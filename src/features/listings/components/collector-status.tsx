@@ -18,7 +18,7 @@ const HEALTH_BADGES = {
 >;
 
 /**
- * Saúde da coleta automática: última execução, atraso do agendamento e lotes abertos na região. Falha fica visível
+ * Saúde da coleta automática: última execução, atraso do agendamento e veículos abertos na região. Falha fica visível
  * no app, não só no GitHub (docs/PLANO-COLETA.md, etapa 1). Lê a sessão: renderizar dentro de <Suspense>.
  */
 export async function CollectorStatusLine() {
@@ -29,7 +29,7 @@ export async function CollectorStatusLine() {
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-foreground-secondary">
       <Radar aria-hidden="true" className="size-4 shrink-0 text-muted" />
       <span>
-        <strong className="text-foreground tabular-nums">{openInRegion}</strong> lotes abertos até {radiusKm} km de{" "}
+        <strong className="text-foreground tabular-nums">{openInRegion}</strong> veículos abertos até {radiusKm} km de{" "}
         {regionLabel}
       </span>
       {lastRun ? (

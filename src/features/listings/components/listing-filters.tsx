@@ -7,7 +7,7 @@ import { type FormEvent, useTransition } from "react";
 
 import { Button, Input, SelectField } from "@/components/ui";
 
-import { DEFAULT_DISTANCE, DISTANCE_OPTIONS } from "../schemas";
+import { CATEGORY_KEYS, CATEGORY_OPTIONS, DEFAULT_CATEGORY, DEFAULT_DISTANCE, DISTANCE_OPTIONS } from "../schemas";
 
 const BASE_PATH = "/descobertos";
 
@@ -18,6 +18,7 @@ export type ListingFilterValues = {
   anoAte?: string;
   precoAte?: string;
   distancia: string;
+  categoria: string;
   situacao: "abertos" | "encerrados";
 };
 
@@ -30,6 +31,7 @@ export function ListingFilters({ values, regionLabel }: { values: ListingFilterV
     values.anoAte,
     values.precoAte,
     values.distancia !== DEFAULT_DISTANCE,
+    values.categoria !== DEFAULT_CATEGORY,
     values.situacao !== "abertos",
   ].filter(Boolean).length;
 
@@ -44,7 +46,11 @@ export function ListingFilters({ values, regionLabel }: { values: ListingFilterV
     for (const [key, value] of new FormData(event.currentTarget)) {
       if (typeof value !== "string" || value.trim() === "") continue;
       // Padrões não vão para a URL.
-      if ((key === "distancia" && value === DEFAULT_DISTANCE) || (key === "situacao" && value === "abertos")) continue;
+      const isDefault =
+        (key === "distancia" && value === DEFAULT_DISTANCE) ||
+        (key === "categoria" && value === DEFAULT_CATEGORY) ||
+        (key === "situacao" && value === "abertos");
+      if (isDefault) continue;
       params.set(key, value.trim());
     }
     navigate(params);
@@ -103,6 +109,13 @@ export function ListingFilters({ values, regionLabel }: { values: ListingFilterV
         ]}
       />
       <SelectField
+        name="categoria"
+        label="Categoria"
+        defaultValue={values.categoria}
+        options={CATEGORY_KEYS.map((key) => ({ value: key, label: CATEGORY_OPTIONS[key].label }))}
+        className="md:col-span-1 xl:col-span-2"
+      />
+      <SelectField
         name="situacao"
         label="Situação"
         defaultValue={values.situacao}
@@ -110,9 +123,9 @@ export function ListingFilters({ values, regionLabel }: { values: ListingFilterV
           { value: "abertos", label: "Abertos" },
           { value: "encerrados", label: "Encerrados" },
         ]}
-        className="md:col-span-1 xl:col-span-2"
+        className="md:col-span-1 xl:col-span-1"
       />
-      <div className="flex flex-wrap items-end gap-3 md:col-span-1 xl:col-span-4 xl:justify-end">
+      <div className="flex flex-wrap items-end gap-3 md:col-span-2 xl:col-span-3 xl:justify-end">
         {activeCount > 0 ? (
           <Button type="button" variant="ghost" onClick={() => navigate(new URLSearchParams())} disabled={isPending}>
             Limpar filtros ({activeCount})

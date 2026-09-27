@@ -8,7 +8,7 @@ import { formatDateTime, formatKm } from "@/lib/format";
 
 import { LISTING_STATUS_LABELS, LISTING_STATUS_VARIANTS } from "../labels";
 import { listListings } from "../queries";
-import { DEFAULT_DISTANCE, type ListingFilters as Filters, listingFiltersSchema } from "../schemas";
+import { DEFAULT_CATEGORY, DEFAULT_DISTANCE, type ListingFilters as Filters, listingFiltersSchema } from "../schemas";
 import type { ListingListItem } from "../types";
 import { ListingFilters, type ListingFilterValues } from "./listing-filters";
 
@@ -28,6 +28,7 @@ export async function ListingsView({ searchParams }: { searchParams: SearchParam
     anoAte: filters.yearTo?.toString(),
     precoAte: filters.maxPrice === undefined ? undefined : String(filters.maxPrice / 100),
     distancia: filters.distanceKm === null ? "todas" : String(filters.distanceKm),
+    categoria: filters.category,
     situacao: filters.ended ? "encerrados" : "abertos",
   };
 
@@ -58,6 +59,7 @@ async function ListingList({ filters, values }: { filters: Filters; values: List
     anoAte: values.anoAte,
     precoAte: values.precoAte,
     distancia: values.distancia === DEFAULT_DISTANCE ? undefined : values.distancia,
+    categoria: values.categoria === DEFAULT_CATEGORY ? undefined : values.categoria,
     situacao: values.situacao === "abertos" ? undefined : values.situacao,
   };
 

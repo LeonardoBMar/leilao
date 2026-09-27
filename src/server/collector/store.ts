@@ -15,6 +15,9 @@ import { db } from "../db";
  * e elas só tocam as tabelas do catálogo.
  */
 
+/** A transação faz três idas ao banco; com latência alta (ex.: máquina local → EUA) o padrão de 5 s não basta. */
+const TRANSACTION_OPTIONS = { maxWait: 10_000, timeout: 15_000 };
+
 type Place = Coordinates & { ibgeCode: number };
 export type PlaceLookup = (city: string | null, state: string | null) => Place | null;
 
@@ -138,7 +141,7 @@ export async function saveListing(
       await tx.listingObservation.create({ data: { listingId: listing.id, observedAt: now, ...next } });
     }
     return previous ? "updated" : "created";
-  });
+  }, TRANSACTION_OPTIONS);
 }
 
 /** Falha ao revisitar um anúncio conhecido: espera crescente e, no limite, desiste (`nextCheckAt` nulo). */

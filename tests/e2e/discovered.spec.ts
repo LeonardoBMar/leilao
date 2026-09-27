@@ -9,7 +9,7 @@ test.skip(!process.env.E2E_EMAIL, "Sem usuário de testes (E2E_EMAIL/E2E_PASSWOR
 test("mostra a saúde da coleta e os lotes descobertos (ou o estado vazio)", async ({ page }) => {
   await page.goto("/descobertos");
   await expect(page.getByRole("heading", { name: "Descobertos", level: 1 })).toBeVisible();
-  await expect(page.getByText(/lotes abertos até 150 km de São Carlos\/SP/)).toBeVisible();
+  await expect(page.getByText(/veículos abertos até 150 km de São Carlos\/SP/)).toBeVisible();
   await expect(page.getByRole("search", { name: "Filtrar lotes descobertos" })).toBeVisible();
   await expect(
     page
@@ -33,7 +33,7 @@ test("filtros vão para a URL e sobrevivem ao recarregar", async ({ page }) => {
 
 test("o dashboard mostra a linha da coleta e leva a Descobertos", async ({ page }) => {
   await page.goto("/dashboard");
-  await expect(page.getByText(/lotes abertos até 150 km/)).toBeVisible();
+  await expect(page.getByText(/veículos abertos até 150 km/)).toBeVisible();
   await page.getByRole("link", { name: "Ver descobertos" }).click();
   await expect(page).toHaveURL(/\/descobertos$/);
 });

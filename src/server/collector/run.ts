@@ -103,13 +103,13 @@ export async function runCollector({
         problem = outcome.error;
       } catch (error) {
         // Erro inesperado (ex.: dado recusado por um CHECK do banco).
-        problem = error instanceof Error ? error.message : String(error);
+        problem = describeError(error);
       }
       fail(url, problem);
       if (visit.reason === "due") await recordCheckFailure(source.id, visit.externalId, now());
     }
   } catch (error) {
-    fail("(execução)", error instanceof Error ? error.message : String(error));
+    fail("(execução)", describeError(error));
     sitemapFailed = true;
   }
 
@@ -136,4 +136,12 @@ async function visitListing(
   // A página precisa ser do anúncio pedido; senão gravaria outro registro e este nunca seria reagendado.
   if (parsed.value.externalId !== expectedId) return err(`página de outro anúncio (${parsed.value.externalId})`);
   return ok(await saveListing(source.id, parsed.value, context));
+}
+
+/** Texto do erro para `collector_runs.errors`: nunca vazio (alguns erros do banco vêm sem mensagem). */
+function describeError(error: unknown): string {
+  if (!(error instanceof Error)) return String(error);
+  const code = "code" in error && typeof error.code === "string" ? ` [${error.code}]` : "";
+  const message = error.message.trim().split("\n").filter(Boolean).at(-1) ?? "";
+  return `${message || error.name}${code}`.slice(0, 500);
 }

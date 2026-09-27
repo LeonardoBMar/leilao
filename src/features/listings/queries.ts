@@ -8,7 +8,13 @@ import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
 
-import { type ListingFilters, LISTINGS_PAGE_SIZE } from "./schemas";
+import {
+  CATEGORY_OPTIONS,
+  type CategoryOption,
+  DEFAULT_CATEGORY,
+  type ListingFilters,
+  LISTINGS_PAGE_SIZE,
+} from "./schemas";
 import type { CollectorStatus, ListingListItem, ListingPage } from "./types";
 
 /**
@@ -85,6 +91,11 @@ function withinBox(radiusKm: number | null): Prisma.ListingWhereInput {
   };
 }
 
+function categoryWhere(option: CategoryOption): Prisma.ListingWhereInput {
+  const { categories } = CATEGORY_OPTIONS[option];
+  return categories === null ? {} : { category: { in: [...categories] } };
+}
+
 /** Aberto de fato: situação aberta e fim ainda no futuro (ou desconhecido). */
 function openWhere(now: Date): Prisma.ListingWhereInput {
   return { status: "open", OR: [{ endsAt: null }, { endsAt: { gt: now } }] };
@@ -99,6 +110,7 @@ export async function listListings(filters: ListingFilters): Promise<ListingPage
     AND: [
       filters.ended ? { NOT: openWhere(now) } : openWhere(now),
       withinBox(filters.distanceKm),
+      categoryWhere(filters.category),
       search
         ? {
             OR: [
@@ -171,7 +183,7 @@ export async function getCollectorStatus(): Promise<CollectorStatus> {
       },
     }),
     db.listing.findMany({
-      where: { AND: [openWhere(now), withinBox(DEFAULT_REGION.radiusKm)] },
+      where: { AND: [openWhere(now), withinBox(DEFAULT_REGION.radiusKm), categoryWhere(DEFAULT_CATEGORY)] },
       select: { municipality: { select: { latitude: true, longitude: true } } },
       take: MAX_CANDIDATES,
     }),
