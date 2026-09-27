@@ -4,6 +4,7 @@ import type { Cents } from "@/domain/money";
 import { err, ok, type Result } from "@/lib/result";
 import { requireUser } from "@/server/auth";
 import { db, isForeignKeyViolation, isUniqueViolation } from "@/server/db";
+import { removeObjects } from "@/server/storage";
 
 import type { LotInput } from "./schemas";
 
@@ -108,7 +109,7 @@ export type DeleteLotError = "not_found" | "has_history";
 
 /**
  * Exclusão definitiva só sem análise fixada e sem resultado (RF-08). Rascunhos saem na mesma transação e os
- * registros de fotos por cascade. Os arquivos no Storage serão removidos pela feature de fotos (RF-07).
+ * registros de fotos por cascade; os arquivos no Storage são removidos depois do banco.
  */
 export async function deleteLot(id: string): Promise<Result<{ auctionId: string }, DeleteLotError>> {
   const user = await requireUser();
@@ -116,6 +117,7 @@ export async function deleteLot(id: string): Promise<Result<{ auctionId: string 
     where: { id, ownerId: user.id },
     select: {
       auctionId: true,
+      images: { select: { storagePath: true } },
       _count: { select: { results: true, analyses: { where: { status: "fixed" } } } },
     },
   });
@@ -132,6 +134,8 @@ export async function deleteLot(id: string): Promise<Result<{ auctionId: string 
     if (isForeignKeyViolation(error)) return err("has_history");
     throw error;
   }
+  // Depois do banco: falha no Storage deixa só arquivo órfão, nunca registro apontando para o nada.
+  await removeObjects(lot.images.map((image) => image.storagePath));
   return ok({ auctionId: lot.auctionId });
 }
 

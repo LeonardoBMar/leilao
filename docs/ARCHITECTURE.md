@@ -280,7 +280,9 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
 
 - **Bucket privado.** O upload vai **direto do navegador para o Storage** com uma URL assinada de upload criada por Server Action. Isso evita o limite de 1 MB de body das actions.
 - **A action valida antes de emitir a URL:** dono do lote, tipo MIME (`image/jpeg|png|webp`) e tamanho. Depois do upload, outra action registra `lot_images`.
-- **Exibição por URL assinada de curta duração**, gerada no servidor.
+- **Exibição por URL assinada de curta duração** (1 h), gerada no servidor.
+- **Bucket `lot-images` privado**, com limite de 5 MB e JPEG/PNG/WebP no próprio Storage, e políticas `SELECT`/`INSERT`/`DELETE` restritas à pasta `<owner_id>/…`. Sem `UPDATE`: arquivo não é sobrescrito. Configuração em `prisma/sql/storage.sql` (D-20).
+- **Ordem das operações:** registro no banco só depois de conferir o arquivo, e remoção do arquivo só depois de apagar o registro. Uma falha do Storage deixa, no pior caso, um arquivo órfão, nunca uma foto registrada que não abre (SPEC §11).
 
 ## 14. Configuração, qualidade e testes
 
@@ -297,6 +299,7 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
 | `npm run check` | typecheck + lint + format:check + test. **Obrigatório antes de concluir qualquer tarefa.** |
 | `npm run build` | Build de produção. Obrigatório ao mexer em rotas, config ou fronteira server/client. |
 | `npm run format` / `lint:fix` | Correções automáticas |
+| `npm run db:migrate` / `db:storage` | Migrations do Prisma (+ `generate`) / bucket e políticas do Storage |
 | `npm test` / `test:watch` | Vitest |
 
 - **TypeScript estrito**, com `noUncheckedIndexedAccess`, `noImplicitReturns`, `noImplicitOverride` e `noFallthroughCasesInSwitch`.
@@ -338,6 +341,7 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
 | D-17 | Sem API JSON própria no MVP; contrato da futura API definido em §17 | A tela usa a DAL direto (recomendação do Next). A separação está no código (`domain` e DAL devolvem DTOs serializáveis), então a API vira um adaptador fino quando houver consumidor externo. | API JSON consumida pela própria tela; backend separado |
 | D-18 | Supabase Auth com `@supabase/ssr` 0.12 + `getClaims()`, Node ≥ 22 | Padrão do guia oficial de Next.js (o SDK `@supabase/server` é genérico). `getClaims()` verifica a assinatura do JWT localmente com chaves assimétricas. As bibliotecas Supabase JS deixaram de suportar Node 20 em 30/06/2026. | `getSession()` no servidor; `getUser()` em toda requisição; `@supabase/server` |
 | D-19 | Coluna `results.prior_declared` e temporalidade calculada no servidor a cada revisão | O SPEC §10 pede registrar a confirmação declarada quando o horário do desfecho é desconhecido, e o modelo do §8 não tinha onde. A regra (`classifyAnalysisTiming`) fica no domínio e é gravada em `analysis_timing` na própria revisão, nunca vinda do cliente. | Guardar a declaração em texto livre; recalcular a temporalidade na leitura |
+| D-20 | Bucket e políticas do Storage em `prisma/sql/storage.sql` (idempotente, `npm run db:storage`); upload em 3 passos com conferência do arquivo real | O schema `storage` é do Supabase e não existe no shadow database do Prisma, então não pode ir em migration. O servidor autoriza e emite a URL, o navegador envia direto, e o servidor confere tamanho, tipo e assinatura binária antes de registrar. Arquivo inválido é removido. | Migration do Prisma; confiar no tipo declarado pelo navegador |
 
 ## 16. Pendências da fundação
 
@@ -347,7 +351,7 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
 4. ~~Autenticação: `src/server/{supabase,auth}.ts`, `src/proxy.ts`, `/login`, casca `(private)` e dashboard com contagens~~ (feito; a vitrine de componentes foi para `/componentes`). Falta: `src/server/storage.ts` (junto com as fotos).
 5. Configurar Playwright para o fluxo E2E (login → leilão → lote → análise fixada → resultado).
 
-**Features entregues:** autenticação, leilões (RF-01), lotes (RF-02/03), análise financeira (RF-04/05), resultados com correções e temporalidade (RF-06, §10), dashboard completo (métricas, indicador, pendências, lotes acompanhados, próximos leilões) e arquivamento (RF-08). **Próximas:** fotos (RF-07) e E2E.
+**Features entregues:** autenticação, leilões (RF-01), lotes (RF-02/03), análise financeira (RF-04/05), resultados com correções e temporalidade (RF-06, §10), dashboard completo (métricas, indicador, pendências, lotes acompanhados, próximos leilões) e arquivamento (RF-08). fotos (RF-07). **Próximas:** E2E e preparação para deploy.
 
 ## 17. Contrato da API JSON (futuro)
 

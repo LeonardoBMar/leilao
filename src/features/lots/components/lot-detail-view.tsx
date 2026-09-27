@@ -1,4 +1,4 @@
-import { ExternalLink, ImageOff, Pencil } from "lucide-react";
+import { ExternalLink, Pencil } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -12,7 +12,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  EmptyState,
   Money,
   Skeleton,
 } from "@/components/ui";
@@ -34,9 +33,10 @@ type LotDetailViewProps = {
   /** Blocos de análise e resultado, compostos pela rota (outras features não são importadas aqui). */
   analysis: React.ReactNode;
   result: React.ReactNode;
+  photos: React.ReactNode;
 };
 
-export async function LotDetailView({ params, analysis, result }: LotDetailViewProps) {
+export async function LotDetailView({ params, analysis, result, photos }: LotDetailViewProps) {
   const parsed = lotIdSchema.safeParse((await params).id);
   if (!parsed.success) notFound();
   const lot = await getLot(parsed.data);
@@ -179,14 +179,7 @@ export async function LotDetailView({ params, analysis, result }: LotDetailViewP
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Fotos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <EmptyState icon={ImageOff} title="Sem fotos" description="O envio de fotos entra com o RF-07." />
-            </CardContent>
-          </Card>
+          {photos}
 
           {lot.notes ? (
             <Card>

@@ -352,5 +352,7 @@ Já implementados; use, não recrie:
 6. Rode `npm run check` e atualize DTOs, queries e mutations afetados.
 
 - **Nunca edite migration já aplicada.** Correção é uma nova migration.
+- **Storage do Supabase (buckets e políticas de `storage.objects`) não vai em migration do Prisma**, porque o schema `storage` não existe no shadow database. Edite `prisma/sql/storage.sql`, que é idempotente, e rode `npm run db:storage`.
+- **Arquivos:** o navegador envia direto ao Storage com URL assinada, e o servidor confere o arquivo real antes de registrar (receita em `features/lot-images/mutations.ts`). Nunca passe arquivo por Server Action.
 - **Nunca rode `migrate reset` ou `db push`** no banco do Supabase sem consentimento explícito do usuário (veja `prisma-cli/references/agent-safety.md`).
 - **Regras que o banco garante** também são validadas na aplicação (Zod e mutation), para gerar mensagem amigável. O banco é a última barreira.
