@@ -248,7 +248,12 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
 
 ## 11. Domínio financeiro
 
-- `src/domain/finance` implementa o SPEC §7 com `Cents`, sem `Date.now()` ou I/O. Entradas incompletas retornam um resultado discriminado (`{ kind: "incomplete", missing: [...] }`) em vez de lançar.
+- `src/domain/finance/calculator.ts` implementa o SPEC §7 com `Cents` e `Bps`, sem `Date.now()` ou I/O:
+  - `calculateMaxBid(inputs)` devolve `{ kind: "viable", maxBid, … } | { kind: "not_viable" } | { kind: "incomplete", missing }`. Ausência (`null`) nunca vira zero.
+  - `simulateBid(complete, bid)` calcula comissão, custos fora do lance, custo total e margem estimada.
+  - `compareToLimit(outcome, bid)` classifica em `below_limit | at_limit | above_limit | no_viable_bid | unavailable` (§7.5). Os rótulos em pt-BR ficam na feature.
+- **Lance máximo exato ao centavo:** parte da divisão teórica e ajusta depois de arredondar a comissão, até o maior lance que satisfaz `custo total + M ≤ V`. Um teste com 1.000 entradas geradas confirma que o lance máximo cabe e que o centavo seguinte não cabe.
+- **Comissão percentual** por `applyRate`, com aritmética inteira e arredondamento half-up, sem ponto flutuante no produto.
 - **`FORMULA_VERSION` é exportada** e persistida junto das saídas fixadas (`analyses.formula_version`). Mudança de fórmula exige nova versão e nunca recalcula análises históricas.
 - A **prévia** (Client Component) importa a mesma função que a mutation usa para fixar a análise. Na fixação, o servidor recalcula a partir das entradas e ignora saídas vindas do cliente.
 - **Percentuais em basis points inteiros** (`commission_rate_bps`), sem ponto flutuante persistido.
