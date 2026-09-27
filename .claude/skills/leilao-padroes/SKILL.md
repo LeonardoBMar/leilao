@@ -16,7 +16,9 @@ Esta skill é o manual de execução do [`docs/ARCHITECTURE.md`](../../../docs/A
 5. **Aplicar as regras de TypeScript** de [references/typescript.md](references/typescript.md).
 6. **Testar** conforme [references/testes.md](references/testes.md). Regra de domínio nova sem teste não está pronta.
 7. **Verificar:** `npm run check` sempre, e `npm run build` quando tocar rotas, config ou fronteira server/client. Para UI, abra no navegador com `npm run dev` e confira o dev overlay: *blocking route* e erros de hidratação são falhas.
-8. **Revisar** com [references/checklist.md](references/checklist.md) antes de declarar concluído.
+8. **Revisar** com [references/checklist.md](references/checklist.md) antes de declarar concluído. Em mudanças maiores, delegue a conferência ao subagente `leilao-reviewer`.
+
+Automação (D-23): um hook formata cada arquivo editado e outro bloqueia `.env*`, `backups/`, arquivos gerados e migrations já versionadas. Se ele bloquear, siga a mensagem e não contorne pelo shell. O MCP `supabase` é somente leitura e serve para diagnóstico.
 
 ## Regras invioláveis
 

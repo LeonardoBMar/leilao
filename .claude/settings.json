@@ -2,5 +2,67 @@
   "enabledPlugins": {
     "claude-code-setup@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npm run check)",
+      "Bash(npm run typecheck)",
+      "Bash(npm run lint)",
+      "Bash(npm run lint:fix)",
+      "Bash(npm run format)",
+      "Bash(npm run format:check)",
+      "Bash(npm run test)",
+      "Bash(npm run test *)",
+      "Bash(npm test)",
+      "Bash(npm run build)",
+      "Bash(npx vitest run *)",
+      "Bash(npx prisma validate)",
+      "Bash(npx prisma format)",
+      "Bash(npx prisma generate)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)"
+    ],
+    "ask": [
+      "Bash(npm run db:migrate *)",
+      "Bash(npm run db:deploy *)",
+      "Bash(npm run db:release *)",
+      "Bash(npm run db:storage *)",
+      "Bash(npm run restore *)",
+      "Bash(npm run backup *)",
+      "Bash(npx prisma migrate *)",
+      "Bash(npx prisma db *)",
+      "Bash(* --accept-data-loss *)",
+      "Bash(* --force-reset *)"
+    ],
+    "deny": ["Read(./.env)", "Read(./.env.local)", "Read(./backups/**)"]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/protect-files.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/format-file.mjs\"",
+            "timeout": 60,
+            "statusMessage": "Formatando arquivo (eslint --fix + prettier)"
+          }
+        ]
+      }
+    ]
   }
 }
