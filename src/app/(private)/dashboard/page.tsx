@@ -1,10 +1,9 @@
 import { Plus } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Suspense } from "react";
 
 import { PageHeader } from "@/components/layout/page-header";
-import { Button } from "@/components/ui";
+import { ButtonLink } from "@/components/ui";
 import { UpcomingAuctions, UpcomingAuctionsSkeleton } from "@/features/auctions/components/upcoming-auctions";
 import { DashboardSummary, DashboardSummarySkeleton } from "@/features/dashboard/components/dashboard-summary";
 import { PendingItems } from "@/features/dashboard/components/pending-items";
@@ -20,12 +19,10 @@ export default function DashboardPage() {
         title="Dashboard"
         description="Visão geral dos leilões e lotes acompanhados."
         actions={
-          <Button asChild>
-            <Link href="/leiloes/novo">
-              <Plus aria-hidden="true" />
-              Novo leilão
-            </Link>
-          </Button>
+          <ButtonLink href="/leiloes/novo">
+            <Plus aria-hidden="true" />
+            Novo leilão
+          </ButtonLink>
         }
       />
 

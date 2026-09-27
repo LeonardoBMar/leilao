@@ -1,7 +1,7 @@
 import { Eye } from "lucide-react";
 import Link from "next/link";
 
-import { Button, EmptyState, Money, Skeleton } from "@/components/ui";
+import { ButtonLink, EmptyState, Money, Skeleton } from "@/components/ui";
 import { formatDate, formatDateTime } from "@/lib/format";
 
 import { listLots } from "../queries";
@@ -31,9 +31,9 @@ export async function FollowedLots() {
         title="Nenhum lote acompanhado"
         description="Marque um lote para acompanhar seu lance e limite no dashboard."
         action={
-          <Button asChild variant="secondary">
-            <Link href="/lotes">Ver lotes</Link>
-          </Button>
+          <ButtonLink href="/lotes" variant="secondary">
+            Ver lotes
+          </ButtonLink>
         }
       />
     );

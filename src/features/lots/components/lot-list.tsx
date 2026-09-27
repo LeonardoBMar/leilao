@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ListPagination } from "@/components/layout/list-pagination";
 import {
   Badge,
-  Button,
+  ButtonLink,
   EmptyState,
   Money,
   Skeleton,
@@ -91,16 +91,14 @@ async function LotList({
         }
         action={
           auctionId ? (
-            <Button asChild>
-              <Link href={`/leiloes/${auctionId}/lotes/novo` as Route}>
-                <Plus aria-hidden="true" />
-                Adicionar lote
-              </Link>
-            </Button>
+            <ButtonLink href={`/leiloes/${auctionId}/lotes/novo` as Route}>
+              <Plus aria-hidden="true" />
+              Adicionar lote
+            </ButtonLink>
           ) : (
-            <Button asChild variant="secondary">
-              <Link href="/leiloes">Ver leilões</Link>
-            </Button>
+            <ButtonLink href="/leiloes" variant="secondary">
+              Ver leilões
+            </ButtonLink>
           )
         }
       />

@@ -5,7 +5,7 @@ import {
   Alert,
   AlertDescription,
   Badge,
-  Button,
+  ButtonLink,
   Card,
   CardContent,
   CardHeader,
@@ -28,12 +28,10 @@ export async function LotResultPanel({ lotId }: { lotId: string }) {
   const { current, revisions } = context;
 
   const action = (
-    <Button asChild variant={current ? "secondary" : "primary"}>
-      <Link href={`/lotes/${lotId}/resultado`}>
-        {current ? <FilePen aria-hidden="true" /> : <Trophy aria-hidden="true" />}
-        {current ? "Corrigir resultado" : "Registrar resultado"}
-      </Link>
-    </Button>
+    <ButtonLink href={`/lotes/${lotId}/resultado`} variant={current ? "secondary" : "primary"}>
+      {current ? <FilePen aria-hidden="true" /> : <Trophy aria-hidden="true" />}
+      {current ? "Corrigir resultado" : "Registrar resultado"}
+    </ButtonLink>
   );
 
   return (

@@ -1,7 +1,7 @@
 import { Calculator, FilePen, GitBranchPlus } from "lucide-react";
 import Link from "next/link";
 
-import { Button, Card, CardContent, CardHeader, CardTitle, EmptyState, Money, Skeleton } from "@/components/ui";
+import { ButtonLink, Card, CardContent, CardHeader, CardTitle, EmptyState, Money, Skeleton } from "@/components/ui";
 import { formatDateTime } from "@/lib/format";
 
 import { listLotAnalyses } from "../queries";
@@ -15,12 +15,10 @@ export async function LotAnalysisPanel({ lotId }: { lotId: string }) {
   const latestFixed = versions.find((version) => version.status === "fixed");
 
   const action = draft ? (
-    <Button asChild>
-      <Link href={`/analise/${draft.id}`}>
-        <FilePen aria-hidden="true" />
-        Continuar rascunho v{draft.version}
-      </Link>
-    </Button>
+    <ButtonLink href={`/analise/${draft.id}`}>
+      <FilePen aria-hidden="true" />
+      Continuar rascunho v{draft.version}
+    </ButtonLink>
   ) : (
     <CreateAnalysisButton lotId={lotId} sourceId={latestFixed?.id}>
       {latestFixed ? <GitBranchPlus aria-hidden="true" /> : <Calculator aria-hidden="true" />}

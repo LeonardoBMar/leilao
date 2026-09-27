@@ -19,6 +19,7 @@ Versão instalada: **16.3.x** com Turbopack, `cacheComponents`, `typedRoutes` e 
 | `next lint` | `eslint .` (script `npm run lint`) |
 | `experimental.ppr` | Removido; o PPR vem com `cacheComponents` |
 | `usePathname()` / `useSearchParams()` em Client Component de layout, sem boundary | Dado de URL: fica dentro de `<Suspense>`, com fallback sem esse dado (ex.: `NavLinks` renderiza a lista sem destaque). Sem isso, o **build falha** em rotas dinâmicas. |
+| `<Button asChild><Link/></Button>` em Server Component | `<ButtonLink href=…>`. O filho criado no servidor pode chegar ao Client Component como referência **lazy**, e `Children.only`/`cloneElement` falham ("React.Children.only expected to receive a single React element child"), de forma intermitente. `asChild` só com filhos criados no próprio Client Component. |
 | `Math.random()`, `Date.now()` e `new Date()` em render de Server Component | Precisam de `await connection()` antes (e `<Suspense>`), ou devem acontecer no cliente, na action ou vir como argumento |
 
 ## Mensagens do dev overlay

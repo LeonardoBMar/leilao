@@ -7,7 +7,7 @@ import {
   Alert,
   AlertDescription,
   Badge,
-  Button,
+  ButtonLink,
   Card,
   CardContent,
   CardHeader,
@@ -67,12 +67,10 @@ export async function LotDetailView({ params, analysis, result, photos }: LotDet
           .join(" · ")}
         actions={
           <>
-            <Button asChild variant="secondary">
-              <Link href={`/lotes/${lot.id}/editar`}>
-                <Pencil aria-hidden="true" />
-                Editar
-              </Link>
-            </Button>
+            <ButtonLink href={`/lotes/${lot.id}/editar`} variant="secondary">
+              <Pencil aria-hidden="true" />
+              Editar
+            </ButtonLink>
             <LotActions
               lotId={lot.id}
               lotLabel={`Lote ${lot.lotNumber} — ${title}`}

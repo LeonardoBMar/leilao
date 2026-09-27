@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { PageHeader } from "@/components/layout/page-header";
-import { Alert, AlertDescription, Badge, Button, Skeleton } from "@/components/ui";
+import { Alert, AlertDescription, Badge, ButtonLink, Skeleton } from "@/components/ui";
 import { FORMULA_VERSION } from "@/domain/finance/calculator";
 import { formatDateTime } from "@/lib/format";
 
@@ -50,12 +50,10 @@ export async function AnalysisView({ params }: { params: Promise<{ id: string }>
         actions={
           isFixed ? (
             analysis.openDraftId ? (
-              <Button asChild>
-                <Link href={`/analise/${analysis.openDraftId}`}>
-                  <FilePen aria-hidden="true" />
-                  Continuar rascunho
-                </Link>
-              </Button>
+              <ButtonLink href={`/analise/${analysis.openDraftId}`}>
+                <FilePen aria-hidden="true" />
+                Continuar rascunho
+              </ButtonLink>
             ) : (
               <CreateAnalysisButton lotId={lot.id} sourceId={analysis.id}>
                 <GitBranchPlus aria-hidden="true" />

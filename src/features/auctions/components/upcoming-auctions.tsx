@@ -1,7 +1,7 @@
 import { CalendarDays } from "lucide-react";
 import Link from "next/link";
 
-import { Badge, Button, EmptyState, Skeleton } from "@/components/ui";
+import { Badge, ButtonLink, EmptyState, Skeleton } from "@/components/ui";
 import { formatDateTime } from "@/lib/format";
 
 import { ORIGIN_LABELS, STATUS_BADGE_VARIANTS, STATUS_LABELS } from "../labels";
@@ -18,9 +18,9 @@ export async function UpcomingAuctions() {
         title="Nenhum leilão próximo"
         description="Leilões agendados ou em andamento aparecem aqui, por data."
         action={
-          <Button asChild variant="secondary">
-            <Link href="/leiloes/novo">Cadastrar leilão</Link>
-          </Button>
+          <ButtonLink href="/leiloes/novo" variant="secondary">
+            Cadastrar leilão
+          </ButtonLink>
         }
       />
     );

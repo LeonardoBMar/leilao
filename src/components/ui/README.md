@@ -15,7 +15,7 @@ Esta pasta contém as primitivas reutilizáveis do Leilão Tracker. Os contratos
 
 | Grupo | Componentes | Uso |
 | --- | --- | --- |
-| Ação | `Button` | Ações primary, secondary, outline, ghost, destructive e link. Suporta loading. |
+| Ação | `Button`, `ButtonLink` | Ações primary, secondary, outline, ghost, destructive e link. Suporta loading. |
 | Formulário | `Input`, `Textarea`, `SelectField`, `Checkbox`, `RadioGroup`, `Switch` | Entrada acessível com label, descrição e erro. |
 | Estrutura | `Card`, `Table`, `Tabs`, `Pagination` | Composição de conteúdo e navegação local. |
 | Estado | `Badge`, `Alert`, `Skeleton`, `Spinner`, `EmptyState` | Estado semântico, carregamento e ausência de dados. |
@@ -53,6 +53,7 @@ Não há Storybook nesta fase. A rota inicial funciona como referência visual t
 ## Contratos de composição
 
 - Passe `loading={false}` desde o primeiro render de ações assíncronas para reservar o espaço dos dois estados. Loading mantém contraste, bloqueia repetição e expõe `aria-busy`; `disabled` usa aparência própria.
+- **Link com aparência de botão:** em Server Components use `ButtonLink` (`<ButtonLink href="/leiloes/novo">`). `Button asChild` só dentro de Client Components: vindo do servidor, o filho pode chegar como referência lazy e o `Children.only` lança "React.Children.only expected to receive a single React element child".
 - `Button asChild` recebe um único elemento. Exemplo: `<Button asChild variant="secondary"><a href="/leiloes">Ver leilões</a></Button>`. Links bloqueados saem do Tab e não disparam navegação ou handlers de ativação. Prefira `Button` nativo para mutações; filhos customizados devem repassar props e ref ao elemento interativo, como exige Radix Slot.
 - Botões `sm`, checkbox e radio mantêm alvos de 40 × 40 px; switch mantém 44 × 40 px. Use o label da primitiva para ampliar a área clicável.
 - Use `text-heading-2`, `text-heading-3`, `text-body`, `text-label` e `text-caption`. `cn()` distingue tamanho de cor, como em `text-heading-2 text-foreground`.

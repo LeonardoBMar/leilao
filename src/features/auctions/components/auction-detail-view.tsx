@@ -7,7 +7,7 @@ import {
   Alert,
   AlertDescription,
   Badge,
-  Button,
+  ButtonLink,
   Card,
   CardContent,
   CardHeader,
@@ -50,12 +50,10 @@ export async function AuctionDetailView({ params, lots }: AuctionDetailViewProps
         description={`${formatDateTime(auction.startsAt)} · ${auction.auctioneer}`}
         actions={
           <>
-            <Button asChild variant="secondary">
-              <Link href={`/leiloes/${auction.id}/editar`}>
-                <Pencil aria-hidden="true" />
-                Editar
-              </Link>
-            </Button>
+            <ButtonLink href={`/leiloes/${auction.id}/editar`} variant="secondary">
+              <Pencil aria-hidden="true" />
+              Editar
+            </ButtonLink>
             <AuctionActions
               auctionId={auction.id}
               auctionName={auction.name}
@@ -80,12 +78,10 @@ export async function AuctionDetailView({ params, lots }: AuctionDetailViewProps
             <h2 id="auction-lots" className="text-heading-2 text-foreground">
               Lotes
             </h2>
-            <Button asChild>
-              <Link href={`/leiloes/${auction.id}/lotes/novo`}>
-                <Plus aria-hidden="true" />
-                Adicionar lote
-              </Link>
-            </Button>
+            <ButtonLink href={`/leiloes/${auction.id}/lotes/novo`}>
+              <Plus aria-hidden="true" />
+              Adicionar lote
+            </ButtonLink>
           </div>
           {lots}
         </section>

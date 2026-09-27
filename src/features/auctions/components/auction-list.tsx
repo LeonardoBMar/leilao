@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ListPagination } from "@/components/layout/list-pagination";
 import {
   Badge,
-  Button,
+  ButtonLink,
   EmptyState,
   Skeleton,
   Table,
@@ -61,11 +61,7 @@ async function AuctionList({
         icon={Gavel}
         title="Nenhum leilão cadastrado"
         description="Cadastre o primeiro leilão para começar a acompanhar lotes."
-        action={
-          <Button asChild>
-            <Link href="/leiloes/novo">Cadastrar leilão</Link>
-          </Button>
-        }
+        action={<ButtonLink href="/leiloes/novo">Cadastrar leilão</ButtonLink>}
       />
     );
   }

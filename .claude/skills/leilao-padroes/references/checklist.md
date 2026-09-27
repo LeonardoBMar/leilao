@@ -28,7 +28,7 @@ Use antes de declarar uma tarefa concluída e ao revisar código. Item não apli
 - [ ] Acesso a sessão, dados, `params` e `searchParams` dentro de `<Suspense>` com fallback de `Skeleton`.
 - [ ] `"use client"` só onde necessário. Nenhum Client Component `async`.
 - [ ] `redirect`/`notFound` fora de `try/catch`. Depois da mutation, `redirect` ou `refresh`.
-- [ ] Links internos com `<Link>` tipado. Sem `useMemo`/`useCallback`/`memo` manuais.
+- [ ] Links internos com `<Link>` tipado; link com cara de botão em Server Component é `ButtonLink`, nunca `Button asChild`. Sem `useMemo`/`useCallback`/`memo` manuais.
 
 ## Código
 
