@@ -1,7 +1,18 @@
 import { expect, test } from "@playwright/test";
 
 import { AUTH_STATE } from "../../playwright.config";
-import { brl, choose, expectToast, FAKE_JPEG, fillFields, idFromUrl, section, signIn, VALID_PNG } from "./helpers";
+import {
+  brl,
+  choose,
+  expectToast,
+  FAKE_JPEG,
+  field,
+  fillFields,
+  idFromUrl,
+  section,
+  signIn,
+  VALID_PNG,
+} from "./helpers";
 
 /**
  * Fluxo completo do SPEC §13: login → leilão → lote → análise fixada → resultado → dashboard, conferindo os
@@ -61,7 +72,7 @@ test("análise: exemplos do SPEC, pendências e fixação (CA-03, CA-04, CA-05, 
     "Margem desejada": "6.000",
   });
   await page.getByRole("radio", { name: "Valor fixo" }).click();
-  await page.getByLabel("Comissão fixa", { exact: true }).fill("2.000");
+  await field(page, "Comissão fixa").fill("2.000");
 
   // CA-03: limite R$ 33.200,00; lance simulado R$ 31.000,00 (lance atual) → custo R$ 41.800,00, margem R$ 8.200,00.
   await expect(section(page, "Lance máximo")).toContainText(brl("33.200,00"));
@@ -82,16 +93,16 @@ test("análise: exemplos do SPEC, pendências e fixação (CA-03, CA-04, CA-05, 
   await expect(section(page, "Lance máximo")).toContainText(brl("33.523,81"));
 
   // CA-07: fixar com campo vazio salva o rascunho e aponta a pendência.
-  await page.getByLabel("Pneus", { exact: true }).fill("");
+  await field(page, "Pneus").fill("");
   await page.getByRole("button", { name: "Fixar análise" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Fixar análise" }).click();
   await expect(page.getByText("Para fixar, preencha os campos pendentes.")).toBeVisible();
   await expect(page.getByText("Obrigatório para fixar.")).toBeVisible();
 
   // Volta à comissão fixa (limite R$ 33.200,00, usado no resultado) e fixa.
-  await page.getByLabel("Pneus", { exact: true }).fill("0");
+  await field(page, "Pneus").fill("0");
   await page.getByRole("radio", { name: "Valor fixo" }).click();
-  await page.getByLabel("Comissão fixa", { exact: true }).fill("2.000");
+  await field(page, "Comissão fixa").fill("2.000");
   await expect(section(page, "Lance máximo")).toContainText(brl("33.200,00"));
   await page.getByRole("button", { name: "Fixar análise" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Fixar análise" }).click();
@@ -106,7 +117,7 @@ test("revisar premissas cria nova versão e preserva a fixada (CA-08)", async ({
   await page.getByRole("button", { name: "Revisar premissas" }).click();
   await expect(page.getByRole("heading", { name: "Análise financeira v2" })).toBeVisible();
   // Premissas copiadas da v1.
-  await expect(page.getByLabel("Valor de mercado", { exact: true })).toHaveValue("50000,00");
+  await expect(field(page, "Valor de mercado")).toHaveValue("50000,00");
   await expect(page.getByRole("link", { name: "v1" })).toBeVisible();
 
   // Descarta o rascunho: a v1 continua intacta.
@@ -127,7 +138,7 @@ test("resultado acima do limite e correção preservando a revisão anterior (CA
   await expect(page.getByText("Análise anterior ao resultado")).toBeVisible();
 
   await page.getByRole("link", { name: "Corrigir resultado" }).click();
-  await page.getByLabel("Preço final", { exact: true }).fill("33.000");
+  await field(page, "Preço final").fill("33.000");
   await page.getByRole("button", { name: "Salvar correção" }).click();
   await expect(page.getByText("Informe o motivo da correção.")).toBeVisible();
   await page.getByLabel("Motivo da correção").fill("Preço conferido no site do leiloeiro");
@@ -147,7 +158,7 @@ test("nova versão depois do resultado não muda a comparação vinculada (CA-09
   await expect(page.getByText("Retrospectiva", { exact: true }).first()).toBeVisible();
 
   // Limite novo bem diferente: R$ 43.200,00.
-  await page.getByLabel("Valor de mercado", { exact: true }).fill("60.000");
+  await field(page, "Valor de mercado").fill("60.000");
   await expect(section(page, "Lance máximo")).toContainText(brl("43.200,00"));
   await page.getByRole("button", { name: "Fixar análise" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Fixar análise" }).click();
@@ -191,7 +202,7 @@ test("duas correções simultâneas do resultado: só uma revisão nova (CA-19)"
   const tabs = [page, other];
   for (const tab of tabs) {
     await tab.goto(`/lotes/${lotId}/resultado`);
-    await tab.getByLabel("Preço final", { exact: true }).fill("34.000");
+    await field(tab, "Preço final").fill("34.000");
     await tab.getByLabel("Motivo da correção").fill("Correção simultânea (E2E)");
   }
   await Promise.all(tabs.map((tab) => tab.getByRole("button", { name: "Salvar correção" }).click()));

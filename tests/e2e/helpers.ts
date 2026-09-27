@@ -3,16 +3,25 @@ import { expect, type Locator, type Page } from "@playwright/test";
 /** `R$ 33.200,00` como o Intl formata (espaço não separável depois de "R$"). */
 export const brl = (value: string) => new RegExp(`R\\$\\s${value.replace(/\./g, "\\.")}`);
 
+/**
+ * Campo pelo rótulo exato. O `*` de obrigatório fica dentro do <label> (aria-hidden), e `getByLabel` com
+ * `exact` compara o texto inteiro ("Nome do leilão *"); por isso o asterisco é aceito como sufixo opcional.
+ */
+export function field(scope: Page | Locator, label: string): Locator {
+  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return scope.getByLabel(new RegExp(`^${escaped}\\s*\\*?$`));
+}
+
 /** Select do Radix: abre pelo rótulo e escolhe a opção pelo texto. */
 export async function choose(page: Page, label: string, option: string) {
-  await page.getByLabel(label, { exact: true }).click();
+  await field(page, label).click();
   await page.getByRole("option", { name: option, exact: true }).click();
 }
 
 /** Preenche vários campos pelo rótulo exato. */
 export async function fillFields(page: Page, fields: Record<string, string>) {
   for (const [label, value] of Object.entries(fields)) {
-    await page.getByLabel(label, { exact: true }).fill(value);
+    await field(page, label).fill(value);
   }
 }
 
