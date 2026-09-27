@@ -101,10 +101,10 @@ export function ListingFilters({ values, regionLabel }: { values: ListingFilterV
       />
       <SelectField
         name="distancia"
-        label="Distância"
+        label={`Distância de ${regionLabel}`}
         defaultValue={values.distancia}
         options={[
-          ...DISTANCE_OPTIONS.map((km) => ({ value: km, label: `Até ${km} km de ${regionLabel}` })),
+          ...DISTANCE_OPTIONS.map((km) => ({ value: km, label: `Até ${km} km` })),
           { value: "todas", label: "Qualquer distância" },
         ]}
       />

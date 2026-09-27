@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
+import { devAuthUserId } from "@/lib/dev-auth";
 import { publicEnv } from "@/lib/public-env";
 
 const PUBLIC_PATHS = ["/login"];
@@ -33,7 +34,7 @@ export async function proxy(request: NextRequest) {
 
   // Nada entre createServerClient e getClaims(): é aqui que o token expirado é renovado.
   const { data } = await supabase.auth.getClaims();
-  const isAuthenticated = Boolean(data?.claims);
+  const isAuthenticated = Boolean(data?.claims) || devAuthUserId(process.env, request.headers.get("host")) !== null;
   const { pathname, search } = request.nextUrl;
   const isPublic = PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 

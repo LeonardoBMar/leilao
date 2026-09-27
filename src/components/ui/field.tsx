@@ -3,7 +3,9 @@ import { cn } from "@/lib/utils";
 function Field({ className, ...props }: React.ComponentProps<"div">) {
   // content-start: em grids de formulário o campo é esticado até a altura do vizinho (ex.: vizinho com
   // texto de ajuda). Sem isso, as linhas internas esticam e label/controle descem, desalinhando a linha.
-  return <div className={cn("grid content-start gap-2", className)} {...props} />;
+  // min-w-0 + grid-cols-1: o texto do controle (ex.: opção longa de um select) não alarga a coluna do grid pai;
+  // o controle trunca dentro dela em vez de vazar do card.
+  return <div className={cn("grid min-w-0 grid-cols-1 content-start gap-2", className)} {...props} />;
 }
 
 function FieldLabel({ className, ...props }: React.ComponentProps<"label">) {

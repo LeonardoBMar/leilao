@@ -3,6 +3,10 @@ import type { NextConfig } from "next";
 // Decisões registradas em docs/ARCHITECTURE.md (seção "Registro de decisões").
 
 const isDev = process.env.NODE_ENV === "development";
+// Login desligado é só para `npm run dev:local` (D-31). Na Vercel a variável só pode estar lá por engano: o build falha.
+if (process.env.VERCEL && process.env.DEV_AUTH_BYPASS) {
+  throw new Error("DEV_AUTH_BYPASS não pode existir na Vercel (D-31). Remova a variável do projeto.");
+}
 const supabaseOrigin = process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin : "";
 // Fotos dos anúncios coletados vêm direto da fonte, sem cópia no Storage (D-29). Uma origem por fonte.
 const listingImageOrigins = ["https://leilo.cdndp.com.br"].join(" ");

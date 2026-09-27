@@ -1,19 +1,25 @@
 import "server-only";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 
+import { devAuthUserId } from "@/lib/dev-auth";
 import { err, ok, type Result } from "@/lib/result";
 
 import { createSupabaseServerClient } from "./supabase";
 
-export type SessionUser = { id: string; email: string | null };
+/** `devBypass`: sessão assumida sem login no desenvolvimento local (D-31). */
+export type SessionUser = { id: string; email: string | null; devBypass?: true };
 
 /**
  * Usuário da sessão, validado uma vez por requisição. `getClaims()` verifica a assinatura do JWT
  * (nunca confiar em `getSession()` no servidor). Lê cookies: chamar dentro de <Suspense>.
  */
 export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
+  const devUserId = devAuthUserId(process.env, (await headers()).get("host"));
+  if (devUserId) return { id: devUserId, email: null, devBypass: true };
+
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.getClaims();
   if (error || !data) return null;

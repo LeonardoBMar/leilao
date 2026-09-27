@@ -1,6 +1,6 @@
 import { LogOut } from "lucide-react";
 
-import { Button } from "@/components/ui";
+import { Badge, Button } from "@/components/ui";
 import { requireUser } from "@/server/auth";
 
 import { logoutAction } from "../actions";
@@ -11,6 +11,11 @@ export async function UserMenu() {
 
   return (
     <div className="grid gap-2">
+      {user.devBypass ? (
+        <Badge variant="warning" className="mx-3 justify-self-start">
+          Modo dev: login desligado
+        </Badge>
+      ) : null}
       <p className="truncate px-3 text-caption text-muted" title={user.email ?? undefined}>
         {user.email ?? "Conta"}
       </p>
