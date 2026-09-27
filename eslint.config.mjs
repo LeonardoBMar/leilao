@@ -71,5 +71,14 @@ export default defineConfig([
     files: ["src/domain/**"],
     rules: { "no-restricted-imports": ["error", { patterns: [dbImports, frameworkImports] }] },
   },
-  globalIgnores([".next/**", "out/**", "build/**", "coverage/**", "next-env.d.ts", "src/generated/**"]),
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "build/**",
+    "coverage/**",
+    "next-env.d.ts",
+    "src/generated/**",
+    "tests/e2e/.report/**",
+    "tests/e2e/.results/**",
+  ]),
 ]);
