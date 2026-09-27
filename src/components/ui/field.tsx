@@ -1,7 +1,9 @@
 import { cn } from "@/lib/utils";
 
 function Field({ className, ...props }: React.ComponentProps<"div">) {
-  return <div className={cn("grid gap-2", className)} {...props} />;
+  // content-start: em grids de formulário o campo é esticado até a altura do vizinho (ex.: vizinho com
+  // texto de ajuda). Sem isso, as linhas internas esticam e label/controle descem, desalinhando a linha.
+  return <div className={cn("grid content-start gap-2", className)} {...props} />;
 }
 
 function FieldLabel({ className, ...props }: React.ComponentProps<"label">) {
