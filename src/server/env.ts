@@ -5,8 +5,6 @@ import { z } from "zod";
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   DATABASE_URL: z.url(),
-  NEXT_PUBLIC_SUPABASE_URL: z.url(),
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
 });
 
 function parseEnv() {
@@ -19,5 +17,5 @@ function parseEnv() {
   return parsed.data;
 }
 
-/** Única fonte de variáveis de ambiente no servidor. */
+/** Única fonte de variáveis secretas no servidor. Variáveis públicas: `@/lib/public-env`. */
 export const env = parseEnv();

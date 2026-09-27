@@ -96,11 +96,12 @@ src/
     finance/                      # calculadora (SPEC §7), versionada por FORMULA_VERSION
   server/
     db.ts                         # PrismaClient singleton
-    auth.ts                       # getCurrentUser / requireUser (DAL de sessão)
-    env.ts                        # process.env validado por Zod
+    auth.ts                       # getCurrentUser / requireUser / signIn / signOut (DAL de sessão)
+    supabase.ts                   # cliente Supabase do servidor (cookies)
+    env.ts                        # variáveis secretas validadas por Zod
     storage.ts                    # URLs assinadas
   lib/
-    utils.ts  format.ts  action-state.ts  result.ts  schemas.ts
+    utils.ts  format.ts  action-state.ts  result.ts  schemas.ts  public-env.ts
 prisma/
   schema.prisma
   migrations/
@@ -158,8 +159,8 @@ export default function AuctionsPage() {
 
 | Onde | O que faz | É barreira de segurança? |
 | --- | --- | --- |
-| `src/proxy.ts` | Renova os cookies da sessão Supabase. Redireciona para `/login` quem não tem cookie de sessão e para `/dashboard` quem já está logado em `/login`. Não acessa o banco. | Não (otimista) |
-| `src/server/auth.ts` | `getCurrentUser()` valida a sessão no Supabase Auth, com memo por request via `React.cache`. `requireUser()` redireciona para `/login` quando não há usuário. | **Sim** |
+| `src/proxy.ts` | Renova a sessão Supabase com `getClaims()` (padrão oficial `@supabase/ssr`). Redireciona para `/login?next=<rota>` quem não tem sessão e para `/dashboard` quem já está logado em `/login`, preservando os cookies renovados no redirect. Não acessa o banco. | Não (otimista) |
+| `src/server/auth.ts` | `getCurrentUser()` valida o JWT com `supabase.auth.getClaims()` (assinatura verificada; **nunca** `getSession()` no servidor), com memo por request via `React.cache`. `requireUser()` redireciona para `/login` quando não há usuário. Login e logout também ficam aqui e retornam `Result`. | **Sim** |
 | `queries.ts` / `mutations.ts` | Chamam `requireUser()` e filtram **toda** consulta por `ownerId: user.id`. | **Sim** |
 | `actions.ts` | Delegam à mutation, que já autentica. Nunca confiam em ids de dono vindos do cliente. | Via mutation |
 | Layouts | Não fazem checagem de auth, porque não re-renderizam em toda navegação. | Não |
@@ -280,7 +281,7 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
 
 **Ambiente**
 
-- `src/server/env.ts` valida `process.env` com Zod na primeira importação e é a única fonte de variáveis no servidor. Só `NEXT_PUBLIC_*` pode ser lida no cliente.
+- `src/server/env.ts` (server-only) valida as variáveis **secretas** com Zod na primeira importação. `src/lib/public-env.ts` valida as **públicas** (`NEXT_PUBLIC_*`, lidas pelo nome literal para o Next embutir no bundle), usadas pelo proxy e pelos clientes Supabase. Nenhum outro arquivo lê `process.env`.
 - `.env.example` lista todas as variáveis, e `.env*` é ignorado pelo Git.
 
 **Ferramentas e scripts**
@@ -330,13 +331,14 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
 | D-15 | Centavos em `integer` (int4), não `bigint` | O teto de R$ 21 milhões por valor cobre veículos com folga, e o Prisma mapeia `Int` para `number`, compatível com `Cents`. `BigInt` viraria `bigint` no JS e exigiria conversão em toda leitura. | `bigint` / `Decimal` |
 | D-16 | Integridade no banco: FKs compostas `(id, owner_id)`, índices únicos parciais, CHECKs e triggers de imutabilidade | O SPEC §8 exige relações do mesmo dono, um rascunho por lote e análises e resultados imutáveis. O banco garante isso mesmo se a aplicação falhar. CHECKs, triggers e RLS ficam no SQL da migration, porque o Prisma não os modela. | Validar só na aplicação |
 | D-17 | Sem API JSON própria no MVP; contrato da futura API definido em §17 | A tela usa a DAL direto (recomendação do Next). A separação está no código (`domain` e DAL devolvem DTOs serializáveis), então a API vira um adaptador fino quando houver consumidor externo. | API JSON consumida pela própria tela; backend separado |
+| D-18 | Supabase Auth com `@supabase/ssr` 0.12 + `getClaims()`, Node ≥ 22 | Padrão do guia oficial de Next.js (o SDK `@supabase/server` é genérico). `getClaims()` verifica a assinatura do JWT localmente com chaves assimétricas. As bibliotecas Supabase JS deixaram de suportar Node 20 em 30/06/2026. | `getSession()` no servidor; `getUser()` em toda requisição; `@supabase/server` |
 
 ## 16. Pendências da fundação
 
 1. Inicializar o repositório Git e fazer o primeiro commit.
 2. ~~Criar o projeto Supabase e preencher `.env.local`~~ (feito; conexões testadas).
-3. ~~Prisma, `src/server/env.ts`, `src/server/db.ts`, modelos e migration inicial~~ (feito). Falta: `@supabase/ssr`, `src/server/{auth,storage}.ts` e `src/proxy.ts`.
-4. Criar `(auth)/login` e a casca `(private)`, e remover a vitrine `component-showcase.tsx` da rota `/`.
+3. ~~Prisma, `src/server/env.ts`, `src/server/db.ts`, modelos e migration inicial~~ (feito).
+4. ~~Autenticação: `src/server/{supabase,auth}.ts`, `src/proxy.ts`, `/login`, casca `(private)` e dashboard com contagens~~ (feito; a vitrine de componentes foi para `/componentes`). Falta: `src/server/storage.ts` (junto com as fotos).
 5. Configurar Playwright para o fluxo E2E quando a primeira feature estiver pronta.
 
 ## 17. Contrato da API JSON (futuro)

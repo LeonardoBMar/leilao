@@ -317,31 +317,21 @@ export function calculateMaxBid(input: Partial<MaxBidInput>): MaxBidOutcome {
 
 Com `<regra>.test.ts` ao lado, cobrindo os exemplos do SPEC e as bordas.
 
-## 11. Infraestrutura — `src/server/*.ts`
+## 11. Infraestrutura e sessão — `src/server/*.ts`
 
-```ts
-// src/server/auth.ts: forma esperada
-import "server-only";
+Já implementados; use, não recrie:
 
-import { redirect } from "next/navigation";
-import { cache } from "react";
-
-export type SessionUser = { id: string; email: string };
-
-/** Valida a sessão uma vez por request. `null` se não houver sessão válida. */
-export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
-  // Supabase: cliente de servidor com cookies() + auth.getUser() / getClaims()
-});
-
-export async function requireUser(): Promise<SessionUser> {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
-  return user;
-}
-```
+| Módulo | Uso |
+| --- | --- |
+| `@/server/auth` | `requireUser()` na primeira linha de toda query/mutation; `getCurrentUser()` quando a ausência de sessão não deve redirecionar |
+| `@/server/db` | `db` (Prisma) e `isUniqueViolation(error)`; só em `queries.ts`/`mutations.ts` |
+| `@/server/supabase` | `createSupabaseServerClient()` para Auth/Storage; criar por chamada, nunca em variável de módulo |
+| `@/server/env` | Variáveis secretas validadas |
+| `@/lib/public-env` | `NEXT_PUBLIC_*` validadas (seguro no cliente) |
 
 - Todo arquivo de `src/server` começa com `import "server-only"`.
-- `process.env` só é lido em `src/server/env.ts`, validado por Zod. Os demais importam `env` de lá.
+- Identidade só por `getClaims()`. **Nunca** use `supabase.auth.getSession()` no servidor para decidir acesso.
+- Componente que lê a sessão (direta ou indiretamente) fica dentro de `<Suspense>`.
 
 ## 12. Mudança de schema (migration)
 
@@ -351,7 +341,7 @@ export async function requireUser(): Promise<SessionUser> {
    - CHECKs das regras do SPEC;
    - triggers;
    - para **toda tabela nova**: `ALTER TABLE ... ENABLE ROW LEVEL SECURITY;` e `REVOKE ALL ON TABLE ... FROM anon, authenticated;` (D-14).
-4. `npx prisma migrate dev` para aplicar e gerar o client.
+4. `npm run db:migrate` para aplicar e gerar o client (no Prisma 7, `migrate dev` sozinho **não** roda `generate`).
 5. Verifique drift: `npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code` deve sair com 0.
 6. Rode `npm run check` e atualize DTOs, queries e mutations afetados.
 
