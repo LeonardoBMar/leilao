@@ -142,7 +142,13 @@ function GalleryItem({ image, isFirst, isLast }: { image: LotImageItem; isFirst:
     <li className="grid gap-2" aria-busy={isPending || undefined}>
       <div className="relative aspect-square overflow-hidden rounded-md border border-border bg-surface-subtle">
         {image.url ? (
-          <a href={image.url} target="_blank" rel="noopener noreferrer" aria-label={`Abrir ${image.originalFilename}`}>
+          <a
+            href={image.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Abrir ${image.originalFilename}`}
+            className="absolute inset-0"
+          >
             {/* URL assinada e temporária: sem otimização do Next (cada URL é única). */}
             <Image
               src={image.url}
