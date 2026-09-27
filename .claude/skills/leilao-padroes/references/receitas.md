@@ -215,6 +215,10 @@ export function AuctionForm({ action, auction }: AuctionFormProps) {
 
 Uso num Server Component: `<AuctionForm action={updateAuctionAction.bind(null, auction.id)} auction={auction} />`.
 
+- **Dois botões no mesmo formulário** (ex.: "Salvar rascunho" e "Fixar análise"): `<Button type="submit" name="intent" value="draft">`. O React 19 inclui o botão acionado no `FormData`, e o schema lê `intent: z.enum([...]).catch("draft")`.
+- **Confirmação irreversível em `Dialog`:** o diálogo é renderizado em portal, fora do `<form>`. O botão de confirmar usa `form={formId}` (com `useId()`) mais `name`/`value`, e o diálogo fecha no próprio `onClick`. **Não** feche diálogo com `setState` dentro de `useEffect`: o lint do React Compiler barra.
+- **Prévia ao vivo sem controlar cada campo:** `onInput` no `<form>` → `new FormData(form)` → leitura leniente (inválido vira pendente) → função de `src/domain`. O servidor valida com Zod e recalcula (ex.: `features/analyses/read-inputs.ts`).
+
 - `defaultValue` (não controlado) + `fieldValue` para restaurar o que foi digitado após erro.
 - `loading={pending}` desde o primeiro render (contrato do `Button`).
 - Um componente controlado com `useState` só se justifica quando há prévia em tempo real, como a calculadora. Nesse caso a prévia importa a função de `src/domain`, e o servidor recalcula ao salvar.

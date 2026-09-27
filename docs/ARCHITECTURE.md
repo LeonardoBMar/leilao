@@ -344,7 +344,9 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
 2. ~~Criar o projeto Supabase e preencher `.env.local`~~ (feito; conexões testadas).
 3. ~~Prisma, `src/server/env.ts`, `src/server/db.ts`, modelos e migration inicial~~ (feito).
 4. ~~Autenticação: `src/server/{supabase,auth}.ts`, `src/proxy.ts`, `/login`, casca `(private)` e dashboard com contagens~~ (feito; a vitrine de componentes foi para `/componentes`). Falta: `src/server/storage.ts` (junto com as fotos).
-5. Configurar Playwright para o fluxo E2E quando a primeira feature estiver pronta.
+5. Configurar Playwright para o fluxo E2E (login → leilão → lote → análise fixada → resultado).
+
+**Features entregues:** autenticação, leilões (RF-01), lotes (RF-02/03), análise financeira (RF-04/05) e arquivamento (RF-08). **Próximas:** resultados (RF-06), dashboard completo, fotos (RF-07).
 
 ## 17. Contrato da API JSON (futuro)
 

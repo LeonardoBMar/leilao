@@ -1,4 +1,4 @@
-import { Calculator, ExternalLink, ImageOff, Pencil, Trophy } from "lucide-react";
+import { ExternalLink, ImageOff, Pencil, Trophy } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -29,7 +29,13 @@ import { LotActions } from "./lot-actions";
 const integer = new Intl.NumberFormat("pt-BR");
 
 /** Ficha do lote (SPEC `/lotes/[id]`, DESIGN.md §15.3). Valores observados e limite antes das notas. */
-export async function LotDetailView({ params }: { params: Promise<{ id: string }> }) {
+type LotDetailViewProps = {
+  params: Promise<{ id: string }>;
+  /** Bloco de análise, composto pela rota (a feature de análises não é importada aqui). */
+  analysis: React.ReactNode;
+};
+
+export async function LotDetailView({ params, analysis }: LotDetailViewProps) {
   const parsed = lotIdSchema.safeParse((await params).id);
   if (!parsed.success) notFound();
   const lot = await getLot(parsed.data);
@@ -124,23 +130,7 @@ export async function LotDetailView({ params }: { params: Promise<{ id: string }
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Análise financeira</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {/* Criação, rascunho e versões fixadas entram com a feature de análises (RF-04, RF-05). */}
-              <EmptyState
-                icon={Calculator}
-                title={
-                  lot.fixedAnalysisCount === 0
-                    ? "Nenhuma análise fixada"
-                    : `${lot.fixedAnalysisCount} análise(s) fixada(s)`
-                }
-                description="A análise financeira será a próxima etapa."
-              />
-            </CardContent>
-          </Card>
+          {analysis}
 
           <Card>
             <CardHeader>

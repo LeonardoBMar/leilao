@@ -71,3 +71,29 @@ export function addDays(value: string, days: number): string | null {
   const date = new Date(Date.UTC(year ?? 0, (month ?? 1) - 1, (day ?? 1) + days));
   return date.toISOString().slice(0, 10);
 }
+
+const LOCAL_MONTH = /^(\d{4})-(\d{2})$/;
+
+/** "YYYY-MM-DD" → meia-noite UTC, para colunas `date`. `null` se inválida. */
+export function calendarDateToUtc(value: string): Date | null {
+  const match = LOCAL_DATE.exec(value);
+  if (!match) return null;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString().slice(0, 10) === value ? date : null;
+}
+
+/** "YYYY-MM" (input type="month") → primeiro dia do mês, meia-noite UTC. */
+export function monthToUtc(value: string): Date | null {
+  return LOCAL_MONTH.test(value) ? calendarDateToUtc(`${value}-01`) : null;
+}
+
+/** Coluna `date` → "YYYY-MM-DD" para `<input type="date">`. */
+export function toCalendarDateInput(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+/** Coluna `date` → "YYYY-MM" para `<input type="month">`. */
+export function toMonthInput(date: Date): string {
+  return date.toISOString().slice(0, 7);
+}
