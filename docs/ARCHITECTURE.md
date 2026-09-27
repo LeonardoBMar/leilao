@@ -6,7 +6,7 @@
 
 ## 1. Princípios
 
-1. **O servidor é a fonte da verdade.** Dados são lidos em Server Components e alterados por Server Actions. Não há API REST própria nem estado global de dados no cliente.
+1. **O servidor é a fonte da verdade.** Dados são lidos em Server Components e alterados por Server Actions. Não há API REST própria nem estado global de dados no cliente. A API JSON para consumidores externos já tem contrato definido (§17) e só será implementada quando houver consumidor.
 2. **Regras de negócio são código puro.** Cálculo financeiro, elegibilidade e comparação ficam em `src/domain`, sem React, Next ou banco. Por isso são fáceis de testar e rodam tanto no servidor quanto na prévia do navegador.
 3. **Segurança perto do dado.** Toda leitura e escrita passa pela Data Access Layer (DAL), que autentica, filtra por `owner_id` e devolve DTOs mínimos. Proxy e UI são só conveniência.
 4. **Erros esperados são valores; erros inesperados são exceções.**
@@ -329,6 +329,7 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
 | D-14 | RLS ligado sem políticas + `REVOKE` para `anon`/`authenticated` em todas as tabelas | O schema `public` é exposto pela Data API e a chave publicável é pública. Assim o único caminho até os dados é o servidor. | Políticas RLS por usuário (duplicariam a DAL) ou schema privado |
 | D-15 | Centavos em `integer` (int4), não `bigint` | O teto de R$ 21 milhões por valor cobre veículos com folga, e o Prisma mapeia `Int` para `number`, compatível com `Cents`. `BigInt` viraria `bigint` no JS e exigiria conversão em toda leitura. | `bigint` / `Decimal` |
 | D-16 | Integridade no banco: FKs compostas `(id, owner_id)`, índices únicos parciais, CHECKs e triggers de imutabilidade | O SPEC §8 exige relações do mesmo dono, um rascunho por lote e análises e resultados imutáveis. O banco garante isso mesmo se a aplicação falhar. CHECKs, triggers e RLS ficam no SQL da migration, porque o Prisma não os modela. | Validar só na aplicação |
+| D-17 | Sem API JSON própria no MVP; contrato da futura API definido em §17 | A tela usa a DAL direto (recomendação do Next). A separação está no código (`domain` e DAL devolvem DTOs serializáveis), então a API vira um adaptador fino quando houver consumidor externo. | API JSON consumida pela própria tela; backend separado |
 
 ## 16. Pendências da fundação
 
@@ -337,3 +338,89 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
 3. ~~Prisma, `src/server/env.ts`, `src/server/db.ts`, modelos e migration inicial~~ (feito). Falta: `@supabase/ssr`, `src/server/{auth,storage}.ts` e `src/proxy.ts`.
 4. Criar `(auth)/login` e a casca `(private)`, e remover a vitrine `component-showcase.tsx` da rota `/`.
 5. Configurar Playwright para o fluxo E2E quando a primeira feature estiver pronta.
+
+## 17. Contrato da API JSON (futuro)
+
+> **Status:** definido, **não implementado** (D-17). Implementar só quando houver um consumidor fora da tela: app mobile, script, integração ou automação. Mudanças neste contrato entram no registro de decisões.
+
+### Princípios
+
+- **Adaptador fino.** Cada rota faz parse da entrada com o schema Zod da feature, chama `queries.ts`/`mutations.ts`, converte `Result` em resposta HTTP e devolve o DTO de `types.ts`. Não há regra de negócio nem acesso ao Prisma na rota.
+- **Mesmas garantias da tela.** A rota usa o mesmo `requireUser()`, o mesmo filtro por `ownerId` e as mesmas validações. A API não é caminho alternativo com menos regras.
+- **A tela não consome a API.** Ela usa a DAL direto, porque buscar a própria API cria volta HTTP extra (guia *Backend for Frontend*, seção *Caveats*).
+
+### Localização e recursos
+
+- Rotas em `src/app/api/v1/<recurso>/route.ts` e `src/app/api/v1/<recurso>/[id]/route.ts`.
+- Recursos no plural, em inglês e kebab-case, igual aos identificadores de código: `/api/v1/auctions`, `/api/v1/lots`, `/api/v1/lots/{id}/analyses`, `/api/v1/lots/{id}/results`, `/api/v1/lots/{id}/images`.
+
+| Método | Uso | Sucesso |
+| --- | --- | --- |
+| `GET /recurso` | Lista paginada | `200` |
+| `GET /recurso/{id}` | Detalhe | `200` |
+| `POST /recurso` | Criação | `201` + cabeçalho `Location` |
+| `PATCH /recurso/{id}` | Atualização parcial | `200` |
+| `DELETE /recurso/{id}` | Exclusão, só quando o RF-08 permite | `204` |
+| `POST /recurso/{id}/<acao>` | Ação de domínio, ex.: `POST /lots/{id}/analyses/{analysisId}/fix`, `POST /auctions/{id}/archive` | `200` |
+
+- **Resultados só recebem `POST`.** Cada chamada cria uma nova revisão (correção). Não há `PATCH`, `PUT` ou `DELETE` em resultado nem em análise fixada, igual ao banco (D-16).
+
+### Formato das respostas
+
+```jsonc
+// Sucesso (item)
+{ "data": { "id": "0199…", "name": "Leilão Detran SP", "startsAt": "2026-10-02T13:00:00.000Z" } }
+
+// Sucesso (lista)
+{ "data": [ { … } ], "meta": { "page": 1, "pageSize": 25, "total": 142 } }
+
+// Erro
+{ "error": { "code": "validation_failed", "message": "Revise os campos destacados.", "fields": { "name": ["Informe o nome do leilão."] } } }
+```
+
+- Sempre `Content-Type: application/json; charset=utf-8`. Nunca devolver array ou valor solto na raiz.
+- **`code`** é estável, em `snake_case` e em inglês, para máquinas. **`message`** fica em pt-BR, para pessoas. **`fields`** só aparece em `validation_failed`.
+- **Os códigos de negócio são os mesmos** das uniões de erro das mutations (`Result`). Um código novo na mutation é um código novo na API.
+
+### Códigos HTTP
+
+| Status | `code` | Quando |
+| --- | --- | --- |
+| `400` | `invalid_request` | JSON malformado, `Content-Type` errado, parâmetro de URL inválido |
+| `401` | `unauthenticated` | Sem token ou token inválido/expirado |
+| `404` | `not_found` | Não existe **ou é de outro dono** (nunca `403`, para não revelar existência) |
+| `405` | `method_not_allowed` | Método não suportado pela rota |
+| `409` | `duplicate_lot_number`, `analysis_already_fixed`, `draft_already_exists`… | Conflito com regra de negócio |
+| `413` | `payload_too_large` | Corpo acima do limite |
+| `422` | `validation_failed` | Entrada bem formada, mas inválida pelo schema Zod |
+| `429` | `rate_limited` | Limite de requisições atingido (com `Retry-After`) |
+| `500` | `internal_error` | Falha inesperada. Mensagem genérica, sem stack nem SQL; o detalhe só vai para o log. |
+
+### Serialização (igual aos DTOs)
+
+- Campos em `camelCase`. Ausência de valor é `null` explícito; campos não são omitidos.
+- **Dinheiro** em centavos inteiros com sufixo `Cents` (`maxBidCents: 3320000`). A API nunca devolve reais formatados nem número decimal.
+- **Percentuais** em pontos-base inteiros com sufixo `Bps` (`commissionRateBps: 500`).
+- **Data e hora** em ISO 8601 UTC com `Z` (`2026-10-02T13:00:00.000Z`). **Datas sem hora** em `YYYY-MM-DD`. O fuso de exibição é responsabilidade do cliente.
+- **Ids** em UUID (texto). **Enums** com os valores do banco (`"sold"`, `"bid_not_won"`).
+
+### Listas
+
+- **Paginação:** `?page=1&pageSize=25` (padrão 25, máximo 100).
+- **Ordenação:** `?sort=startsAt:asc` (campos permitidos definidos por recurso).
+- **Filtros** por query string, validados pelo schema de filtros da feature. Valor inválido gera `400`, diferente da tela, onde vira o padrão.
+
+### Autenticação e segurança
+
+- **Autenticação:** `Authorization: Bearer <access token do Supabase Auth>`. A API **não aceita cookie de sessão**, o que elimina CSRF. `requireUser()` passa a resolver o usuário pelo token quando a rota for de API.
+- **CORS** fechado por padrão, com lista explícita de origens apenas se houver cliente web externo.
+- **Escrita** exige `Content-Type: application/json`, com limite de corpo por rota. Upload de foto continua por URL assinada (D-11), nunca pelo corpo da API.
+- **Rate limit** por usuário nas rotas de escrita.
+- **Idempotência:** `POST` aceita `Idempotency-Key`, a avaliar quando existir cliente com retentativa automática.
+- **Logs** sem corpo de requisição, token ou dado pessoal.
+
+### Versionamento e documentação
+
+- **Prefixo `/api/v1`.** Adicionar campo ou rota não quebra o contrato. Remover ou renomear campo, mudar tipo ou semântica exige `/api/v2`, com a `v1` mantida durante a transição.
+- **Especificação OpenAPI gerada dos schemas Zod** (`z.toJSONSchema`) e dos tipos de `types.ts`, publicada junto da API. Não é mantida à mão.
+- **Testes de contrato** por rota: status, envelope, códigos de erro e isolamento por dono (usuário A não acessa dado de B).

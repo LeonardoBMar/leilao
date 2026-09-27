@@ -55,5 +55,5 @@ Versão instalada: **16.3.x** com Turbopack, `cacheComponents`, `typedRoutes` e 
 - **Provider global** (`src/app/providers.tsx`) só para o que é realmente global (tooltip, toaster). Dados não vão em contexto global.
 - **`<Link>` para navegação interna**, sem `<a href>`. `router.push` apenas em resposta a evento do cliente.
 - **`next/image` para imagens** e `next/font` para fontes (já configurado no layout raiz).
-- **Route Handlers** (`route.ts`) só para necessidade concreta: webhook ou download de arquivo. Seguem a mesma DAL e autenticação.
+- **Route Handlers** (`route.ts`) só para necessidade concreta: webhook, download de arquivo ou a API JSON. Seguem a mesma DAL e autenticação. A API JSON segue **exatamente** o contrato de `docs/ARCHITECTURE.md` §17 (envelope, códigos de erro, serialização). A tela nunca consome a própria API: ela usa a DAL direto (D-17).
 - **Verificação em runtime:** o `next dev` escreve a URL em `.next/dev/lock` e encaminha erros do navegador para o terminal. O MCP de dev fica em `/_next/mcp`.
