@@ -6,7 +6,7 @@ import { compareResult, limitIndicator } from "@/domain/results/results";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
 
-import type { DashboardSummary } from "./types";
+import type { DashboardSummary, PendingItems } from "./types";
 
 export async function getDashboardSummary(): Promise<DashboardSummary> {
   const user = await requireUser();
@@ -51,4 +51,63 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
   );
 
   return { activeAuctions, activeLots, followedLotsWithoutResult, analyzedLots, indicator };
+}
+
+const PENDING_LIMIT = 5;
+
+/**
+ * Pendências do dashboard: rascunhos de análise abertos e lotes acompanhados cujo leilão já começou e ainda não
+ * têm resultado. Só registros ativos.
+ */
+export async function getPendingItems(): Promise<PendingItems> {
+  const user = await requireUser();
+  const activeLot = { archivedAt: null, auction: { archivedAt: null } };
+
+  const [drafts, awaiting] = await Promise.all([
+    db.analysis.findMany({
+      where: { ownerId: user.id, status: "draft", lot: activeLot },
+      orderBy: { updatedAt: "desc" },
+      take: PENDING_LIMIT,
+      select: {
+        id: true,
+        version: true,
+        updatedAt: true,
+        lot: { select: { id: true, lotNumber: true, brand: true, model: true } },
+      },
+    }),
+    db.lot.findMany({
+      where: {
+        ownerId: user.id,
+        ...activeLot,
+        isFollowed: true,
+        results: { none: {} },
+        auction: { archivedAt: null, startsAt: { lt: new Date() } },
+      },
+      orderBy: { auction: { startsAt: "asc" } },
+      take: PENDING_LIMIT,
+      select: {
+        id: true,
+        lotNumber: true,
+        brand: true,
+        model: true,
+        auction: { select: { name: true, startsAt: true } },
+      },
+    }),
+  ]);
+
+  return {
+    drafts: drafts.map(({ id, version, updatedAt, lot }) => ({
+      analysisId: id,
+      version,
+      lotId: lot.id,
+      lotLabel: `Lote ${lot.lotNumber} · ${lot.brand} ${lot.model}`,
+      updatedAt,
+    })),
+    awaitingResult: awaiting.map((lot) => ({
+      lotId: lot.id,
+      lotLabel: `Lote ${lot.lotNumber} · ${lot.brand} ${lot.model}`,
+      auctionName: lot.auction.name,
+      startsAt: lot.auction.startsAt,
+    })),
+  };
 }

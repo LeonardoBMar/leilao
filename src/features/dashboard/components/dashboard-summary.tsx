@@ -1,6 +1,6 @@
-import { Gavel, Target } from "lucide-react";
+import { Target } from "lucide-react";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, EmptyState, Skeleton } from "@/components/ui";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Skeleton } from "@/components/ui";
 
 import { getDashboardSummary } from "../queries";
 import type { DashboardSummary as Summary } from "../types";
@@ -18,7 +18,7 @@ export async function DashboardSummary() {
   const summary = await getDashboardSummary();
 
   return (
-    <div className="grid gap-10 lg:gap-12">
+    <div className="grid gap-6">
       <section aria-label="Resumo" className={GRID}>
         {METRICS.map(({ key, label, hint }) => (
           <Card key={key}>
@@ -31,13 +31,6 @@ export async function DashboardSummary() {
         ))}
       </section>
       <LimitIndicator indicator={summary.indicator} />
-      {summary.activeAuctions === 0 ? (
-        <EmptyState
-          icon={Gavel}
-          title="Nenhum leilão cadastrado"
-          description="Cadastre o primeiro leilão para começar a acompanhar lotes e registrar análises."
-        />
-      ) : null}
     </div>
   );
 }

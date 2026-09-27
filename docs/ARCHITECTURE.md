@@ -347,7 +347,7 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
 4. ~~Autenticação: `src/server/{supabase,auth}.ts`, `src/proxy.ts`, `/login`, casca `(private)` e dashboard com contagens~~ (feito; a vitrine de componentes foi para `/componentes`). Falta: `src/server/storage.ts` (junto com as fotos).
 5. Configurar Playwright para o fluxo E2E (login → leilão → lote → análise fixada → resultado).
 
-**Features entregues:** autenticação, leilões (RF-01), lotes (RF-02/03), análise financeira (RF-04/05), resultados com correções e temporalidade (RF-06, §10), indicador do dashboard e arquivamento (RF-08). **Próximas:** dashboard completo (próximos leilões, lotes acompanhados), fotos (RF-07), E2E.
+**Features entregues:** autenticação, leilões (RF-01), lotes (RF-02/03), análise financeira (RF-04/05), resultados com correções e temporalidade (RF-06, §10), dashboard completo (métricas, indicador, pendências, lotes acompanhados, próximos leilões) e arquivamento (RF-08). **Próximas:** fotos (RF-07) e E2E.
 
 ## 17. Contrato da API JSON (futuro)
 
