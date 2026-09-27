@@ -1,0 +1,344 @@
+# Receitas de arquivo
+
+Formas canônicas de cada tipo de arquivo. O exemplo usa a feature `auctions` (leilões); troque nomes e campos e mantenha a estrutura. Os módulos de infraestrutura (`@/server/db`, `@/server/auth`) aparecem como serão criados na fundação (ARCHITECTURE §16).
+
+Ordem de criação de uma feature: `schemas.ts` → `types.ts` → `mutations.ts`/`queries.ts` → `actions.ts` → `components/*` → rota em `src/app`.
+
+---
+
+## 1. `features/<f>/schemas.ts` — entrada validada
+
+```ts
+import { z } from "zod";
+
+import { entityId, optionalText, requiredText } from "@/lib/schemas";
+
+export const auctionInputSchema = z.object({
+  name: requiredText("Informe o nome do leilão."),
+  auctioneer: requiredText("Informe o leiloeiro."),
+  startsAt: z.coerce.date({ error: "Informe uma data válida." }),
+  city: optionalText(),
+  noticeUrl: z.url("Informe um link válido.").optional().or(z.literal("").transform(() => undefined)),
+});
+export type AuctionInput = z.infer<typeof auctionInputSchema>;
+
+export const auctionIdSchema = entityId();
+
+// Filtros de URL: nunca lançam; valor inválido vira padrão.
+export const auctionFiltersSchema = z.object({
+  status: z.enum(["upcoming", "finished"]).optional().catch(undefined),
+  page: z.coerce.number().int().min(1).catch(1),
+});
+```
+
+- Campos monetários usam `brlAmount()`/`optionalBrlAmount()` e já saem como `Cents`.
+- O schema descreve a **entrada do usuário**. Dono, status e campos calculados nunca entram nele.
+
+## 2. `features/<f>/types.ts` — DTOs
+
+```ts
+import type { Cents } from "@/domain/money";
+
+export type AuctionListItem = {
+  id: string;
+  name: string;
+  auctioneer: string;
+  startsAt: Date;
+  lotCount: number;
+};
+
+export type AuctionDetail = AuctionListItem & {
+  city: string | null;
+  noticeUrl: string | null;
+  totalStartingBid: Cents;
+};
+```
+
+DTO = exatamente o que a UI usa, com tipos serializáveis. Sem tipos do Prisma aqui.
+
+## 3. `features/<f>/queries.ts` — leitura (DAL)
+
+```ts
+import "server-only";
+
+import { requireUser } from "@/server/auth";
+import { db } from "@/server/db";
+
+import type { AuctionDetail, AuctionListItem } from "./types";
+
+export async function listAuctions(filters: AuctionFilters): Promise<AuctionListItem[]> {
+  const user = await requireUser();
+  const rows = await db.auction.findMany({
+    where: { ownerId: user.id, archivedAt: null /* + filtros */ },
+    orderBy: { startsAt: "asc" },
+    select: { id: true, name: true, auctioneer: true, startsAt: true, _count: { select: { lots: true } } },
+  });
+  return rows.map(({ _count, ...row }) => ({ ...row, lotCount: _count.lots }));
+}
+
+/** Devolve `null` para inexistente ou de outro dono; quem renderiza decide `notFound()`. */
+export async function getAuction(id: string): Promise<AuctionDetail | null> {
+  const user = await requireUser();
+  const row = await db.auction.findFirst({ where: { id, ownerId: user.id }, select: { /* campos do DTO */ } });
+  return row ? toAuctionDetail(row) : null;
+}
+```
+
+- `requireUser()` na primeira linha de **toda** função exportada.
+- `where` sempre com `ownerId: user.id`.
+- `select` explícito e mapeamento para DTO.
+- Consultas independentes com `Promise.all`.
+
+## 4. `features/<f>/mutations.ts` — escrita (DAL)
+
+```ts
+import "server-only";
+
+import { err, ok, type Result } from "@/lib/result";
+import { requireUser } from "@/server/auth";
+import { db, isUniqueViolation } from "@/server/db";
+
+import type { AuctionInput } from "./schemas";
+
+export type UpdateAuctionError = "not_found" | "duplicate_name";
+
+export async function updateAuction(
+  id: string,
+  input: AuctionInput,
+): Promise<Result<{ id: string }, UpdateAuctionError>> {
+  const user = await requireUser();
+  try {
+    // updateMany com ownerId: autorização e escrita na mesma consulta.
+    const { count } = await db.auction.updateMany({ where: { id, ownerId: user.id }, data: input });
+    return count === 0 ? err("not_found") : ok({ id });
+  } catch (error) {
+    if (isUniqueViolation(error)) return err("duplicate_name");
+    throw error;
+  }
+}
+```
+
+- `try/catch` só para **traduzir** erro conhecido do banco. O resto é relançado.
+- Operações com mais de uma escrita usam `db.$transaction(async (tx) => { ... })`.
+- Regra de negócio (cálculo, elegibilidade) vem de `src/domain` e nunca é reimplementada aqui.
+
+## 5. `features/<f>/actions.ts` — Server Actions
+
+```ts
+"use server";
+
+import { refresh } from "next/cache";
+import { redirect } from "next/navigation";
+
+import { type ActionState, failure, validationError } from "@/lib/action-state";
+
+import { createAuction, updateAuction, type UpdateAuctionError } from "./mutations";
+import { auctionIdSchema, auctionInputSchema } from "./schemas";
+
+const UPDATE_ERRORS = {
+  not_found: "Leilão não encontrado.",
+  duplicate_name: "Já existe um leilão com este nome.",
+} satisfies Record<UpdateAuctionError, string>;
+
+export async function createAuctionAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const parsed = auctionInputSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return validationError(parsed.error, formData);
+
+  const result = await createAuction(parsed.data);
+  if (!result.ok) return failure("Não foi possível criar o leilão.", formData);
+
+  redirect(`/leiloes/${result.value.id}`); // fora de try/catch; encerra a action
+}
+
+// Recebe o id por .bind(null, id) no componente.
+export async function updateAuctionAction(id: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+  const parsedId = auctionIdSchema.safeParse(id);
+  const parsed = auctionInputSchema.safeParse(Object.fromEntries(formData));
+  if (!parsedId.success) return failure(UPDATE_ERRORS.not_found);
+  if (!parsed.success) return validationError(parsed.error, formData);
+
+  const result = await updateAuction(parsedId.data, parsed.data);
+  if (!result.ok) return failure(UPDATE_ERRORS[result.error], formData);
+
+  refresh(); // mesma rota: re-renderiza com os dados novos na mesma resposta
+  return { status: "success", message: "Leilão atualizado." };
+}
+```
+
+- A action é um **adaptador fino**: parse → mutation → tradução do erro → `redirect`/`refresh`.
+- Mapa de mensagens com `satisfies Record<ErrorUnion, string>`. Um erro novo sem mensagem quebra a compilação.
+- Nunca retorne dados do banco. Retorne `ActionState`.
+
+## 6. `features/<f>/components/<nome>-form.tsx` — formulário
+
+```tsx
+"use client";
+
+import { useActionState } from "react";
+
+import { Alert, AlertDescription, Button, Input } from "@/components/ui";
+import { type ActionState, fieldError, fieldValue, idleState } from "@/lib/action-state";
+
+import type { AuctionDetail } from "../types";
+
+type AuctionFormProps = {
+  action: (prev: ActionState, formData: FormData) => Promise<ActionState>;
+  auction?: AuctionDetail;
+};
+
+export function AuctionForm({ action, auction }: AuctionFormProps) {
+  const [state, formAction, pending] = useActionState(action, idleState);
+
+  return (
+    <form action={formAction} className="grid gap-6">
+      {state.status === "error" && !state.fieldErrors ? (
+        <Alert variant="error">
+          <AlertDescription>{state.message}</AlertDescription>
+        </Alert>
+      ) : null}
+      <Input
+        name="name"
+        label="Nome do leilão"
+        required
+        defaultValue={fieldValue(state, "name") ?? auction?.name}
+        error={fieldError(state, "name")}
+      />
+      <Button type="submit" loading={pending} loadingLabel="Salvando…">
+        Salvar leilão
+      </Button>
+    </form>
+  );
+}
+```
+
+Uso num Server Component: `<AuctionForm action={updateAuctionAction.bind(null, auction.id)} auction={auction} />`.
+
+- `defaultValue` (não controlado) + `fieldValue` para restaurar o que foi digitado após erro.
+- `loading={pending}` desde o primeiro render (contrato do `Button`).
+- Um componente controlado com `useState` só se justifica quando há prévia em tempo real, como a calculadora. Nesse caso a prévia importa a função de `src/domain`, e o servidor recalcula ao salvar.
+
+## 7. Componente de leitura (async Server Component)
+
+```tsx
+import { notFound } from "next/navigation";
+
+import { PageHeader } from "@/components/layout/page-header";
+import { formatDateTime } from "@/lib/format";
+
+import { getAuction } from "../queries";
+import { auctionIdSchema } from "../schemas";
+
+export async function AuctionDetailView({ params }: { params: Promise<{ id: string }> }) {
+  const parsed = auctionIdSchema.safeParse((await params).id);
+  if (!parsed.success) notFound();
+
+  const auction = await getAuction(parsed.data);
+  if (!auction) notFound();
+
+  return (
+    <>
+      <PageHeader title={auction.name} description={formatDateTime(auction.startsAt)} />
+      {/* ... */}
+    </>
+  );
+}
+```
+
+## 8. Rota — `src/app/(private)/leiloes/[id]/page.tsx`
+
+```tsx
+import { Suspense } from "react";
+
+import { AuctionDetailSkeleton } from "@/features/auctions/components/auction-detail-skeleton";
+import { AuctionDetailView } from "@/features/auctions/components/auction-detail-view";
+
+export default function AuctionPage({ params }: PageProps<"/leiloes/[id]">) {
+  return (
+    <Suspense fallback={<AuctionDetailSkeleton />}>
+      <AuctionDetailView params={params} />
+    </Suspense>
+  );
+}
+```
+
+- A página **não é `async`** e não faz `await params`. Ela passa a Promise para dentro do `<Suspense>`.
+- Conteúdo estático (títulos fixos, botões de navegação) fica fora do Suspense para entrar na shell.
+- `metadata` estático por `export const metadata`. `generateMetadata` só se o título depender de dado.
+
+## 9. `loading.tsx`, `error.tsx`, `not-found.tsx`
+
+```tsx
+// error.tsx: Client Component obrigatório; `retry` re-busca e re-renderiza o segmento.
+"use client";
+
+import { useEffect } from "react";
+
+import { Alert, AlertDescription, AlertTitle, Button } from "@/components/ui";
+
+export default function PrivateError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
+
+  return (
+    <Alert variant="error">
+      <AlertTitle>Algo deu errado</AlertTitle>
+      <AlertDescription>
+        Não foi possível carregar esta página. {error.digest ? `Código: ${error.digest}` : null}
+      </AlertDescription>
+      <Button variant="secondary" onClick={() => retry()}>
+        Tentar novamente
+      </Button>
+    </Alert>
+  );
+}
+```
+
+- `loading.tsx` só quando a página inteira depende de dados. Prefira `<Suspense>` granular.
+- Para boundary em trecho específico, use `catchError` de `next/error`.
+
+## 10. Regra de domínio — `src/domain/<area>/<regra>.ts`
+
+```ts
+import { type Cents, cents } from "@/domain/money";
+
+export const FORMULA_VERSION = 1;
+
+export type MaxBidInput = { marketValue: Cents; fixedCosts: Cents /* ... */ };
+export type MaxBidOutcome =
+  | { kind: "viable"; maxBid: Cents; totalAtMaxBid: Cents; marginAtMaxBid: Cents }
+  | { kind: "not_viable" }
+  | { kind: "incomplete"; missing: (keyof MaxBidInput)[] };
+
+export function calculateMaxBid(input: Partial<MaxBidInput>): MaxBidOutcome {
+  // puro: sem Date.now(), sem I/O, sem exceção para caso esperado
+}
+```
+
+Com `<regra>.test.ts` ao lado, cobrindo os exemplos do SPEC e as bordas.
+
+## 11. Infraestrutura — `src/server/*.ts`
+
+```ts
+// src/server/auth.ts: forma esperada
+import "server-only";
+
+import { redirect } from "next/navigation";
+import { cache } from "react";
+
+export type SessionUser = { id: string; email: string };
+
+/** Valida a sessão uma vez por request. `null` se não houver sessão válida. */
+export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
+  // Supabase: cliente de servidor com cookies() + auth.getUser() / getClaims()
+});
+
+export async function requireUser(): Promise<SessionUser> {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  return user;
+}
+```
+
+- Todo arquivo de `src/server` começa com `import "server-only"`.
+- `process.env` só é lido em `src/server/env.ts`, validado por Zod. Os demais importam `env` de lá.

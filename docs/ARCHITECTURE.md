@@ -1,0 +1,332 @@
+# Leilão Tracker — System Design
+
+> Versão 1.0 • 26/09/2026 • Complementa o [`SPEC.md`](../SPEC.md) (o quê) e o [`DESIGN.md`](../DESIGN.md) (visual). Este documento define **como** o sistema é construído. Toda decisão estrutural nova entra no [Registro de decisões](#15-registro-de-decisões).
+>
+> Base técnica: Next.js 16.3 (App Router, Turbopack, Cache Components), React 19.3, TypeScript 6 e a documentação oficial em `node_modules/next/dist/docs/`.
+
+## 1. Princípios
+
+1. **O servidor é a fonte da verdade.** Dados são lidos em Server Components e alterados por Server Actions. Não há API REST própria nem estado global de dados no cliente.
+2. **Regras de negócio são código puro.** Cálculo financeiro, elegibilidade e comparação ficam em `src/domain`, sem React, Next ou banco. Por isso são fáceis de testar e rodam tanto no servidor quanto na prévia do navegador.
+3. **Segurança perto do dado.** Toda leitura e escrita passa pela Data Access Layer (DAL), que autentica, filtra por `owner_id` e devolve DTOs mínimos. Proxy e UI são só conveniência.
+4. **Erros esperados são valores; erros inesperados são exceções.**
+5. **Uma forma de fazer cada coisa.** Cada tipo de arquivo tem um padrão, com receita na skill `leilao-padroes`.
+6. **Dinheiro em centavos inteiros e datas em UTC.** A conversão para reais e para `America/Sao_Paulo` acontece só na borda (formulário e exibição).
+
+## 2. Contexto
+
+```mermaid
+flowchart LR
+    U[Usuário<br/>navegador] -->|HTML + RSC stream| N[Next.js na Vercel<br/>Server Components · Server Actions · Proxy]
+    N -->|Prisma| DB[(PostgreSQL<br/>Supabase)]
+    N -->|sessão / JWT| A[Supabase Auth]
+    N -->|URLs assinadas| S[Supabase Storage<br/>bucket privado]
+    U -->|upload direto com URL assinada| S
+```
+
+- Uso individual e privado, mas **todo registro tem `owner_id`** desde o início. Isso mantém a autorização explícita e o custo de abrir para mais usuários baixo.
+- O navegador nunca fala com o banco. Com o Supabase, fala apenas com Auth (login) e Storage (upload/download por URL assinada).
+
+## 3. Camadas e regra de dependência
+
+```mermaid
+flowchart TD
+    APP["src/app<br/>rotas: page · layout · loading · error"] --> FEAT
+    APP --> UI
+    FEAT["src/features/&lt;feature&gt;<br/>components · actions · queries · mutations · schemas"] --> DOMAIN
+    FEAT --> SERVER
+    FEAT --> UI
+    FEAT --> LIB
+    SERVER["src/server<br/>db · auth · env · storage (server-only)"] --> LIB
+    UI["src/components<br/>ui · layout"] --> LIB
+    DOMAIN["src/domain<br/>regras puras (finance, money)"]
+    LIB["src/lib<br/>utilitários puros compartilhados"] --> DOMAIN
+```
+
+As setas indicam "pode importar". Não existe seta no sentido contrário.
+
+| Camada | Responsabilidade | Pode importar | Nunca |
+| --- | --- | --- | --- |
+| `src/app` | Roteamento e composição da página. Lê `params`/`searchParams`, delega à feature e define `<Suspense>`/boundaries. | features, components, lib | Prisma, regra de negócio, `fetch` direto |
+| `src/features/<f>` | Uma fatia do produto: leilões, lotes, análises, resultados, dashboard. | domain, server, components, lib, `@/features/<outra>/queries` | UI de outra feature por caminho interno |
+| `src/domain` | Regras puras e tipos de domínio (`Cents`, calculadora, elegibilidade). | apenas `src/domain` | React, Next, Prisma, `process.env`, `Date.now()` implícito |
+| `src/server` | Infraestrutura server-only: cliente Prisma, sessão, env validado, Storage. | lib, domain | componentes, features |
+| `src/components` | Primitivas visuais (`ui`) e casca (`layout`), sem conhecer o domínio. | lib | features, server |
+| `src/lib` | Utilitários puros: `cn`, formatação, `ActionState`, `Result`. | domain (tipos) | server, features |
+
+As fronteiras são **verificadas por ferramenta**:
+
+- `import "server-only"` em todo arquivo de `src/server` e em `queries.ts`/`mutations.ts`. Importá-los no cliente quebra o build.
+- ESLint `no-restricted-imports` (`eslint.config.mjs`):
+  - Prisma/`@/server/db` só em `src/server/**`, `queries.ts` e `mutations.ts`.
+  - `src/domain` não importa framework nem outras camadas.
+
+## 4. Estrutura de pastas
+
+```text
+src/
+  app/
+    layout.tsx                    # raiz: fontes, <html lang="pt-BR">, Providers
+    (auth)/login/page.tsx
+    (private)/
+      layout.tsx                  # casca autenticada (nav); sessão lida dentro de <Suspense>
+      dashboard/page.tsx
+      leiloes/page.tsx
+      leiloes/[id]/page.tsx
+      lotes/[id]/page.tsx
+      analise/[id]/page.tsx
+      error.tsx                   # boundary da área privada
+    not-found.tsx
+    global-error.tsx
+  proxy.ts                        # renovação da sessão Supabase + redirecionamento otimista
+  components/
+    ui/                           # primitivas (ver DESIGN.md e components/ui/README.md)
+    layout/                       # PageHeader, AppShell, navegação
+  features/
+    auctions/
+      components/                 # auction-form.tsx, auction-list.tsx, ...
+      actions.ts                  # "use server" — adaptadores finos
+      queries.ts                  # server-only — leituras → DTO
+      mutations.ts                # server-only — escritas, autorização, transações
+      schemas.ts                  # Zod: entrada de formulário (compartilhado cliente/servidor)
+      types.ts                    # DTOs expostos à UI
+    lots/ analyses/ results/ dashboard/
+  domain/
+    money.ts                      # Cents, parseBRL, roundCents
+    finance/                      # calculadora (SPEC §7), versionada por FORMULA_VERSION
+  server/
+    db.ts                         # PrismaClient singleton
+    auth.ts                       # getCurrentUser / requireUser (DAL de sessão)
+    env.ts                        # process.env validado por Zod
+    storage.ts                    # URLs assinadas
+  lib/
+    utils.ts  format.ts  action-state.ts  result.ts  schemas.ts
+prisma/
+  schema.prisma
+  migrations/
+tests/
+  e2e/                            # Playwright (fluxos completos)
+  stubs/                          # substitutos para ambiente de teste
+```
+
+**Regras de nomes**
+
+- Arquivos e pastas em `kebab-case`. Componentes em `PascalCase`. Funções e variáveis em `camelCase`. Constantes de módulo em `SCREAMING_SNAKE_CASE`.
+- Identificadores, tipos e comentários de código em **inglês**. Textos da interface, mensagens de erro ao usuário e documentação em **português do Brasil**.
+  - Glossário: leilão = `auction`, lote = `lot`, análise = `analysis`, resultado = `result`, lance = `bid`, comissão = `commission`, margem = `margin`.
+- As URLs seguem o português do SPEC (`/leiloes`, `/lotes`, `/analise`), e as pastas de feature usam o inglês.
+- Server Actions terminam em `Action` (`createAuctionAction`). O plugin TypeScript do Next só aceita props de função com nome `action` ou terminadas em `Action` em Client Components.
+- Schemas Zod terminam em `Schema` (`auctionInputSchema`), com o tipo inferido correspondente (`AuctionInput`).
+- DTOs descrevem o uso: `AuctionListItem`, `LotDetail`, `AnalysisSnapshot`.
+- **Named exports sempre.** Default export só onde o Next exige (`page`, `layout`, `error`, `proxy` etc.).
+
+## 5. Renderização e cache (Cache Components)
+
+`cacheComponents: true` está ligado. Nesse modelo, tudo é **dinâmico por padrão**: o Next pré-renderiza uma *static shell* e faz streaming das partes que dependem de request ou dados.
+
+Regras do projeto:
+
+1. **Toda leitura de sessão ou de dados fica dentro de um `<Suspense>`**, com fallback de `Skeleton`. Sem isso o dev overlay aponta *blocking route*, e isso é tratado como erro.
+2. **O que é estático fica fora do Suspense** (título da página, `PageHeader`, navegação) e entra na shell.
+3. **Nada de `await` de sessão no topo de layout.** O layout privado renderiza a casca, e só o componente que mostra o usuário lê a sessão, dentro do próprio `<Suspense>`.
+4. **Sem `"use cache"` para dados de domínio no MVP.** Os dados são privados, pequenos e precisam refletir a última escrita (análises e resultados). Cache em memória de servidor serverless traria pouco ganho e risco de dado velho. Se uma leitura cara surgir (ex.: agregados do dashboard), a regra é:
+   - `"use cache"` + `cacheLife(...)` + `cacheTag(\`<entidade>:${userId}\`)` numa função **não exportada**, chamada por uma query exportada que resolve o usuário;
+   - invalidação com `updateTag` na mutation;
+   - registro da decisão aqui.
+5. **`params` e `searchParams` são Promises.** Tipar com os helpers globais gerados por `next typegen`: `PageProps<"/lotes/[id]">`, `LayoutProps<...>`, `RouteContext<...>`.
+6. **Links tipados** (`typedRoutes`). Rotas dinâmicas não literais usam `as Route`.
+7. **Navegação preserva estado** (React `<Activity>`). Dialogs e menus abertos devem fechar ao sair da rota. Ver `02-guides/preserving-ui-state.md`.
+8. **React Compiler ligado.** Não escrever `useMemo`, `useCallback` ou `memo` por desempenho.
+
+Exemplo de página:
+
+```tsx
+// src/app/(private)/leiloes/page.tsx
+export default function AuctionsPage() {
+  return (
+    <>
+      <PageHeader title="Leilões" actions={<NewAuctionButton />} />
+      <Suspense fallback={<AuctionListSkeleton />}>
+        <AuctionList />   {/* async Server Component: chama listAuctions() */}
+      </Suspense>
+    </>
+  );
+}
+```
+
+## 6. Autenticação e autorização
+
+| Onde | O que faz | É barreira de segurança? |
+| --- | --- | --- |
+| `src/proxy.ts` | Renova os cookies da sessão Supabase. Redireciona para `/login` quem não tem cookie de sessão e para `/dashboard` quem já está logado em `/login`. Não acessa o banco. | Não (otimista) |
+| `src/server/auth.ts` | `getCurrentUser()` valida a sessão no Supabase Auth, com memo por request via `React.cache`. `requireUser()` redireciona para `/login` quando não há usuário. | **Sim** |
+| `queries.ts` / `mutations.ts` | Chamam `requireUser()` e filtram **toda** consulta por `ownerId: user.id`. | **Sim** |
+| `actions.ts` | Delegam à mutation, que já autentica. Nunca confiam em ids de dono vindos do cliente. | Via mutation |
+| Layouts | Não fazem checagem de auth, porque não re-renderizam em toda navegação. | Não |
+
+- O cliente envia **referências** (ids) e a mudança desejada. Dono, status e valores derivados são relidos do banco pela sessão.
+- Registro de outro dono é tratado como "não encontrado", sem revelar que ele existe. Na leitura, a query devolve `null` e o componente chama `notFound()`. Na escrita, a mutation devolve `err("not_found")`.
+- DTOs só contêm o que a tela usa. Nunca repassar o objeto do Prisma para um Client Component.
+
+## 7. Leitura de dados
+
+```text
+page.tsx ──► <Suspense> ──► Async Server Component (feature/components)
+                                  │
+                                  ▼
+                        queries.ts  (import "server-only")
+                          1. const user = await requireUser()
+                          2. prisma.<model>.findMany({ where: { ownerId: user.id, ... }, select: {...} })
+                          3. return row ? toDTO(row) : null   ← tipos em types.ts
+```
+
+- `select` explícito em toda consulta, sem `include` genérico.
+- Buscas independentes em paralelo com `Promise.all`, sem waterfall.
+- Client Components recebem dados por props, já serializáveis: `Date` ou string ISO, e centavos como `number`.
+- Leitura de filtros: `searchParams` validado por um schema Zod em `schemas.ts` (valores inválidos caem no padrão, sem lançar erro).
+
+## 8. Mutações
+
+```mermaid
+sequenceDiagram
+    participant F as Form (Client Component)
+    participant A as actions.ts ("use server")
+    participant M as mutations.ts (server-only)
+    participant D as domain/*
+    participant DB as Prisma/Postgres
+    F->>A: formAction(prevState, formData)
+    A->>A: schema.safeParse(Object.fromEntries(formData))
+    alt entrada inválida
+        A-->>F: validationError(...) → fieldErrors + values
+    end
+    A->>M: createX(input)
+    M->>M: requireUser()
+    M->>D: regras puras (ex.: calcular lance máximo)
+    M->>DB: $transaction(...) filtrando ownerId
+    M-->>A: Result<T, "not_found" | "duplicate" | ...>
+    alt falha esperada
+        A-->>F: failure("mensagem em pt-BR")
+    end
+    A->>A: refresh() ou redirect(rota tipada)
+```
+
+Contratos:
+
+- **Assinatura da action de formulário:** `(prev: ActionState, formData: FormData) => Promise<ActionState>`. O formulário usa `useActionState(action, idleState)`.
+- **Ações sem formulário** (arquivar, fixar) recebem ids por `.bind(null, id)` e seguem o mesmo retorno.
+- **Mutations retornam `Result`** (`src/lib/result.ts`) para falhas de negócio (`"not_found"`, `"duplicate_lot_number"`, `"analysis_already_fixed"`). Erros inesperados são lançados.
+- **Depois de escrever:** `redirect()` quando a tela muda (criação → detalhe) ou `refresh()` quando fica na mesma rota. Se no futuro houver `"use cache"` com tag, usar `updateTag(tag)` antes.
+- **`redirect()` fica fora de `try/catch`**, porque ele lança por design.
+- **Operações compostas** (fixar análise, revisar resultado) acontecem numa `prisma.$transaction`. Unicidade (`auction_id, lot_number`) e (`lot_id, revision`) é garantida pelo banco, e o erro `P2002` vira `err("duplicate_...")` na mutation.
+- **Retorno mínimo:** nunca devolver registro do banco para o cliente.
+
+## 9. Validação
+
+- **Schemas Zod ficam em `features/<f>/schemas.ts`** e são a única definição da forma da entrada. O cliente pode usá-los para feedback imediato, e o servidor **sempre** revalida.
+- **Conversões de borda acontecem no schema:**
+  - texto em reais → `Cents` com `parseBRL`;
+  - `""` → `undefined` nos campos opcionais;
+  - datas locais → `Date` UTC;
+  - `trim` em textos.
+- **Mensagens de erro em pt-BR** no próprio schema.
+- **`searchParams`, `params` e `FormData` são sempre `unknown`** até passarem por um schema.
+- **O banco também valida.** Constraints `NOT NULL`, `CHECK` (valores ≥ 0) e `UNIQUE` duplicam as regras críticas.
+
+## 10. Tratamento de erros
+
+| Situação | Mecanismo | UI |
+| --- | --- | --- |
+| Campo inválido | `validationError()` → `ActionState` | Erro no campo (`fieldError`) e valor preservado (`fieldValue`) |
+| Regra de negócio / conflito | `Result` na mutation → `failure()` | `Alert` no formulário ou `toast` |
+| Registro inexistente, de outro dono ou id inválido | query devolve `null` → componente chama `notFound()` | `not-found.tsx` |
+| Sessão ausente | `requireUser()` → `redirect("/login")` | Login |
+| Bug / falha de infraestrutura | exceção | `error.tsx` do segmento (prop `retry`), `catchError` para trechos isolados, `global-error.tsx` |
+| Erro em event handler do cliente | `try/catch` local + estado | `toast` |
+
+Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra texto genérico e `digest`, e registra o erro com `console.error`.
+
+## 11. Domínio financeiro
+
+- `src/domain/finance` implementa o SPEC §7 com `Cents`, sem `Date.now()` ou I/O. Entradas incompletas retornam um resultado discriminado (`{ kind: "incomplete", missing: [...] }`) em vez de lançar.
+- **`FORMULA_VERSION` é exportada** e persistida junto das saídas fixadas (`analyses.formula_version`). Mudança de fórmula exige nova versão e nunca recalcula análises históricas.
+- A **prévia** (Client Component) importa a mesma função que a mutation usa para fixar a análise. Na fixação, o servidor recalcula a partir das entradas e ignora saídas vindas do cliente.
+- **Percentuais em basis points inteiros** (`commission_rate_bps`), sem ponto flutuante persistido.
+- **A cobertura de testes do domínio é obrigatória:** exemplos do SPEC §7.3/7.4, bordas de arredondamento, "sem lance viável" e entradas incompletas.
+
+## 12. Persistência
+
+- **Prisma** acessa o PostgreSQL do Supabase. O cliente é gerado em `src/generated/prisma` (ignorado no lint) e instanciado uma vez em `src/server/db.ts`, com singleton em dev para o HMR.
+  - Verificar na instalação a versão atual do Prisma e a exigência de *driver adapter* (`@prisma/adapter-pg`).
+- **Migrations versionadas em `prisma/migrations`**, criadas com `prisma migrate dev` e aplicadas em produção com `prisma migrate deploy`. Nunca editar migration já aplicada.
+- **Convenções de schema:**
+  - tabelas e colunas em `snake_case` (`@@map`/`@map`), modelos em `PascalCase`;
+  - ids `uuid`;
+  - `created_at`/`updated_at` gerados pelo banco e datas em `timestamptz`;
+  - valores monetários em `bigint` ou `int` de centavos;
+  - arquivamento lógico por `archived_at`.
+- **Imutabilidade:** análises `fixed` e revisões de resultado nunca recebem `UPDATE` nem `DELETE` nas mutations. Correção = nova revisão (SPEC RF-05/RF-06).
+- **Índices** conforme SPEC §8, declarados no `schema.prisma`.
+
+## 13. Arquivos (fotos)
+
+- **Bucket privado.** O upload vai **direto do navegador para o Storage** com uma URL assinada de upload criada por Server Action. Isso evita o limite de 1 MB de body das actions.
+- **A action valida antes de emitir a URL:** dono do lote, tipo MIME (`image/jpeg|png|webp`) e tamanho. Depois do upload, outra action registra `lot_images`.
+- **Exibição por URL assinada de curta duração**, gerada no servidor.
+
+## 14. Configuração, qualidade e testes
+
+**Ambiente**
+
+- `src/server/env.ts` valida `process.env` com Zod na primeira importação e é a única fonte de variáveis no servidor. Só `NEXT_PUBLIC_*` pode ser lida no cliente.
+- `.env.example` lista todas as variáveis, e `.env*` é ignorado pelo Git.
+
+**Ferramentas e scripts**
+
+| Comando | Uso |
+| --- | --- |
+| `npm run dev` | Desenvolvimento (Turbopack) |
+| `npm run check` | typecheck + lint + format:check + test. **Obrigatório antes de concluir qualquer tarefa.** |
+| `npm run build` | Build de produção. Obrigatório ao mexer em rotas, config ou fronteira server/client. |
+| `npm run format` / `lint:fix` | Correções automáticas |
+| `npm test` / `test:watch` | Vitest |
+
+- **TypeScript estrito**, com `noUncheckedIndexedAccess`, `noImplicitReturns`, `noImplicitOverride` e `noFallthroughCasesInSwitch`.
+- **ESLint** com as regras do Next e `typescript-eslint` com informação de tipos:
+  - `no-floating-promises`, `no-misused-promises`, `switch-exhaustiveness-check`, `consistent-type-imports`;
+  - sem `any` e sem `!`;
+  - imports ordenados;
+  - fronteiras de camada.
+- **Prettier** (largura 120, classes Tailwind ordenadas) é a única fonte de formatação.
+
+**Pirâmide de testes**
+
+| Nível | Ferramenta | Alvo | Local |
+| --- | --- | --- | --- |
+| Unitário | Vitest | `domain`, `lib`, schemas, componentes síncronos | `*.test.ts(x)` ao lado do arquivo |
+| Integração | Vitest + banco de teste | `mutations`/`queries` (unicidade, versões, autorização) | `*.int.test.ts` (quando o banco existir) |
+| E2E | Playwright | Fluxo SPEC §13 e Server Components assíncronos | `tests/e2e` |
+
+## 15. Registro de decisões
+
+| # | Decisão | Motivo | Alternativa descartada |
+| --- | --- | --- | --- |
+| D-01 | `cacheComponents: true` desde o início | É o modelo atual do Next 16, com shell estática, streaming e validação de navegação instantânea. Migrar depois custa mais. | Modelo anterior (`dynamic`, `revalidate`) |
+| D-02 | DAL por feature (`queries.ts`/`mutations.ts`) + `server/auth.ts` | Abordagem recomendada pelo Next para projetos novos: autorização centralizada e DTOs. | Consultas diretas em componentes |
+| D-03 | Formulários com `useActionState` + Zod + `ActionState` | Padrão da documentação do Next e do React 19: progressive enhancement, sem estado duplicado. **Substitui React Hook Form do SPEC §9.** | React Hook Form |
+| D-04 | Sem `"use cache"` para dados de domínio no MVP | Dados privados, poucos e sensíveis à última escrita | Cache por usuário com tags |
+| D-05 | Dinheiro como `Cents` (inteiro com marca de tipo) | Elimina erros de ponto flutuante e confusão entre reais e centavos | `number` livre / `Decimal` |
+| D-06 | React Compiler ligado | Memoização automática, estável no Next 16 | `useMemo`/`useCallback` manuais |
+| D-07 | `typedRoutes` ligado | Links quebrados viram erro de compilação | Strings livres |
+| D-08 | Vitest, com testes junto do código | Recomendado pelo Next. Substitui o runner `node --test` com transpilação manual. | Jest |
+| D-09 | Prettier + `eslint-config-prettier` + `simple-import-sort` | Formatação sem debate. O `import/order` do plugin do Next não carrega o resolver TS nesta versão. | Formatação manual |
+| D-10 | Código em inglês, interface e docs em pt-BR | Consistência com bibliotecas e glossário único | Misturar idiomas |
+| D-11 | Upload direto ao Storage por URL assinada | Evita o limite de body das Server Actions e não passa arquivo pelo servidor | Upload via action/Route Handler |
+| D-12 | Proxy só otimista; autorização real na DAL | Recomendação oficial: proxy roda em toda rota e prefetch | Checar banco no proxy |
+
+## 16. Pendências da fundação
+
+1. Inicializar o repositório Git e fazer o primeiro commit.
+2. Criar o projeto Supabase e preencher `.env.local`.
+3. Instalar Prisma e `@supabase/ssr`, criar `src/server/{env,db,auth,storage}.ts`, `src/proxy.ts` e o schema/migration inicial (SPEC §8).
+4. Criar `(auth)/login` e a casca `(private)`, e remover a vitrine `component-showcase.tsx` da rota `/`.
+5. Configurar Playwright para o fluxo E2E quando a primeira feature estiver pronta.
