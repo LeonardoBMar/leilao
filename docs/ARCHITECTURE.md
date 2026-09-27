@@ -50,7 +50,8 @@ As setas indicam "pode importar". Não existe seta no sentido contrário.
 | `src/app` | Roteamento e composição da página. Lê `params`/`searchParams`, delega à feature e define `<Suspense>`/boundaries. | features, components, lib | Prisma, regra de negócio, `fetch` direto |
 | `src/features/<f>` | Uma fatia do produto: leilões, lotes, análises, resultados, dashboard. | domain, server, components, lib, `@/features/<outra>/queries` | UI, actions ou schemas de outra feature. Para mostrar UI de duas features juntas, a **rota compõe** (ex.: o detalhe do leilão recebe a lista de lotes como slot `lots`). |
 | `src/domain` | Regras puras e tipos de domínio (`Cents`, calculadora, elegibilidade). | apenas `src/domain` | React, Next, Prisma, `process.env`, `Date.now()` implícito |
-| `src/server` | Infraestrutura server-only: cliente Prisma, sessão, env validado, Storage. | lib, domain | componentes, features |
+| `src/server` | Infraestrutura server-only: cliente Prisma, sessão, env validado, Storage e o **coletor** (`server/collector`, D-26). | lib, domain, sources | componentes, features |
+| `src/sources/<fonte>` | Adaptador de site de leilão (D-27): descobre URLs e converte a página em anúncio normalizado. **Puro**: recebe texto, devolve dado validado. | domain, lib, `zod` | rede, Prisma, `process.env`, React/Next, features |
 | `src/components` | Primitivas visuais (`ui`) e casca (`layout`), sem conhecer regras de negócio. | lib, **tipos** de `domain` (ex.: `Money` recebe `Cents`) | features, server, funções de domain |
 | `src/lib` | Utilitários puros: `cn`, formatação, `ActionState`, `Result`. | domain (tipos) | server, features |
 
@@ -60,6 +61,7 @@ As fronteiras são **verificadas por ferramenta**:
 - ESLint `no-restricted-imports` (`eslint.config.mjs`):
   - Prisma/`@/server/db` só em `src/server/**`, `queries.ts` e `mutations.ts`.
   - `src/domain` não importa framework nem outras camadas.
+  - `src/sources` não importa framework, banco nem infraestrutura.
 
 ## 4. Estrutura de pastas
 
@@ -100,6 +102,9 @@ src/
     supabase.ts                   # cliente Supabase do servidor (cookies)
     env.ts                        # variáveis secretas validadas por Zod
     storage.ts                    # URLs assinadas
+    collector/                    # coletor agendado: rede educada, gravação do catálogo, registro das execuções (D-26)
+  sources/
+    leilo/                        # adaptador da fonte: discover(), parse() + fixtures/ com páginas salvas (D-27)
   lib/
     utils.ts  format.ts  action-state.ts  result.ts  schemas.ts  public-env.ts
 prisma/
@@ -114,7 +119,7 @@ tests/
 
 - Arquivos e pastas em `kebab-case`. Componentes em `PascalCase`. Funções e variáveis em `camelCase`. Constantes de módulo em `SCREAMING_SNAKE_CASE`.
 - Identificadores, tipos e comentários de código em **inglês**. Textos da interface, mensagens de erro ao usuário e documentação em **português do Brasil**.
-  - Glossário: leilão = `auction`, lote = `lot`, análise = `analysis`, resultado = `result`, lance = `bid`, comissão = `commission`, margem = `margin`.
+  - Glossário: leilão = `auction`, lote = `lot`, análise = `analysis`, resultado = `result`, lance = `bid`, comissão = `commission`, margem = `margin`, anúncio coletado = `listing`, fonte = `source`, monitor = `watch`, alerta = `alert`.
 - As URLs seguem o português do SPEC (`/leiloes`, `/lotes`, `/analise`), e as pastas de feature usam o inglês.
 - Server Actions terminam em `Action` (`createAuctionAction`). O plugin TypeScript do Next só aceita props de função com nome `action` ou terminadas em `Action` em Client Components.
 - Schemas Zod terminam em `Schema` (`auctionInputSchema`), com o tipo inferido correspondente (`AuctionInput`).
@@ -346,6 +351,12 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
 | D-22 | Backup e restauração por scripts Node (`npm run backup`/`restore`), com simulação por padrão, destino explícito e vazio, transação única e `--owner` para projeto novo | Sem `pg_dump` local, e o Supabase Free não oferece download de backups. O formato JSON é validado contra as mesmas garantias do banco; ensaio com dados sintéticos restaurou conteúdo idêntico. | `pg_dump` (dependência externa); backups do plano Supabase |
 | D-23 | Automação do Claude Code versionada em `.claude/`: hooks em Node (`protect-files.mjs` bloqueia `.env*`, `backups/`, arquivos gerados e migrations versionadas; `format-file.mjs` roda `eslint --fix` + Prettier no arquivo editado), permissões (`allow` para verificações, `ask` para comandos que tocam o banco, `deny` de leitura de `.env`/`.env.local`/`backups/`), subagente `leilao-reviewer` e MCP do Supabase em `.mcp.json` **somente leitura** | O agente segue as regras sem depender de memória, e comandos destrutivos pedem confirmação. Hooks em Node rodam igual no Windows e no CI, sem `jq`. O MCP é só para diagnóstico: schema continua só por migrations do Prisma. | Git hooks (husky); hooks em bash com `jq`; MCP com escrita |
 | D-24 | Estado preservado entre navegações (Cache Components usa `<Activity>`): formulário de **edição** recebe `key` derivada do dado (`updatedAt`, revisão do resultado); formulário de **cadastro** fica dentro de `FreshOnNavigation` (`key={useRouter().bfcacheId}`) | O Next esconde a página anterior em vez de desmontá-la, e o estado do cliente volta junto. Sem isso, "Corrigir resultado" abria com o estado da primeira visita (sem desfecho) e "Novo leilão" voltava com o cadastro anterior. `key` do dado é a forma que a doc do Next recomenda; `bfcacheId` cobre cadastros, que não têm dado próprio, e ainda restaura no voltar do navegador. | `cacheComponents: false`; limpar estado em efeitos |
+| D-25 | Catálogo de anúncios coletados **global** (`sources`, `listings`, `listing_observations`, `collector_runs`, `municipalities`), sem `owner_id`; monitores, alertas e lotes continuam por dono | Anúncio é dado público e igual para todos; duplicar por usuário desperdiça coleta. Exceção explícita à regra "todo registro tem `owner_id`" (§2). RLS ligado e sem acesso pela API de dados (D-14), como as demais tabelas | Catálogo por usuário |
+| D-26 | Coletor em `src/server/collector` + `scripts/collect.ts`, executado pelo **GitHub Actions** (cron de hora em hora, `concurrency` sem sobreposição) com **`tsx`** (dev). Roda **sem usuário**: é a única escrita fora da DAL com `requireUser()`, e só grava o catálogo global | Grátis para este volume; o cron gratuito da Vercel é diário e as funções são curtas. Reaproveita domínio, Zod e Prisma. Migra para servidor pequeno se horário ou volume exigirem | Vercel Cron; Edge Functions (Deno, sem Prisma); servidor dedicado desde o início |
+| D-27 | Adaptador por fonte em `src/sources/<fonte>`: descoberta por **sitemap** (`lastmod`), leitura do **estado serializado da página** (Leilo: `window.__INITIAL_STATE__`) e do **JSON-LD** como reserva, tudo validado com Zod; `parse` é puro e testado com páginas salvas. Navegador automatizado só se uma fonte exigir | O estado da página traz o lote completo (situação, lance final, custos, FIPE); o JSON-LD é padrão schema.org e cobre o núcleo se o estado mudar. Classes CSS do site têm versão no nome e mudam | Seletores CSS; Playwright para tudo |
+| D-28 | Estimativas (preço provável de arremate e limite estimado) **só com dados do sistema** (arremates observados e análises fixadas do usuário), com amostra mínima, faixa e `n` visíveis; nunca fixam análise | Pedido do usuário; transparência; o indicador continua medindo a decisão do usuário, não uma fórmula | FIPE ou tabela externa como base |
+| D-29 | Fotos do catálogo guardadas como **URL da fonte**; nada é copiado para o Storage (fotos enviadas pelo usuário continuam no bucket privado) | Evita custo e questões de direito de imagem; o anúncio já é público | Copiar todas as fotos |
+| D-30 | Dados da fonte (valor de mercado, custos, comissão) entram no rascunho de "Adicionar à análise" como **sugestão rotulada com a fonte**; o usuário revisa e fixa | Menos digitação sem esconder a origem do número; a fixação continua sendo a decisão do usuário | Não usar os dados da fonte; tratá-los como estimativa do sistema |
 
 ## 16. Pendências da fundação
 

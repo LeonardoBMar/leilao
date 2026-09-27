@@ -71,6 +71,21 @@ export default defineConfig([
     files: ["src/domain/**"],
     rules: { "no-restricted-imports": ["error", { patterns: [dbImports, frameworkImports] }] },
   },
+  {
+    // Adaptadores de fonte (D-27): puros, recebem texto e devolvem dado validado. Rede e banco ficam no coletor.
+    files: ["src/sources/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            dbImports,
+            { ...frameworkImports, message: "src/sources é puro: sem framework, UI, I/O ou infraestrutura." },
+          ],
+        },
+      ],
+    },
+  },
   globalIgnores([
     ".next/**",
     "out/**",

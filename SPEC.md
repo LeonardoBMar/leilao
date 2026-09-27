@@ -647,6 +647,8 @@ O MVP estará concluído quando o usuário conseguir executar o fluxo inteiro co
 
 ## 15. Evolução após o MVP
 
+> **Em andamento (2026-09-27):** coleta automática, monitores, alertas e estimativas com dados do sistema, antecipando partes das Fases 3 e 4. Plano, etapas e critérios em [`docs/PLANO-COLETA.md`](docs/PLANO-COLETA.md); decisões D-25 a D-30 no ARCHITECTURE. A fixação da análise continua manual.
+
 ### Fase 2 — Aprendizado com a base registrada
 
 Iniciar após o uso real confirmar os campos e o fluxo, idealmente com 50 a 100 lotes analisados.
