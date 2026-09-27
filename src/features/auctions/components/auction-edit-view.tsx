@@ -18,6 +18,7 @@ export async function AuctionEditView({ params }: { params: Promise<{ id: string
     <div className="grid max-w-4xl gap-6">
       <PageHeader title="Editar leilão" description={auction.name} />
       <AuctionForm
+        key={auction.updatedAt.getTime()}
         action={updateAuctionAction.bind(null, auction.id)}
         auction={auction}
         cancelHref={`/leiloes/${auction.id}` as Route}

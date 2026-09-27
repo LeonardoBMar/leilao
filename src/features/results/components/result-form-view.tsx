@@ -20,7 +20,12 @@ export async function ResultFormView({ params }: { params: Promise<{ id: string 
         title={context.current ? "Corrigir resultado" : "Registrar resultado"}
         description={context.lot.auction.name}
       />
-      <ResultForm action={recordResultAction.bind(null, context.lot.id)} context={context} />
+      {/* A página fica preservada entre navegações (D-24): cada revisão nova recomeça o formulário. */}
+      <ResultForm
+        key={context.current?.revision ?? 0}
+        action={recordResultAction.bind(null, context.lot.id)}
+        context={context}
+      />
     </div>
   );
 }
