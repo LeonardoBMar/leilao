@@ -19,6 +19,7 @@ Use antes de declarar uma tarefa concluída e ao revisar código. Item não apli
 - [ ] Toda query e mutation chama `requireUser()` e filtra por `ownerId`.
 - [ ] Toda Server Action valida a entrada com Zod e não aceita dono, status ou valores calculados do cliente.
 - [ ] Nenhum objeto do Prisma chega ao cliente ou ao retorno de action; DTOs com `select` explícito.
+- [ ] Migration que cria tabela também liga RLS e faz `REVOKE ALL` de `anon`/`authenticated` (D-14).
 - [ ] Escritas compostas estão em transação. Análise fixada e revisão de resultado não são alteradas.
 - [ ] Nenhum segredo fora de `src/server/env.ts`. Nenhuma variável sem `NEXT_PUBLIC_` usada no cliente.
 

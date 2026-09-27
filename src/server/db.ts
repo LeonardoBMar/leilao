@@ -1,0 +1,23 @@
+import "server-only";
+
+import { PrismaPg } from "@prisma/adapter-pg";
+
+import { Prisma, PrismaClient } from "@/generated/prisma/client";
+
+import { env } from "./env";
+
+function createClient() {
+  return new PrismaClient({ adapter: new PrismaPg({ connectionString: env.DATABASE_URL }) });
+}
+
+// Reaproveita o cliente entre recargas do HMR em desenvolvimento.
+const globalForPrisma = globalThis as typeof globalThis & { prisma?: PrismaClient };
+
+export const db = globalForPrisma.prisma ?? createClient();
+
+if (env.NODE_ENV !== "production") globalForPrisma.prisma = db;
+
+/** Violação de restrição UNIQUE (ex.: número de lote repetido no mesmo leilão). */
+export function isUniqueViolation(error: unknown): boolean {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
+}

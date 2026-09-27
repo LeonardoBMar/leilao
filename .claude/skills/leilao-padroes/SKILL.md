@@ -33,6 +33,20 @@ Esta skill é o manual de execução do [`docs/ARCHITECTURE.md`](../../../docs/A
 11. **UI só com `@/components/ui`** e tokens do DESIGN.md. Sem cor literal ou espaçamento arbitrário. Todo campo tem label e erro associado.
 12. **Não adicionar dependência** sem justificar no ARCHITECTURE (registro de decisões). Versões fixas (`--save-exact`).
 
+## Skills de terceiros no projeto
+
+Instaladas por `npx skills add` (versões em `skills-lock.json`; atualize com `npx skills update -p`). São referência de API e boas práticas; **em conflito, esta skill e o ARCHITECTURE prevalecem**.
+
+| Skill | Use para | Ignore dela |
+| --- | --- | --- |
+| `prisma-cli` | Comandos `migrate`, `db`, `generate` e o protocolo de consentimento para comandos destrutivos | `dotenv` e `prisma init` (o projeto usa `@next/env` e já está configurado) |
+| `prisma-client-api` | Filtros, relações, transações, `$queryRaw` seguro | `process.env` direto e cliente instanciado fora de `src/server/db.ts` |
+| `prisma-database-setup` | Detalhes de conexão PostgreSQL e adapter | Caminhos de `output` (o nosso é `src/generated/prisma`) |
+| `supabase` | Auth com `@supabase/ssr`, Storage, checklist de segurança, depuração | Fluxo de schema pela Supabase CLI ou MCP (`supabase migration`, `db pull`, `apply_migration`). **Schema só por migrations do Prisma.** |
+| `supabase-postgres-best-practices` | Tipos de coluna, índices, constraints, locks, pooling | Políticas RLS por usuário (o acesso a dados é só pelo servidor, ver D-14) |
+
+**Nunca** rode `migrate reset`, `db push --force-reset` ou `--accept-data-loss` sem consentimento explícito do usuário imediatamente antes, conforme `prisma-cli/references/agent-safety.md`.
+
 ## Quando o padrão não cobre o caso
 
 Siga a documentação do Next instalada e o espírito do ARCHITECTURE. Se a solução criar um padrão novo (nova pasta, nova lib, novo tipo de cache, exceção a uma regra), **pare e proponha** a decisão ao usuário. Depois de aprovada, registre-a em `docs/ARCHITECTURE.md` §15 e atualize esta skill.

@@ -255,8 +255,9 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
 
 ## 12. Persistência
 
-- **Prisma** acessa o PostgreSQL do Supabase. O cliente é gerado em `src/generated/prisma` (ignorado no lint) e instanciado uma vez em `src/server/db.ts`, com singleton em dev para o HMR.
-  - Verificar na instalação a versão atual do Prisma e a exigência de *driver adapter* (`@prisma/adapter-pg`).
+- **Prisma 7** (gerador `prisma-client`, sem engine Rust) acessa o PostgreSQL do Supabase. O cliente é gerado em `src/generated/prisma` (fora do Git, gerado no `postinstall`) e instanciado uma vez em `src/server/db.ts` com `@prisma/adapter-pg`, com singleton em dev para o HMR.
+- **Duas conexões:** a aplicação usa `DATABASE_URL` (pooler de transação, porta 6543, `pgbouncer=true`). A CLI usa `DIRECT_URL` (pooler de sessão, porta 5432), configurada em `prisma.config.ts`. O Prisma 7 não tem mais `url`/`directUrl` no `schema.prisma`.
+- **`prisma.config.ts` carrega `.env*` com `@next/env`**, o mesmo carregador do Next, então não há `dotenv` nem arquivo `.env` separado para o Prisma.
 - **Migrations versionadas em `prisma/migrations`**, criadas com `prisma migrate dev` e aplicadas em produção com `prisma migrate deploy`. Nunca editar migration já aplicada.
 - **Convenções de schema:**
   - tabelas e colunas em `snake_case` (`@@map`/`@map`), modelos em `PascalCase`;
@@ -264,6 +265,7 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
   - `created_at`/`updated_at` gerados pelo banco e datas em `timestamptz`;
   - valores monetários em `bigint` ou `int` de centavos;
   - arquivamento lógico por `archived_at`.
+- **Data API do Supabase fechada (D-14):** toda tabela nasce com `ENABLE ROW LEVEL SECURITY` **sem políticas** e com `REVOKE ALL ... FROM anon, authenticated`, no SQL da própria migration. A chave publicável do navegador não lê nem escreve nada. O Prisma conecta como `postgres`, que ignora RLS, e a autorização fica na DAL.
 - **Imutabilidade:** análises `fixed` e revisões de resultado nunca recebem `UPDATE` nem `DELETE` nas mutations. Correção = nova revisão (SPEC RF-05/RF-06).
 - **Índices** conforme SPEC §8, declarados no `schema.prisma`.
 
@@ -322,11 +324,13 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
 | D-10 | Código em inglês, interface e docs em pt-BR | Consistência com bibliotecas e glossário único | Misturar idiomas |
 | D-11 | Upload direto ao Storage por URL assinada | Evita o limite de body das Server Actions e não passa arquivo pelo servidor | Upload via action/Route Handler |
 | D-12 | Proxy só otimista; autorização real na DAL | Recomendação oficial: proxy roda em toda rota e prefetch | Checar banco no proxy |
+| D-13 | Prisma 7.10.0 fixo, com adapter `pg` e env via `@next/env` | Última versão estável (a tag `latest` do pacote `prisma` aponta para 8.0 RC). O adapter é obrigatório no Prisma 7. | Snippet do Supabase (`prisma-client-js`, `directUrl`), Prisma 8 RC, `dotenv` |
+| D-14 | RLS ligado sem políticas + `REVOKE` para `anon`/`authenticated` em todas as tabelas | O schema `public` é exposto pela Data API e a chave publicável é pública. Assim o único caminho até os dados é o servidor. | Políticas RLS por usuário (duplicariam a DAL) ou schema privado |
 
 ## 16. Pendências da fundação
 
 1. Inicializar o repositório Git e fazer o primeiro commit.
-2. Criar o projeto Supabase e preencher `.env.local`.
-3. Instalar Prisma e `@supabase/ssr`, criar `src/server/{env,db,auth,storage}.ts`, `src/proxy.ts` e o schema/migration inicial (SPEC §8).
+2. ~~Criar o projeto Supabase e preencher `.env.local`~~ (feito; conexões testadas).
+3. ~~Prisma, `src/server/env.ts` e `src/server/db.ts`~~ (feito). Falta: modelos e migration inicial (SPEC §8), `@supabase/ssr`, `src/server/{auth,storage}.ts` e `src/proxy.ts`.
 4. Criar `(auth)/login` e a casca `(private)`, e remover a vitrine `component-showcase.tsx` da rota `/`.
 5. Configurar Playwright para o fluxo E2E quando a primeira feature estiver pronta.
