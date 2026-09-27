@@ -23,6 +23,15 @@ export function idFromUrl(page: Page, prefix: string): string {
   return match[1];
 }
 
+/** Login pela tela, como o usuário faz. */
+export async function signIn(page: Page, email: string, password: string) {
+  await page.goto("/login");
+  await page.getByLabel("E-mail").fill(email);
+  await page.getByLabel("Senha").fill(password);
+  await page.getByRole("button", { name: "Entrar" }).click();
+  await expect(page).toHaveURL(/\/dashboard$/);
+}
+
 export async function expectToast(page: Page, text: string | RegExp) {
   await expect(page.getByText(text).first()).toBeVisible();
 }

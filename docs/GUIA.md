@@ -1,0 +1,102 @@
+# Guia de uso
+
+Como usar o Leilão Tracker no dia a dia: registrar leilões e lotes, calcular até quanto vale dar lance, preservar essa decisão e comparar com o que aconteceu de fato.
+
+## O fluxo em uma frase
+
+**Leilão → lote → análise → fixar → acompanhar → resultado.** O dashboard mostra o que está em andamento e quantas das suas decisões ficaram dentro do limite.
+
+## 1. Entrar
+
+Acesse o endereço do app e entre com e-mail e senha. Não há cadastro público: contas são criadas no painel do Supabase (Authentication → Users).
+
+**Sair** (no rodapé do menu) encerra a sessão em todos os aparelhos.
+
+## 2. Cadastrar um leilão
+
+**Leilões → Novo leilão.**
+
+- Obrigatórios: nome, organizador, data e hora, origem (Detran, seguradora, financeira, judicial…) e status.
+- Opcionais: cidade, UF, links do edital e da plataforma e observações.
+- O **status é manual**. A data passar não encerra o leilão sozinho: mude para *Encerrado* quando for o caso.
+
+## 3. Cadastrar os lotes
+
+Na página do leilão, **Adicionar lote**.
+
+- Obrigatórios: número do lote e o veículo (marca, modelo e ano-modelo).
+- O número do lote não se repete no mesmo leilão; em outro leilão, pode.
+- **Lance atual:** atualize na ficha do lote (campo *Novo lance atual* → *Atualizar*). O app registra quando foi atualizado.
+- **Acompanhar este lote:** coloca o lote no dashboard, com lance atual e seu limite lado a lado.
+- **Fotos:** até 10 por lote, JPEG, PNG ou WebP até 5 MB. A primeira vira capa; dá para trocar a capa e reordenar.
+
+## 4. Analisar o lote
+
+Na ficha do lote, **Analisar lote**. A análise calcula o **lance máximo**: o maior lance que ainda deixa a margem que você quer.
+
+| Campo | O que é |
+| --- | --- |
+| Valor de mercado | Por quanto o carro vale/vende depois de pronto. É a base do cálculo. |
+| FIPE (opcional) | Só referência. Não substitui o valor de mercado. |
+| Custos fixos | Reparos, documentação, transporte, pneus, revisão e outras taxas. |
+| Comissão | Valor fixo **ou** percentual sobre o lance. |
+| Reserva para imprevistos | Dinheiro separado para surpresas. |
+| Margem desejada | Quanto você quer que sobre. |
+
+```text
+lance máximo = maior lance em que  lance + custos + comissão + reserva + margem ≤ valor de mercado
+```
+
+- **Campo em branco não vira zero.** Enquanto faltar algo, o painel lista o que falta. Se um custo não existe, digite 0.
+- **Lance simulado:** teste qualquer valor e veja custo total, margem e se ficou abaixo, no ou acima do limite. Não altera o lance do lote.
+- **Sem lance viável:** se os custos e a margem já consomem o valor de mercado, o app avisa em vez de sugerir número negativo.
+- **Salvar rascunho** guarda sem compromisso. Rascunhos podem ter campos em branco.
+
+## 5. Fixar a análise
+
+**Fixar análise** congela premissas, notas e o limite calculado. É o registro da sua decisão **antes** do resultado.
+
+- Todos os custos precisam estar preenchidos (mesmo que zero).
+- A versão fixada **nunca muda**. Para rever números, use **Revisar premissas**: nasce um rascunho novo (v2, v3…) com os dados da anterior, e a antiga continua no histórico.
+- Fixe **antes do leilão acabar**. É isso que faz a análise contar no indicador do dashboard.
+
+## 6. Registrar o resultado
+
+Depois do leilão, na ficha do lote, **Registrar resultado**.
+
+- **Desfecho:** arrematado, sem arrematação, retirado, cancelado ou desconhecido. Preço final só para arrematado.
+- **Data e hora do desfecho:** informe se souber. Sem ela, marque *Confirmo que esta análise foi feita antes do desfecho* se for verdade.
+- **Análise usada na comparação:** por padrão, a última fixada que não é retrospectiva. A comparação fica presa a essa versão, mesmo que você crie outras depois.
+- **Minha participação:** apenas observei, participei e não arrematei, ou arrematei. É separado do desfecho: "dentro do limite" não quer dizer que você comprou.
+
+O resultado mostra a diferença entre o preço final e seu limite (ex.: *R$ 2.300,00 acima do seu limite*). Não é prejuízo: é só a distância entre o que o mercado pagou e o que você decidiu pagar.
+
+**Errou algo?** **Corrigir resultado** exige um motivo. A revisão anterior continua visível em *Histórico de correções*.
+
+## 7. Dashboard
+
+- **Contagens:** leilões, lotes, acompanhados e analisados (arquivados não contam).
+- **Lotes acompanhados:** lance atual × seu limite.
+- **Próximos leilões:** agendados e em andamento, por data.
+- **Pendências:** rascunhos de análise abertos e lotes acompanhados cujo leilão já começou e ainda não têm resultado.
+- **Indicador:** *X de Y resultados comparáveis ficaram dentro do limite*.
+
+**O que entra no indicador:** lotes arrematados, com preço final conhecido e análise fixada **antes** do resultado. Ficam de fora:
+
+- lotes não arrematados (retirados, cancelados, sem arrematação) ou com preço desconhecido;
+- análises marcadas como **Retrospectiva** (feitas já sabendo o resultado) ou com momento desconhecido.
+
+## 8. Arquivar e excluir
+
+- **Arquivar** tira leilão ou lote das listas e do dashboard, sem apagar nada. Veja de novo em *Somente arquivados*; **Reativar** traz de volta.
+- **Excluir** só aparece quando não há histórico (nenhuma análise fixada nem resultado). Com histórico, arquive.
+
+## 9. Backup
+
+Os dados vivem no Supabase. Faça backup **toda semana e antes de cada migration**:
+
+```bash
+npm run backup
+```
+
+Guarde a cópia fora do computador. Restauração e detalhes: [OPERACAO.md](OPERACAO.md) §5 e §6.

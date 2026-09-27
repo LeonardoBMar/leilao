@@ -354,7 +354,7 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
 4. ~~Autenticação: `src/server/{supabase,auth}.ts`, `src/proxy.ts`, `/login`, casca `(private)` e dashboard com contagens~~ (feito; a vitrine de componentes foi para `/componentes`). Falta: `src/server/storage.ts` (junto com as fotos).
 5. ~~Configurar Playwright para o fluxo E2E~~ (feito: `public` roda sem sessão; `authenticated` precisa de `E2E_EMAIL`/`E2E_PASSWORD`).
 
-**Features entregues:** autenticação, leilões (RF-01), lotes (RF-02/03), análise financeira (RF-04/05), resultados com correções e temporalidade (RF-06, §10), dashboard completo (métricas, indicador, pendências, lotes acompanhados, próximos leilões) e arquivamento (RF-08). fotos (RF-07). E2E, preparação para deploy (runbook em `docs/OPERACAO.md`). **Próximo:** primeiro deploy na Vercel.
+**Features entregues:** autenticação, leilões (RF-01), lotes (RF-02/03), análise financeira (RF-04/05), resultados com correções e temporalidade (RF-06, §10), dashboard completo (métricas, indicador, pendências, lotes acompanhados, próximos leilões) e arquivamento (RF-08). fotos (RF-07). E2E cobrindo os critérios de aceite de interface (CA-01 a CA-05, CA-07 a CA-11, CA-14 a CA-19), preparação para deploy (runbook em `docs/OPERACAO.md`), primeiro deploy na Vercel e guia de uso (`docs/GUIA.md`). **Próximo:** validação do MVP pelo usuário (E2E autenticado e conferência pós-deploy).
 
 ## 17. Contrato da API JSON (futuro)
 

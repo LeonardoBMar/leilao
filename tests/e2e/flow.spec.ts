@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { brl, choose, expectToast, FAKE_JPEG, fillFields, idFromUrl, section, VALID_PNG } from "./helpers";
+import { brl, choose, expectToast, FAKE_JPEG, fillFields, idFromUrl, section, signIn, VALID_PNG } from "./helpers";
 
 /**
  * Fluxo completo do SPEC §13: login → leilão → lote → análise fixada → resultado → dashboard, conferindo os
@@ -138,6 +138,78 @@ test("resultado acima do limite e correção preservando a revisão anterior (CA
   await expect(page.getByText("Histórico de correções (1)")).toBeVisible();
 });
 
+test("nova versão depois do resultado não muda a comparação vinculada (CA-09)", async ({ page }) => {
+  await page.goto(`/lotes/${lotId}`);
+  await page.getByRole("button", { name: "Revisar premissas" }).click();
+  await expect(page.getByRole("heading", { name: "Análise financeira v2" })).toBeVisible();
+  // Criada com resultado já registrado: retrospectiva (SPEC §10).
+  await expect(page.getByText("Retrospectiva", { exact: true }).first()).toBeVisible();
+
+  // Limite novo bem diferente: R$ 43.200,00.
+  await page.getByLabel("Valor de mercado", { exact: true }).fill("60.000");
+  await expect(section(page, "Lance máximo")).toContainText(brl("43.200,00"));
+  await page.getByRole("button", { name: "Fixar análise" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Fixar análise" }).click();
+  await expectToast(page, "Análise fixada.");
+
+  // O resultado continua comparado com a v1 (R$ 33.200,00), não com a v2.
+  await page.goto(`/lotes/${lotId}`);
+  await expect(page.getByRole("link", { name: /33\.200,00 · v1/ })).toBeVisible();
+  await expect(page.getByText(/Preço final R\$\s200,00 abaixo do seu limite\./)).toBeVisible();
+});
+
+test("duas fixações simultâneas do mesmo rascunho: só uma vale (CA-19)", async ({ page, context }) => {
+  await page.goto(`/lotes/${lotId}`);
+  await page.getByRole("button", { name: "Revisar premissas" }).click();
+  await expect(page.getByRole("heading", { name: "Análise financeira v3" })).toBeVisible();
+
+  const other = await context.newPage();
+  await other.goto(page.url());
+  const tabs = [page, other];
+  for (const tab of tabs) await tab.getByRole("button", { name: "Fixar análise" }).click();
+  await Promise.all(tabs.map((tab) => tab.getByRole("dialog").getByRole("button", { name: "Fixar análise" }).click()));
+
+  const outcomes = await Promise.all(
+    tabs.map((tab) =>
+      settle(
+        () => tab.getByText(/^Análise fixada\./).isVisible(),
+        () => tab.getByText("Esta análise já foi fixada", { exact: false }).isVisible(),
+      ),
+    ),
+  );
+  expect(outcomes.sort()).toEqual(["lost", "won"]);
+
+  // Nenhuma versão duplicada: v1, v2 e v3 (cabeçalho + 3 linhas).
+  await other.reload();
+  await expect(section(other, "Histórico de versões").getByRole("row")).toHaveCount(4);
+  await other.close();
+});
+
+test("duas correções simultâneas do resultado: só uma revisão nova (CA-19)", async ({ page, context }) => {
+  const other = await context.newPage();
+  const tabs = [page, other];
+  for (const tab of tabs) {
+    await tab.goto(`/lotes/${lotId}/resultado`);
+    await tab.getByLabel("Preço final", { exact: true }).fill("34.000");
+    await tab.getByLabel("Motivo da correção").fill("Correção simultânea (E2E)");
+  }
+  await Promise.all(tabs.map((tab) => tab.getByRole("button", { name: "Salvar correção" }).click()));
+
+  const outcomes = await Promise.all(
+    tabs.map((tab) =>
+      settle(
+        async () => new URL(tab.url()).pathname === `/lotes/${lotId}`,
+        () => tab.getByText("O resultado deste lote foi alterado depois", { exact: false }).isVisible(),
+      ),
+    ),
+  );
+  expect(outcomes.sort()).toEqual(["lost", "won"]);
+
+  await other.close();
+  await page.goto(`/lotes/${lotId}`);
+  await expect(page.getByText("Histórico de correções (2)")).toBeVisible();
+});
+
 test("fotos: recusa conteúdo que não é imagem e aceita imagem válida (CA-18)", async ({ page }) => {
   await page.goto(`/lotes/${lotId}`);
   const input = page.locator('input[type="file"]');
@@ -155,6 +227,24 @@ test("dashboard mostra o indicador de resultados comparáveis", async ({ page })
   await expect(page.getByText(/\d+ de \d+ resultados comparáveis ficaram dentro do limite/)).toBeVisible();
 });
 
+test("arquivar lote com histórico: sai das listas e continua acessível (CA-17)", async ({ page }) => {
+  const lotLink = page.getByRole("link", { name: "Toyota Corolla 2020" });
+
+  await page.goto(`/lotes/${lotId}`);
+  await page.getByRole("button", { name: "Arquivar" }).click();
+  await expectToast(page, "Lote arquivado.");
+  await expect(page.getByText(/Lote arquivado em/)).toBeVisible();
+
+  await page.goto(`/leiloes/${auctionId}`);
+  await expect(page.getByRole("heading", { name: auctionName })).toBeVisible();
+  await expect(lotLink).toHaveCount(0);
+
+  await page.goto(`/leiloes/${auctionId}?arquivados=1`);
+  await lotLink.click();
+  await expect(page.getByRole("heading", { name: "Toyota Corolla 2020" })).toBeVisible();
+  await expect(page.getByText("Histórico de correções (2)")).toBeVisible();
+});
+
 test("arquiva o leilão de teste (sai das visões ativas)", async ({ page }) => {
   await page.goto(`/leiloes/${auctionId}`);
   await page.getByRole("button", { name: "Arquivar" }).click();
@@ -163,3 +253,38 @@ test("arquiva o leilão de teste (sai das visões ativas)", async ({ page }) => 
   await page.goto(`/leiloes?busca=${encodeURIComponent(auctionName)}`);
   await expect(page.getByText("Nenhum leilão encontrado")).toBeVisible();
 });
+
+/**
+ * Por último: "Sair" encerra todas as sessões do usuário (padrão do Supabase), inclusive a salva pelo setup.
+ * A próxima execução faz login de novo no projeto "setup".
+ */
+test("sair e entrar de novo: dados e vínculos continuam lá (CA-01)", async ({ page }) => {
+  await page.goto("/dashboard");
+  await page.getByRole("button", { name: "Sair" }).click();
+  await expect(page).toHaveURL(/\/login/);
+
+  await page.goto(`/lotes/${lotId}`);
+  await expect(page).toHaveURL(/\/login/);
+
+  await signIn(page, process.env.E2E_EMAIL ?? "", process.env.E2E_PASSWORD ?? "");
+  await page.goto(`/lotes/${lotId}`);
+  await expect(page.getByRole("heading", { name: "Toyota Corolla 2020" })).toBeVisible();
+  await expect(page.getByRole("link", { name: auctionName })).toBeVisible();
+  await expect(page.getByRole("link", { name: /33\.200,00 · v1/ })).toBeVisible();
+  await expect(page.getByText("Histórico de correções (2)")).toBeVisible();
+  await expect(page.getByRole("list", { name: "Fotos do lote" }).getByText("Capa")).toBeVisible();
+});
+
+/** Espera a aba chegar a um dos dois desfechos de uma disputa (CA-19). */
+async function settle(won: () => Promise<boolean>, lost: () => Promise<boolean>): Promise<"won" | "lost"> {
+  let outcome: "won" | "lost" | undefined;
+  await expect
+    .poll(async () => {
+      if (await won()) outcome = "won";
+      else if (await lost()) outcome = "lost";
+      return outcome;
+    })
+    .toBeDefined();
+  if (!outcome) throw new Error("Disputa sem desfecho.");
+  return outcome;
+}
