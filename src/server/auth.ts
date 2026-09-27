@@ -51,5 +51,6 @@ export async function signInWithPassword(email: string, password: string): Promi
 
 export async function signOut(): Promise<void> {
   const supabase = await createSupabaseServerClient();
-  await supabase.auth.signOut();
+  // Só esta sessão: sair no celular não desconecta o computador.
+  await supabase.auth.signOut({ scope: "local" });
 }

@@ -10,7 +10,7 @@ Como usar o Leilão Tracker no dia a dia: registrar leilões e lotes, calcular a
 
 Acesse o endereço do app e entre com e-mail e senha. Não há cadastro público: contas são criadas no painel do Supabase (Authentication → Users).
 
-**Sair** (no rodapé do menu) encerra a sessão em todos os aparelhos.
+**Sair** (no rodapé do menu) encerra a sessão só neste aparelho; os outros continuam conectados.
 
 ## 2. Cadastrar um leilão
 

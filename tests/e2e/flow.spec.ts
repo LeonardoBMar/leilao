@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+import { AUTH_STATE } from "../../playwright.config";
 import { brl, choose, expectToast, FAKE_JPEG, fillFields, idFromUrl, section, signIn, VALID_PNG } from "./helpers";
 
 /**
@@ -254,17 +255,20 @@ test("arquiva o leilão de teste (sai das visões ativas)", async ({ page }) => 
   await expect(page.getByText("Nenhum leilão encontrado")).toBeVisible();
 });
 
-/**
- * Por último: "Sair" encerra todas as sessões do usuário (padrão do Supabase), inclusive a salva pelo setup.
- * A próxima execução faz login de novo no projeto "setup".
- */
-test("sair e entrar de novo: dados e vínculos continuam lá (CA-01)", async ({ page }) => {
+test("sair e entrar de novo: dados e vínculos continuam lá (CA-01)", async ({ page, browser, baseURL }) => {
   await page.goto("/dashboard");
   await page.getByRole("button", { name: "Sair" }).click();
   await expect(page).toHaveURL(/\/login/);
 
   await page.goto(`/lotes/${lotId}`);
   await expect(page).toHaveURL(/\/login/);
+
+  // "Sair" encerra só esta sessão: a de outro aparelho (a salva pelo setup) continua valendo.
+  const otherDevice = await browser.newContext({ storageState: AUTH_STATE, baseURL });
+  const otherPage = await otherDevice.newPage();
+  await otherPage.goto("/dashboard");
+  await expect(otherPage.getByRole("heading", { name: "Dashboard" })).toBeVisible();
+  await otherDevice.close();
 
   await signIn(page, process.env.E2E_EMAIL ?? "", process.env.E2E_PASSWORD ?? "");
   await page.goto(`/lotes/${lotId}`);
