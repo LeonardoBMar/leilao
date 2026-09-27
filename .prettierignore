@@ -7,3 +7,5 @@ src/generated
 .claude/skills/*/
 !.claude/skills/leilao-padroes/
 skills-lock.json
+tests/e2e/.report
+tests/e2e/.results

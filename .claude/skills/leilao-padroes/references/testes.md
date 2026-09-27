@@ -4,7 +4,7 @@
 | --- | --- | --- | --- |
 | Unitário | Vitest (`npm test`) | `src/domain` (obrigatório), `src/lib`, schemas Zod, componentes síncronos | `arquivo.test.ts(x)` ao lado do arquivo |
 | Integração | Vitest + banco de teste | Mutations/queries: unicidade, versões imutáveis, isolamento por `ownerId`, transações | `arquivo.int.test.ts` (a configurar com o banco) |
-| E2E | Playwright | Fluxo login → leilão → lote → análise fixada → resultado → dashboard. Async Server Components. | `tests/e2e/` (a configurar) |
+| E2E | Playwright (`@playwright/test` + `@next/playwright`) | Fluxo login → leilão → lote → análise fixada → resultado → dashboard, critérios de aceite de interface, casca estática com `instant()` | `tests/e2e/*.spec.ts` |
 
 ## Regras
 
@@ -22,10 +22,20 @@
 - `server-only` é substituído por um stub nos testes (`tests/stubs/server-only.ts`), então queries e mutations podem ser importadas em testes de integração.
 - **Bug corrigido ganha um teste de regressão** que falha antes da correção.
 
+## E2E (Playwright)
+
+- **Projetos** (`playwright.config.ts`): `public` (sem sessão), `setup` (login único, sessão salva em `tests/e2e/.auth/`, fora do Git) e `authenticated` (fluxo e acesso).
+- **Usuário de testes dedicado:** `E2E_EMAIL`/`E2E_PASSWORD` no `.env.local`. Sem eles, os testes autenticados são pulados. **O agente não roda o projeto autenticado**, porque exigiria digitar credenciais enviadas ao Supabase. Quem roda é o usuário.
+- **Dados reais:** cada execução cria um leilão `E2E <data>` e o arquiva no final. Análises fixadas e resultados são imutáveis, então ficam no usuário de testes.
+- **Seletores por papel e rótulo** (`getByRole`, `getByLabel` com `exact`), nunca por classe CSS. Select do Radix: helper `choose()`. Valores em reais: helper `brl()` (o Intl usa espaço não separável).
+- **Casca estática** de rotas: `instant()` de `@next/playwright`, com `baseURL` quando `page.goto` é a primeira navegação.
+
 ## Comandos
 
 ```bash
 npm test               # execução única
 npm run test:watch     # modo watch
 npx vitest run src/domain   # um diretório
+npm run test:e2e:public     # E2E sem sessão
+npm run test:e2e            # E2E completo (precisa de E2E_EMAIL/E2E_PASSWORD)
 ```

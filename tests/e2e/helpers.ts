@@ -1,0 +1,39 @@
+import { expect, type Locator, type Page } from "@playwright/test";
+
+/** `R$ 33.200,00` como o Intl formata (espaço não separável depois de "R$"). */
+export const brl = (value: string) => new RegExp(`R\\$\\s${value.replace(/\./g, "\\.")}`);
+
+/** Select do Radix: abre pelo rótulo e escolhe a opção pelo texto. */
+export async function choose(page: Page, label: string, option: string) {
+  await page.getByLabel(label, { exact: true }).click();
+  await page.getByRole("option", { name: option, exact: true }).click();
+}
+
+/** Preenche vários campos pelo rótulo exato. */
+export async function fillFields(page: Page, fields: Record<string, string>) {
+  for (const [label, value] of Object.entries(fields)) {
+    await page.getByLabel(label, { exact: true }).fill(value);
+  }
+}
+
+/** Id do registro a partir da URL atual (`/lotes/<id>`, `/analise/<id>`…). */
+export function idFromUrl(page: Page, prefix: string): string {
+  const match = new RegExp(`${prefix}/([0-9a-f-]{36})`).exec(page.url());
+  if (!match?.[1]) throw new Error(`URL sem id após ${prefix}: ${page.url()}`);
+  return match[1];
+}
+
+export async function expectToast(page: Page, text: string | RegExp) {
+  await expect(page.getByText(text).first()).toBeVisible();
+}
+
+export function section(page: Page, name: string): Locator {
+  return page.getByRole("region", { name });
+}
+
+/** PNG 1×1 válido e um PDF disfarçado de JPEG (CA-18). */
+export const VALID_PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+  "base64",
+);
+export const FAKE_JPEG = Buffer.from("%PDF-1.7\n% não é uma imagem\n");

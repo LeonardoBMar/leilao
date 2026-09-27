@@ -1,0 +1,165 @@
+import { expect, test } from "@playwright/test";
+
+import { brl, choose, expectToast, FAKE_JPEG, fillFields, idFromUrl, section, VALID_PNG } from "./helpers";
+
+/**
+ * Fluxo completo do SPEC §13: login → leilão → lote → análise fixada → resultado → dashboard, conferindo os
+ * critérios de aceite pela interface. Cria dados reais no usuário de testes; ao final o leilão é arquivado.
+ */
+test.describe.configure({ mode: "serial" });
+test.skip(!process.env.E2E_EMAIL, "Sem usuário de testes (E2E_EMAIL/E2E_PASSWORD).");
+
+const stamp = new Date().toISOString().replace(/\D/g, "").slice(0, 14);
+const auctionName = `E2E ${stamp}`;
+let auctionId = "";
+let lotId = "";
+
+test("cadastra um leilão", async ({ page }) => {
+  await page.goto("/leiloes/novo");
+  await fillFields(page, {
+    "Nome do leilão": auctionName,
+    Organizador: "Leiloeiro E2E",
+    "Data e hora": "2030-10-02T10:00",
+  });
+  await choose(page, "Origem", "Detran");
+  await page.getByRole("button", { name: "Cadastrar leilão" }).click();
+
+  await expect(page.getByRole("heading", { name: auctionName })).toBeVisible();
+  auctionId = idFromUrl(page, "/leiloes");
+});
+
+test("cadastra um lote e bloqueia número repetido no mesmo leilão (CA-02)", async ({ page }) => {
+  const lotForm = { "Número do lote": "0152", Marca: "Toyota", Modelo: "Corolla", "Ano-modelo": "2020" };
+
+  await page.goto(`/leiloes/${auctionId}/lotes/novo`);
+  await fillFields(page, { ...lotForm, "Lance atual": "31.000" });
+  await page.getByRole("button", { name: "Cadastrar lote" }).click();
+  await expect(page.getByRole("heading", { name: "Toyota Corolla 2020" })).toBeVisible();
+  lotId = idFromUrl(page, "/lotes");
+
+  await page.goto(`/leiloes/${auctionId}/lotes/novo`);
+  await fillFields(page, lotForm);
+  await page.getByRole("button", { name: "Cadastrar lote" }).click();
+  await expect(page.getByText("Já existe um lote com este número neste leilão.")).toBeVisible();
+});
+
+test("análise: exemplos do SPEC, pendências e fixação (CA-03, CA-04, CA-05, CA-07)", async ({ page }) => {
+  await page.goto(`/lotes/${lotId}`);
+  await page.getByRole("button", { name: "Analisar lote" }).click();
+  await expect(page.getByRole("heading", { name: "Análise financeira v1" })).toBeVisible();
+
+  await fillFields(page, {
+    "Valor de mercado": "50.000",
+    Reparos: "5.000",
+    Documentação: "1.000",
+    "Transporte/guincho": "800",
+    Pneus: "0",
+    Revisão: "0",
+    "Outras taxas fixas": "0",
+    "Reserva para imprevistos": "2.000",
+    "Margem desejada": "6.000",
+  });
+  await page.getByRole("radio", { name: "Valor fixo" }).click();
+  await page.getByLabel("Comissão fixa", { exact: true }).fill("2.000");
+
+  // CA-03: limite R$ 33.200,00; lance simulado R$ 31.000,00 (lance atual) → custo R$ 41.800,00, margem R$ 8.200,00.
+  await expect(section(page, "Lance máximo")).toContainText(brl("33.200,00"));
+  const simulation = section(page, "Simulação de lance");
+  await expect(simulation).toContainText(brl("41.800,00"));
+  await expect(simulation).toContainText(brl("8.200,00"));
+  await expect(simulation).toContainText("Abaixo do seu limite");
+
+  // CA-05: no limite e acima, sem divergência de centavos.
+  await simulation.getByLabel("Lance simulado").fill("33.200,00");
+  await expect(simulation).toContainText("No seu limite");
+  await simulation.getByLabel("Lance simulado").fill("33.200,01");
+  await expect(simulation).toContainText("Acima do seu limite");
+
+  // CA-04: 5% sobre o lance → R$ 33.523,81.
+  await page.getByRole("radio", { name: "Percentual sobre o lance" }).click();
+  await page.getByLabel("Taxa de comissão (%)").fill("5");
+  await expect(section(page, "Lance máximo")).toContainText(brl("33.523,81"));
+
+  // CA-07: fixar com campo vazio salva o rascunho e aponta a pendência.
+  await page.getByLabel("Pneus", { exact: true }).fill("");
+  await page.getByRole("button", { name: "Fixar análise" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Fixar análise" }).click();
+  await expect(page.getByText("Para fixar, preencha os campos pendentes.")).toBeVisible();
+  await expect(page.getByText("Obrigatório para fixar.")).toBeVisible();
+
+  // Volta à comissão fixa (limite R$ 33.200,00, usado no resultado) e fixa.
+  await page.getByLabel("Pneus", { exact: true }).fill("0");
+  await page.getByRole("radio", { name: "Valor fixo" }).click();
+  await page.getByLabel("Comissão fixa", { exact: true }).fill("2.000");
+  await expect(section(page, "Lance máximo")).toContainText(brl("33.200,00"));
+  await page.getByRole("button", { name: "Fixar análise" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Fixar análise" }).click();
+
+  await expectToast(page, "Análise fixada.");
+  await expect(page.getByText("Fixada", { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Criar nova versão" })).toBeVisible();
+});
+
+test("revisar premissas cria nova versão e preserva a fixada (CA-08)", async ({ page }) => {
+  await page.goto(`/lotes/${lotId}`);
+  await page.getByRole("button", { name: "Revisar premissas" }).click();
+  await expect(page.getByRole("heading", { name: "Análise financeira v2" })).toBeVisible();
+  // Premissas copiadas da v1.
+  await expect(page.getByLabel("Valor de mercado", { exact: true })).toHaveValue("50000,00");
+  await expect(page.getByRole("link", { name: "v1" })).toBeVisible();
+
+  // Descarta o rascunho: a v1 continua intacta.
+  await page.getByRole("button", { name: "Descartar rascunho" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Descartar" }).click();
+  await expect(page).toHaveURL(`/lotes/${lotId}`);
+  await expect(page.getByText(brl("33.200,00")).first()).toBeVisible();
+});
+
+test("resultado acima do limite e correção preservando a revisão anterior (CA-10, CA-11, CA-14)", async ({ page }) => {
+  await page.goto(`/lotes/${lotId}/resultado`);
+  await choose(page, "Desfecho", "Arrematado");
+  await fillFields(page, { "Preço final": "35.500", "Data e hora do desfecho": "2030-10-02T15:00" });
+  await page.getByRole("button", { name: "Registrar resultado" }).click();
+
+  await expect(page).toHaveURL(`/lotes/${lotId}`);
+  await expect(page.getByText(/Preço final R\$\s2\.300,00 acima do seu limite\./)).toBeVisible();
+  await expect(page.getByText("Análise anterior ao resultado")).toBeVisible();
+
+  await page.getByRole("link", { name: "Corrigir resultado" }).click();
+  await page.getByLabel("Preço final", { exact: true }).fill("33.000");
+  await page.getByRole("button", { name: "Salvar correção" }).click();
+  await expect(page.getByText("Informe o motivo da correção.")).toBeVisible();
+  await page.getByLabel("Motivo da correção").fill("Preço conferido no site do leiloeiro");
+  await page.getByRole("button", { name: "Salvar correção" }).click();
+
+  await expect(page).toHaveURL(`/lotes/${lotId}`);
+  await expect(page.getByText(/Preço final R\$\s200,00 abaixo do seu limite\./)).toBeVisible();
+  await expect(page.getByText("Dentro do limite")).toBeVisible();
+  await expect(page.getByText("Histórico de correções (1)")).toBeVisible();
+});
+
+test("fotos: recusa conteúdo que não é imagem e aceita imagem válida (CA-18)", async ({ page }) => {
+  await page.goto(`/lotes/${lotId}`);
+  const input = page.locator('input[type="file"]');
+
+  await input.setInputFiles({ name: "falsa.jpg", mimeType: "image/jpeg", buffer: FAKE_JPEG });
+  await expectToast(page, /não é uma imagem JPEG, PNG ou WebP válida/);
+
+  await input.setInputFiles({ name: "valida.png", mimeType: "image/png", buffer: VALID_PNG });
+  await expectToast(page, "Foto adicionada.");
+  await expect(page.getByRole("list", { name: "Fotos do lote" }).getByText("Capa")).toBeVisible();
+});
+
+test("dashboard mostra o indicador de resultados comparáveis", async ({ page }) => {
+  await page.goto("/dashboard");
+  await expect(page.getByText(/\d+ de \d+ resultados comparáveis ficaram dentro do limite/)).toBeVisible();
+});
+
+test("arquiva o leilão de teste (sai das visões ativas)", async ({ page }) => {
+  await page.goto(`/leiloes/${auctionId}`);
+  await page.getByRole("button", { name: "Arquivar" }).click();
+  await expectToast(page, "Leilão arquivado.");
+
+  await page.goto(`/leiloes?busca=${encodeURIComponent(auctionName)}`);
+  await expect(page.getByText("Nenhum leilão encontrado")).toBeVisible();
+});

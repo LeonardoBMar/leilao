@@ -316,7 +316,7 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
 | --- | --- | --- | --- |
 | Unitário | Vitest | `domain`, `lib`, schemas, componentes síncronos | `*.test.ts(x)` ao lado do arquivo |
 | Integração | Vitest + banco de teste | `mutations`/`queries` (unicidade, versões, autorização) | `*.int.test.ts` (quando o banco existir) |
-| E2E | Playwright | Fluxo SPEC §13 e Server Components assíncronos | `tests/e2e` |
+| E2E | Playwright + `@next/playwright` | Fluxo SPEC §13, critérios de aceite de interface e casca estática (`instant()`) | `tests/e2e` (`npm run test:e2e`; usuário de testes dedicado) |
 
 ## 15. Registro de decisões
 
@@ -349,9 +349,9 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
 2. ~~Criar o projeto Supabase e preencher `.env.local`~~ (feito; conexões testadas).
 3. ~~Prisma, `src/server/env.ts`, `src/server/db.ts`, modelos e migration inicial~~ (feito).
 4. ~~Autenticação: `src/server/{supabase,auth}.ts`, `src/proxy.ts`, `/login`, casca `(private)` e dashboard com contagens~~ (feito; a vitrine de componentes foi para `/componentes`). Falta: `src/server/storage.ts` (junto com as fotos).
-5. Configurar Playwright para o fluxo E2E (login → leilão → lote → análise fixada → resultado).
+5. ~~Configurar Playwright para o fluxo E2E~~ (feito: `public` roda sem sessão; `authenticated` precisa de `E2E_EMAIL`/`E2E_PASSWORD`).
 
-**Features entregues:** autenticação, leilões (RF-01), lotes (RF-02/03), análise financeira (RF-04/05), resultados com correções e temporalidade (RF-06, §10), dashboard completo (métricas, indicador, pendências, lotes acompanhados, próximos leilões) e arquivamento (RF-08). fotos (RF-07). **Próximas:** E2E e preparação para deploy.
+**Features entregues:** autenticação, leilões (RF-01), lotes (RF-02/03), análise financeira (RF-04/05), resultados com correções e temporalidade (RF-06, §10), dashboard completo (métricas, indicador, pendências, lotes acompanhados, próximos leilões) e arquivamento (RF-08). fotos (RF-07). E2E. **Próxima:** preparação para deploy (Vercel, variáveis de produção, backup).
 
 ## 17. Contrato da API JSON (futuro)
 

@@ -33,3 +33,8 @@ next-env.d.ts
 
 # Prisma Client gerado
 /src/generated/
+
+# Playwright
+/tests/e2e/.auth/
+/tests/e2e/.report/
+/tests/e2e/.results/
