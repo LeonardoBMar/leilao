@@ -107,7 +107,8 @@ test("análise: exemplos do SPEC, pendências e fixação (CA-03, CA-04, CA-05, 
   await page.getByRole("button", { name: "Fixar análise" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Fixar análise" }).click();
 
-  await expectToast(page, "Análise fixada.");
+  // Fixada: a tela troca o editor pela versão em leitura (o aviso some junto com o editor).
+  await expect(page.getByText(/^Fixada em /)).toBeVisible();
   await expect(page.getByText("Fixada", { exact: true }).first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Criar nova versão" })).toBeVisible();
 });
@@ -162,7 +163,7 @@ test("nova versão depois do resultado não muda a comparação vinculada (CA-09
   await expect(section(page, "Lance máximo")).toContainText(brl("43.200,00"));
   await page.getByRole("button", { name: "Fixar análise" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Fixar análise" }).click();
-  await expectToast(page, "Análise fixada.");
+  await expect(page.getByText(/^Fixada em /)).toBeVisible();
 
   // O resultado continua comparado com a v1 (R$ 33.200,00), não com a v2.
   await page.goto(`/lotes/${lotId}`);
@@ -184,7 +185,7 @@ test("duas fixações simultâneas do mesmo rascunho: só uma vale (CA-19)", asy
   const outcomes = await Promise.all(
     tabs.map((tab) =>
       settle(
-        () => tab.getByText(/^Análise fixada\./).isVisible(),
+        () => tab.getByText(/^Fixada em /).isVisible(),
         () => tab.getByText("Esta análise já foi fixada", { exact: false }).isVisible(),
       ),
     ),
