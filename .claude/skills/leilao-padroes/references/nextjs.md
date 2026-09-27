@@ -18,6 +18,7 @@ Versão instalada: **16.3.x** com Turbopack, `cacheComponents`, `typedRoutes` e 
 | `useFormState` | `useActionState` de `react` |
 | `next lint` | `eslint .` (script `npm run lint`) |
 | `experimental.ppr` | Removido; o PPR vem com `cacheComponents` |
+| `usePathname()` / `useSearchParams()` em Client Component de layout, sem boundary | Dado de URL: fica dentro de `<Suspense>`, com fallback sem esse dado (ex.: `NavLinks` renderiza a lista sem destaque). Sem isso, o **build falha** em rotas dinâmicas. |
 | `Math.random()`, `Date.now()` e `new Date()` em render de Server Component | Precisam de `await connection()` antes (e `<Suspense>`), ou devem acontecer no cliente, na action ou vir como argumento |
 
 ## Mensagens do dev overlay

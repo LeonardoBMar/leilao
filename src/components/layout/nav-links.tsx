@@ -1,28 +1,46 @@
 "use client";
 
-import { LayoutDashboard, type LucideIcon } from "lucide-react";
+import { Gavel, LayoutDashboard, type LucideIcon } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Suspense } from "react";
 
 import { cn } from "@/lib/utils";
 
 type NavItem = { href: Route; label: string; icon: LucideIcon };
 
-// Ordem do DESIGN.md §9. Leilões e Lotes entram quando as rotas existirem.
-const NAV_ITEMS: readonly NavItem[] = [{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }];
+// Ordem do DESIGN.md §9. Lotes entra quando a rota existir.
+const NAV_ITEMS: readonly NavItem[] = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/leiloes", label: "Leilões", icon: Gavel },
+];
 
 type NavLinksProps = {
   onNavigate?: () => void;
 };
 
+/**
+ * `usePathname()` é dado de URL: em rotas dinâmicas não existe no pré-render e precisa de <Suspense>.
+ * O fallback é a mesma lista sem destaque, então a casca estática já traz a navegação completa.
+ */
 export function NavLinks({ onNavigate }: NavLinksProps) {
-  const pathname = usePathname();
+  return (
+    <Suspense fallback={<NavList pathname={null} onNavigate={onNavigate} />}>
+      <ActiveNavList onNavigate={onNavigate} />
+    </Suspense>
+  );
+}
 
+function ActiveNavList({ onNavigate }: NavLinksProps) {
+  return <NavList pathname={usePathname()} onNavigate={onNavigate} />;
+}
+
+function NavList({ pathname, onNavigate }: NavLinksProps & { pathname: string | null }) {
   return (
     <ul className="grid gap-1">
       {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-        const isActive = pathname === href || pathname.startsWith(`${href}/`);
+        const isActive = pathname !== null && (pathname === href || pathname.startsWith(`${href}/`));
         return (
           <li key={href}>
             <Link

@@ -118,7 +118,9 @@ export async function updateAuction(
 }
 ```
 
+- **Sem falha de negócio possível** (ex.: criar leilão), a mutation devolve o valor direto, sem `Result<T, never>`.
 - `try/catch` só para **traduzir** erro conhecido do banco. O resto é relançado.
+- **No `update`, opcionais ausentes viram `null` explicitamente**, porque `undefined` faz o Prisma manter o valor antigo. Use uma função `to<Entity>Data(input)`.
 - Operações com mais de uma escrita usam `db.$transaction(async (tx) => { ... })`.
 - Regra de negócio (cálculo, elegibilidade) vem de `src/domain` e nunca é reimplementada aqui.
 
@@ -144,10 +146,8 @@ export async function createAuctionAction(_prev: ActionState, formData: FormData
   const parsed = auctionInputSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return validationError(parsed.error, formData);
 
-  const result = await createAuction(parsed.data);
-  if (!result.ok) return failure("Não foi possível criar o leilão.", formData);
-
-  redirect(`/leiloes/${result.value.id}`); // fora de try/catch; encerra a action
+  const auction = await createAuction(parsed.data);
+  redirect(`/leiloes/${auction.id}`); // fora de try/catch; encerra a action
 }
 
 // Recebe o id por .bind(null, id) no componente.

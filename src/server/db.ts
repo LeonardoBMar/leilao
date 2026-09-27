@@ -21,3 +21,8 @@ if (env.NODE_ENV !== "production") globalForPrisma.prisma = db;
 export function isUniqueViolation(error: unknown): boolean {
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
 }
+
+/** Violação de chave estrangeira (ex.: excluir leilão que ainda tem lotes). */
+export function isForeignKeyViolation(error: unknown): boolean {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003";
+}
