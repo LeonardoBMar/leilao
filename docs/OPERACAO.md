@@ -119,7 +119,7 @@ npm run restore -- backups/<data>
 ## 7. Monitoramento e manutenção
 
 - **Coleta automática** (docs/PLANO-COLETA.md): workflow **Coleta** no GitHub Actions, de 2 em 2 horas.
-  - **Segredo necessário:** `DATABASE_URL` (pooler, porta 6543) em GitHub → Settings → Secrets and variables → Actions. É o mesmo valor da Vercel.
+  - **Segredos necessários** em GitHub → Settings → Secrets and variables → Actions: `DATABASE_URL` (pooler, porta 6543, o mesmo valor da Vercel) e `DIRECT_URL` (sessão, porta 5432, o mesmo do `.env.local`; o `prisma generate` da instalação exige).
   - **Saúde:** a linha "Última coleta" no dashboard e em Descobertos. Falha aparece ali e em Actions → Coleta.
   - **Rodar à mão:** Actions → Coleta → Run workflow, ou `npm run collect` na máquina local.
   - **Fonte com problema** (layout mudou, bloqueio): os erros ficam em `collector_runs.errors`. Para pausar uma fonte, `update sources set active = false where id = 'leilo'` (o coletor passa a ignorá-la).
@@ -127,4 +127,4 @@ npm run restore -- backups/<data>
 - **Supabase → Advisors** (Security e Performance): mensalmente e depois de cada migration.
 - **Dependências:** `npm audit` mensal. Atualizações do Next seguem o guia de upgrade em `node_modules/next/dist/docs/` e o `AGENTS.md`.
 - **Arquivos órfãos no Storage** (envio sem confirmação, ou falha ao remover): são inofensivos, porque ninguém os exibe. Para limpar, compare `storage.objects` com `lot_images.storage_path`.
-- **Senha do banco trocada:** atualize `DATABASE_URL` na Vercel e `DATABASE_URL`/`DIRECT_URL` no `.env.local`.
+- **Senha do banco trocada:** atualize `DATABASE_URL` na Vercel, os dois segredos do GitHub Actions e `DATABASE_URL`/`DIRECT_URL` no `.env.local`.
