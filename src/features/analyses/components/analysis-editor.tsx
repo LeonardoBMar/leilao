@@ -271,8 +271,11 @@ export function AnalysisEditor({ analysis }: { analysis: AnalysisDetail }) {
                     form={formId}
                     name="intent"
                     value="fix"
-                    onClick={() => {
-                      // Fecha já no envio; o carregamento aparece no botão "Fixar análise" do formulário.
+                    onClick={(event) => {
+                      // Fechar o diálogo remove este botão da página antes do envio nativo, que o navegador
+                      // então cancela. Por isso o envio é disparado aqui, com o botão ainda conectado.
+                      event.preventDefault();
+                      formRef.current?.requestSubmit(event.currentTarget);
                       setIntent("fix");
                       setIsFixOpen(false);
                     }}
