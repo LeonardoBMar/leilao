@@ -2,7 +2,8 @@
 //
 // - Tabelas/colunas em snake_case (@@map/@map); modelos em PascalCase.
 // - Dinheiro em centavos inteiros (Int = até R$ 21.474.836,47; D-15); taxas em pontos-base.
-// - owner_id em toda tabela. FKs compostas (id, owner_id) garantem que relações apontem para o mesmo dono.
+// - owner_id em toda tabela do usuário. FKs compostas (id, owner_id) garantem que relações apontem para o mesmo dono.
+//   Exceção: o catálogo de anúncios coletados é global (D-25), no fim do arquivo.
 // - CHECKs, RLS (D-14) e triggers de imutabilidade ficam no SQL das migrations: o Prisma não os modela.
 
 generator client {
@@ -239,4 +240,168 @@ model LotImage {
   @@unique([lotId], map: "lot_images_one_cover_per_lot", where: { isCover: true })
   @@index([lotId, sortOrder])
   @@map("lot_images")
+}
+
+// ---------------------------------------------------------------------------
+// Catálogo de anúncios coletados (docs/PLANO-COLETA.md). Global, sem owner_id (D-25):
+// é dado público e igual para todos. Só o coletor grava (D-26); o app só lê, pela DAL.
+// ---------------------------------------------------------------------------
+
+/// Desfecho do anúncio na fonte. `unknown`: encerrado sem desfecho reconhecido (nunca adivinhado).
+enum ListingStatus {
+  open
+  sold
+  conditional
+  unsold
+  withdrawn
+  unknown
+
+  @@map("listing_status")
+}
+
+enum CollectorRunStatus {
+  running
+  succeeded
+  failed
+
+  @@map("collector_run_status")
+}
+
+/// Site de leilão coletado. O id é a chave usada no código (ex.: "leilo").
+model Source {
+  id        String   @id @db.VarChar(40)
+  name      String
+  baseUrl   String   @map("base_url")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  listings Listing[]
+  runs     CollectorRun[]
+
+  @@map("sources")
+}
+
+/// Município do IBGE com as coordenadas da sede (prisma/data/municipalities.csv).
+model Municipality {
+  ibgeCode  Int    @id @map("ibge_code")
+  name      String
+  state     String @db.Char(2)
+  /// Nome sem acento e em maiúsculas, para casar com o texto da fonte (normalizePlaceName).
+  nameKey   String @map("name_key")
+  latitude  Float
+  longitude Float
+
+  listings Listing[]
+
+  @@unique([nameKey, state])
+  @@index([latitude, longitude])
+  @@map("municipalities")
+}
+
+/// Anúncio normalizado de uma fonte. Único por (fonte, id na fonte): reaparecer atualiza, não duplica.
+model Listing {
+  id                 String        @id @default(uuid(7)) @db.Uuid
+  sourceId           String        @map("source_id") @db.VarChar(40)
+  externalId         String        @map("external_id")
+  url                String
+  lotNumber          String?       @map("lot_number")
+  title              String
+  brand              String?
+  model              String?
+  fipeCode           String?       @map("fipe_code")
+  fipeName           String?       @map("fipe_name")
+  modelYear          Int?          @map("model_year") @db.SmallInt
+  manufactureYear    Int?          @map("manufacture_year") @db.SmallInt
+  mileageKm          Int?          @map("mileage_km")
+  fuel               String?
+  color              String?
+  category           String?
+  recoveryType       String?       @map("recovery_type")
+  hasKey             Boolean?      @map("has_key")
+  sellerName         String?       @map("seller_name")
+  auctionExternalId  String?       @map("auction_external_id")
+  auctionName        String?       @map("auction_name")
+  auctionStartsAt    DateTime?     @map("auction_starts_at") @db.Timestamptz(3)
+  startsAt           DateTime?     @map("starts_at") @db.Timestamptz(3)
+  endsAt             DateTime?     @map("ends_at") @db.Timestamptz(3)
+  yardName           String?       @map("yard_name")
+  city               String?
+  state              String?       @db.Char(2)
+  address            String?
+  municipalityId     Int?          @map("municipality_id")
+  status             ListingStatus
+  /// Situação como a fonte escreve (ex.: "LiberadoLeilao", "Pago"), para auditoria do mapeamento.
+  sourceStatus       String?       @map("source_status")
+  currentBidCents    Int?          @map("current_bid_cents")
+  minimumBidCents    Int?          @map("minimum_bid_cents")
+  bidCount           Int?          @map("bid_count")
+  /// Lance final, gravado quando o anúncio encerra com lance (base das estimativas, D-28).
+  finalBidCents      Int?          @map("final_bid_cents")
+  /// Valor de mercado informado pela fonte: referência rotulada, nunca estimativa do sistema (D-30).
+  marketValueCents   Int?          @map("market_value_cents")
+  commissionBps      Int?          @map("commission_bps")
+  dispatcherFeeCents Int?          @map("dispatcher_fee_cents")
+  removalFeeCents    Int?          @map("removal_fee_cents")
+  storageFeeCents    Int?          @map("storage_fee_cents")
+  inspectionFeeCents Int?          @map("inspection_fee_cents")
+  otherFeesCents     Int?          @map("other_fees_cents")
+  /// URLs das fotos na fonte (D-29).
+  photoUrls          String[]      @map("photo_urls")
+  /// Dado original da fonte, sem informações de quem deu lance.
+  raw                Json
+  firstSeenAt        DateTime      @default(now()) @map("first_seen_at") @db.Timestamptz(3)
+  lastSeenAt         DateTime      @default(now()) @map("last_seen_at") @db.Timestamptz(3)
+  lastCheckedAt      DateTime      @default(now()) @map("last_checked_at") @db.Timestamptz(3)
+  /// Próxima revisita. Nulo: desfecho definitivo, não precisa voltar.
+  nextCheckAt        DateTime?     @map("next_check_at") @db.Timestamptz(3)
+  checkFailures      Int           @default(0) @map("check_failures") @db.SmallInt
+  createdAt          DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  source       Source               @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  municipality Municipality?        @relation(fields: [municipalityId], references: [ibgeCode], onDelete: SetNull)
+  observations ListingObservation[]
+
+  @@unique([sourceId, externalId])
+  @@index([nextCheckAt])
+  @@index([status, endsAt])
+  @@index([municipalityId])
+  @@index([brand, model, modelYear])
+  @@map("listings")
+}
+
+/// Instantâneo de lance e situação. Só inserção; gravado quando algo muda.
+model ListingObservation {
+  id         String        @id @default(uuid(7)) @db.Uuid
+  listingId  String        @map("listing_id") @db.Uuid
+  observedAt DateTime      @default(now()) @map("observed_at") @db.Timestamptz(3)
+  status     ListingStatus
+  bidCents   Int?          @map("bid_cents")
+  bidCount   Int?          @map("bid_count")
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, observedAt])
+  @@map("listing_observations")
+}
+
+/// Uma execução do coletor, para acompanhar saúde e falhas no app.
+model CollectorRun {
+  id         String             @id @default(uuid(7)) @db.Uuid
+  sourceId   String             @map("source_id") @db.VarChar(40)
+  status     CollectorRunStatus @default(running)
+  startedAt  DateTime           @default(now()) @map("started_at") @db.Timestamptz(3)
+  finishedAt DateTime?          @map("finished_at") @db.Timestamptz(3)
+  requests   Int                @default(0)
+  discovered Int                @default(0)
+  created    Int                @default(0)
+  updated    Int                @default(0)
+  failed     Int                @default(0)
+  /// Amostra dos erros (até 20), para diagnóstico.
+  errors     Json               @default("[]")
+
+  source Source @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+
+  @@index([sourceId, startedAt])
+  @@map("collector_runs")
 }

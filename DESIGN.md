@@ -567,10 +567,11 @@ Ordem inicial:
 
 1. Marca “Leilão Tracker”.
 2. Dashboard.
-3. Leilões.
-4. Lotes.
-5. Divisor flexível.
-6. Conta/sair.
+3. Descobertos (lotes coletados automaticamente, docs/PLANO-COLETA.md): porta de entrada do fluxo descobrir → analisar.
+4. Leilões.
+5. Lotes.
+6. Divisor flexível.
+7. Conta/sair.
 
 - Item: altura mínima de 40 px, `radius-md`, ícone 20 px, texto label.
 - Ativo: `primary-subtle`, texto e ícone `primary-active`, peso 600.

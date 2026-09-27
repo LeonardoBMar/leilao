@@ -9,9 +9,15 @@ const dateTime = new Intl.DateTimeFormat("pt-BR", {
   timeZone: APP_TIME_ZONE,
 });
 const date = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeZone: APP_TIME_ZONE });
+const integer = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
 
 export function formatBRL(value: Cents): string {
   return brl.format(value / 100);
+}
+
+/** Quilometragem: "55.493 km". */
+export function formatKm(value: number): string {
+  return `${integer.format(value)} km`;
 }
 
 export function formatDateTime(value: Date): string {

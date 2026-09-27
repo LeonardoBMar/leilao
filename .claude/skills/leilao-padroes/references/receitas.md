@@ -356,3 +356,18 @@ Já implementados; use, não recrie:
 - **Arquivos:** o navegador envia direto ao Storage com URL assinada, e o servidor confere o arquivo real antes de registrar (receita em `features/lot-images/mutations.ts`). Nunca passe arquivo por Server Action.
 - **Nunca rode `migrate reset` ou `db push`** no banco do Supabase sem consentimento explícito do usuário (veja `prisma-cli/references/agent-safety.md`).
 - **Regras que o banco garante** também são validadas na aplicação (Zod e mutation), para gerar mensagem amigável. O banco é a última barreira.
+
+## 13. Nova fonte de coleta (adaptador)
+
+Plano e decisões: `docs/PLANO-COLETA.md`, D-25 a D-30. O coletor (`src/server/collector`) não muda: fonte nova é só um adaptador.
+
+1. **Investigue antes de codar:** `robots.txt`, termos de uso, sitemap, e se a página traz dados estruturados (estado serializado, JSON-LD). Registre o levantamento no plano (§2). Área com login ou CAPTCHA fica fora.
+2. **Fixtures reais e reduzidas** em `src/sources/<fonte>/fixtures/`: uma página por desfecho conhecido (aberto, vendido, condicional…) e um trecho do sitemap. **Remova dados de quem deu lance** (apelido, cidade). As fixtures ficam fora do Prettier.
+3. **Adaptador puro** em `src/sources/<fonte>/`:
+   - `schema.ts`: Zod tolerante (`.nullish().catch(null)`); só o essencial é obrigatório.
+   - `parse.ts`: página → `ListingInput`. Dado estruturado primeiro, reserva depois; **situação não confirmada nunca é adivinhada** (vira `open` antes do fim e `unknown` depois). Dinheiro por `reaisToCents`, taxa em `bps`.
+   - `discover.ts`: sitemap → `DiscoveredListing[]`.
+   - `index.ts`: exporta o `SourceAdapter`.
+4. **Testes** com as fixtures: cada campo do formato único, cada desfecho, a reserva e a página fora do formato (`missing_data`/`invalid_data`).
+5. **Banco:** migration que insere a linha em `sources`; se as fotos vêm de outro domínio, inclua a origem em `listingImageOrigins` (`next.config.ts`, D-29).
+6. **Agendamento:** registre o adaptador em `scripts/collect.ts` e teste com `npm run collect -- --max-visits 5` antes de liberar no workflow.

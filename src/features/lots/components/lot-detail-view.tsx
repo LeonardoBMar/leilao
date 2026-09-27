@@ -15,7 +15,7 @@ import {
   Money,
   Skeleton,
 } from "@/components/ui";
-import { formatDate, formatDateTime } from "@/lib/format";
+import { formatDate, formatDateTime, formatKm } from "@/lib/format";
 
 import { updateCurrentBidAction } from "../actions";
 import { getLot } from "../queries";
@@ -24,8 +24,6 @@ import { CurrentBidForm } from "./current-bid-form";
 import { FollowSwitch } from "./follow-switch";
 import { LimitBadge } from "./limit-badge";
 import { LotActions } from "./lot-actions";
-
-const integer = new Intl.NumberFormat("pt-BR");
 
 /** Ficha do lote (SPEC `/lotes/[id]`, DESIGN.md §15.3). Valores observados e limite antes das notas. */
 type LotDetailViewProps = {
@@ -154,9 +152,7 @@ export async function LotDetailView({ params, analysis, result, photos }: LotDet
                 <Detail label="Ano (fabricação/modelo)">
                   {lot.manufactureYear ?? "—"}/{lot.modelYear}
                 </Detail>
-                <Detail label="Quilometragem">
-                  {lot.mileageKm === null ? <Unknown /> : `${integer.format(lot.mileageKm)} km`}
-                </Detail>
+                <Detail label="Quilometragem">{lot.mileageKm === null ? <Unknown /> : formatKm(lot.mileageKm)}</Detail>
                 <Detail label="Página do lote">
                   {lot.lotUrl ? (
                     <a

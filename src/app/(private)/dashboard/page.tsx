@@ -7,6 +7,7 @@ import { ButtonLink } from "@/components/ui";
 import { UpcomingAuctions, UpcomingAuctionsSkeleton } from "@/features/auctions/components/upcoming-auctions";
 import { DashboardSummary, DashboardSummarySkeleton } from "@/features/dashboard/components/dashboard-summary";
 import { PendingItems } from "@/features/dashboard/components/pending-items";
+import { CollectorStatusLine, CollectorStatusLineSkeleton } from "@/features/listings/components/collector-status";
 import { FollowedLots, FollowedLotsSkeleton } from "@/features/lots/components/followed-lots";
 
 export const metadata: Metadata = { title: "Dashboard · Leilão Tracker" };
@@ -29,6 +30,15 @@ export default function DashboardPage() {
       <Suspense fallback={<DashboardSummarySkeleton />}>
         <DashboardSummary />
       </Suspense>
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Suspense fallback={<CollectorStatusLineSkeleton />}>
+          <CollectorStatusLine />
+        </Suspense>
+        <ButtonLink href="/descobertos" variant="secondary" size="sm">
+          Ver descobertos
+        </ButtonLink>
+      </div>
 
       <Suspense fallback={null}>
         <PendingItems />

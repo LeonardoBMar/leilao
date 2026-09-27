@@ -25,6 +25,15 @@ const TABLES = [
   { name: "lot_images", orderBy: "lot_id, sort_order, created_at" },
 ];
 
+/**
+ * Catálogo coletado (D-25): global, sem dono. Entra no backup porque arremates antigos não podem ser coletados
+ * de novo quando a página sai do ar na fonte. Municípios e fontes vêm de `db:seed` e das migrations.
+ */
+const CATALOG_TABLES = [
+  { name: "listings", orderBy: "source_id, external_id" },
+  { name: "listing_observations", orderBy: "listing_id, observed_at, id" },
+];
+
 async function main() {
   const databaseUrl = process.env.DIRECT_URL;
   if (!databaseUrl) throw new Error("DIRECT_URL não definida (.env.local).");
@@ -36,6 +45,7 @@ async function main() {
   const client = new pg.Client({ connectionString: databaseUrl });
   await client.connect();
   const tables = {};
+  const catalog = {};
   let migrations = [];
   try {
     // Leitura consistente de todas as tabelas no mesmo instante.
@@ -48,15 +58,22 @@ async function main() {
     for (const table of TABLES) {
       tables[table.name] = (await client.query(`select * from "${table.name}" order by ${table.orderBy}`)).rows;
     }
+    if (migrations.some((name) => name.endsWith("_add_listings_catalog"))) {
+      for (const table of CATALOG_TABLES) {
+        catalog[table.name] = (await client.query(`select * from "${table.name}" order by ${table.orderBy}`)).rows;
+      }
+    }
     await client.query("COMMIT");
   } finally {
     await client.end();
   }
 
-  const backup = { format: 1, createdAt: new Date().toISOString(), migrations, tables };
+  const backup = { format: 1, createdAt: new Date().toISOString(), migrations, tables, catalog };
   await writeFile(path.join(outDir, "database.json"), JSON.stringify(backup, null, 2));
 
-  const counts = Object.fromEntries(Object.entries(tables).map(([name, rows]) => [name, rows.length]));
+  const counts = Object.fromEntries(
+    Object.entries({ ...tables, ...catalog }).map(([name, rows]) => [name, rows.length]),
+  );
   console.log(`Banco: ${outDir}/database.json`, counts);
 
   await backupPhotos(tables.lot_images, outDir);

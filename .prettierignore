@@ -10,3 +10,5 @@ skills-lock.json
 tests/e2e/.report
 tests/e2e/.results
 backups
+src/sources/*/fixtures
+prisma/data/*.csv

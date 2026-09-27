@@ -85,6 +85,7 @@ npm run restore -- backups/<data>
 
 1. Crie um banco vazio no mesmo cluster ou use um projeto novo (seção seguinte).
 2. `DIRECT_URL=<url do destino> npx prisma migrate deploy`.
+   Se o backup tiver catálogo coletado, carregue também os municípios: `DATABASE_URL=<url do destino> npm run db:seed`.
 3. `RESTORE_DATABASE_URL=<url do destino> npm run restore -- backups/<data> --apply`.
 4. Confira os dados e troque `DATABASE_URL` na Vercel para o banco restaurado.
 
@@ -94,7 +95,9 @@ npm run restore -- backups/<data>
 2. Aplique o schema e o Storage no destino, com `DIRECT_URL` do projeto novo:
    ```bash
    npm run db:release
+   npm run db:seed
    ```
+   `db:seed` carrega os municípios, necessários para restaurar o catálogo coletado.
 3. Restaure reatribuindo o dono, porque o id do usuário mudou:
    ```bash
    npm run restore -- backups/<data> --apply --owner <uuid-do-usuário>
@@ -115,6 +118,11 @@ npm run restore -- backups/<data>
 
 ## 7. Monitoramento e manutenção
 
+- **Coleta automática** (docs/PLANO-COLETA.md): workflow **Coleta** no GitHub Actions, de 2 em 2 horas.
+  - **Segredo necessário:** `DATABASE_URL` (pooler, porta 6543) em GitHub → Settings → Secrets and variables → Actions. É o mesmo valor da Vercel.
+  - **Saúde:** a linha "Última coleta" no dashboard e em Descobertos. Falha aparece ali e em Actions → Coleta.
+  - **Rodar à mão:** Actions → Coleta → Run workflow, ou `npm run collect` na máquina local.
+  - **Fonte com problema** (layout mudou, bloqueio): os erros ficam em `collector_runs.errors`. Para pausar uma fonte, `update sources set active = false where id = 'leilo'` (o coletor passa a ignorá-la).
 - **Erros:** Vercel → Logs (as actions registram `console.error` sem dados pessoais).
 - **Supabase → Advisors** (Security e Performance): mensalmente e depois de cada migration.
 - **Dependências:** `npm audit` mensal. Atualizações do Next seguem o guia de upgrade em `node_modules/next/dist/docs/` e o `AGENTS.md`.

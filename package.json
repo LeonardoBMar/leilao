@@ -20,11 +20,13 @@
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:storage": "prisma db execute --file prisma/sql/storage.sql",
+    "db:seed": "node --conditions=react-server --import tsx scripts/seed-municipalities.ts",
     "test:e2e": "playwright test",
     "test:e2e:public": "playwright test --project=public",
     "db:release": "prisma migrate deploy && npm run db:storage",
     "backup": "node scripts/backup.mjs",
-    "restore": "node scripts/restore.mjs"
+    "restore": "node scripts/restore.mjs",
+    "collect": "node --conditions=react-server --import tsx scripts/collect.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.0",
@@ -69,6 +71,7 @@
     "prettier-plugin-tailwindcss": "0.8.1",
     "prisma": "7.10.0",
     "tailwindcss": "4.3.3",
+    "tsx": "4.23.15",
     "typescript": "6.0.3",
     "vitest": "5.0.2"
   },

@@ -34,7 +34,11 @@
       "Bash(npx prisma migrate *)",
       "Bash(npx prisma db *)",
       "Bash(* --accept-data-loss *)",
-      "Bash(* --force-reset *)"
+      "Bash(* --force-reset *)",
+      "Bash(npm run db:seed *)",
+      "Bash(npm run db:seed)",
+      "Bash(npm run collect *)",
+      "Bash(npm run collect)"
     ],
     "deny": ["Read(./.env)", "Read(./.env.local)", "Read(./backups/**)"]
   },

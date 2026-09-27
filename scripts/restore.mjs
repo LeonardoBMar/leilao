@@ -10,6 +10,8 @@
 //   e estar vazio. Caso contrário, nada é feito.
 // - Tudo em uma transação: ou restaura inteiro, ou nada.
 // - Fotos: com SUPABASE_SECRET_KEY e RESTORE_SUPABASE_URL, envia backups/<data>/photos de volta ao bucket.
+// - Catálogo coletado (anúncios e observações, D-25): restaurado junto, se o backup tiver. O destino precisa
+//   dos municípios (`npm run db:seed` com DIRECT_URL do destino) e das fontes (vêm das migrations).
 // - owner_id é o id do usuário no Supabase Auth, que não faz parte do backup. Num projeto novo o usuário terá
 //   outro id: --owner reescreve owner_id e o prefixo das fotos (<owner_id>/…) durante a inserção. Depois não
 //   dá para corrigir, porque análises fixadas e resultados não aceitam UPDATE.
@@ -24,10 +26,16 @@ import pg from "pg";
 nextEnv.loadEnvConfig(process.cwd(), false, { info() {}, error: console.error });
 
 const TABLE_ORDER = ["auctions", "lots", "analyses", "results", "lot_images"];
+/** Backups antigos não têm `catalog`: vira vazio. */
+const CATALOG_ORDER = ["listings", "listing_observations"];
 
 /** Confere, dentro do backup, as mesmas garantias que o banco impõe (FKs por dono e por lote). */
-function validate({ tables }) {
+function validate({ tables, catalog }) {
   const problems = [];
+  const listingIds = new Set(catalog.listings.map((listing) => listing.id));
+  for (const observation of catalog.listing_observations) {
+    if (!listingIds.has(observation.listing_id)) problems.push(`observação ${observation.id}: anúncio ausente`);
+  }
   const byId = (rows) => new Map(rows.map((row) => [row.id, row]));
   const auctions = byId(tables.auctions);
   const lots = byId(tables.lots);
@@ -87,14 +95,17 @@ async function apply(backup) {
     if (missing.length > 0)
       throw new Error(`Destino sem as migrations do backup: ${missing.join(", ")}. Rode prisma migrate deploy.`);
 
-    for (const table of TABLE_ORDER) {
+    for (const table of [...TABLE_ORDER, ...CATALOG_ORDER]) {
       const { rows } = await client.query(`select count(*)::int as n from "${table}"`);
       if (rows[0].n > 0)
         throw new Error(`Destino não está vazio (${table} tem ${rows[0].n} linhas). Nada foi alterado.`);
     }
 
+    await checkCatalogReferences(client, backup.catalog.listings);
+
     await client.query("BEGIN");
     for (const table of TABLE_ORDER) await insertRows(client, table, backup.tables[table]);
+    for (const table of CATALOG_ORDER) await insertRows(client, table, backup.catalog[table]);
     await client.query("COMMIT");
   } catch (error) {
     await client.query("ROLLBACK").catch(() => {});
@@ -103,6 +114,19 @@ async function apply(backup) {
     await client.end();
   }
   console.log("Banco restaurado.");
+}
+
+/** Fontes e municípios não estão no backup: precisam existir no destino antes de inserir anúncios. */
+async function checkCatalogReferences(client, listings) {
+  if (listings.length === 0) return;
+  const sources = new Set((await client.query("select id from sources")).rows.map((row) => row.id));
+  const missingSources = [...new Set(listings.map((listing) => listing.source_id))].filter((id) => !sources.has(id));
+  if (missingSources.length > 0)
+    throw new Error(`Destino sem as fontes: ${missingSources.join(", ")}. Nada foi alterado.`);
+  const { rows } = await client.query("select count(*)::int as n from municipalities");
+  if (listings.some((listing) => listing.municipality_id !== null) && rows[0].n === 0) {
+    throw new Error("Destino sem municípios. Rode npm run db:seed apontando para o destino. Nada foi alterado.");
+  }
 }
 
 async function restorePhotos(backupDir, images) {
@@ -157,8 +181,12 @@ async function main() {
     throw new Error("Informe a pasta do backup: npm run restore -- backups/<data> [--apply] [--owner <id>]");
   const backup = JSON.parse(await readFile(path.join(backupDir, "database.json"), "utf8"));
   if (backup.format !== 1) throw new Error(`Formato de backup desconhecido: ${backup.format}`);
+  backup.catalog = Object.fromEntries(CATALOG_ORDER.map((table) => [table, backup.catalog?.[table] ?? []]));
 
-  const counts = Object.fromEntries(TABLE_ORDER.map((table) => [table, backup.tables[table].length]));
+  const counts = Object.fromEntries([
+    ...TABLE_ORDER.map((table) => [table, backup.tables[table].length]),
+    ...CATALOG_ORDER.map((table) => [table, backup.catalog[table].length]),
+  ]);
   console.log(`Backup de ${backup.createdAt}`, counts, `${backup.migrations.length} migrations`);
 
   const problems = validate(backup);

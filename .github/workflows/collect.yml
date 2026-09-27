@@ -1,0 +1,39 @@
+# Coletor de anúncios (docs/PLANO-COLETA.md, D-26). Grava só o catálogo global no banco.
+# Segredo necessário: DATABASE_URL (pooler, porta 6543) em Settings → Secrets and variables → Actions.
+name: Coleta
+
+on:
+  schedule:
+    # De 2 em 2 horas, fora da virada da hora (horário cheio concentra filas no GitHub).
+    - cron: "17 */2 * * *"
+  workflow_dispatch:
+    inputs:
+      max_visits:
+        description: "Máximo de páginas de anúncio nesta execução"
+        default: "400"
+        required: false
+
+permissions:
+  contents: read
+
+# Nunca duas coletas ao mesmo tempo; a próxima espera a atual terminar.
+concurrency:
+  group: collector
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      # Entrada manual passa por variável de ambiente, nunca interpolada direto no comando.
+      MAX_VISITS: ${{ inputs.max_visits || '400' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run collect -- --max-visits "$MAX_VISITS"

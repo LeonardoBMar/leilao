@@ -1,6 +1,6 @@
 "use client";
 
-import { Car, Gavel, LayoutDashboard, type LucideIcon } from "lucide-react";
+import { Car, Gavel, LayoutDashboard, type LucideIcon, Radar } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -13,6 +13,7 @@ type NavItem = { href: Route; label: string; icon: LucideIcon };
 // Ordem do DESIGN.md §9.
 const NAV_ITEMS: readonly NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/descobertos", label: "Descobertos", icon: Radar },
   { href: "/leiloes", label: "Leilões", icon: Gavel },
   { href: "/lotes", label: "Lotes", icon: Car },
 ];
