@@ -3,12 +3,25 @@ import Image from "next/image";
 
 import { ListPagination } from "@/components/layout/list-pagination";
 import { Alert, AlertDescription, Badge, EmptyState, Money, Skeleton } from "@/components/ui";
-import { DEFAULT_REGION } from "@/domain/listings/region";
 import { formatDateTime, formatKm } from "@/lib/format";
 
-import { LISTING_STATUS_LABELS, LISTING_STATUS_VARIANTS } from "../labels";
+import {
+  CONDITION_FLAG_LABELS,
+  DAMAGE_LABELS,
+  DAMAGE_VARIANTS,
+  INSPECTION_LABELS,
+  INSPECTION_VARIANTS,
+  LISTING_STATUS_LABELS,
+  LISTING_STATUS_VARIANTS,
+} from "../labels";
 import { listListings } from "../queries";
-import { DEFAULT_CATEGORY, DEFAULT_DISTANCE, type ListingFilters as Filters, listingFiltersSchema } from "../schemas";
+import {
+  DEFAULT_CATEGORY,
+  DEFAULT_CONDITION,
+  DEFAULT_DISTANCE,
+  type ListingFilters as Filters,
+  listingFiltersSchema,
+} from "../schemas";
 import type { ListingListItem } from "../types";
 import { ListingFilters, type ListingFilterValues } from "./listing-filters";
 
@@ -29,12 +42,13 @@ export async function ListingsView({ searchParams }: { searchParams: SearchParam
     precoAte: filters.maxPrice === undefined ? undefined : String(filters.maxPrice / 100),
     distancia: filters.distanceKm === null ? "todas" : String(filters.distanceKm),
     categoria: filters.category,
+    condicao: filters.condition,
     situacao: filters.ended ? "encerrados" : "abertos",
   };
 
   return (
     <div className="grid gap-6">
-      <ListingFilters values={values} regionLabel={DEFAULT_REGION.label} />
+      <ListingFilters values={values} />
       <ListingList filters={filters} values={values} />
     </div>
   );
@@ -60,6 +74,7 @@ async function ListingList({ filters, values }: { filters: Filters; values: List
     precoAte: values.precoAte,
     distancia: values.distancia === DEFAULT_DISTANCE ? undefined : values.distancia,
     categoria: values.categoria === DEFAULT_CATEGORY ? undefined : values.categoria,
+    condicao: values.condicao === DEFAULT_CONDITION ? undefined : values.condicao,
     situacao: values.situacao === "abertos" ? undefined : values.situacao,
   };
 
@@ -126,6 +141,8 @@ function ListingCard({ item }: { item: ListingListItem }) {
           </p>
         </div>
 
+        <ConditionBadges item={item} />
+
         <p className="flex items-center gap-1 text-caption text-foreground-secondary">
           <MapPin aria-hidden="true" className="size-4 shrink-0" />
           {item.city && item.state ? `${item.city}/${item.state}` : "Local não informado"}
@@ -157,6 +174,34 @@ function ListingCard({ item }: { item: ListingListItem }) {
         </a>
       </div>
     </article>
+  );
+}
+
+/** Condição declarada pelo leiloeiro. Sem nada declarado, não mostra nada (não afirma "sem dano"). */
+function ConditionBadges({ item }: { item: ListingListItem }) {
+  const { damageLevel, conditionFlags, inspection, inspectionNotes } = item;
+  if (damageLevel === null && conditionFlags.length === 0 && inspection === null) return null;
+
+  return (
+    <ul aria-label="Condição informada pelo leiloeiro" className="flex flex-wrap gap-1.5">
+      {damageLevel ? (
+        <li>
+          <Badge variant={DAMAGE_VARIANTS[damageLevel]}>{DAMAGE_LABELS[damageLevel]}</Badge>
+        </li>
+      ) : null}
+      {conditionFlags.map((flag) => (
+        <li key={flag}>
+          <Badge variant="outline">{CONDITION_FLAG_LABELS[flag]}</Badge>
+        </li>
+      ))}
+      {inspection ? (
+        <li>
+          <Badge variant={INSPECTION_VARIANTS[inspection]} title={inspectionNotes ?? undefined}>
+            {INSPECTION_LABELS[inspection]}
+          </Badge>
+        </li>
+      ) : null}
+    </ul>
   );
 }
 

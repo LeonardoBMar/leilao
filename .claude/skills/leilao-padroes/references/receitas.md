@@ -367,7 +367,8 @@ Plano e decisões: `docs/PLANO-COLETA.md`, D-25 a D-30. O coletor (`src/server/c
    - `schema.ts`: Zod tolerante (`.nullish().catch(null)`); só o essencial é obrigatório.
    - `parse.ts`: página → `ListingInput`. Dado estruturado primeiro, reserva depois; **situação não confirmada nunca é adivinhada** (vira `open` antes do fim e `unknown` depois). Dinheiro por `reaisToCents`, taxa em `bps`.
    - `discover.ts`: sitemap → `DiscoveredListing[]`.
-   - `index.ts`: exporta o `SourceAdapter`.
+   - `index.ts`: exporta o `SourceAdapter`, inclusive `detailsFromRaw` (rederiva descrição e condição do `raw` guardado, para preencher campos novos sem coletar de novo).
+   - **Condição** (monta, sucata, marcações, laudo): texto livre passa por `parseConditionNotes` (`src/domain/listings/condition.ts`); rótulos próprios da fonte (ex.: resultado do laudo, categoria "Sucatas") são mapeados no adaptador, como a situação.
 4. **Testes** com as fixtures: cada campo do formato único, cada desfecho, a reserva e a página fora do formato (`missing_data`/`invalid_data`).
 5. **Banco:** migration que insere a linha em `sources`; se as fotos vêm de outro domínio, inclua a origem em `listingImageOrigins` (`next.config.ts`, D-29).
 6. **Agendamento:** registre o adaptador em `scripts/collect.ts` e teste com `npm run collect -- --max-visits 5` antes de liberar no workflow.

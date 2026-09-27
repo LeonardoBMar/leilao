@@ -7,7 +7,16 @@ import { type FormEvent, useTransition } from "react";
 
 import { Button, Input, SelectField } from "@/components/ui";
 
-import { CATEGORY_KEYS, CATEGORY_OPTIONS, DEFAULT_CATEGORY, DEFAULT_DISTANCE, DISTANCE_OPTIONS } from "../schemas";
+import {
+  CATEGORY_KEYS,
+  CATEGORY_OPTIONS,
+  CONDITION_KEYS,
+  CONDITION_OPTIONS,
+  DEFAULT_CATEGORY,
+  DEFAULT_CONDITION,
+  DEFAULT_DISTANCE,
+  DISTANCE_OPTIONS,
+} from "../schemas";
 
 const BASE_PATH = "/descobertos";
 
@@ -19,10 +28,12 @@ export type ListingFilterValues = {
   precoAte?: string;
   distancia: string;
   categoria: string;
+  condicao: string;
   situacao: "abertos" | "encerrados";
 };
 
-export function ListingFilters({ values, regionLabel }: { values: ListingFilterValues; regionLabel: string }) {
+/** Distâncias contam a partir da região padrão, que a linha de status da coleta mostra logo acima. */
+export function ListingFilters({ values }: { values: ListingFilterValues }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const activeCount = [
@@ -32,6 +43,7 @@ export function ListingFilters({ values, regionLabel }: { values: ListingFilterV
     values.precoAte,
     values.distancia !== DEFAULT_DISTANCE,
     values.categoria !== DEFAULT_CATEGORY,
+    values.condicao !== DEFAULT_CONDITION,
     values.situacao !== "abertos",
   ].filter(Boolean).length;
 
@@ -49,6 +61,7 @@ export function ListingFilters({ values, regionLabel }: { values: ListingFilterV
       const isDefault =
         (key === "distancia" && value === DEFAULT_DISTANCE) ||
         (key === "categoria" && value === DEFAULT_CATEGORY) ||
+        (key === "condicao" && value === DEFAULT_CONDITION) ||
         (key === "situacao" && value === "abertos");
       if (isDefault) continue;
       params.set(key, value.trim());
@@ -101,7 +114,7 @@ export function ListingFilters({ values, regionLabel }: { values: ListingFilterV
       />
       <SelectField
         name="distancia"
-        label={`Distância de ${regionLabel}`}
+        label="Distância"
         defaultValue={values.distancia}
         options={[
           ...DISTANCE_OPTIONS.map((km) => ({ value: km, label: `Até ${km} km` })),
@@ -125,7 +138,14 @@ export function ListingFilters({ values, regionLabel }: { values: ListingFilterV
         ]}
         className="md:col-span-1 xl:col-span-1"
       />
-      <div className="flex flex-wrap items-end gap-3 md:col-span-2 xl:col-span-3 xl:justify-end">
+      <SelectField
+        name="condicao"
+        label="Condição"
+        defaultValue={values.condicao}
+        options={CONDITION_KEYS.map((key) => ({ value: key, label: CONDITION_OPTIONS[key].label }))}
+        className="md:col-span-2 xl:col-span-1"
+      />
+      <div className="flex flex-wrap items-end gap-3 md:col-span-2 xl:col-span-2 xl:justify-end">
         {activeCount > 0 ? (
           <Button type="button" variant="ghost" onClick={() => navigate(new URLSearchParams())} disabled={isPending}>
             Limpar filtros ({activeCount})

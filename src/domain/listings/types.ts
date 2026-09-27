@@ -1,4 +1,5 @@
 import type { Bps, Cents } from "../money";
+import type { ListingCondition } from "./condition";
 
 /** Desfecho do anúncio na fonte. `unknown`: encerrado sem desfecho reconhecido (nunca adivinhado). */
 export const LISTING_STATUSES = ["open", "sold", "conditional", "unsold", "withdrawn", "unknown"] as const;
@@ -29,6 +30,10 @@ export type ListingInput = {
   };
   auction: { externalId: string | null; name: string | null; startsAt: Date | null };
   sellerName: string | null;
+  /** Texto do leiloeiro sobre o lote, sem HTML. */
+  description: string | null;
+  /** Dano, marcações e laudo cautelar: só o que a fonte declara (`condition.ts`). */
+  condition: ListingCondition;
   startsAt: Date | null;
   endsAt: Date | null;
   location: { yardName: string | null; city: string | null; state: string | null; address: string | null };

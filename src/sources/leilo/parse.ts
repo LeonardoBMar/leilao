@@ -1,12 +1,21 @@
 import { z } from "zod";
 
+import {
+  cleanDescription,
+  EMPTY_CONDITION,
+  type InspectionResult,
+  type ListingCondition,
+  normalizeNotes,
+  parseConditionNotes,
+  worstDamage,
+} from "@/domain/listings/condition";
 import { splitBrandModel } from "@/domain/listings/place";
 import type { ListingInput, ListingStatus } from "@/domain/listings/types";
 import { bps } from "@/domain/money";
 import { err, ok, type Result } from "@/lib/result";
 
 import { extractAssignedJson, extractJsonLd, reaisToCents } from "../shared/extract";
-import type { ParseError } from "../types";
+import type { ListingDetails, ParseError } from "../types";
 import { type LeiloLot, leiloLotSchema, type LeiloVehicleLd, leiloVehicleLdSchema } from "./schema";
 
 const BASE_URL = "https://leilo.com.br";
@@ -27,6 +36,15 @@ const STATUS_BY_SITUACAO: Record<string, ListingStatus> = {
   Retirado: "withdrawn",
 };
 
+/** Laudo cautelar como o Leilo escreve. "AUSENTE" e desconhecidos ficam `null`. */
+const INSPECTION_BY_LAUDO: Record<string, InspectionResult> = {
+  APROVADO: "approved",
+  "APROVADO COM OBSERVACOES": "approved_with_notes",
+  REPROVADO: "rejected",
+};
+/** Categoria do Leilo que já é classificação de dano. */
+const SALVAGE_CATEGORY = "Sucatas";
+
 const pageStateSchema = z.object({ elastic: z.object({ lotePaginaAtualData: z.unknown() }) });
 
 /** Página de lote do Leilo → anúncio no formato único. Estado da página primeiro, JSON-LD como reserva (D-27). */
@@ -42,6 +60,16 @@ export function parseLeiloListingPage(html: string, now: Date): Result<ListingIn
     return fallback ? ok(fallback) : err("invalid_data");
   }
   return err(rawLot === null ? "missing_data" : "invalid_data");
+}
+
+/** Descrição e condição a partir do lote guardado em `raw` (o mesmo objeto, sem fotos e sem quem deu lance). */
+export function leiloDetailsFromRaw(raw: unknown): ListingDetails | null {
+  const lot = leiloLotSchema.safeParse(raw);
+  return lot.success ? detailsOf(lot.data) : null;
+}
+
+function detailsOf(lot: LeiloLot): ListingDetails {
+  return { description: cleanDescription(lot.descricao), condition: conditionOf(lot) };
 }
 
 function fromLot(lot: LeiloLot, raw: unknown, ld: LeiloVehicleLd | null, now: Date): ListingInput {
@@ -79,6 +107,7 @@ function fromLot(lot: LeiloLot, raw: unknown, ld: LeiloVehicleLd | null, now: Da
       startsAt: toDate(lot.leilao?.data),
     },
     sellerName: lot.comitente?.nome ?? null,
+    ...detailsOf(lot),
     startsAt: toDate(lot.dataInicio) ?? toDate(ld?.offers?.availabilityStarts),
     endsAt,
     location: {
@@ -138,6 +167,8 @@ function fromLd(ld: LeiloVehicleLd, now: Date): ListingInput | null {
     },
     auction: { externalId: null, name: null, startsAt: null },
     sellerName: null,
+    description: null,
+    condition: EMPTY_CONDITION,
     startsAt: toDate(offers?.availabilityStarts),
     endsAt,
     location: {
@@ -163,6 +194,19 @@ function fromLd(ld: LeiloVehicleLd, now: Date): ListingInput | null {
     },
     photoUrls: fromPhotoOrigin(ld.image ?? []),
     raw: ld,
+  };
+}
+
+function conditionOf(lot: LeiloLot): ListingCondition {
+  const notes = parseConditionNotes(lot.descricao);
+  const laudo = lot.laudoCautelarResultado
+    ? INSPECTION_BY_LAUDO[normalizeNotes(lot.laudoCautelarResultado)]
+    : undefined;
+  return {
+    damageLevel: worstDamage(notes.damageLevel, lot.tipo === SALVAGE_CATEGORY ? "salvage" : null),
+    flags: notes.flags,
+    inspection: laudo ?? null,
+    inspectionNotes: cleanDescription(lot.laudoCautelarObservacao),
   };
 }
 

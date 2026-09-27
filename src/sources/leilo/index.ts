@@ -1,6 +1,6 @@
 import type { SourceAdapter } from "../types";
 import { parseLeiloSitemap } from "./discover";
-import { leiloListingUrl, parseLeiloListingPage } from "./parse";
+import { leiloDetailsFromRaw, leiloListingUrl, parseLeiloListingPage } from "./parse";
 
 /** Leilo (leilo.com.br): primeira fonte (docs/PLANO-COLETA.md §2). */
 export const leiloSource: SourceAdapter = {
@@ -9,4 +9,5 @@ export const leiloSource: SourceAdapter = {
   listingUrl: leiloListingUrl,
   parseSitemap: parseLeiloSitemap,
   parseListingPage: parseLeiloListingPage,
+  detailsFromRaw: leiloDetailsFromRaw,
 };

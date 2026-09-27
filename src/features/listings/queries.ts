@@ -11,6 +11,8 @@ import { db } from "@/server/db";
 import {
   CATEGORY_OPTIONS,
   type CategoryOption,
+  CONDITION_OPTIONS,
+  type ConditionOption,
   DEFAULT_CATEGORY,
   type ListingFilters,
   LISTINGS_PAGE_SIZE,
@@ -34,6 +36,10 @@ const listSelect = {
   mileageKm: true,
   fuel: true,
   recoveryType: true,
+  damageLevel: true,
+  conditionFlags: true,
+  inspectionResult: true,
+  inspectionNotes: true,
   city: true,
   state: true,
   auctionName: true,
@@ -64,6 +70,10 @@ function toListItem(row: ListRow): ListingListItem {
     mileageKm: row.mileageKm,
     fuel: row.fuel,
     recoveryType: row.recoveryType,
+    damageLevel: row.damageLevel,
+    conditionFlags: row.conditionFlags,
+    inspection: row.inspectionResult,
+    inspectionNotes: row.inspectionNotes,
     city: row.city,
     state: row.state,
     distanceKm: row.municipality ? distanceKm(DEFAULT_REGION.center, row.municipality) : null,
@@ -96,6 +106,17 @@ function categoryWhere(option: CategoryOption): Prisma.ListingWhereInput {
   return categories === null ? {} : { category: { in: [...categories] } };
 }
 
+function conditionWhere(option: ConditionOption): Prisma.ListingWhereInput {
+  const { filter } = CONDITION_OPTIONS[option];
+  if (filter === null) return {};
+  return {
+    OR: [
+      ...(filter.unclassified ? [{ damageLevel: null }] : []),
+      ...(filter.levels.length > 0 ? [{ damageLevel: { in: [...filter.levels] } }] : []),
+    ],
+  };
+}
+
 /** Aberto de fato: situação aberta e fim ainda no futuro (ou desconhecido). */
 function openWhere(now: Date): Prisma.ListingWhereInput {
   return { status: "open", OR: [{ endsAt: null }, { endsAt: { gt: now } }] };
@@ -111,6 +132,7 @@ export async function listListings(filters: ListingFilters): Promise<ListingPage
       filters.ended ? { NOT: openWhere(now) } : openWhere(now),
       withinBox(filters.distanceKm),
       categoryWhere(filters.category),
+      conditionWhere(filters.condition),
       search
         ? {
             OR: [

@@ -4,6 +4,8 @@ import type { Result } from "@/lib/result";
 /** Anúncio encontrado na descoberta (sitemap), antes de baixar a página. */
 export type DiscoveredListing = { externalId: string; url: string; lastModified: Date | null };
 
+export type ListingDetails = Pick<ListingInput, "description" | "condition">;
+
 /** Página sem os dados esperados (a fonte mudou o formato) ou com dados inválidos. */
 export type ParseError = "missing_data" | "invalid_data";
 
@@ -21,4 +23,9 @@ export type SourceAdapter = {
   parseSitemap: (xml: string) => DiscoveredListing[];
   /** `now` decide se um anúncio com situação desconhecida já deveria ter encerrado. */
   parseListingPage: (html: string, now: Date) => Result<ListingInput, ParseError>;
+  /**
+   * Rederiva do dado bruto já guardado (`listings.raw`) os campos extraídos depois da coleta, sem baixar a página.
+   * `null`: o dado bruto não tem a forma esperada (ex.: veio do JSON-LD de reserva).
+   */
+  detailsFromRaw: (raw: unknown) => ListingDetails | null;
 };

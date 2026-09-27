@@ -1,3 +1,4 @@
+import type { ConditionFlag, DamageLevel, InspectionResult } from "@/domain/listings/condition";
 import type { CollectorHealth } from "@/domain/listings/health";
 import type { ListingStatus } from "@/domain/listings/types";
 import type { Cents } from "@/domain/money";
@@ -13,6 +14,11 @@ export type ListingListItem = {
   mileageKm: number | null;
   fuel: string | null;
   recoveryType: string | null;
+  /** Condição declarada pelo leiloeiro; nula quando não informada. */
+  damageLevel: DamageLevel | null;
+  conditionFlags: ConditionFlag[];
+  inspection: InspectionResult | null;
+  inspectionNotes: string | null;
   city: string | null;
   state: string | null;
   /** Distância em linha reta até a região padrão; nula se a cidade não foi reconhecida. */

@@ -35,6 +35,8 @@
       "Bash(npx prisma db *)",
       "Bash(* --accept-data-loss *)",
       "Bash(* --force-reset *)",
+      "Bash(npm run db:backfill-condition *)",
+      "Bash(npm run db:backfill-condition)",
       "Bash(npm run db:seed *)",
       "Bash(npm run db:seed)",
       "Bash(npm run collect *)",

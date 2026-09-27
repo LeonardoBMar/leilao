@@ -57,6 +57,9 @@ export const leiloLotSchema = z.object({
     .nullish()
     .catch(null),
   comitente: z.object({ nome: text }).nullish().catch(null),
+  descricao: text,
+  laudoCautelarResultado: text,
+  laudoCautelarObservacao: text,
 });
 export type LeiloLot = z.infer<typeof leiloLotSchema>;
 

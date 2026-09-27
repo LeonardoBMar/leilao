@@ -1,3 +1,4 @@
+import type { ConditionFlag, DamageLevel, InspectionResult } from "@/domain/listings/condition";
 import type { ListingStatus } from "@/domain/listings/types";
 
 export const LISTING_STATUS_LABELS = {
@@ -17,3 +18,40 @@ export const LISTING_STATUS_VARIANTS = {
   withdrawn: "default",
   unknown: "outline",
 } as const satisfies Record<ListingStatus, "primary" | "success" | "warning" | "default" | "outline">;
+
+export const DAMAGE_LABELS = {
+  small: "Pequena monta",
+  medium: "Média monta",
+  large: "Grande monta",
+  salvage: "Sucata",
+} satisfies Record<DamageLevel, string>;
+
+export const DAMAGE_VARIANTS = {
+  small: "warning",
+  medium: "warning",
+  large: "destructive",
+  salvage: "destructive",
+} as const satisfies Record<DamageLevel, "warning" | "destructive">;
+
+export const CONDITION_FLAG_LABELS = {
+  circulation_banned: "Circulação vedada",
+  remarked: "Remarcado",
+  theft_history: "Histórico de roubo/furto",
+  prior_claim: "Sinistro",
+  airbag_deployed: "Airbag acionado",
+  missing_parts: "Faltando peças",
+  recall_pending: "Recall pendente",
+  cng: "GNV",
+} satisfies Record<ConditionFlag, string>;
+
+export const INSPECTION_LABELS = {
+  approved: "Laudo aprovado",
+  approved_with_notes: "Laudo com observações",
+  rejected: "Laudo reprovado",
+} satisfies Record<InspectionResult, string>;
+
+export const INSPECTION_VARIANTS = {
+  approved: "success",
+  approved_with_notes: "warning",
+  rejected: "destructive",
+} as const satisfies Record<InspectionResult, "success" | "warning" | "destructive">;

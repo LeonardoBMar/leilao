@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { parseLeiloSitemap } from "./discover";
-import { leiloListingUrl, parseLeiloListingPage } from "./parse";
+import { leiloDetailsFromRaw, leiloListingUrl, parseLeiloListingPage } from "./parse";
 
 const fixture = (name: string) => readFileSync(join(import.meta.dirname, "fixtures", name), "utf8");
 const soldPage = fixture("lote-vendido.html");
@@ -164,6 +164,42 @@ describe("parseLeiloListingPage — página fora do formato", () => {
   it("estado sem o lote válido e sem JSON-LD: dados inválidos", () => {
     const html = '<script>window.__INITIAL_STATE__={"elastic":{"lotePaginaAtualData":{"nome":"X"}}}</script>';
     expect(parseLeiloListingPage(html, now)).toEqual({ ok: false, error: "invalid_data" });
+  });
+});
+
+describe("parseLeiloListingPage — condição declarada pelo leiloeiro", () => {
+  const withNotes = (html: string, descricao: string, laudo = "AUSENTE") =>
+    html
+      .replace(/"descricao":"[^"]*"/, `"descricao":"${descricao}"`)
+      .replace(/"laudoCautelarResultado":"[^"]*"/, `"laudoCautelarResultado":"${laudo}"`);
+
+  it("lote sem classificação: descrição guardada, nada deduzido", () => {
+    const listing = parseOk(soldPage);
+    expect(listing.description).toMatch(/^IPVA 2026 PAGO \/ REMOCAO R\$ 400/);
+    expect(listing.condition).toEqual({ damageLevel: null, flags: [], inspection: null, inspectionNotes: null });
+  });
+
+  it("lê monta, marcações e laudo cautelar", () => {
+    const listing = parseOk(withNotes(soldPage, "   MEDIA MONTA / CIRCULACAO VEDADA", "APROVADO COM OBSERVAÇÕES"));
+    expect(listing.condition).toMatchObject({
+      damageLevel: "medium",
+      flags: ["circulation_banned"],
+      inspection: "approved_with_notes",
+    });
+  });
+
+  it("categoria Sucatas é sucata mesmo sem o termo na descrição", () => {
+    const listing = parseOk(soldPage.replace(/"tipo":"[^"]*"/, `"tipo":"Sucatas"`));
+    expect(listing.condition.damageLevel).toBe("salvage");
+  });
+
+  it("rederiva do dado bruto guardado o mesmo que a coleta extraiu", () => {
+    const listing = parseOk(withNotes(openPage, "PEQUENA MONTA / POSSUI GNV", "REPROVADO"));
+    expect(leiloDetailsFromRaw(listing.raw)).toEqual({
+      description: listing.description,
+      condition: listing.condition,
+    });
+    expect(leiloDetailsFromRaw({ nome: "sem id" })).toBeNull();
   });
 });
 

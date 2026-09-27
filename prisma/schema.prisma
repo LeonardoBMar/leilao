@@ -259,6 +259,36 @@ enum ListingStatus {
   @@map("listing_status")
 }
 
+enum DamageLevel {
+  small
+  medium
+  large
+  salvage
+
+  @@map("damage_level")
+}
+
+enum ConditionFlag {
+  circulation_banned
+  remarked
+  theft_history
+  prior_claim
+  airbag_deployed
+  missing_parts
+  recall_pending
+  cng
+
+  @@map("condition_flag")
+}
+
+enum InspectionResult {
+  approved
+  approved_with_notes
+  rejected
+
+  @@map("inspection_result")
+}
+
 enum CollectorRunStatus {
   running
   succeeded
@@ -300,63 +330,70 @@ model Municipality {
 
 /// Anúncio normalizado de uma fonte. Único por (fonte, id na fonte): reaparecer atualiza, não duplica.
 model Listing {
-  id                 String        @id @default(uuid(7)) @db.Uuid
-  sourceId           String        @map("source_id") @db.VarChar(40)
-  externalId         String        @map("external_id")
+  id                 String            @id @default(uuid(7)) @db.Uuid
+  sourceId           String            @map("source_id") @db.VarChar(40)
+  externalId         String            @map("external_id")
   url                String
-  lotNumber          String?       @map("lot_number")
+  lotNumber          String?           @map("lot_number")
   title              String
   brand              String?
   model              String?
-  fipeCode           String?       @map("fipe_code")
-  fipeName           String?       @map("fipe_name")
-  modelYear          Int?          @map("model_year") @db.SmallInt
-  manufactureYear    Int?          @map("manufacture_year") @db.SmallInt
-  mileageKm          Int?          @map("mileage_km")
+  fipeCode           String?           @map("fipe_code")
+  fipeName           String?           @map("fipe_name")
+  modelYear          Int?              @map("model_year") @db.SmallInt
+  manufactureYear    Int?              @map("manufacture_year") @db.SmallInt
+  mileageKm          Int?              @map("mileage_km")
   fuel               String?
   color              String?
   category           String?
-  recoveryType       String?       @map("recovery_type")
-  hasKey             Boolean?      @map("has_key")
-  sellerName         String?       @map("seller_name")
-  auctionExternalId  String?       @map("auction_external_id")
-  auctionName        String?       @map("auction_name")
-  auctionStartsAt    DateTime?     @map("auction_starts_at") @db.Timestamptz(3)
-  startsAt           DateTime?     @map("starts_at") @db.Timestamptz(3)
-  endsAt             DateTime?     @map("ends_at") @db.Timestamptz(3)
-  yardName           String?       @map("yard_name")
+  recoveryType       String?           @map("recovery_type")
+  hasKey             Boolean?          @map("has_key")
+  sellerName         String?           @map("seller_name")
+  /// Texto do leiloeiro sobre o lote, sem HTML.
+  description        String?
+  /// Condição declarada pela fonte (src/domain/listings/condition.ts). Nula: a fonte não classificou.
+  damageLevel        DamageLevel?      @map("damage_level")
+  conditionFlags     ConditionFlag[]   @default([]) @map("condition_flags")
+  inspectionResult   InspectionResult? @map("inspection_result")
+  inspectionNotes    String?           @map("inspection_notes")
+  auctionExternalId  String?           @map("auction_external_id")
+  auctionName        String?           @map("auction_name")
+  auctionStartsAt    DateTime?         @map("auction_starts_at") @db.Timestamptz(3)
+  startsAt           DateTime?         @map("starts_at") @db.Timestamptz(3)
+  endsAt             DateTime?         @map("ends_at") @db.Timestamptz(3)
+  yardName           String?           @map("yard_name")
   city               String?
-  state              String?       @db.Char(2)
+  state              String?           @db.Char(2)
   address            String?
-  municipalityId     Int?          @map("municipality_id")
+  municipalityId     Int?              @map("municipality_id")
   status             ListingStatus
   /// Situação como a fonte escreve (ex.: "LiberadoLeilao", "Pago"), para auditoria do mapeamento.
-  sourceStatus       String?       @map("source_status")
-  currentBidCents    Int?          @map("current_bid_cents")
-  minimumBidCents    Int?          @map("minimum_bid_cents")
-  bidCount           Int?          @map("bid_count")
+  sourceStatus       String?           @map("source_status")
+  currentBidCents    Int?              @map("current_bid_cents")
+  minimumBidCents    Int?              @map("minimum_bid_cents")
+  bidCount           Int?              @map("bid_count")
   /// Lance final, gravado quando o anúncio encerra com lance (base das estimativas, D-28).
-  finalBidCents      Int?          @map("final_bid_cents")
+  finalBidCents      Int?              @map("final_bid_cents")
   /// Valor de mercado informado pela fonte: referência rotulada, nunca estimativa do sistema (D-30).
-  marketValueCents   Int?          @map("market_value_cents")
-  commissionBps      Int?          @map("commission_bps")
-  dispatcherFeeCents Int?          @map("dispatcher_fee_cents")
-  removalFeeCents    Int?          @map("removal_fee_cents")
-  storageFeeCents    Int?          @map("storage_fee_cents")
-  inspectionFeeCents Int?          @map("inspection_fee_cents")
-  otherFeesCents     Int?          @map("other_fees_cents")
+  marketValueCents   Int?              @map("market_value_cents")
+  commissionBps      Int?              @map("commission_bps")
+  dispatcherFeeCents Int?              @map("dispatcher_fee_cents")
+  removalFeeCents    Int?              @map("removal_fee_cents")
+  storageFeeCents    Int?              @map("storage_fee_cents")
+  inspectionFeeCents Int?              @map("inspection_fee_cents")
+  otherFeesCents     Int?              @map("other_fees_cents")
   /// URLs das fotos na fonte (D-29).
-  photoUrls          String[]      @map("photo_urls")
+  photoUrls          String[]          @map("photo_urls")
   /// Dado original da fonte, sem informações de quem deu lance.
   raw                Json
-  firstSeenAt        DateTime      @default(now()) @map("first_seen_at") @db.Timestamptz(3)
-  lastSeenAt         DateTime      @default(now()) @map("last_seen_at") @db.Timestamptz(3)
-  lastCheckedAt      DateTime      @default(now()) @map("last_checked_at") @db.Timestamptz(3)
+  firstSeenAt        DateTime          @default(now()) @map("first_seen_at") @db.Timestamptz(3)
+  lastSeenAt         DateTime          @default(now()) @map("last_seen_at") @db.Timestamptz(3)
+  lastCheckedAt      DateTime          @default(now()) @map("last_checked_at") @db.Timestamptz(3)
   /// Próxima revisita. Nulo: desfecho definitivo, não precisa voltar.
-  nextCheckAt        DateTime?     @map("next_check_at") @db.Timestamptz(3)
-  checkFailures      Int           @default(0) @map("check_failures") @db.SmallInt
-  createdAt          DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt          DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+  nextCheckAt        DateTime?         @map("next_check_at") @db.Timestamptz(3)
+  checkFailures      Int               @default(0) @map("check_failures") @db.SmallInt
+  createdAt          DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   source       Source               @relation(fields: [sourceId], references: [id], onDelete: Restrict)
   municipality Municipality?        @relation(fields: [municipalityId], references: [ibgeCode], onDelete: SetNull)

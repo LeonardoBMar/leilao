@@ -122,6 +122,7 @@ npm run restore -- backups/<data>
   - **Segredos necessários** em GitHub → Settings → Secrets and variables → Actions: `DATABASE_URL` (pooler, porta 6543, o mesmo valor da Vercel) e `DIRECT_URL` (sessão, porta 5432, o mesmo do `.env.local`; o `prisma generate` da instalação exige).
   - **Saúde:** a linha "Última coleta" no dashboard e em Descobertos. Falha aparece ali e em Actions → Coleta.
   - **Rodar à mão:** Actions → Coleta → Run workflow, ou `npm run collect` na máquina local.
+  - **Campo novo extraído do dado bruto** (ex.: condição do veículo): depois da migration, `npm run db:backfill-condition` relê `listings.raw` e preenche os anúncios já coletados, sem baixar as páginas. Idempotente.
   - **Fonte com problema** (layout mudou, bloqueio): os erros ficam em `collector_runs.errors`. Para pausar uma fonte, `update sources set active = false where id = 'leilo'` (o coletor passa a ignorá-la).
 - **Erros:** Vercel → Logs (as actions registram `console.error` sem dados pessoais).
 - **Supabase → Advisors** (Security e Performance): mensalmente e depois de cada migration.
