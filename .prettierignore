@@ -9,3 +9,4 @@ src/generated
 skills-lock.json
 tests/e2e/.report
 tests/e2e/.results
+backups

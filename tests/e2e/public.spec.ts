@@ -33,6 +33,33 @@ test.describe("acesso sem sessão", () => {
   });
 });
 
+test.describe("produção", () => {
+  test("robots.txt responde sem sessão e bloqueia indexação", async ({ request }) => {
+    const response = await request.get("/robots.txt");
+    expect(response.status()).toBe(200);
+    expect(await response.text()).toMatch(/Disallow: \//);
+  });
+
+  test("cabeçalhos de segurança e CSP", async ({ request }) => {
+    const headers = (await request.get("/login")).headers();
+    expect(headers["content-security-policy"]).toContain("frame-ancestors 'none'");
+    expect(headers["content-security-policy"]).toContain("object-src 'none'");
+    expect(headers["x-content-type-options"]).toBe("nosniff");
+    expect(headers["referrer-policy"]).toBe("strict-origin-when-cross-origin");
+    expect(headers["x-powered-by"]).toBeUndefined();
+  });
+
+  test("a página de login funciona sob a CSP, sem violações", async ({ page }) => {
+    const violations: string[] = [];
+    page.on("console", (message) => {
+      if (/Content Security Policy/i.test(message.text())) violations.push(message.text());
+    });
+    await page.goto("/login");
+    await expect(page.getByLabel("E-mail")).toBeVisible();
+    expect(violations).toEqual([]);
+  });
+});
+
 test.describe("tela de login", () => {
   test("a casca estática aparece de imediato (Cache Components)", async ({ page, baseURL }) => {
     await instant(

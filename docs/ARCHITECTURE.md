@@ -1,6 +1,6 @@
 # Leilão Tracker — System Design
 
-> Versão 1.0 • 26/09/2026 • Complementa o [`SPEC.md`](../SPEC.md) (o quê) e o [`DESIGN.md`](../DESIGN.md) (visual). Este documento define **como** o sistema é construído. Toda decisão estrutural nova entra no [Registro de decisões](#15-registro-de-decisões).
+> Versão 1.0 • 26/09/2026 • Complementa o [`SPEC.md`](../SPEC.md) (o quê), o [`DESIGN.md`](../DESIGN.md) (visual) e o [`OPERACAO.md`](OPERACAO.md) (deploy, backup e restauração). Este documento define **como** o sistema é construído. Toda decisão estrutural nova entra no [Registro de decisões](#15-registro-de-decisões).
 >
 > Base técnica: Next.js 16.3 (App Router, Turbopack, Cache Components), React 19.3, TypeScript 6 e a documentação oficial em `node_modules/next/dist/docs/`.
 
@@ -342,6 +342,8 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
 | D-18 | Supabase Auth com `@supabase/ssr` 0.12 + `getClaims()`, Node ≥ 22 | Padrão do guia oficial de Next.js (o SDK `@supabase/server` é genérico). `getClaims()` verifica a assinatura do JWT localmente com chaves assimétricas. As bibliotecas Supabase JS deixaram de suportar Node 20 em 30/06/2026. | `getSession()` no servidor; `getUser()` em toda requisição; `@supabase/server` |
 | D-19 | Coluna `results.prior_declared` e temporalidade calculada no servidor a cada revisão | O SPEC §10 pede registrar a confirmação declarada quando o horário do desfecho é desconhecido, e o modelo do §8 não tinha onde. A regra (`classifyAnalysisTiming`) fica no domínio e é gravada em `analysis_timing` na própria revisão, nunca vinda do cliente. | Guardar a declaração em texto livre; recalcular a temporalidade na leitura |
 | D-20 | Bucket e políticas do Storage em `prisma/sql/storage.sql` (idempotente, `npm run db:storage`); upload em 3 passos com conferência do arquivo real | O schema `storage` é do Supabase e não existe no shadow database do Prisma, então não pode ir em migration. O servidor autoriza e emite a URL, o navegador envia direto, e o servidor confere tamanho, tipo e assinatura binária antes de registrar. Arquivo inválido é removido. | Migration do Prisma; confiar no tipo declarado pelo navegador |
+| D-21 | CSP sem nonce + cabeçalhos de segurança em `next.config.ts`; `robots.txt` e `noindex` | Nonce exige renderização dinâmica e é incompatível com o Partial Prerendering (guia de CSP do Next). A política restringe origens (própria e Supabase), bloqueia `object`, `frame-ancestors` e formulários externos. | CSP com nonce; SRI (experimental) |
+| D-22 | Backup e restauração por scripts Node (`npm run backup`/`restore`), com simulação por padrão, destino explícito e vazio, transação única e `--owner` para projeto novo | Sem `pg_dump` local, e o Supabase Free não oferece download de backups. O formato JSON é validado contra as mesmas garantias do banco; ensaio com dados sintéticos restaurou conteúdo idêntico. | `pg_dump` (dependência externa); backups do plano Supabase |
 
 ## 16. Pendências da fundação
 
@@ -351,7 +353,7 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
 4. ~~Autenticação: `src/server/{supabase,auth}.ts`, `src/proxy.ts`, `/login`, casca `(private)` e dashboard com contagens~~ (feito; a vitrine de componentes foi para `/componentes`). Falta: `src/server/storage.ts` (junto com as fotos).
 5. ~~Configurar Playwright para o fluxo E2E~~ (feito: `public` roda sem sessão; `authenticated` precisa de `E2E_EMAIL`/`E2E_PASSWORD`).
 
-**Features entregues:** autenticação, leilões (RF-01), lotes (RF-02/03), análise financeira (RF-04/05), resultados com correções e temporalidade (RF-06, §10), dashboard completo (métricas, indicador, pendências, lotes acompanhados, próximos leilões) e arquivamento (RF-08). fotos (RF-07). E2E. **Próxima:** preparação para deploy (Vercel, variáveis de produção, backup).
+**Features entregues:** autenticação, leilões (RF-01), lotes (RF-02/03), análise financeira (RF-04/05), resultados com correções e temporalidade (RF-06, §10), dashboard completo (métricas, indicador, pendências, lotes acompanhados, próximos leilões) e arquivamento (RF-08). fotos (RF-07). E2E, preparação para deploy (runbook em `docs/OPERACAO.md`). **Próximo:** primeiro deploy na Vercel.
 
 ## 17. Contrato da API JSON (futuro)
 

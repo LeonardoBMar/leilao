@@ -18,6 +18,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Leilão Tracker",
   description: "Acompanhe lotes e preserve suas análises de leilões.",
+  // Aplicativo privado (ver também src/app/robots.ts).
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

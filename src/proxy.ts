@@ -67,5 +67,6 @@ function redirectKeepingSession(url: URL, sessionResponse: NextResponse) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
+  // Fora do proxy: assets do Next, arquivos estáticos e metadados públicos (robots.txt responde sem sessão).
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
 };

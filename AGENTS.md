@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Antes de criar, alterar ou revisar código, **carregue a skill `leilao-padroes`** (`.claude/skills/leilao-padroes/`). Ela traz o fluxo, as receitas e o checklist.
 
-Documentos: [`SPEC.md`](SPEC.md) (produto) · [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) (system design e decisões) · [`DESIGN.md`](DESIGN.md) (visual).
+Documentos: [`SPEC.md`](SPEC.md) (produto) · [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) (system design e decisões) · [`DESIGN.md`](DESIGN.md) (visual) · [`docs/OPERACAO.md`](docs/OPERACAO.md) (deploy, backup e restauração).
 
 ## Sempre
 

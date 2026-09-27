@@ -21,7 +21,10 @@
     "db:studio": "prisma studio",
     "db:storage": "prisma db execute --file prisma/sql/storage.sql",
     "test:e2e": "playwright test",
-    "test:e2e:public": "playwright test --project=public"
+    "test:e2e:public": "playwright test --project=public",
+    "db:release": "prisma migrate deploy && npm run db:storage",
+    "backup": "node scripts/backup.mjs",
+    "restore": "node scripts/restore.mjs"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.0",
@@ -61,6 +64,7 @@
     "eslint-config-next": "16.3.5",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-simple-import-sort": "14.0.0",
+    "pg": "8.23.0",
     "prettier": "3.9.9",
     "prettier-plugin-tailwindcss": "0.8.1",
     "prisma": "7.10.0",
