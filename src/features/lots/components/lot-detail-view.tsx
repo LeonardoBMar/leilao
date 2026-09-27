@@ -1,4 +1,4 @@
-import { ExternalLink, ImageOff, Pencil, Trophy } from "lucide-react";
+import { ExternalLink, ImageOff, Pencil } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -31,11 +31,12 @@ const integer = new Intl.NumberFormat("pt-BR");
 /** Ficha do lote (SPEC `/lotes/[id]`, DESIGN.md §15.3). Valores observados e limite antes das notas. */
 type LotDetailViewProps = {
   params: Promise<{ id: string }>;
-  /** Bloco de análise, composto pela rota (a feature de análises não é importada aqui). */
+  /** Blocos de análise e resultado, compostos pela rota (outras features não são importadas aqui). */
   analysis: React.ReactNode;
+  result: React.ReactNode;
 };
 
-export async function LotDetailView({ params, analysis }: LotDetailViewProps) {
+export async function LotDetailView({ params, analysis, result }: LotDetailViewProps) {
   const parsed = lotIdSchema.safeParse((await params).id);
   if (!parsed.success) notFound();
   const lot = await getLot(parsed.data);
@@ -132,18 +133,7 @@ export async function LotDetailView({ params, analysis }: LotDetailViewProps) {
 
           {analysis}
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Resultado</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <EmptyState
-                icon={Trophy}
-                title={lot.resultCount === 0 ? "Sem resultado registrado" : "Resultado registrado"}
-                description="O registro de resultado entra depois da análise."
-              />
-            </CardContent>
-          </Card>
+          {result}
         </div>
 
         <div className="grid content-start gap-6">

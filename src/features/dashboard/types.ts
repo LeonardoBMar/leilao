@@ -4,4 +4,6 @@ export type DashboardSummary = {
   activeLots: number;
   followedLotsWithoutResult: number;
   analyzedLots: number;
+  /** Indicador inicial do SPEC §10: comparáveis com análise anterior e quantos ficaram dentro do limite. */
+  indicator: { comparable: number; withinLimit: number };
 };

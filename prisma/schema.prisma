@@ -202,6 +202,8 @@ model Result {
   notes              String?
   analysisId         String?         @map("analysis_id") @db.Uuid
   analysisTiming     AnalysisTiming  @default(unknown) @map("analysis_timing")
+  /// Usuário declarou que a análise antecedeu o desfecho quando o horário real é desconhecido (SPEC §10).
+  priorDeclared      Boolean         @default(false) @map("prior_declared")
   recordedAt         DateTime        @default(now()) @map("recorded_at") @db.Timestamptz(3)
   correctionReason   String?         @map("correction_reason")
 

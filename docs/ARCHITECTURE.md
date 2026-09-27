@@ -337,6 +337,7 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
 | D-16 | Integridade no banco: FKs compostas `(id, owner_id)`, índices únicos parciais, CHECKs e triggers de imutabilidade | O SPEC §8 exige relações do mesmo dono, um rascunho por lote e análises e resultados imutáveis. O banco garante isso mesmo se a aplicação falhar. CHECKs, triggers e RLS ficam no SQL da migration, porque o Prisma não os modela. | Validar só na aplicação |
 | D-17 | Sem API JSON própria no MVP; contrato da futura API definido em §17 | A tela usa a DAL direto (recomendação do Next). A separação está no código (`domain` e DAL devolvem DTOs serializáveis), então a API vira um adaptador fino quando houver consumidor externo. | API JSON consumida pela própria tela; backend separado |
 | D-18 | Supabase Auth com `@supabase/ssr` 0.12 + `getClaims()`, Node ≥ 22 | Padrão do guia oficial de Next.js (o SDK `@supabase/server` é genérico). `getClaims()` verifica a assinatura do JWT localmente com chaves assimétricas. As bibliotecas Supabase JS deixaram de suportar Node 20 em 30/06/2026. | `getSession()` no servidor; `getUser()` em toda requisição; `@supabase/server` |
+| D-19 | Coluna `results.prior_declared` e temporalidade calculada no servidor a cada revisão | O SPEC §10 pede registrar a confirmação declarada quando o horário do desfecho é desconhecido, e o modelo do §8 não tinha onde. A regra (`classifyAnalysisTiming`) fica no domínio e é gravada em `analysis_timing` na própria revisão, nunca vinda do cliente. | Guardar a declaração em texto livre; recalcular a temporalidade na leitura |
 
 ## 16. Pendências da fundação
 
@@ -346,7 +347,7 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
 4. ~~Autenticação: `src/server/{supabase,auth}.ts`, `src/proxy.ts`, `/login`, casca `(private)` e dashboard com contagens~~ (feito; a vitrine de componentes foi para `/componentes`). Falta: `src/server/storage.ts` (junto com as fotos).
 5. Configurar Playwright para o fluxo E2E (login → leilão → lote → análise fixada → resultado).
 
-**Features entregues:** autenticação, leilões (RF-01), lotes (RF-02/03), análise financeira (RF-04/05) e arquivamento (RF-08). **Próximas:** resultados (RF-06), dashboard completo, fotos (RF-07).
+**Features entregues:** autenticação, leilões (RF-01), lotes (RF-02/03), análise financeira (RF-04/05), resultados com correções e temporalidade (RF-06, §10), indicador do dashboard e arquivamento (RF-08). **Próximas:** dashboard completo (próximos leilões, lotes acompanhados), fotos (RF-07), E2E.
 
 ## 17. Contrato da API JSON (futuro)
 
