@@ -1,6 +1,6 @@
 "use client";
 
-import { Gavel, LayoutDashboard, type LucideIcon } from "lucide-react";
+import { Car, Gavel, LayoutDashboard, type LucideIcon } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -10,10 +10,11 @@ import { cn } from "@/lib/utils";
 
 type NavItem = { href: Route; label: string; icon: LucideIcon };
 
-// Ordem do DESIGN.md §9. Lotes entra quando a rota existir.
+// Ordem do DESIGN.md §9.
 const NAV_ITEMS: readonly NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/leiloes", label: "Leilões", icon: Gavel },
+  { href: "/lotes", label: "Lotes", icon: Car },
 ];
 
 type NavLinksProps = {

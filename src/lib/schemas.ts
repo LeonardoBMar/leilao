@@ -54,3 +54,38 @@ export const zonedDateTime = (message = "Informe data e hora válidas.") =>
     }
     return date;
   });
+
+const emptyToUndefined = (value: unknown) => (typeof value === "string" && value.trim() === "" ? undefined : value);
+
+/** Inteiro digitado ("12.345" aceita separador de milhar). Vazio vira `undefined`. */
+export const optionalInt = (min: number, max: number, message: string) =>
+  z.preprocess(
+    (value) => (typeof value === "string" ? emptyToUndefined(value.replace(/\./g, "").trim()) : value),
+    z.coerce.number(message).int(message).min(min, message).max(max, message).optional(),
+  );
+
+export const requiredInt = (min: number, max: number, message: string) =>
+  z.preprocess(
+    (value) => (typeof value === "string" ? value.replace(/\./g, "").trim() : value),
+    z
+      .string(message)
+      .min(1, message)
+      .transform(Number)
+      .pipe(z.number(message).int(message).min(min, message).max(max, message)),
+  );
+
+/** Checkbox nativo/Radix: presente ("on", "1", "true") = marcado; ausente = desmarcado. */
+export const checkbox = () =>
+  z
+    .union([z.literal(["on", "1", "true"]), z.undefined()])
+    .catch(undefined)
+    .transform((value) => value !== undefined);
+
+/** Valor em reais opcional e estritamente positivo (lances e preço final; SPEC §7.6). */
+export const optionalPositiveBrlAmount = (message = "Informe um valor maior que zero.") =>
+  z.preprocess(
+    emptyToUndefined,
+    brlAmount(message)
+      .refine((value) => value > 0, message)
+      .optional(),
+  );

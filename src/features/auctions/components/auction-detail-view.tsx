@@ -1,4 +1,4 @@
-import { ExternalLink, Package, Pencil } from "lucide-react";
+import { ExternalLink, Pencil, Plus } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -12,7 +12,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  EmptyState,
   Skeleton,
 } from "@/components/ui";
 import { formatDateTime } from "@/lib/format";
@@ -22,7 +21,13 @@ import { getAuction } from "../queries";
 import { auctionIdSchema } from "../schemas";
 import { AuctionActions } from "./auction-actions";
 
-export async function AuctionDetailView({ params }: { params: Promise<{ id: string }> }) {
+type AuctionDetailViewProps = {
+  params: Promise<{ id: string }>;
+  /** Lista de lotes, composta pela rota (a feature de lotes não é importada aqui). */
+  lots: React.ReactNode;
+};
+
+export async function AuctionDetailView({ params, lots }: AuctionDetailViewProps) {
   const parsed = auctionIdSchema.safeParse((await params).id);
   if (!parsed.success) notFound();
   const auction = await getAuction(parsed.data);
@@ -70,19 +75,20 @@ export async function AuctionDetailView({ params }: { params: Promise<{ id: stri
       ) : null}
 
       <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Lotes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {/* A lista paginada de lotes entra com o cadastro de lotes (RF-02). */}
-            <EmptyState
-              icon={Package}
-              title={auction.lotCount === 0 ? "Nenhum lote cadastrado" : `${auction.lotCount} lotes ativos`}
-              description="O cadastro de lotes será a próxima etapa."
-            />
-          </CardContent>
-        </Card>
+        <section aria-labelledby="auction-lots" className="grid content-start gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 id="auction-lots" className="text-heading-2 text-foreground">
+              Lotes
+            </h2>
+            <Button asChild>
+              <Link href={`/leiloes/${auction.id}/lotes/novo`}>
+                <Plus aria-hidden="true" />
+                Adicionar lote
+              </Link>
+            </Button>
+          </div>
+          {lots}
+        </section>
 
         <Card>
           <CardHeader>

@@ -1,0 +1,112 @@
+"use server";
+
+import { refresh } from "next/cache";
+import { redirect } from "next/navigation";
+
+import { type ActionState, failure, validationError } from "@/lib/action-state";
+import { entityId } from "@/lib/schemas";
+
+import {
+  createLot,
+  deleteLot,
+  type DeleteLotError,
+  type LotStateError,
+  type SaveLotError,
+  setLotArchived,
+  setLotFollowed,
+  updateCurrentBid,
+  updateLot,
+} from "./mutations";
+import { currentBidInputSchema, lotIdSchema, lotInputSchema } from "./schemas";
+
+const NOT_FOUND = "Lote não encontrado.";
+const auctionIdSchema = entityId();
+
+const SAVE_ERRORS = {
+  not_found: NOT_FOUND,
+  auction_not_found: "Leilão não encontrado.",
+  duplicate_lot_number: "Já existe um lote com este número neste leilão.",
+} satisfies Record<SaveLotError, string>;
+
+const STATE_ERRORS = { not_found: NOT_FOUND } satisfies Record<LotStateError, string>;
+
+const DELETE_ERRORS = {
+  not_found: NOT_FOUND,
+  has_history: "Este lote tem análise fixada ou resultado registrado. Arquive-o para preservar o histórico.",
+} satisfies Record<DeleteLotError, string>;
+
+export async function createLotAction(auctionId: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+  const parsedAuctionId = auctionIdSchema.safeParse(auctionId);
+  if (!parsedAuctionId.success) return failure(SAVE_ERRORS.auction_not_found);
+  const parsed = lotInputSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return validationError(parsed.error, formData);
+
+  const result = await createLot(parsedAuctionId.data, parsed.data);
+  if (!result.ok) return duplicateOr(result.error, formData);
+
+  redirect(`/lotes/${result.value.id}`);
+}
+
+export async function updateLotAction(id: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+  const parsedId = lotIdSchema.safeParse(id);
+  if (!parsedId.success) return failure(NOT_FOUND);
+  const parsed = lotInputSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return validationError(parsed.error, formData);
+
+  const result = await updateLot(parsedId.data, parsed.data);
+  if (!result.ok) return duplicateOr(result.error, formData);
+
+  redirect(`/lotes/${parsedId.data}`);
+}
+
+export async function updateCurrentBidAction(id: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+  const parsedId = lotIdSchema.safeParse(id);
+  if (!parsedId.success) return failure(NOT_FOUND);
+  const parsed = currentBidInputSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return validationError(parsed.error, formData);
+
+  const result = await updateCurrentBid(parsedId.data, parsed.data.currentBid ?? null);
+  if (!result.ok) return failure(STATE_ERRORS[result.error]);
+
+  refresh();
+  return { status: "success", message: "Lance atual atualizado." };
+}
+
+export async function setLotFollowedAction(id: string, isFollowed: boolean): Promise<ActionState> {
+  const parsedId = lotIdSchema.safeParse(id);
+  if (!parsedId.success) return failure(NOT_FOUND);
+
+  const result = await setLotFollowed(parsedId.data, isFollowed === true);
+  if (!result.ok) return failure(STATE_ERRORS[result.error]);
+
+  refresh();
+  return { status: "success" };
+}
+
+export async function setLotArchivedAction(id: string, archived: boolean): Promise<ActionState> {
+  const parsedId = lotIdSchema.safeParse(id);
+  if (!parsedId.success) return failure(NOT_FOUND);
+
+  const result = await setLotArchived(parsedId.data, archived === true);
+  if (!result.ok) return failure(STATE_ERRORS[result.error]);
+
+  refresh();
+  return { status: "success", message: archived ? "Lote arquivado." : "Lote reativado." };
+}
+
+export async function deleteLotAction(id: string): Promise<ActionState> {
+  const parsedId = lotIdSchema.safeParse(id);
+  if (!parsedId.success) return failure(NOT_FOUND);
+
+  const result = await deleteLot(parsedId.data);
+  if (!result.ok) return failure(DELETE_ERRORS[result.error]);
+
+  redirect(`/leiloes/${result.value.auctionId}`);
+}
+
+/** Número repetido é erro do campo, para aparecer junto do "Número do lote" (CA-02). */
+function duplicateOr(error: SaveLotError, formData: FormData): ActionState {
+  const state = failure(SAVE_ERRORS[error], formData);
+  if (error !== "duplicate_lot_number" || state.status !== "error") return state;
+  return { ...state, message: "Revise os campos destacados.", fieldErrors: { lotNumber: [SAVE_ERRORS[error]] } };
+}

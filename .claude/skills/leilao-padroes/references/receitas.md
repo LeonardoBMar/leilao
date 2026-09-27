@@ -31,7 +31,9 @@ export const auctionFiltersSchema = z.object({
 });
 ```
 
-- Campos monetários usam `brlAmount()`/`optionalBrlAmount()` e já saem como `Cents`.
+- Campos monetários usam `brlAmount()`/`optionalBrlAmount()`/`optionalPositiveBrlAmount()` e já saem como `Cents`. Inteiros: `requiredInt`/`optionalInt`. Checkbox: `checkbox()`. URL: `optionalUrl()`. Data e hora: `zonedDateTime()`. Tudo em `@/lib/schemas`.
+- **Zod 4: `.refine` no objeto roda mesmo se um campo já falhou.** A regra cruzada precisa se proteger de campo inválido (ex.: `!Number.isInteger(lot.modelYear) || …`), senão aparece um erro extra e enganoso.
+- **Erro de unicidade vira erro do campo** (ex.: `fieldErrors: { lotNumber: [...] }`), não alerta genérico.
 - O schema descreve a **entrada do usuário**. Dono, status e campos calculados nunca entram nele.
 
 ## 2. `features/<f>/types.ts` — DTOs

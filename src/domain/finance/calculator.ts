@@ -163,10 +163,22 @@ export function differenceToLimit(maxBid: Cents, bid: Cents): Cents {
 
 /** Compara um lance (ou preço final) ao limite de uma análise (SPEC §7.5 e §10). */
 export function compareToLimit(outcome: MaxBidOutcome, bid: Cents | null): LimitComparison {
-  if (outcome.kind === "incomplete" || bid === null) return "unavailable";
-  if (outcome.kind === "not_viable") return "no_viable_bid";
-  if (bid < outcome.maxBid) return "below_limit";
-  return bid === outcome.maxBid ? "at_limit" : "above_limit";
+  if (outcome.kind === "incomplete") return "unavailable";
+  return compareToFixedLimit(
+    outcome.kind === "viable" ? { isViable: true, maxBid: outcome.maxBid } : { isViable: false },
+    bid,
+  );
+}
+
+/** Limite preservado numa análise fixada (`is_viable` + `max_bid_cents`). */
+export type FixedLimit = { isViable: false } | { isViable: true; maxBid: Cents };
+
+/** Mesma comparação a partir do limite já fixado. Sem análise fixada ou sem lance: indisponível. */
+export function compareToFixedLimit(limit: FixedLimit | null, bid: Cents | null): LimitComparison {
+  if (limit === null || bid === null) return "unavailable";
+  if (!limit.isViable) return "no_viable_bid";
+  if (bid < limit.maxBid) return "below_limit";
+  return bid === limit.maxBid ? "at_limit" : "above_limit";
 }
 
 function fitsBudget(inputs: CompleteInputs, bid: Cents): boolean {

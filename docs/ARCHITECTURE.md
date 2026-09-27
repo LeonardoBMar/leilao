@@ -48,10 +48,10 @@ As setas indicam "pode importar". Não existe seta no sentido contrário.
 | Camada | Responsabilidade | Pode importar | Nunca |
 | --- | --- | --- | --- |
 | `src/app` | Roteamento e composição da página. Lê `params`/`searchParams`, delega à feature e define `<Suspense>`/boundaries. | features, components, lib | Prisma, regra de negócio, `fetch` direto |
-| `src/features/<f>` | Uma fatia do produto: leilões, lotes, análises, resultados, dashboard. | domain, server, components, lib, `@/features/<outra>/queries` | UI de outra feature por caminho interno |
+| `src/features/<f>` | Uma fatia do produto: leilões, lotes, análises, resultados, dashboard. | domain, server, components, lib, `@/features/<outra>/queries` | UI, actions ou schemas de outra feature. Para mostrar UI de duas features juntas, a **rota compõe** (ex.: o detalhe do leilão recebe a lista de lotes como slot `lots`). |
 | `src/domain` | Regras puras e tipos de domínio (`Cents`, calculadora, elegibilidade). | apenas `src/domain` | React, Next, Prisma, `process.env`, `Date.now()` implícito |
 | `src/server` | Infraestrutura server-only: cliente Prisma, sessão, env validado, Storage. | lib, domain | componentes, features |
-| `src/components` | Primitivas visuais (`ui`) e casca (`layout`), sem conhecer o domínio. | lib | features, server |
+| `src/components` | Primitivas visuais (`ui`) e casca (`layout`), sem conhecer regras de negócio. | lib, **tipos** de `domain` (ex.: `Money` recebe `Cents`) | features, server, funções de domain |
 | `src/lib` | Utilitários puros: `cn`, formatação, `ActionState`, `Result`. | domain (tipos) | server, features |
 
 As fronteiras são **verificadas por ferramenta**:

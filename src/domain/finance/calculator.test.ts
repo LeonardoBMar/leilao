@@ -5,6 +5,7 @@ import { bps, cents } from "@/domain/money";
 import {
   type AnalysisInputs,
   calculateMaxBid,
+  compareToFixedLimit,
   compareToLimit,
   type CompleteInputs,
   completeInputs,
@@ -222,5 +223,16 @@ describe("compareToLimit — SPEC §7.5", () => {
   it("comparação indisponível sem lance ou com análise incompleta", () => {
     expect(compareToLimit(outcome, null)).toBe("unavailable");
     expect(compareToLimit(calculateMaxBid({ ...fixedExample, marketValue: null }), reais(1))).toBe("unavailable");
+  });
+});
+
+describe("compareToFixedLimit", () => {
+  it("compara com o limite preservado na análise fixada", () => {
+    const limit = { isViable: true, maxBid: reais(33_200) } as const;
+    expect(compareToFixedLimit(limit, reais(38_500))).toBe("above_limit");
+    expect(compareToFixedLimit(limit, reais(33_200))).toBe("at_limit");
+    expect(compareToFixedLimit({ isViable: false }, reais(1))).toBe("no_viable_bid");
+    expect(compareToFixedLimit(null, reais(1))).toBe("unavailable");
+    expect(compareToFixedLimit(limit, null)).toBe("unavailable");
   });
 });

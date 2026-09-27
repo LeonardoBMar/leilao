@@ -33,7 +33,7 @@ describe("Button asChild", () => {
   ])("renders one anchor without a nested button (%o)", (state) => {
     const html = renderToStaticMarkup(
       <Button asChild {...state}>
-        <a href="/lotes">Ver lotes</a>
+        <a href="/exemplo">Ver lotes</a>
       </Button>,
     );
 
@@ -44,7 +44,7 @@ describe("Button asChild", () => {
       expect(html).toMatch(/aria-disabled="true"/);
       expect(html).not.toMatch(/href=/);
     } else {
-      expect(html).toMatch(/href="\/lotes"/);
+      expect(html).toMatch(/href="\/exemplo"/);
     }
   });
 
@@ -57,7 +57,7 @@ describe("Button asChild", () => {
         ...state,
         onClick: () => activations++,
         children: (
-          <a href="/lotes" tabIndex={0} onClick={() => activations++}>
+          <a href="/exemplo" tabIndex={0} onClick={() => activations++}>
             Ver lotes
           </a>
         ),
