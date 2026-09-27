@@ -1,10 +1,240 @@
 // Convenções: docs/ARCHITECTURE.md §12. Modelos do domínio: SPEC.md §8.
+//
+// - Tabelas/colunas em snake_case (@@map/@map); modelos em PascalCase.
+// - Dinheiro em centavos inteiros (Int = até R$ 21.474.836,47; D-15); taxas em pontos-base.
+// - owner_id em toda tabela. FKs compostas (id, owner_id) garantem que relações apontem para o mesmo dono.
+// - CHECKs, RLS (D-14) e triggers de imutabilidade ficam no SQL das migrations: o Prisma não os modela.
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["partialIndexes"]
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+enum AuctionOrigin {
+  detran
+  insurer
+  financial
+  judicial
+  other
+  unknown
+
+  @@map("auction_origin")
+}
+
+enum AuctionStatus {
+  scheduled
+  in_progress
+  finished
+  cancelled
+
+  @@map("auction_status")
+}
+
+enum AnalysisStatus {
+  draft
+  fixed
+
+  @@map("analysis_status")
+}
+
+enum CommissionMode {
+  fixed
+  percentage
+
+  @@map("commission_mode")
+}
+
+enum LotOutcome {
+  sold
+  unsold
+  withdrawn
+  cancelled
+  unknown
+
+  @@map("lot_outcome")
+}
+
+enum PersonalOutcome {
+  observed
+  bid_not_won
+  won
+
+  @@map("personal_outcome")
+}
+
+enum AnalysisTiming {
+  prior
+  retrospective
+  unknown
+
+  @@map("analysis_timing")
+}
+
+/// Leilão (SPEC RF-01).
+model Auction {
+  id          String        @id @default(uuid(7)) @db.Uuid
+  ownerId     String        @map("owner_id") @db.Uuid
+  name        String
+  auctioneer  String
+  origin      AuctionOrigin
+  status      AuctionStatus @default(scheduled)
+  startsAt    DateTime      @map("starts_at") @db.Timestamptz(3)
+  city        String?
+  state       String?       @db.Char(2)
+  noticeUrl   String?       @map("notice_url")
+  platformUrl String?       @map("platform_url")
+  notes       String?
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+  archivedAt  DateTime?     @map("archived_at") @db.Timestamptz(3)
+
+  lots Lot[]
+
+  @@unique([id, ownerId])
+  @@index([ownerId, startsAt])
+  @@map("auctions")
+}
+
+/// Lote de um leilão, com os dados do veículo (SPEC RF-02, RF-03).
+model Lot {
+  id                   String    @id @default(uuid(7)) @db.Uuid
+  ownerId              String    @map("owner_id") @db.Uuid
+  auctionId            String    @map("auction_id") @db.Uuid
+  lotNumber            String    @map("lot_number")
+  brand                String
+  model                String
+  vehicleVersion       String?   @map("vehicle_version")
+  modelYear            Int       @map("model_year") @db.SmallInt
+  manufactureYear      Int?      @map("manufacture_year") @db.SmallInt
+  mileageKm            Int?      @map("mileage_km")
+  isFollowed           Boolean   @default(false) @map("is_followed")
+  notes                String?
+  startingBidCents     Int?      @map("starting_bid_cents")
+  currentBidCents      Int?      @map("current_bid_cents")
+  currentBidObservedAt DateTime? @map("current_bid_observed_at") @db.Timestamptz(3)
+  lotUrl               String?   @map("lot_url")
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  archivedAt           DateTime? @map("archived_at") @db.Timestamptz(3)
+
+  auction  Auction    @relation(fields: [auctionId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  analyses Analysis[]
+  results  Result[]
+  images   LotImage[]
+
+  @@unique([id, ownerId])
+  @@unique([auctionId, lotNumber])
+  @@index([ownerId, isFollowed])
+  @@map("lots")
+}
+
+/// Versão de análise financeira de um lote (SPEC RF-04, RF-05, §7). Campos de entrada são
+/// opcionais porque rascunhos aceitam dados incompletos; ao fixar, todos passam a ser exigidos.
+model Analysis {
+  id                     String          @id @default(uuid(7)) @db.Uuid
+  ownerId                String          @map("owner_id") @db.Uuid
+  lotId                  String          @map("lot_id") @db.Uuid
+  version                Int
+  status                 AnalysisStatus  @default(draft)
+  // Referências de preço
+  marketValueCents       Int?            @map("market_value_cents")
+  marketReferenceDate    DateTime?       @map("market_reference_date") @db.Date
+  marketReferenceSource  String?         @map("market_reference_source")
+  fipeValueCents         Int?            @map("fipe_value_cents")
+  fipeReferenceMonth     DateTime?       @map("fipe_reference_month") @db.Date
+  fipeReferenceSource    String?         @map("fipe_reference_source")
+  // Custos fixos (F)
+  repairCostCents        Int?            @map("repair_cost_cents")
+  documentationCostCents Int?            @map("documentation_cost_cents")
+  transportCostCents     Int?            @map("transport_cost_cents")
+  tiresCostCents         Int?            @map("tires_cost_cents")
+  serviceCostCents       Int?            @map("service_cost_cents")
+  otherFeesCents         Int?            @map("other_fees_cents")
+  // Comissão (K ou p)
+  commissionMode         CommissionMode? @map("commission_mode")
+  commissionFixedCents   Int?            @map("commission_fixed_cents")
+  commissionRateBps      Int?            @map("commission_rate_bps")
+  // Estratégia (R, M)
+  riskReserveCents       Int?            @map("risk_reserve_cents")
+  desiredMarginCents     Int?            @map("desired_margin_cents")
+  notes                  String?
+  // Saídas preservadas ao fixar
+  maxBidCents            Int?            @map("max_bid_cents")
+  isViable               Boolean?        @map("is_viable")
+  totalAtMaxBidCents     Int?            @map("total_at_max_bid_cents")
+  marginAtMaxBidCents    Int?            @map("margin_at_max_bid_cents")
+  formulaVersion         Int?            @map("formula_version")
+  // Temporalidade
+  knownResultAtCreation  Boolean         @default(false) @map("known_result_at_creation")
+  fixedAt                DateTime?       @map("fixed_at") @db.Timestamptz(3)
+  createdAt              DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt              DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  lot     Lot      @relation(fields: [lotId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  results Result[]
+
+  @@unique([id, lotId])
+  @@unique([lotId, version])
+  // No máximo um rascunho aberto por lote (RF-05).
+  @@unique([lotId], map: "analyses_one_draft_per_lot", where: { status: "draft" })
+  @@map("analyses")
+}
+
+/// Revisão de resultado de um lote (SPEC RF-06). Correções inserem nova revisão; a vigente é a de maior número.
+model Result {
+  id                 String          @id @default(uuid(7)) @db.Uuid
+  ownerId            String          @map("owner_id") @db.Uuid
+  lotId              String          @map("lot_id") @db.Uuid
+  revision           Int
+  supersedesResultId String?         @map("supersedes_result_id") @db.Uuid
+  outcome            LotOutcome
+  finalBidCents      Int?            @map("final_bid_cents")
+  eventAt            DateTime?       @map("event_at") @db.Timestamptz(3)
+  sourceUrl          String?         @map("source_url")
+  sourceNotes        String?         @map("source_notes")
+  personalOutcome    PersonalOutcome @default(observed) @map("personal_outcome")
+  decisionReason     String?         @map("decision_reason")
+  notes              String?
+  analysisId         String?         @map("analysis_id") @db.Uuid
+  analysisTiming     AnalysisTiming  @default(unknown) @map("analysis_timing")
+  recordedAt         DateTime        @default(now()) @map("recorded_at") @db.Timestamptz(3)
+  correctionReason   String?         @map("correction_reason")
+
+  lot        Lot       @relation(fields: [lotId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  // FK composta: a análise vinculada precisa ser do mesmo lote.
+  analysis   Analysis? @relation(fields: [analysisId, lotId], references: [id, lotId], onDelete: Restrict)
+  supersedes Result?   @relation("ResultCorrections", fields: [supersedesResultId, lotId], references: [id, lotId], onDelete: Restrict)
+  correction Result?   @relation("ResultCorrections")
+
+  @@unique([id, lotId])
+  @@unique([lotId, revision])
+  @@unique([supersedesResultId, lotId])
+  @@index([analysisId])
+  @@map("results")
+}
+
+/// Foto privada de um lote no Supabase Storage (SPEC RF-07).
+model LotImage {
+  id               String   @id @default(uuid(7)) @db.Uuid
+  ownerId          String   @map("owner_id") @db.Uuid
+  lotId            String   @map("lot_id") @db.Uuid
+  storagePath      String   @unique @map("storage_path")
+  originalFilename String   @map("original_filename")
+  mimeType         String   @map("mime_type")
+  sizeBytes        Int      @map("size_bytes")
+  sortOrder        Int      @default(0) @map("sort_order")
+  isCover          Boolean  @default(false) @map("is_cover")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  lot Lot @relation(fields: [lotId, ownerId], references: [id, ownerId], onDelete: Cascade)
+
+  // Uma capa por lote.
+  @@unique([lotId], map: "lot_images_one_cover_per_lot", where: { isCover: true })
+  @@index([lotId, sortOrder])
+  @@map("lot_images")
 }

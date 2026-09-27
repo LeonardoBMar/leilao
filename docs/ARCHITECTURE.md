@@ -263,11 +263,12 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
   - tabelas e colunas em `snake_case` (`@@map`/`@map`), modelos em `PascalCase`;
   - ids `uuid`;
   - `created_at`/`updated_at` gerados pelo banco e datas em `timestamptz`;
-  - valores monetários em `bigint` ou `int` de centavos;
+  - valores monetários em `integer` de centavos, até R$ 21.474.836,47 (D-15);
   - arquivamento lógico por `archived_at`.
 - **Data API do Supabase fechada (D-14):** toda tabela nasce com `ENABLE ROW LEVEL SECURITY` **sem políticas** e com `REVOKE ALL ... FROM anon, authenticated`, no SQL da própria migration. A chave publicável do navegador não lê nem escreve nada. O Prisma conecta como `postgres`, que ignora RLS, e a autorização fica na DAL.
 - **Imutabilidade:** análises `fixed` e revisões de resultado nunca recebem `UPDATE` nem `DELETE` nas mutations. Correção = nova revisão (SPEC RF-05/RF-06).
-- **Índices** conforme SPEC §8, declarados no `schema.prisma`.
+- **Índices** conforme SPEC §8, declarados no `schema.prisma` (índices parciais com o preview `partialIndexes`).
+- **SQL fora do Prisma:** CHECKs, triggers e RLS são escritos à mão na migration, criada com `prisma migrate dev --create-only`. Depois de aplicar, `prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code` deve sair com 0 (sem drift).
 
 ## 13. Arquivos (fotos)
 
@@ -326,11 +327,13 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
 | D-12 | Proxy só otimista; autorização real na DAL | Recomendação oficial: proxy roda em toda rota e prefetch | Checar banco no proxy |
 | D-13 | Prisma 7.10.0 fixo, com adapter `pg` e env via `@next/env` | Última versão estável (a tag `latest` do pacote `prisma` aponta para 8.0 RC). O adapter é obrigatório no Prisma 7. | Snippet do Supabase (`prisma-client-js`, `directUrl`), Prisma 8 RC, `dotenv` |
 | D-14 | RLS ligado sem políticas + `REVOKE` para `anon`/`authenticated` em todas as tabelas | O schema `public` é exposto pela Data API e a chave publicável é pública. Assim o único caminho até os dados é o servidor. | Políticas RLS por usuário (duplicariam a DAL) ou schema privado |
+| D-15 | Centavos em `integer` (int4), não `bigint` | O teto de R$ 21 milhões por valor cobre veículos com folga, e o Prisma mapeia `Int` para `number`, compatível com `Cents`. `BigInt` viraria `bigint` no JS e exigiria conversão em toda leitura. | `bigint` / `Decimal` |
+| D-16 | Integridade no banco: FKs compostas `(id, owner_id)`, índices únicos parciais, CHECKs e triggers de imutabilidade | O SPEC §8 exige relações do mesmo dono, um rascunho por lote e análises e resultados imutáveis. O banco garante isso mesmo se a aplicação falhar. CHECKs, triggers e RLS ficam no SQL da migration, porque o Prisma não os modela. | Validar só na aplicação |
 
 ## 16. Pendências da fundação
 
 1. Inicializar o repositório Git e fazer o primeiro commit.
 2. ~~Criar o projeto Supabase e preencher `.env.local`~~ (feito; conexões testadas).
-3. ~~Prisma, `src/server/env.ts` e `src/server/db.ts`~~ (feito). Falta: modelos e migration inicial (SPEC §8), `@supabase/ssr`, `src/server/{auth,storage}.ts` e `src/proxy.ts`.
+3. ~~Prisma, `src/server/env.ts`, `src/server/db.ts`, modelos e migration inicial~~ (feito). Falta: `@supabase/ssr`, `src/server/{auth,storage}.ts` e `src/proxy.ts`.
 4. Criar `(auth)/login` e a casca `(private)`, e remover a vitrine `component-showcase.tsx` da rota `/`.
 5. Configurar Playwright para o fluxo E2E quando a primeira feature estiver pronta.

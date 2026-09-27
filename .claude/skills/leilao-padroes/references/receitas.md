@@ -342,3 +342,19 @@ export async function requireUser(): Promise<SessionUser> {
 
 - Todo arquivo de `src/server` começa com `import "server-only"`.
 - `process.env` só é lido em `src/server/env.ts`, validado por Zod. Os demais importam `env` de lá.
+
+## 12. Mudança de schema (migration)
+
+1. Edite `prisma/schema.prisma` seguindo as convenções do topo do arquivo: `@@map`/`@map` snake_case, `@db.Uuid`, `@db.Timestamptz(3)`, centavos `Int`, `owner_id` + FK composta `(id, owner_id)` com o pai.
+2. `npx prisma migrate dev --create-only --name <verbo_objeto>` para gerar o SQL **sem aplicar**.
+3. Revise o SQL e anexe o que o Prisma não modela:
+   - CHECKs das regras do SPEC;
+   - triggers;
+   - para **toda tabela nova**: `ALTER TABLE ... ENABLE ROW LEVEL SECURITY;` e `REVOKE ALL ON TABLE ... FROM anon, authenticated;` (D-14).
+4. `npx prisma migrate dev` para aplicar e gerar o client.
+5. Verifique drift: `npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code` deve sair com 0.
+6. Rode `npm run check` e atualize DTOs, queries e mutations afetados.
+
+- **Nunca edite migration já aplicada.** Correção é uma nova migration.
+- **Nunca rode `migrate reset` ou `db push`** no banco do Supabase sem consentimento explícito do usuário (veja `prisma-cli/references/agent-safety.md`).
+- **Regras que o banco garante** também são validadas na aplicação (Zod e mutation), para gerar mensagem amigável. O banco é a última barreira.
