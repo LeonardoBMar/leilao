@@ -56,8 +56,11 @@ test("cria, edita, desliga e exclui um monitor", async ({ page }) => {
 
   await card.getByRole("link", { name: "Editar" }).click();
   await expect(page.getByRole("heading", { name: "Editar monitor", level: 1 })).toBeVisible();
-  await expect(field(page, "Marca, modelo ou versão")).toHaveValue(search);
-  await field(page, "Nome do monitor").fill(`${search} renomeado`);
+  // Por papel, não por rótulo: o formulário de "Novo monitor" continua montado e escondido (<Activity>),
+  // e getByLabel também encontra campos escondidos.
+  const editForm = (name: string) => page.getByRole("textbox", { name, exact: true });
+  await expect(editForm("Marca, modelo ou versão")).toHaveValue(search);
+  await editForm("Nome do monitor").fill(`${search} renomeado`);
   await page.getByRole("button", { name: "Salvar alterações" }).click();
 
   await expect(page).toHaveURL(/\/monitores$/);
