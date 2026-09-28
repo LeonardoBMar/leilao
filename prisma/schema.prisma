@@ -398,6 +398,7 @@ model Listing {
   source       Source               @relation(fields: [sourceId], references: [id], onDelete: Restrict)
   municipality Municipality?        @relation(fields: [municipalityId], references: [ibgeCode], onDelete: SetNull)
   observations ListingObservation[]
+  alerts       Alert[]
 
   @@unique([sourceId, externalId])
   @@index([nextCheckAt])
@@ -424,21 +425,70 @@ model ListingObservation {
 
 /// Uma execução do coletor, para acompanhar saúde e falhas no app.
 model CollectorRun {
-  id         String             @id @default(uuid(7)) @db.Uuid
-  sourceId   String             @map("source_id") @db.VarChar(40)
-  status     CollectorRunStatus @default(running)
-  startedAt  DateTime           @default(now()) @map("started_at") @db.Timestamptz(3)
-  finishedAt DateTime?          @map("finished_at") @db.Timestamptz(3)
-  requests   Int                @default(0)
-  discovered Int                @default(0)
-  created    Int                @default(0)
-  updated    Int                @default(0)
-  failed     Int                @default(0)
+  id            String             @id @default(uuid(7)) @db.Uuid
+  sourceId      String             @map("source_id") @db.VarChar(40)
+  status        CollectorRunStatus @default(running)
+  startedAt     DateTime           @default(now()) @map("started_at") @db.Timestamptz(3)
+  finishedAt    DateTime?          @map("finished_at") @db.Timestamptz(3)
+  requests      Int                @default(0)
+  discovered    Int                @default(0)
+  created       Int                @default(0)
+  updated       Int                @default(0)
+  failed        Int                @default(0)
+  /// Alertas criados para os monitores ao fim da execução.
+  alertsCreated Int                @default(0) @map("alerts_created")
   /// Amostra dos erros (até 20), para diagnóstico.
-  errors     Json               @default("[]")
+  errors        Json               @default("[]")
 
   source Source @relation(fields: [sourceId], references: [id], onDelete: Restrict)
 
   @@index([sourceId, startedAt])
   @@map("collector_runs")
+}
+
+/// Monitor do usuário (docs/PLANO-COLETA.md, etapa 2): critérios de busca no catálogo que geram alertas.
+/// Os critérios são os mesmos de "Descobertos" (src/domain/listings/criteria.ts); categoria e condição guardam a chave.
+model Watch {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  ownerId       String   @map("owner_id") @db.Uuid
+  name          String?
+  search        String?
+  yearFrom      Int?     @map("year_from") @db.SmallInt
+  yearTo        Int?     @map("year_to") @db.SmallInt
+  maxPriceCents Int?     @map("max_price_cents")
+  /// Nulo: qualquer distância.
+  radiusKm      Int?     @map("radius_km") @db.SmallInt
+  category      String   @db.VarChar(20)
+  condition     String   @db.VarChar(20)
+  active        Boolean  @default(true)
+  /// Só anúncios vistos pela primeira vez a partir daqui geram alerta. Volta para "agora" ao criar, ao mudar os
+  /// critérios e ao religar: o que já existia não vira alerta (aparece em "combinam agora").
+  alertsFrom    DateTime @default(now()) @map("alerts_from") @db.Timestamptz(3)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  alerts Alert[]
+
+  @@unique([id, ownerId])
+  @@index([ownerId, createdAt])
+  @@index([active])
+  @@map("watches")
+}
+
+/// Anúncio novo que combinou com um monitor. Um por par monitor × anúncio: mudanças no anúncio não geram outro.
+model Alert {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  ownerId   String    @map("owner_id") @db.Uuid
+  watchId   String    @map("watch_id") @db.Uuid
+  listingId String    @map("listing_id") @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  readAt    DateTime? @map("read_at") @db.Timestamptz(3)
+
+  watch   Watch   @relation(fields: [watchId, ownerId], references: [id, ownerId], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([watchId, listingId])
+  @@index([ownerId, readAt, createdAt])
+  @@index([listingId])
+  @@map("alerts")
 }

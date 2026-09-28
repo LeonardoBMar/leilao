@@ -5,6 +5,7 @@ import { err, ok, type Result } from "@/lib/result";
 import type { DiscoveredListing, SourceAdapter } from "@/sources/types";
 
 import { db } from "../db";
+import { createAlerts } from "./alerts";
 import { createPoliteFetcher, type PoliteFetcher } from "./http";
 import { findDueVisits, findKnownIds, loadPlaceLookup, markSeen, recordCheckFailure, saveListing } from "./store";
 
@@ -20,6 +21,7 @@ export type CollectorSummary = {
   created: number;
   updated: number;
   failed: number;
+  alertsCreated: number;
   errors: { url: string; error: string }[];
 };
 
@@ -33,7 +35,8 @@ type RunOptions = {
 
 /**
  * Uma execução do coletor para uma fonte (docs/PLANO-COLETA.md §3):
- * sitemap → marca vistos → revisitas vencidas + anúncios novos → baixa, lê e grava → registra a execução.
+ * sitemap → marca vistos → revisitas vencidas + anúncios novos → baixa, lê e grava → alertas dos monitores →
+ * registra a execução.
  * Falha de um anúncio não derruba a execução; ela fica registrada em `collector_runs.errors`.
  */
 export async function runCollector({
@@ -54,6 +57,7 @@ export async function runCollector({
       created: 0,
       updated: 0,
       failed: 0,
+      alertsCreated: 0,
       errors: [],
     };
   }
@@ -113,12 +117,23 @@ export async function runCollector({
     sitemapFailed = true;
   }
 
-  const status = sitemapFailed ? "failed" : "succeeded";
+  // Alertas mesmo se a coleta falhou em parte: o que foi gravado já pode avisar. Falha aqui marca a execução
+  // como falha, para aparecer no app; a próxima execução recupera (janela de ALERT_LOOKBACK_MS).
+  let alertsCreated = 0;
+  let alertsFailed = false;
+  try {
+    alertsCreated = await createAlerts(now());
+  } catch (error) {
+    fail("(alertas)", describeError(error));
+    alertsFailed = true;
+  }
+
+  const status = sitemapFailed || alertsFailed ? "failed" : "succeeded";
   await db.collectorRun.update({
     where: { id: run.id },
-    data: { status, finishedAt: now(), requests: fetcher.requests, errors, ...counters },
+    data: { status, finishedAt: now(), requests: fetcher.requests, errors, alertsCreated, ...counters },
   });
-  return { runId: run.id, sourceId: source.id, status, requests: fetcher.requests, errors, ...counters };
+  return { runId: run.id, sourceId: source.id, status, requests: fetcher.requests, errors, alertsCreated, ...counters };
 }
 
 /** Baixa, lê e grava um anúncio. Falha esperada volta como valor; erro inesperado lança. */

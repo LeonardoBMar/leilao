@@ -1,5 +1,15 @@
 import "server-only";
 
+import type { DamageLevel } from "@/domain/listings/condition";
+import {
+  CATEGORY_GROUPS,
+  type CategoryKey,
+  CONDITION_RULES,
+  type ConditionKey,
+  DEFAULT_CATEGORY,
+  type ListingCriteria,
+  searchTokens,
+} from "@/domain/listings/criteria";
 import { boundingBox, distanceKm } from "@/domain/listings/geo";
 import { collectorHealth } from "@/domain/listings/health";
 import { DEFAULT_REGION } from "@/domain/listings/region";
@@ -8,15 +18,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
 
-import {
-  CATEGORY_OPTIONS,
-  type CategoryOption,
-  CONDITION_OPTIONS,
-  type ConditionOption,
-  DEFAULT_CATEGORY,
-  type ListingFilters,
-  LISTINGS_PAGE_SIZE,
-} from "./schemas";
+import { type ListingFilters, LISTINGS_PAGE_SIZE } from "./schemas";
 import type { CollectorStatus, ListingListItem, ListingPage } from "./types";
 
 /**
@@ -27,7 +29,8 @@ import type { CollectorStatus, ListingListItem, ListingPage } from "./types";
 /** Teto de candidatos lidos antes do filtro exato de distância: o retângulo já corta quase tudo. */
 const MAX_CANDIDATES = 2_000;
 
-const listSelect = {
+/** Campos do cartão de anúncio; reusado pelos alertas. */
+export const listingCardSelect = {
   id: true,
   url: true,
   lotNumber: true,
@@ -55,11 +58,11 @@ const listSelect = {
   municipality: { select: { latitude: true, longitude: true } },
 } satisfies Prisma.ListingSelect;
 
-type ListRow = Prisma.ListingGetPayload<{ select: typeof listSelect }>;
+type ListingCardRow = Prisma.ListingGetPayload<{ select: typeof listingCardSelect }>;
 
 const toCents = (value: number | null) => (value === null ? null : cents(value));
 
-function toListItem(row: ListRow): ListingListItem {
+export function toListItem(row: ListingCardRow): ListingListItem {
   return {
     id: row.id,
     sourceName: row.source.name,
@@ -101,59 +104,81 @@ function withinBox(radiusKm: number | null): Prisma.ListingWhereInput {
   };
 }
 
-function categoryWhere(option: CategoryOption): Prisma.ListingWhereInput {
-  const { categories } = CATEGORY_OPTIONS[option];
+function categoryWhere(key: CategoryKey): Prisma.ListingWhereInput {
+  const categories = CATEGORY_GROUPS[key];
   return categories === null ? {} : { category: { in: [...categories] } };
 }
 
-function conditionWhere(option: ConditionOption): Prisma.ListingWhereInput {
-  const { filter } = CONDITION_OPTIONS[option];
-  if (filter === null) return {};
+function conditionWhere(key: ConditionKey): Prisma.ListingWhereInput {
+  const rule = CONDITION_RULES[key];
+  if (rule === null) return {};
+  const levels: readonly DamageLevel[] = rule.levels;
   return {
     OR: [
-      ...(filter.unclassified ? [{ damageLevel: null }] : []),
-      ...(filter.levels.length > 0 ? [{ damageLevel: { in: [...filter.levels] } }] : []),
+      ...(rule.unclassified ? [{ damageLevel: null }] : []),
+      ...(levels.length > 0 ? [{ damageLevel: { in: [...levels] } }] : []),
     ],
   };
 }
 
-/** Aberto de fato: situação aberta e fim ainda no futuro (ou desconhecido). */
+/** Cada palavra da busca precisa aparecer em algum dos campos (`searchTokens`, mesma regra dos monitores). */
+function searchWhere(search: string | null): Prisma.ListingWhereInput {
+  return {
+    AND: searchTokens(search).map((token) => ({
+      OR: [
+        { title: { contains: token, mode: "insensitive" } },
+        { brand: { contains: token, mode: "insensitive" } },
+        { model: { contains: token, mode: "insensitive" } },
+        { fipeName: { contains: token, mode: "insensitive" } },
+      ],
+    })),
+  };
+}
+
+/** Aberto de fato: situação aberta e fim ainda no futuro (ou desconhecido). Mesma regra de `isOpenAt`. */
 function openWhere(now: Date): Prisma.ListingWhereInput {
   return { status: "open", OR: [{ endsAt: null }, { endsAt: { gt: now } }] };
 }
 
+/** Critérios no banco, exceto a distância exata (o retângulo só pré-filtra; `withinRadius` completa). */
+function criteriaWhere(criteria: ListingCriteria): Prisma.ListingWhereInput {
+  return {
+    AND: [
+      withinBox(criteria.radiusKm),
+      categoryWhere(criteria.category),
+      conditionWhere(criteria.condition),
+      searchWhere(criteria.search),
+      criteria.yearFrom === null ? {} : { modelYear: { gte: criteria.yearFrom } },
+      criteria.yearTo === null ? {} : { modelYear: { lte: criteria.yearTo } },
+      criteria.maxPrice === null
+        ? {}
+        : {
+            OR: [
+              { currentBidCents: { lte: criteria.maxPrice } },
+              { currentBidCents: null, minimumBidCents: { lte: criteria.maxPrice } },
+            ],
+          },
+    ],
+  };
+}
+
+const withinRadius = (radiusKm: number | null) => (item: { distanceKm: number | null }) =>
+  radiusKm === null || (item.distanceKm !== null && item.distanceKm <= radiusKm);
+
 export async function listListings(filters: ListingFilters): Promise<ListingPage> {
   await requireUser();
   const now = new Date();
-  const search = filters.search;
-
+  const criteria: ListingCriteria = {
+    search: filters.search ?? null,
+    yearFrom: filters.yearFrom ?? null,
+    yearTo: filters.yearTo ?? null,
+    maxPrice: filters.maxPrice ?? null,
+    radiusKm: filters.distanceKm,
+    category: filters.category,
+    condition: filters.condition,
+  };
   const where: Prisma.ListingWhereInput = {
-    AND: [
-      filters.ended ? { NOT: openWhere(now) } : openWhere(now),
-      withinBox(filters.distanceKm),
-      categoryWhere(filters.category),
-      conditionWhere(filters.condition),
-      search
-        ? {
-            OR: [
-              { title: { contains: search, mode: "insensitive" } },
-              { brand: { contains: search, mode: "insensitive" } },
-              { model: { contains: search, mode: "insensitive" } },
-              { fipeName: { contains: search, mode: "insensitive" } },
-            ],
-          }
-        : {},
-      filters.yearFrom ? { modelYear: { gte: filters.yearFrom } } : {},
-      filters.yearTo ? { modelYear: { lte: filters.yearTo } } : {},
-      filters.maxPrice
-        ? {
-            OR: [
-              { currentBidCents: { lte: filters.maxPrice } },
-              { currentBidCents: null, minimumBidCents: { lte: filters.maxPrice } },
-            ],
-          }
-        : {},
-    ],
+    AND: [filters.ended ? { NOT: openWhere(now) } : openWhere(now), criteriaWhere(criteria)],
   };
 
   // Abertos: o que encerra primeiro. Encerrados: o mais recente.
@@ -164,19 +189,16 @@ export async function listListings(filters: ListingFilters): Promise<ListingPage
   // Sem raio, tudo é filtrável no banco: pagina lá.
   if (radius === null) {
     const [rows, total] = await Promise.all([
-      db.listing.findMany({ where, orderBy, skip: start, take: LISTINGS_PAGE_SIZE, select: listSelect }),
+      db.listing.findMany({ where, orderBy, skip: start, take: LISTINGS_PAGE_SIZE, select: listingCardSelect }),
       db.listing.count({ where }),
     ]);
     return { items: rows.map(toListItem), total, page: filters.page, pageSize: LISTINGS_PAGE_SIZE, truncated: false };
   }
 
   // Com raio, o retângulo corta no banco e a distância exata filtra aqui, sobre no máximo MAX_CANDIDATES.
-  const rows = await db.listing.findMany({ where, orderBy, take: MAX_CANDIDATES + 1, select: listSelect });
+  const rows = await db.listing.findMany({ where, orderBy, take: MAX_CANDIDATES + 1, select: listingCardSelect });
   const truncated = rows.length > MAX_CANDIDATES;
-  const items = rows
-    .slice(0, MAX_CANDIDATES)
-    .map(toListItem)
-    .filter((item) => item.distanceKm !== null && item.distanceKm <= radius);
+  const items = rows.slice(0, MAX_CANDIDATES).map(toListItem).filter(withinRadius(radius));
 
   return {
     items: items.slice(start, start + LISTINGS_PAGE_SIZE),
@@ -185,6 +207,26 @@ export async function listListings(filters: ListingFilters): Promise<ListingPage
     pageSize: LISTINGS_PAGE_SIZE,
     truncated,
   };
+}
+
+/** Quantos anúncios abertos atendem aos critérios agora (ex.: "12 lotes combinam com este monitor"). */
+export async function countOpenListings(criteria: ListingCriteria): Promise<{ count: number; truncated: boolean }> {
+  await requireUser();
+  const where: Prisma.ListingWhereInput = { AND: [openWhere(new Date()), criteriaWhere(criteria)] };
+  if (criteria.radiusKm === null) return { count: await db.listing.count({ where }), truncated: false };
+
+  const rows = await db.listing.findMany({
+    where,
+    take: MAX_CANDIDATES + 1,
+    select: { municipality: { select: { latitude: true, longitude: true } } },
+  });
+  const count = rows
+    .slice(0, MAX_CANDIDATES)
+    .map(({ municipality }) => ({
+      distanceKm: municipality ? distanceKm(DEFAULT_REGION.center, municipality) : null,
+    }))
+    .filter(withinRadius(criteria.radiusKm)).length;
+  return { count, truncated: rows.length > MAX_CANDIDATES };
 }
 
 /** Saúde do coletor para o dashboard e para "Descobertos": última execução e abertos na região. */

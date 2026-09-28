@@ -102,7 +102,7 @@ Cada etapa segue o fluxo da skill `leilao-padroes`:
 | --- | --- | --- |
 | **0** | **Decisões e fixtures.** SPEC e ARCHITECTURE atualizados. Arremate já confirmado pela página do lote (§2). Falta mapear os **outros desfechos**: salvar como fixture as páginas de lotes de São Carlos do leilão de **28/09 10h** depois do fim (vendido, condicional, não vendido, retirado) | Decisões aprovadas e uma fixture para cada desfecho conhecido |
 | 1 | **Catálogo + adaptador Leilo + coletor agendado**, já **revisitando lotes encerrados** para gravar o arremate (a base das estimativas começa a crescer no primeiro dia). Tabelas `sources`, `listings`, `listing_observations`, `collector_runs` e `municipalities`. Cron de 2 em 2 horas (cabe na cota gratuita do GitHub para repositório privado). Tela **Descobertos** com filtros (marca, modelo, ano, preço, distância) e cartão "última coleta" no dashboard. **Condição declarada** pelo leiloeiro (monta, sucata, circulação vedada, remarcado, laudo cautelar…) extraída da descrição, com selos e filtro | Lotes até 150 km de São Carlos aparecem sozinhos, sem duplicar, com fotos e distância. Falha do coletor fica visível no app |
-| 2 | **Monitores e alertas.** Telas de monitores (CRUD) e de alertas, com contador na navegação e seção no dashboard | Lote novo compatível gera **um** alerta, com "Ver lote" e "Adicionar à análise" |
+| 2 | **Monitores e alertas.** Telas de monitores (CRUD) e de alertas, com contador na navegação e seção no dashboard. Monitor usa os mesmos critérios de Descobertos, inclusive a condição. Lote que já existia ao criar, editar ou religar o monitor não vira alerta (aparece como "combinam agora"); mudança no lote não gera outro alerta | Lote novo compatível gera **um** alerta, com "Ver lote" ("Adicionar à análise" chega na etapa 3) |
 | 3 | **Adicionar à análise + acompanhamento automático.** Cria leilão, lote e rascunho a partir do anúncio (sem duplicar se já existir). O coletor atualiza o lance dos lotes ligados | Um clique leva o lote ao Tracker, e o lance atual se mantém sozinho |
 | 4 | **Resultado automático** nos lotes do usuário: quando o anúncio ligado encerra, o coletor registra o resultado (desfecho, preço final, hora real) com `source = collector` e link. Desfecho ambíguo (ex.: condicional) fica como **"resultado a confirmar"**, já preenchido | O usuário não digita resultados; no máximo confirma |
 | 5 | **Estimativas** (§5), quando houver base | Alerta e anúncio mostram "provável R$ X (n=12) · limite estimado R$ Y" ou "sem base suficiente" |
@@ -110,7 +110,7 @@ Cada etapa segue o fluxo da skill `leilao-padroes`:
 
 ## 7. Decisões
 
-Aprovadas e registradas em `docs/ARCHITECTURE.md` §15: **D-25** catálogo global · **D-26** coletor no GitHub Actions com `tsx` · **D-27** adaptador por estado da página + JSON-LD · **D-28** estimativas só com dados do sistema · **D-29** fotos por URL · **D-30** dados da fonte como sugestão rotulada.
+Aprovadas e registradas em `docs/ARCHITECTURE.md` §15: **D-25** catálogo global · **D-26** coletor no GitHub Actions com `tsx` · **D-27** adaptador por estado da página + JSON-LD · **D-28** estimativas só com dados do sistema · **D-29** fotos por URL · **D-30** dados da fonte como sugestão rotulada · **D-32** alertas criados pelo coletor.
 
 ## 8. Riscos
 

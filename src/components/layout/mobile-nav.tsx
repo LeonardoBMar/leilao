@@ -5,15 +5,16 @@ import { type ReactNode, useState } from "react";
 
 import { Button, Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui";
 
-import { NavLinks } from "./nav-links";
+import { type NavBadges, NavLinks } from "./nav-links";
 
 type MobileNavProps = {
   /** Conta/sair, renderizado no servidor. */
   account: ReactNode;
+  badges?: NavBadges;
 };
 
 /** Gaveta lateral abaixo de `lg`, com os mesmos destinos e ordem da sidebar (DESIGN.md §9). */
-export function MobileNav({ account }: MobileNavProps) {
+export function MobileNav({ account, badges }: MobileNavProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -30,7 +31,7 @@ export function MobileNav({ account }: MobileNavProps) {
         </div>
         <nav aria-label="Principal" className="flex-1">
           {/* Fecha ao navegar: com <Activity> a rota anterior fica montada e a gaveta ficaria aberta. */}
-          <NavLinks onNavigate={() => setIsOpen(false)} />
+          <NavLinks onNavigate={() => setIsOpen(false)} badges={badges} />
         </nav>
         <div className="border-t border-border pt-4">{account}</div>
       </DialogContent>

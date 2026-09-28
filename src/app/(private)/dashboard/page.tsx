@@ -4,6 +4,7 @@ import { Suspense } from "react";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { ButtonLink } from "@/components/ui";
+import { RecentAlerts } from "@/features/alerts/components/recent-alerts";
 import { UpcomingAuctions, UpcomingAuctionsSkeleton } from "@/features/auctions/components/upcoming-auctions";
 import { DashboardSummary, DashboardSummarySkeleton } from "@/features/dashboard/components/dashboard-summary";
 import { PendingItems } from "@/features/dashboard/components/pending-items";
@@ -39,6 +40,11 @@ export default function DashboardPage() {
           Ver descobertos
         </ButtonLink>
       </div>
+
+      {/* Sem alertas não lidos, a seção não aparece: fallback vazio evita um bloco que some depois. */}
+      <Suspense fallback={null}>
+        <RecentAlerts />
+      </Suspense>
 
       <Suspense fallback={null}>
         <PendingItems />

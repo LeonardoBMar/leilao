@@ -4,7 +4,7 @@ Como usar o Leilão Tracker no dia a dia: registrar leilões e lotes, calcular a
 
 ## O fluxo em uma frase
 
-**Leilão → lote → análise → fixar → acompanhar → resultado.** O dashboard mostra o que está em andamento e quantas das suas decisões ficaram dentro do limite.
+**Leilão → lote → análise → fixar → acompanhar → resultado.** Para achar lotes, o app coleta os sites de leilão e avisa quando aparece um lote que combina com o que você procura (seção 9). O dashboard mostra o que está em andamento e quantas das suas decisões ficaram dentro do limite.
 
 ## 1. Entrar
 
@@ -91,7 +91,16 @@ O resultado mostra a diferença entre o preço final e seu limite (ex.: *R$ 2.30
 - **Arquivar** tira leilão ou lote das listas e do dashboard, sem apagar nada. Veja de novo em *Somente arquivados*; **Reativar** traz de volta.
 - **Excluir** só aparece quando não há histórico (nenhuma análise fixada nem resultado). Com histórico, arquive.
 
-## 9. Backup
+## 9. Descobertos, monitores e alertas
+
+O app coleta sozinho, de 2 em 2 horas, os lotes dos sites de leilão (hoje o Leilo). Você não cadastra nada para isso.
+
+- **Descobertos:** os lotes coletados, com foto, lance, distância de São Carlos/SP, valor de mercado informado pelo site e **condição declarada pelo leiloeiro** (pequena ou média monta, sucata, circulação vedada, laudo cautelar…). Filtre por busca, ano, lance, distância, categoria, condição e situação. Lote sem selo de condição é lote em que o leiloeiro **não informou** nada, e não uma garantia de que não há dano.
+- **Monitores:** buscas salvas. Crie em *Monitores → Novo monitor* com pelo menos marca ou modelo, um ano ou um lance máximo (ex.: "VW Fox, 2011–2013, até R$ 25.000, até pequena monta"). Cada monitor mostra quantos lotes abertos **combinam agora**, com link para Descobertos já filtrado.
+- **Alertas:** a cada coleta, lote **novo** que combina com um monitor ligado vira um alerta ("Novo veículo encontrado"), com o contador ao lado de *Alertas* no menu e uma seção no Dashboard. Lotes que já existiam quando você criou, editou ou religou o monitor não viram alerta (estão em "combinam agora"). Se o lance ou os dados do lote mudarem depois, não chega outro alerta: o alerta mostra sempre os dados da última coleta.
+- **Desligar** um monitor para de gerar alertas sem apagar os antigos; **Excluir** apaga o monitor e os alertas dele.
+
+## 10. Backup
 
 Os dados vivem no Supabase. Faça backup **toda semana e antes de cada migration**:
 

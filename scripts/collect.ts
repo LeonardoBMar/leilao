@@ -17,7 +17,7 @@ async function main() {
   process.stdout.write(
     `Coleta ${summary.sourceId}: ${summary.status} · ${summary.requests} requisições · ` +
       `${summary.discovered} no sitemap · ${summary.created} novos · ${summary.updated} atualizados · ` +
-      `${summary.failed} falhas\n`,
+      `${summary.failed} falhas · ${summary.alertsCreated} alertas\n`,
   );
   for (const { url, error } of summary.errors) process.stdout.write(`  falha: ${url} → ${error}\n`);
   if (summary.status === "failed") process.exitCode = 1;

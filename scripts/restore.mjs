@@ -28,11 +28,18 @@ nextEnv.loadEnvConfig(process.cwd(), false, { info() {}, error: console.error })
 const TABLE_ORDER = ["auctions", "lots", "analyses", "results", "lot_images"];
 /** Backups antigos não têm `catalog`: vira vazio. */
 const CATALOG_ORDER = ["listings", "listing_observations"];
+/** Backups antigos não têm `watches`: vira vazio. Alertas dependem de monitores e anúncios: entram por último. */
+const WATCH_ORDER = ["watches", "alerts"];
 
 /** Confere, dentro do backup, as mesmas garantias que o banco impõe (FKs por dono e por lote). */
-function validate({ tables, catalog }) {
+function validate({ tables, catalog, watches }) {
   const problems = [];
   const listingIds = new Set(catalog.listings.map((listing) => listing.id));
+  const watchOwners = new Map(watches.watches.map((watch) => [watch.id, watch.owner_id]));
+  for (const alert of watches.alerts) {
+    if (watchOwners.get(alert.watch_id) !== alert.owner_id) problems.push(`alerta ${alert.id}: monitor ausente`);
+    if (!listingIds.has(alert.listing_id)) problems.push(`alerta ${alert.id}: anúncio ausente`);
+  }
   for (const observation of catalog.listing_observations) {
     if (!listingIds.has(observation.listing_id)) problems.push(`observação ${observation.id}: anúncio ausente`);
   }
@@ -95,7 +102,7 @@ async function apply(backup) {
     if (missing.length > 0)
       throw new Error(`Destino sem as migrations do backup: ${missing.join(", ")}. Rode prisma migrate deploy.`);
 
-    for (const table of [...TABLE_ORDER, ...CATALOG_ORDER]) {
+    for (const table of [...TABLE_ORDER, ...CATALOG_ORDER, ...WATCH_ORDER]) {
       const { rows } = await client.query(`select count(*)::int as n from "${table}"`);
       if (rows[0].n > 0)
         throw new Error(`Destino não está vazio (${table} tem ${rows[0].n} linhas). Nada foi alterado.`);
@@ -106,6 +113,7 @@ async function apply(backup) {
     await client.query("BEGIN");
     for (const table of TABLE_ORDER) await insertRows(client, table, backup.tables[table]);
     for (const table of CATALOG_ORDER) await insertRows(client, table, backup.catalog[table]);
+    for (const table of WATCH_ORDER) await insertRows(client, table, backup.watches[table]);
     await client.query("COMMIT");
   } catch (error) {
     await client.query("ROLLBACK").catch(() => {});
@@ -157,7 +165,10 @@ async function restorePhotos(backupDir, images) {
 function reassignOwner(backup, newOwner) {
   if (!/^[0-9a-f-]{36}$/.test(newOwner))
     throw new Error("--owner precisa ser o UUID do usuário no projeto de destino.");
-  const owners = new Set(TABLE_ORDER.flatMap((table) => backup.tables[table].map((row) => row.owner_id)));
+  const owners = new Set([
+    ...TABLE_ORDER.flatMap((table) => backup.tables[table].map((row) => row.owner_id)),
+    ...WATCH_ORDER.flatMap((table) => backup.watches[table].map((row) => row.owner_id)),
+  ]);
   if (owners.size > 1)
     throw new Error("O backup tem mais de um dono; --owner só vale para backups de um único usuário.");
   const [oldOwner] = owners;
@@ -168,6 +179,7 @@ function reassignOwner(backup, newOwner) {
       if (table === "lot_images") row.storage_path = row.storage_path.replace(`${oldOwner}/`, `${newOwner}/`);
     }
   }
+  for (const table of WATCH_ORDER) for (const row of backup.watches[table]) row.owner_id = newOwner;
   console.log(`Dono reatribuído: ${oldOwner} → ${newOwner}`);
 }
 
@@ -182,10 +194,12 @@ async function main() {
   const backup = JSON.parse(await readFile(path.join(backupDir, "database.json"), "utf8"));
   if (backup.format !== 1) throw new Error(`Formato de backup desconhecido: ${backup.format}`);
   backup.catalog = Object.fromEntries(CATALOG_ORDER.map((table) => [table, backup.catalog?.[table] ?? []]));
+  backup.watches = Object.fromEntries(WATCH_ORDER.map((table) => [table, backup.watches?.[table] ?? []]));
 
   const counts = Object.fromEntries([
     ...TABLE_ORDER.map((table) => [table, backup.tables[table].length]),
     ...CATALOG_ORDER.map((table) => [table, backup.catalog[table].length]),
+    ...WATCH_ORDER.map((table) => [table, backup.watches[table].length]),
   ]);
   console.log(`Backup de ${backup.createdAt}`, counts, `${backup.migrations.length} migrations`);
 

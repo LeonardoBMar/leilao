@@ -68,7 +68,7 @@
 npm run backup
 ```
 
-- **Gera** `backups/<data>/database.json` (tabelas do domínio e migrations aplicadas) e, com `SUPABASE_SECRET_KEY`, a pasta `backups/<data>/photos/`.
+- **Gera** `backups/<data>/database.json` (tabelas do domínio, catálogo coletado, monitores e alertas, e migrations aplicadas) e, com `SUPABASE_SECRET_KEY`, a pasta `backups/<data>/photos/`.
 - **Leitura consistente:** as tabelas são lidas numa única transação somente leitura.
 - **`backups/` não é versionada.**
 - **Backups do plano Supabase:** o plano Free não oferece backups para download; o Pro mantém 7 dias diários. Este script vale para qualquer plano e é a fonte principal.
@@ -122,6 +122,7 @@ npm run restore -- backups/<data>
   - **Segredos necessários** em GitHub → Settings → Secrets and variables → Actions: `DATABASE_URL` (pooler, porta 6543, o mesmo valor da Vercel) e `DIRECT_URL` (sessão, porta 5432, o mesmo do `.env.local`; o `prisma generate` da instalação exige).
   - **Saúde:** a linha "Última coleta" no dashboard e em Descobertos. Falha aparece ali e em Actions → Coleta.
   - **Rodar à mão:** Actions → Coleta → Run workflow, ou `npm run collect` na máquina local.
+  - **Alertas** (D-32): criados ao fim de cada coleta para os monitores ligados; o log termina com `· N alertas`. Se a geração falhar, a execução fica como falha com o erro `(alertas)`, e a próxima recupera os lotes das últimas 48 h.
   - **Campo novo extraído do dado bruto** (ex.: condição do veículo): depois da migration, `npm run db:backfill-condition` relê `listings.raw` e preenche os anúncios já coletados, sem baixar as páginas. Idempotente.
   - **Fonte com problema** (layout mudou, bloqueio): os erros ficam em `collector_runs.errors`. Para pausar uma fonte, `update sources set active = false where id = 'leilo'` (o coletor passa a ignorá-la).
 - **Erros:** Vercel → Logs (as actions registram `console.error` sem dados pessoais).

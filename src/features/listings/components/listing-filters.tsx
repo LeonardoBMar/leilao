@@ -6,17 +6,9 @@ import { useRouter } from "next/navigation";
 import { type FormEvent, useTransition } from "react";
 
 import { Button, Input, SelectField } from "@/components/ui";
+import { CATEGORY_KEYS, CONDITION_KEYS, DEFAULT_CATEGORY, DEFAULT_CONDITION } from "@/domain/listings/criteria";
 
-import {
-  CATEGORY_KEYS,
-  CATEGORY_OPTIONS,
-  CONDITION_KEYS,
-  CONDITION_OPTIONS,
-  DEFAULT_CATEGORY,
-  DEFAULT_CONDITION,
-  DEFAULT_DISTANCE,
-  DISTANCE_OPTIONS,
-} from "../schemas";
+import { CATEGORY_LABELS, CONDITION_LABELS, DEFAULT_DISTANCE, DISTANCE_OPTIONS } from "../schemas";
 
 const BASE_PATH = "/descobertos";
 
@@ -125,7 +117,7 @@ export function ListingFilters({ values }: { values: ListingFilterValues }) {
         name="categoria"
         label="Categoria"
         defaultValue={values.categoria}
-        options={CATEGORY_KEYS.map((key) => ({ value: key, label: CATEGORY_OPTIONS[key].label }))}
+        options={CATEGORY_KEYS.map((key) => ({ value: key, label: CATEGORY_LABELS[key] }))}
         className="md:col-span-1 xl:col-span-2"
       />
       <SelectField
@@ -142,7 +134,7 @@ export function ListingFilters({ values }: { values: ListingFilterValues }) {
         name="condicao"
         label="Condição"
         defaultValue={values.condicao}
-        options={CONDITION_KEYS.map((key) => ({ value: key, label: CONDITION_OPTIONS[key].label }))}
+        options={CONDITION_KEYS.map((key) => ({ value: key, label: CONDITION_LABELS[key] }))}
         className="md:col-span-2 xl:col-span-1"
       />
       <div className="flex flex-wrap items-end gap-3 md:col-span-2 xl:col-span-2 xl:justify-end">

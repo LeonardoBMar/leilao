@@ -1,10 +1,10 @@
 "use client";
 
-import { Car, Gavel, LayoutDashboard, type LucideIcon, Radar } from "lucide-react";
+import { BellRing, Car, Gavel, LayoutDashboard, type LucideIcon, Radar, ScanSearch } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Suspense } from "react";
+import { type ReactNode, Suspense } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -14,31 +14,37 @@ type NavItem = { href: Route; label: string; icon: LucideIcon };
 const NAV_ITEMS: readonly NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/descobertos", label: "Descobertos", icon: Radar },
+  { href: "/alertas", label: "Alertas", icon: BellRing },
+  { href: "/monitores", label: "Monitores", icon: ScanSearch },
   { href: "/leiloes", label: "Leilões", icon: Gavel },
   { href: "/lotes", label: "Lotes", icon: Car },
 ];
 
+/** Conteúdo ao lado do item, renderizado no servidor (ex.: contador de alertas não lidos, DESIGN.md §9). */
+export type NavBadges = Partial<Record<Route, ReactNode>>;
+
 type NavLinksProps = {
   onNavigate?: () => void;
+  badges?: NavBadges;
 };
 
 /**
  * `usePathname()` é dado de URL: em rotas dinâmicas não existe no pré-render e precisa de <Suspense>.
  * O fallback é a mesma lista sem destaque, então a casca estática já traz a navegação completa.
  */
-export function NavLinks({ onNavigate }: NavLinksProps) {
+export function NavLinks({ onNavigate, badges }: NavLinksProps) {
   return (
-    <Suspense fallback={<NavList pathname={null} onNavigate={onNavigate} />}>
-      <ActiveNavList onNavigate={onNavigate} />
+    <Suspense fallback={<NavList pathname={null} onNavigate={onNavigate} badges={badges} />}>
+      <ActiveNavList onNavigate={onNavigate} badges={badges} />
     </Suspense>
   );
 }
 
-function ActiveNavList({ onNavigate }: NavLinksProps) {
-  return <NavList pathname={usePathname()} onNavigate={onNavigate} />;
+function ActiveNavList({ onNavigate, badges }: NavLinksProps) {
+  return <NavList pathname={usePathname()} onNavigate={onNavigate} badges={badges} />;
 }
 
-function NavList({ pathname, onNavigate }: NavLinksProps & { pathname: string | null }) {
+function NavList({ pathname, onNavigate, badges }: NavLinksProps & { pathname: string | null }) {
   return (
     <ul className="grid gap-1">
       {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
@@ -56,6 +62,7 @@ function NavList({ pathname, onNavigate }: NavLinksProps & { pathname: string | 
             >
               <Icon aria-hidden="true" className="size-5 shrink-0" />
               {label}
+              {badges?.[href]}
             </Link>
           </li>
         );

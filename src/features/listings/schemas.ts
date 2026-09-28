@@ -1,50 +1,40 @@
 import { z } from "zod";
 
-import type { DamageLevel } from "@/domain/listings/condition";
+import {
+  CATEGORY_KEYS,
+  type CategoryKey,
+  CONDITION_KEYS,
+  type ConditionKey,
+  DEFAULT_CATEGORY,
+  DEFAULT_CONDITION,
+  DEFAULT_RADIUS_KM,
+  RADIUS_OPTIONS_KM,
+} from "@/domain/listings/criteria";
 import { cents } from "@/domain/money";
 
 export const LISTINGS_PAGE_SIZE = 24;
 
-/** Raios oferecidos no filtro, em km a partir da região padrão (São Carlos/SP). */
-export const DISTANCE_OPTIONS = ["50", "100", "150", "300"] as const;
-export const DEFAULT_DISTANCE = "150";
+/** Raios na URL e nos formulários (texto), a partir de `RADIUS_OPTIONS_KM`. */
+export const DISTANCE_OPTIONS = RADIUS_OPTIONS_KM.map(String);
+export const DEFAULT_DISTANCE = String(DEFAULT_RADIUS_KM);
 
-/**
- * Categorias como a fonte escreve (Leilo). "veiculos" é o padrão: o que o fluxo de análise cobre.
- * Imóveis e equipamentos ficam no catálogo, mas só aparecem em "todas".
- */
-export const CATEGORY_KEYS = ["veiculos", "carros", "motos", "utilitarios", "pesados", "sucatas", "todas"] as const;
-export type CategoryOption = (typeof CATEGORY_KEYS)[number];
+export const CATEGORY_LABELS = {
+  veiculos: "Veículos (carros, motos e utilitários)",
+  carros: "Carros",
+  motos: "Motos",
+  utilitarios: "Utilitários",
+  pesados: "Pesados",
+  sucatas: "Sucatas",
+  todas: "Todas as categorias",
+} satisfies Record<CategoryKey, string>;
 
-export const CATEGORY_OPTIONS = {
-  veiculos: { label: "Veículos (carros, motos e utilitários)", categories: ["Carros", "Motos", "Utilitarios"] },
-  carros: { label: "Carros", categories: ["Carros"] },
-  motos: { label: "Motos", categories: ["Motos"] },
-  utilitarios: { label: "Utilitários", categories: ["Utilitarios"] },
-  pesados: { label: "Pesados", categories: ["Pesados"] },
-  sucatas: { label: "Sucatas", categories: ["Sucatas"] },
-  todas: { label: "Todas as categorias", categories: null },
-} as const satisfies Record<CategoryOption, { label: string; categories: readonly string[] | null }>;
-export const DEFAULT_CATEGORY: CategoryOption = "veiculos";
-
-/**
- * Condição declarada pelo leiloeiro. "Sem monta" inclui o lote que não informa nada (a maioria, em geral recuperado de
- * financiamento): a fonte não diz que não há dano, então a tela chama de "não informada", nunca de "sem dano".
- */
-export const CONDITION_KEYS = ["qualquer", "sem-monta", "ate-pequena", "ate-media", "com-monta"] as const;
-export type ConditionOption = (typeof CONDITION_KEYS)[number];
-
-export const CONDITION_OPTIONS = {
-  qualquer: { label: "Qualquer condição", filter: null },
-  "sem-monta": { label: "Sem monta ou sucata informada", filter: { unclassified: true, levels: [] } },
-  "ate-pequena": { label: "Até pequena monta", filter: { unclassified: true, levels: ["small"] } },
-  "ate-media": { label: "Até média monta", filter: { unclassified: true, levels: ["small", "medium"] } },
-  "com-monta": { label: "Só com monta", filter: { unclassified: false, levels: ["small", "medium", "large"] } },
-} as const satisfies Record<
-  ConditionOption,
-  { label: string; filter: { unclassified: boolean; levels: readonly DamageLevel[] } | null }
->;
-export const DEFAULT_CONDITION: ConditionOption = "qualquer";
+export const CONDITION_LABELS = {
+  qualquer: "Qualquer condição",
+  "sem-monta": "Sem monta ou sucata informada",
+  "ate-pequena": "Até pequena monta",
+  "ate-media": "Até média monta",
+  "com-monta": "Só com monta",
+} satisfies Record<ConditionKey, string>;
 
 const year = z.coerce.number().int().min(1900).max(2100).optional().catch(undefined);
 

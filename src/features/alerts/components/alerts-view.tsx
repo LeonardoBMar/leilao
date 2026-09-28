@@ -1,0 +1,118 @@
+import { BellRing } from "lucide-react";
+import type { Route } from "next";
+import Link from "next/link";
+
+import { ListPagination } from "@/components/layout/list-pagination";
+import { ButtonLink, EmptyState, Skeleton } from "@/components/ui";
+import { cn } from "@/lib/utils";
+
+import { listAlerts } from "../queries";
+import { alertFiltersSchema } from "../schemas";
+import { MarkAllAlertsReadButton } from "./alert-buttons";
+import { AlertCard } from "./alert-card";
+
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+/** Lista de alertas com filtro por situação e por monitor. Renderizar dentro de <Suspense>. */
+export async function AlertsView({ searchParams }: { searchParams: SearchParams }) {
+  const raw = await searchParams;
+  const first = (key: string) => {
+    const value = raw[key];
+    return Array.isArray(value) ? value[0] : value;
+  };
+  const filters = alertFiltersSchema.parse({
+    monitor: first("monitor"),
+    situacao: first("situacao"),
+    pagina: first("pagina"),
+  });
+  const page = await listAlerts(filters);
+  const hrefWith = (situacao: "todos" | "nao-lidos") => {
+    const params = new URLSearchParams();
+    if (filters.watchId) params.set("monitor", filters.watchId);
+    if (situacao === "nao-lidos") params.set("situacao", situacao);
+    const query = params.toString();
+    return (query ? `/alertas?${query}` : "/alertas") as Route;
+  };
+
+  return (
+    <div className="grid gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <nav aria-label="Situação dos alertas" className="flex flex-wrap items-center gap-2 text-label">
+          <FilterLink href={hrefWith("todos")} active={!filters.unreadOnly}>
+            Todos
+          </FilterLink>
+          <FilterLink href={hrefWith("nao-lidos")} active={filters.unreadOnly}>
+            Não lidos ({page.unread})
+          </FilterLink>
+          {page.watchTitle ? (
+            <span className="text-caption text-muted">
+              Monitor “{page.watchTitle}” ·{" "}
+              <Link href="/alertas" className="text-primary hover:underline">
+                ver de todos
+              </Link>
+            </span>
+          ) : null}
+        </nav>
+        {page.unread > 0 ? <MarkAllAlertsReadButton watchId={filters.watchId ?? null} /> : null}
+      </div>
+
+      {page.total === 0 ? (
+        <EmptyState
+          icon={BellRing}
+          title={filters.unreadOnly ? "Nenhum alerta não lido" : "Nenhum alerta ainda"}
+          description="A cada coleta (de 2 em 2 horas), lotes novos que combinam com um monitor ligado aparecem aqui."
+          action={
+            <ButtonLink href="/monitores" variant="secondary">
+              Ver monitores
+            </ButtonLink>
+          }
+        />
+      ) : (
+        <section aria-label="Alertas" className="grid gap-4">
+          <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {page.items.map((alert) => (
+              <li key={alert.id}>
+                <AlertCard alert={alert} />
+              </li>
+            ))}
+          </ul>
+          <ListPagination
+            basePath="/alertas"
+            params={{ monitor: filters.watchId, situacao: filters.unreadOnly ? "nao-lidos" : undefined }}
+            page={page.page}
+            pageSize={page.pageSize}
+            total={page.total}
+          />
+        </section>
+      )}
+    </div>
+  );
+}
+
+function FilterLink({ href, active, children }: { href: Route; active: boolean; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "inline-flex min-h-8 items-center rounded-md px-3 text-foreground-secondary hover:bg-surface-subtle",
+        active && "bg-primary-subtle font-semibold text-primary-active hover:bg-primary-subtle",
+      )}
+    >
+      {children}
+    </Link>
+  );
+}
+
+export function AlertsViewSkeleton() {
+  return (
+    <div className="grid gap-4" aria-hidden="true">
+      <Skeleton className="h-9 w-64" />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <Skeleton className="h-96" />
+        <Skeleton className="h-96" />
+        <Skeleton className="h-96" />
+      </div>
+    </div>
+  );
+}

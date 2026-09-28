@@ -568,15 +568,17 @@ Ordem inicial:
 1. Marca “Leilão Tracker”.
 2. Dashboard.
 3. Descobertos (lotes coletados automaticamente, docs/PLANO-COLETA.md): porta de entrada do fluxo descobrir → analisar.
-4. Leilões.
-5. Lotes.
-6. Divisor flexível.
-7. Conta/sair.
+4. Alertas (lotes novos que combinaram com um monitor), com contador de não lidos.
+5. Monitores (buscas salvas que geram alertas).
+6. Leilões.
+7. Lotes.
+8. Divisor flexível.
+9. Conta/sair.
 
 - Item: altura mínima de 40 px, `radius-md`, ícone 20 px, texto label.
 - Ativo: `primary-subtle`, texto e ícone `primary-active`, peso 600.
 - Hover: `surface-subtle`.
-- Não usar badges de contagem na navegação salvo necessidade operacional validada.
+- Não usar badges de contagem na navegação salvo necessidade operacional validada. Única exceção validada: **não lidos em Alertas** (etapa 2 de docs/PLANO-COLETA.md), pílula `primary` com texto branco alinhada à direita, some quando é zero.
 
 ### Navegação mobile
 
