@@ -35,6 +35,8 @@
       "Bash(npx prisma db *)",
       "Bash(* --accept-data-loss *)",
       "Bash(* --force-reset *)",
+      "Bash(npm run db:cron *)",
+      "Bash(npm run db:cron)",
       "Bash(npm run db:reparse *)",
       "Bash(npm run db:reparse)",
       "Bash(npm run db:seed *)",
