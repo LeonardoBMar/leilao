@@ -1,6 +1,5 @@
 # Coletor de anúncios (docs/PLANO-COLETA.md, D-26). Grava só o catálogo global no banco.
-# Segredos necessários em Settings → Secrets and variables → Actions: DATABASE_URL (pooler, porta 6543) e
-# DIRECT_URL (sessão, porta 5432; o prisma.config.ts exige na instalação, no `prisma generate`).
+# Segredo necessário em Settings → Secrets and variables → Actions: DATABASE_URL (pooler, porta 6543).
 name: Coleta
 
 on:
@@ -28,12 +27,11 @@ jobs:
     timeout-minutes: 20
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      DIRECT_URL: ${{ secrets.DIRECT_URL }}
       # Entrada manual passa por variável de ambiente, nunca interpolada direto no comando.
       MAX_VISITS: ${{ inputs.max_visits || '400' }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm

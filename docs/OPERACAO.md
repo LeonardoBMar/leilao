@@ -119,7 +119,7 @@ npm run restore -- backups/<data>
 ## 7. Monitoramento e manutenção
 
 - **Coleta automática** (docs/PLANO-COLETA.md): workflow **Coleta** no GitHub Actions, de 2 em 2 horas.
-  - **Segredos necessários** em GitHub → Settings → Secrets and variables → Actions: `DATABASE_URL` (pooler, porta 6543, o mesmo valor da Vercel) e `DIRECT_URL` (sessão, porta 5432, o mesmo do `.env.local`; o `prisma generate` da instalação exige).
+  - **Segredo necessário** em GitHub → Settings → Secrets and variables → Actions: `DATABASE_URL` (pooler, porta 6543, o mesmo valor da Vercel). `DIRECT_URL` não é usado ali: `prisma generate` não conecta ao banco.
   - **Saúde:** a linha "Última coleta" no dashboard e em Descobertos. Falha aparece ali e em Actions → Coleta.
   - **Rodar à mão:** Actions → Coleta → Run workflow, ou `npm run collect` na máquina local.
   - **Alertas** (D-32): criados ao fim de cada coleta para os monitores ligados; o log termina com `· N alertas`. Se a geração falhar, a execução fica como falha com o erro `(alertas)`, e a próxima recupera os lotes das últimas 48 h.

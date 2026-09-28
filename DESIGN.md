@@ -876,7 +876,7 @@ DESIGN.md                       # contrato visual
 SPEC.md                         # contrato funcional
 ```
 
-Versões da fundação: Next.js `16.3.5`, React `19.3.0`, Tailwind CSS `4.3.3`, TypeScript `6.0.3` e ESLint `9.39.5`. TypeScript 6 e ESLint 9 são mantidos enquanto os analisadores do ecossistema usado pelo Next.js 16 não suportarem as APIs das versões major seguintes.
+Versões da fundação: Next.js `16.3.6` (atualizado de 16.3.5 em 2026-09-28), React `19.3.0`, Tailwind CSS `4.3.3`, TypeScript `6.0.3` e ESLint `9.39.5`. TypeScript 6 e ESLint 9 são mantidos enquanto os analisadores do ecossistema usado pelo Next.js 16 não suportarem as APIs das versões major seguintes.
 
 ### Estratégia de tokens
 
