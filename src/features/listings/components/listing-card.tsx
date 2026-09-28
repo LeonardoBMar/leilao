@@ -21,10 +21,12 @@ type ListingCardProps = {
   header?: React.ReactNode;
   /** Ações abaixo do link para a fonte (ex.: "Marcar como lido"). */
   footer?: React.ReactNode;
+  /** Primeira linha da lista, visível sem rolar: a foto carrega já (é a candidata a LCP), sem esperar o lazy. */
+  eager?: boolean;
 };
 
 /** Anúncio coletado em cartão: "Descobertos" e alertas. */
-export function ListingCard({ item, header, footer }: ListingCardProps) {
+export function ListingCard({ item, header, footer, eager = false }: ListingCardProps) {
   const isOpen = item.status === "open";
   const bid = isOpen ? item.currentBid : item.finalBid;
 
@@ -38,6 +40,7 @@ export function ListingCard({ item, header, footer }: ListingCardProps) {
             alt=""
             fill
             unoptimized
+            loading={eager ? "eager" : "lazy"}
             sizes="(min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw"
             className="object-cover"
           />

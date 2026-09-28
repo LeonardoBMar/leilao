@@ -41,8 +41,14 @@ export async function signIn(page: Page, email: string, password: string) {
   await expect(page).toHaveURL(/\/dashboard$/);
 }
 
+/**
+ * Mensagem da action e, depois, a rede parada: a action com `refresh()` ainda transmite a página re-renderizada
+ * quando a mensagem aparece. Navegar antes corta essa resposta, e o servidor registra "The destination stream
+ * closed early" (inofensivo, mas polui o log do teste).
+ */
 export async function expectToast(page: Page, text: string | RegExp) {
   await expect(page.getByText(text).first()).toBeVisible();
+  await page.waitForLoadState("networkidle");
 }
 
 export function section(page: Page, name: string): Locator {

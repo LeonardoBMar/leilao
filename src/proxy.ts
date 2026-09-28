@@ -45,7 +45,8 @@ export async function proxy(request: NextRequest) {
     return redirectKeepingSession(url, response);
   }
 
-  if (isAuthenticated && isPublic) {
+  // A raiz não tem conteúdo: com sessão vai direto ao dashboard, sem renderizar a página (que só redirecionaria).
+  if (isAuthenticated && (isPublic || pathname === "/")) {
     const url = request.nextUrl.clone();
     url.pathname = HOME_PATH;
     url.search = "";

@@ -9,6 +9,9 @@ import { DEFAULT_DISTANCE, type ListingFilters as Filters, listingFiltersSchema 
 import { ListingCard } from "./listing-card";
 import { ListingFilters, type ListingFilterValues } from "./listing-filters";
 
+/** Cards na primeira linha no layout mais largo (3 colunas). */
+const FIRST_ROW = 3;
+
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 /** "Descobertos": anúncios coletados, com filtros na URL. Renderizar dentro de <Suspense>. */
@@ -72,9 +75,9 @@ async function ListingList({ filters, values }: { filters: Filters; values: List
         </Alert>
       ) : null}
       <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {page.items.map((item) => (
+        {page.items.map((item, index) => (
           <li key={item.id}>
-            <ListingCard item={item} />
+            <ListingCard item={item} eager={index < FIRST_ROW} />
           </li>
         ))}
       </ul>

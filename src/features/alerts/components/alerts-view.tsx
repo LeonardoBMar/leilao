@@ -11,6 +11,9 @@ import { alertFiltersSchema } from "../schemas";
 import { MarkAllAlertsReadButton } from "./alert-buttons";
 import { AlertCard } from "./alert-card";
 
+/** Cards na primeira linha no layout mais largo (3 colunas). */
+const FIRST_ROW = 3;
+
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 /** Lista de alertas com filtro por situação e por monitor. Renderizar dentro de <Suspense>. */
@@ -70,9 +73,9 @@ export async function AlertsView({ searchParams }: { searchParams: SearchParams 
       ) : (
         <section aria-label="Alertas" className="grid gap-4">
           <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {page.items.map((alert) => (
+            {page.items.map((alert, index) => (
               <li key={alert.id}>
-                <AlertCard alert={alert} />
+                <AlertCard alert={alert} eager={index < FIRST_ROW} />
               </li>
             ))}
           </ul>
