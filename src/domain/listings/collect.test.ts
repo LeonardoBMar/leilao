@@ -1,7 +1,23 @@
 import { describe, expect, it } from "vitest";
 
 import { cents } from "../money";
-import { finalBidOf, observationChanged, planVisits } from "./collect";
+import { finalBidOf, goneStatus, observationChanged, planVisits } from "./collect";
+
+describe("goneStatus — página fora do ar (HTTP 404)", () => {
+  const now = new Date("2026-09-29T12:00:00Z");
+  const ended = new Date("2026-09-28T15:29:20Z");
+
+  it("encerrado: para de revisitar; aberto vira desconhecido, desfecho conhecido fica", () => {
+    expect(goneStatus({ status: "open", endsAt: ended }, now)).toBe("unknown");
+    expect(goneStatus({ status: "conditional", endsAt: ended }, now)).toBe("conditional");
+    expect(goneStatus({ status: "unsold", endsAt: ended }, now)).toBe("unsold");
+  });
+
+  it("ainda não encerrado ou sem data: não decide (conta como falha e tenta de novo)", () => {
+    expect(goneStatus({ status: "open", endsAt: new Date("2026-09-30T12:00:00Z") }, now)).toBeNull();
+    expect(goneStatus({ status: "open", endsAt: null }, now)).toBeNull();
+  });
+});
 
 describe("finalBidOf", () => {
   it("aberto não tem lance final", () => {

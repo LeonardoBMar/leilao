@@ -9,6 +9,16 @@ export function finalBidOf(listing: Pick<ListingInput, "status" | "currentBid">)
   return listing.status === "open" ? null : listing.currentBid;
 }
 
+/**
+ * A página do anúncio sumiu (HTTP 404). Depois do fim é o fim da linha: o Leilo tira do ar lotes encerrados sem venda
+ * (ex.: condicional negada). Devolve a situação a gravar, sem revisita: aberto vira desconhecido (não se adivinha o
+ * desfecho), o resto fica como estava. Antes do fim (ou sem data), `null`: pode ser instabilidade, e conta como falha.
+ */
+export function goneStatus(listing: { status: ListingStatus; endsAt: Date | null }, now: Date): ListingStatus | null {
+  if (listing.endsAt === null || listing.endsAt > now) return null;
+  return listing.status === "open" ? "unknown" : listing.status;
+}
+
 type Snapshot = { status: ListingStatus; bidCents: number | null; bidCount: number | null };
 
 /** Só grava observação quando algo mudou: o histórico fica com os pontos de mudança, sem repetição. */

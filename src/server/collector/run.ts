@@ -7,7 +7,15 @@ import type { DiscoveredListing, SourceAdapter } from "@/sources/types";
 import { db } from "../db";
 import { createAlerts } from "./alerts";
 import { createPoliteFetcher, type PoliteFetcher } from "./http";
-import { findDueVisits, findKnownIds, loadPlaceLookup, markSeen, recordCheckFailure, saveListing } from "./store";
+import {
+  findDueVisits,
+  findKnownIds,
+  loadPlaceLookup,
+  markGone,
+  markSeen,
+  recordCheckFailure,
+  saveListing,
+} from "./store";
 
 const MAX_ERROR_SAMPLES = 20;
 
@@ -145,6 +153,10 @@ async function visitListing(
   context: Parameters<typeof saveListing>[2],
 ): Promise<Result<"created" | "updated">> {
   const response = await fetcher.get(url);
+  // Página de anúncio encerrado fora do ar: desfecho da fonte, não falha (goneStatus).
+  if (!response.ok && response.status === 404 && (await markGone(source.id, expectedId, context.now))) {
+    return ok("updated");
+  }
   if (!response.ok) return err(response.error);
   const parsed = source.parseListingPage(response.text, context.now);
   if (!parsed.ok) return err(parsed.error);

@@ -21,7 +21,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:storage": "prisma db execute --file prisma/sql/storage.sql",
-    "db:backfill-condition": "node --conditions=react-server --import tsx scripts/backfill-condition.ts",
+    "db:reparse": "node --conditions=react-server --import tsx scripts/reparse.ts",
     "db:seed": "node --conditions=react-server --import tsx scripts/seed-municipalities.ts",
     "test:e2e": "playwright test",
     "test:e2e:public": "playwright test --project=public",

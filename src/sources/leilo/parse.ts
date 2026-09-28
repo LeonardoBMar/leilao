@@ -25,14 +25,22 @@ const PHOTO_ORIGIN = "https://leilo.cdndp.com.br/";
 export const leiloListingUrl = (externalId: string) => `${BASE_URL}/lote/${externalId}/`;
 
 /**
- * Situações do Leilo com significado confirmado em páginas reais. O que não estiver aqui não é adivinhado:
- * vira `open` antes do fim e `unknown` depois (docs/PLANO-COLETA.md §8).
+ * Situações do Leilo com significado confirmado em páginas reais (fixtures em ./fixtures, 21 e 28/09/2026).
+ * O que não estiver aqui não é adivinhado: vira `open` antes do fim e `unknown` depois (docs/PLANO-COLETA.md §8).
+ * - AgPagamento: arrematado, aguardando pagamento (JSON-LD SoldOut, lance ≥ mínimo).
+ * - Condicional: lance à espera da aprovação do vendedor; revisitado até virar venda ou negativa.
+ * - CondicionalNegada: vendedor recusou o lance condicional. A página sai do ar logo depois (HTTP 404).
+ * - NaoArrematado: sem lance válido.
  */
 const STATUS_BY_SITUACAO: Record<string, ListingStatus> = {
   Criado: "open",
   EmLoteamento: "open",
   LiberadoLeilao: "open",
   Pago: "sold",
+  AgPagamento: "sold",
+  Condicional: "conditional",
+  CondicionalNegada: "unsold",
+  NaoArrematado: "unsold",
   Retirado: "withdrawn",
 };
 
@@ -62,13 +70,18 @@ export function parseLeiloListingPage(html: string, now: Date): Result<ListingIn
   return err(rawLot === null ? "missing_data" : "invalid_data");
 }
 
-/** Descrição e condição a partir do lote guardado em `raw` (o mesmo objeto, sem fotos e sem quem deu lance). */
-export function leiloDetailsFromRaw(raw: unknown): ListingDetails | null {
+/** Descrição, condição e situação a partir do lote guardado em `raw` (o mesmo objeto, sem fotos e sem quem deu lance). */
+export function leiloDetailsFromRaw(raw: unknown, now: Date): ListingDetails | null {
   const lot = leiloLotSchema.safeParse(raw);
-  return lot.success ? detailsOf(lot.data) : null;
+  if (!lot.success) return null;
+  return {
+    ...detailsOf(lot.data),
+    status: mapStatus(lot.data.situacao ?? null, toDate(lot.data.dataFim), now),
+    sourceStatus: lot.data.situacao ?? null,
+  };
 }
 
-function detailsOf(lot: LeiloLot): ListingDetails {
+function detailsOf(lot: LeiloLot): Pick<ListingDetails, "description" | "condition"> {
   return { description: cleanDescription(lot.descricao), condition: conditionOf(lot) };
 }
 

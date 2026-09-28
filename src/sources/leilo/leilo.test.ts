@@ -3,6 +3,9 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { finalBidOf } from "@/domain/listings/collect";
+import { isFinalStatus } from "@/domain/listings/types";
+
 import { parseLeiloSitemap } from "./discover";
 import { leiloDetailsFromRaw, leiloListingUrl, parseLeiloListingPage } from "./parse";
 
@@ -195,11 +198,41 @@ describe("parseLeiloListingPage — condição declarada pelo leiloeiro", () => 
 
   it("rederiva do dado bruto guardado o mesmo que a coleta extraiu", () => {
     const listing = parseOk(withNotes(openPage, "PEQUENA MONTA / POSSUI GNV", "REPROVADO"));
-    expect(leiloDetailsFromRaw(listing.raw)).toEqual({
+    expect(leiloDetailsFromRaw(listing.raw, now)).toEqual({
       description: listing.description,
       condition: listing.condition,
+      status: listing.status,
+      sourceStatus: listing.sourceStatus,
     });
-    expect(leiloDetailsFromRaw({ nome: "sem id" })).toBeNull();
+    expect(leiloDetailsFromRaw({ nome: "sem id" }, now)).toBeNull();
+  });
+});
+
+describe("parseLeiloListingPage — desfechos do leilão de 28/09/2026", () => {
+  const after = new Date("2026-09-29T12:00:00Z");
+
+  it.each([
+    ["lote-aguardando-pagamento.html", "AgPagamento", "sold", 1_440_000],
+    ["lote-condicional.html", "Condicional", "conditional", 4_200_000],
+    ["lote-condicional-negada.html", "CondicionalNegada", "unsold", 4_450_000],
+    ["lote-nao-arrematado.html", "NaoArrematado", "unsold", null],
+  ] as const)("%s: %s vira %s, com o lance final do encerramento", (file, situacao, status, finalBid) => {
+    const listing = parseOk(fixture(file), after);
+    expect(listing.sourceStatus).toBe(situacao);
+    expect(listing.status).toBe(status);
+    expect(finalBidOf(listing)).toBe(finalBid);
+  });
+
+  it("sem lance, não arrematado não tem lance atual (o inicial fica como referência)", () => {
+    const listing = parseOk(fixture("lote-nao-arrematado.html"), after);
+    expect(listing.currentBid).toBeNull();
+    expect(listing.minimumBid).toBe(100_000);
+  });
+
+  it("condicional segue sendo revisitado; vendido e não vendido não", () => {
+    expect(isFinalStatus(parseOk(fixture("lote-condicional.html"), after).status)).toBe(false);
+    expect(isFinalStatus(parseOk(fixture("lote-aguardando-pagamento.html"), after).status)).toBe(true);
+    expect(isFinalStatus(parseOk(fixture("lote-condicional-negada.html"), after).status)).toBe(true);
   });
 });
 

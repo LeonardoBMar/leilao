@@ -1,6 +1,6 @@
 import "server-only";
 
-import { finalBidOf, observationChanged } from "@/domain/listings/collect";
+import { finalBidOf, goneStatus, observationChanged } from "@/domain/listings/collect";
 import { type Coordinates, distanceKm } from "@/domain/listings/geo";
 import { municipalityKey } from "@/domain/listings/place";
 import { DEFAULT_REGION } from "@/domain/listings/region";
@@ -146,6 +146,37 @@ export async function saveListing(
       await tx.listingObservation.create({ data: { listingId: listing.id, observedAt: now, ...next } });
     }
     return previous ? "updated" : "created";
+  }, TRANSACTION_OPTIONS);
+}
+
+/**
+ * Página do anúncio fora do ar (HTTP 404). Encerrado: grava a situação de `goneStatus` e para de revisitar
+ * (devolve `true`). Ainda não encerrado ou desconhecido: `false`, e o 404 conta como falha comum.
+ */
+export async function markGone(sourceId: string, externalId: string, now: Date): Promise<boolean> {
+  return db.$transaction(async (tx) => {
+    const listing = await tx.listing.findUnique({
+      where: { sourceId_externalId: { sourceId, externalId } },
+      select: { id: true, status: true, endsAt: true, currentBidCents: true, bidCount: true },
+    });
+    const status = listing && goneStatus(listing, now);
+    if (!listing || !status) return false;
+    await tx.listing.update({
+      where: { id: listing.id },
+      data: { status, lastCheckedAt: now, nextCheckAt: null, checkFailures: 0 },
+    });
+    if (status !== listing.status) {
+      await tx.listingObservation.create({
+        data: {
+          listingId: listing.id,
+          observedAt: now,
+          status,
+          bidCents: listing.currentBidCents,
+          bidCount: listing.bidCount,
+        },
+      });
+    }
+    return true;
   }, TRANSACTION_OPTIONS);
 }
 

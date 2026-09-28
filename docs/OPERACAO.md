@@ -123,7 +123,7 @@ npm run restore -- backups/<data>
   - **Saúde:** a linha "Última coleta" no dashboard e em Descobertos. Falha aparece ali e em Actions → Coleta.
   - **Rodar à mão:** Actions → Coleta → Run workflow, ou `npm run collect` na máquina local.
   - **Alertas** (D-32): criados ao fim de cada coleta para os monitores ligados; o log termina com `· N alertas`. Se a geração falhar, a execução fica como falha com o erro `(alertas)`, e a próxima recupera os lotes das últimas 48 h.
-  - **Campo novo extraído do dado bruto** (ex.: condição do veículo): depois da migration, `npm run db:backfill-condition` relê `listings.raw` e preenche os anúncios já coletados, sem baixar as páginas. Idempotente.
+  - **Extração mudou** (ex.: condição do veículo, situação nova da fonte mapeada): `npm run db:reparse` relê `listings.raw` e atualiza descrição, condição e situação dos anúncios já coletados, sem baixar as páginas (serve também quando a página já saiu do ar). Só aplica situação quando o dado bruto traz um desfecho reconhecido. Idempotente. (A migration `add_listing_condition` cita o nome antigo, `db:backfill-condition`.)
   - **Fonte com problema** (layout mudou, bloqueio): os erros ficam em `collector_runs.errors`. Para pausar uma fonte, `update sources set active = false where id = 'leilo'` (o coletor passa a ignorá-la).
 - **Erros:** Vercel → Logs (as actions registram `console.error` sem dados pessoais).
 - **Supabase → Advisors** (Security e Performance): mensalmente e depois de cada migration.
