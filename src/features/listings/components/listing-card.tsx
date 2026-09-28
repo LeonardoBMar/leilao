@@ -1,4 +1,4 @@
-import { ExternalLink, MapPin } from "lucide-react";
+import { Car, ExternalLink, MapPin } from "lucide-react";
 import Image from "next/image";
 
 import { Badge, Money } from "@/components/ui";
@@ -41,7 +41,13 @@ export function ListingCard({ item, header, footer }: ListingCardProps) {
             sizes="(min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw"
             className="object-cover"
           />
-        ) : null}
+        ) : (
+          // A fonte ainda não publicou fotos (o Leilo mostra "Fotos em breve"); a revisita traz quando saírem.
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted">
+            <Car aria-hidden="true" className="size-10" />
+            <span className="text-caption">{item.status === "open" ? "Fotos em breve" : "Sem fotos"}</span>
+          </div>
+        )}
         <Badge variant={LISTING_STATUS_VARIANTS[item.status]} className="absolute top-2 left-2">
           {LISTING_STATUS_LABELS[item.status]}
         </Badge>
