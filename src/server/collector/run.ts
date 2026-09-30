@@ -94,7 +94,10 @@ export async function runCollector({
 
     const discoveredIds = discovered.map((item) => item.externalId);
     const knownIds = await findKnownIds(source.id, discoveredIds);
-    await markSeen(source.id, [...knownIds], now());
+    const seenAt = now();
+    await markSeen(source.id, [...knownIds], seenAt);
+    // Com o sitemap completo, "não visto agora" significa "saiu da lista da fonte" (goneStatus).
+    const sitemapReadAt = sitemapFailed ? null : seenAt;
 
     const due = await findDueVisits(source.id, now(), maxVisits);
     const visits = planVisits({ due, discovered, knownIds, budget: maxVisits });
@@ -107,7 +110,14 @@ export async function runCollector({
       // para não gastar o limite de toda execução com o mesmo anúncio.
       let problem: string;
       try {
-        const outcome = await visitListing(source, fetcher, url, visit.externalId, { now: now(), place });
+        const outcome = await visitListing(
+          source,
+          fetcher,
+          url,
+          visit.externalId,
+          { now: now(), place },
+          sitemapReadAt,
+        );
         if (outcome.ok) {
           counters[outcome.value]++;
           continue;
@@ -151,10 +161,11 @@ async function visitListing(
   url: string,
   expectedId: string,
   context: Parameters<typeof saveListing>[2],
+  sitemapReadAt: Date | null,
 ): Promise<Result<"created" | "updated">> {
   const response = await fetcher.get(url);
-  // Página de anúncio encerrado fora do ar: desfecho da fonte, não falha (goneStatus).
-  if (!response.ok && response.status === 404 && (await markGone(source.id, expectedId, context.now))) {
+  // Página fora do ar de anúncio encerrado ou fora do sitemap: desfecho da fonte, não falha (goneStatus).
+  if (!response.ok && response.status === 404 && (await markGone(source.id, expectedId, context.now, sitemapReadAt))) {
     return ok("updated");
   }
   if (!response.ok) return err(response.error);

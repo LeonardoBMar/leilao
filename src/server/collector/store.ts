@@ -150,16 +150,21 @@ export async function saveListing(
 }
 
 /**
- * Página do anúncio fora do ar (HTTP 404). Encerrado: grava a situação de `goneStatus` e para de revisitar
- * (devolve `true`). Ainda não encerrado ou desconhecido: `false`, e o 404 conta como falha comum.
+ * Página do anúncio fora do ar (HTTP 404). Encerrado ou fora do sitemap: grava a situação de `goneStatus` e para de
+ * revisitar (devolve `true`). Senão, ou se o anúncio não existe: `false`, e o 404 conta como falha comum.
  */
-export async function markGone(sourceId: string, externalId: string, now: Date): Promise<boolean> {
+export async function markGone(
+  sourceId: string,
+  externalId: string,
+  now: Date,
+  sitemapReadAt: Date | null,
+): Promise<boolean> {
   return db.$transaction(async (tx) => {
     const listing = await tx.listing.findUnique({
       where: { sourceId_externalId: { sourceId, externalId } },
-      select: { id: true, status: true, endsAt: true, currentBidCents: true, bidCount: true },
+      select: { id: true, status: true, endsAt: true, lastSeenAt: true, currentBidCents: true, bidCount: true },
     });
-    const status = listing && goneStatus(listing, now);
+    const status = listing && goneStatus(listing, now, sitemapReadAt);
     if (!listing || !status) return false;
     await tx.listing.update({
       where: { id: listing.id },

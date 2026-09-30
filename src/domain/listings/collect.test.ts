@@ -5,17 +5,32 @@ import { finalBidOf, goneStatus, observationChanged, planVisits } from "./collec
 
 describe("goneStatus — página fora do ar (HTTP 404)", () => {
   const now = new Date("2026-09-29T12:00:00Z");
+  const sitemapReadAt = new Date("2026-09-29T11:59:00Z");
   const ended = new Date("2026-09-28T15:29:20Z");
+  const future = new Date("2026-09-30T12:00:00Z");
+  const inSitemap = sitemapReadAt;
+  const delisted = new Date("2026-09-29T08:00:00Z");
 
   it("encerrado: para de revisitar; aberto vira desconhecido, desfecho conhecido fica", () => {
-    expect(goneStatus({ status: "open", endsAt: ended }, now)).toBe("unknown");
-    expect(goneStatus({ status: "conditional", endsAt: ended }, now)).toBe("conditional");
-    expect(goneStatus({ status: "unsold", endsAt: ended }, now)).toBe("unsold");
+    expect(goneStatus({ status: "open", endsAt: ended, lastSeenAt: inSitemap }, now, sitemapReadAt)).toBe("unknown");
+    expect(goneStatus({ status: "conditional", endsAt: ended, lastSeenAt: delisted }, now, sitemapReadAt)).toBe(
+      "conditional",
+    );
+    expect(goneStatus({ status: "unsold", endsAt: ended, lastSeenAt: delisted }, now, sitemapReadAt)).toBe("unsold");
   });
 
-  it("ainda não encerrado ou sem data: não decide (conta como falha e tenta de novo)", () => {
-    expect(goneStatus({ status: "open", endsAt: new Date("2026-09-30T12:00:00Z") }, now)).toBeNull();
-    expect(goneStatus({ status: "open", endsAt: null }, now)).toBeNull();
+  it("fora do sitemap, mesmo sem data de fim: saiu da oferta, não volta", () => {
+    expect(goneStatus({ status: "open", endsAt: null, lastSeenAt: delisted }, now, sitemapReadAt)).toBe("unknown");
+    expect(goneStatus({ status: "open", endsAt: future, lastSeenAt: delisted }, now, sitemapReadAt)).toBe("unknown");
+  });
+
+  it("ainda no sitemap e antes do fim: não decide (conta como falha e tenta de novo)", () => {
+    expect(goneStatus({ status: "open", endsAt: future, lastSeenAt: inSitemap }, now, sitemapReadAt)).toBeNull();
+    expect(goneStatus({ status: "open", endsAt: null, lastSeenAt: inSitemap }, now, sitemapReadAt)).toBeNull();
+  });
+
+  it("sitemap não carregou: nunca conclui que saiu dele", () => {
+    expect(goneStatus({ status: "open", endsAt: null, lastSeenAt: delisted }, now, null)).toBeNull();
   });
 });
 
