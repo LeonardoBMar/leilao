@@ -84,7 +84,7 @@ Nada de fórmula externa. A estimativa só aparece quando **existe base suficien
 | Estimativa | Fonte | Regra |
 | --- | --- | --- |
 | **Preço provável de arremate** | Últimos lances observados de lotes **comparáveis** já encerrados no catálogo | Mesma marca e modelo, ano ±1, faixa de km, região e **mesma condição declarada** (sem monta informada, pequena monta, média monta, sucata; `damage_level`). Mostra **mediana e faixa (P25–P75) com o número de casos**. Com menos de 5 comparáveis: "Sem base suficiente (3 de 5)" |
-| **Limite estimado** | Calculadora atual (a mesma fórmula da análise) alimentada pelos **dados do usuário**: valor de mercado e custos das suas análises fixadas de veículos comparáveis, e margem e reserva padrão | Sem análises comparáveis suficientes, não mostra limite, e sim "faça 3 análises de veículos parecidos para liberar". Nunca vira análise fixada sozinha |
+| **Limite estimado** | Calculadora atual (a mesma fórmula da análise) alimentada pelos **dados do usuário**: custos das suas análises fixadas de veículos comparáveis, com a FIPE do anúncio como valor de mercado (D-36), e margem e reserva padrão | Sem análises comparáveis suficientes, não mostra limite, e sim "faça 3 análises de veículos parecidos para liberar". Nunca vira análise fixada sozinha |
 | **Precisão** | Estimado × real dos lotes encerrados | Tela de aprendizado (Fase 2): quanto a estimativa errou, por modelo e origem |
 
 Consequência honesta: **no começo não haverá estimativas.** Elas surgem conforme o coletor acumula arremates e o usuário fixa análises. A etapa 5 só começa quando houver dados.

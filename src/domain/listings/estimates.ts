@@ -149,11 +149,19 @@ export type AnalysisSample = Pick<Vehicle, "brand" | "model" | "modelYear"> & { 
 
 export type LimitEstimate =
   /** `maxBid` nulo: com essas premissas, nenhum lance preserva a margem. */
-  { kind: "estimated"; n: number; maxBid: Cents | null } | { kind: "insufficient"; analyses: number; needed: number };
+  | {
+      kind: "estimated";
+      n: number;
+      maxBid: Cents | null;
+      /** De onde veio o valor de mercado: a FIPE do anúncio ou, sem ela, a mediana das análises. */
+      marketValueFrom: "listing" | "analyses";
+    }
+  | { kind: "insufficient"; analyses: number; needed: number };
 
 /**
  * Limite estimado: mediana de cada premissa das análises fixadas do usuário para veículos da mesma marca, modelo base
- * e ano ±1, na calculadora atual. A comissão segue a modalidade mais usada nessas análises.
+ * e ano ±1, na calculadora atual. O valor de mercado é o do próprio anúncio (a FIPE que a fonte mostra), que é do
+ * veículo exato; sem ele, a mediana das análises. A comissão segue a modalidade mais usada nessas análises.
  */
 export function estimateLimit(target: EstimateTarget, analyses: readonly AnalysisSample[]): LimitEstimate {
   const key = vehicleKey(target.brand, target.model);
@@ -176,9 +184,10 @@ export function estimateLimit(target: EstimateTarget, analyses: readonly Analysi
   const commissionMode: CommissionMode = percentageCount * 2 >= inputs.length ? "percentage" : "fixed";
   const rate = median((input) => (input.commissionMode === "percentage" ? input.commissionRateBps : null));
   const fixed = median((input) => (input.commissionMode === "fixed" ? input.commissionFixed : null));
+  const listingValue = target.marketValue !== null && target.marketValue > 0 ? target.marketValue : null;
 
   const outcome = calculateMaxBid({
-    marketValue: toCents(median((input) => input.marketValue)),
+    marketValue: listingValue ?? toCents(median((input) => input.marketValue)),
     repairCost: toCents(median((input) => input.repairCost)),
     documentationCost: toCents(median((input) => input.documentationCost)),
     transportCost: toCents(median((input) => input.transportCost)),
@@ -194,7 +203,12 @@ export function estimateLimit(target: EstimateTarget, analyses: readonly Analysi
   // Só entram análises completas, e cada premissa tem ao menos um valor: "incompleto" não acontece. Por segurança,
   // sem limite em vez de um número montado com lacunas.
   if (outcome.kind === "incomplete") return { kind: "insufficient", analyses: 0, needed: MIN_COMPARABLE_ANALYSES };
-  return { kind: "estimated", n: similar.length, maxBid: outcome.kind === "viable" ? outcome.maxBid : null };
+  return {
+    kind: "estimated",
+    n: similar.length,
+    maxBid: outcome.kind === "viable" ? outcome.maxBid : null,
+    marketValueFrom: listingValue === null ? "analyses" : "listing",
+  };
 }
 
 /** Percentil com interpolação linear (mesma definição do `percentile_cont` do Postgres). Lista ordenada, não vazia. */

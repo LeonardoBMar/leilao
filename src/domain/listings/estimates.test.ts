@@ -158,14 +158,31 @@ describe("estimateLimit", () => {
   it("com 3 análises parecidas: calculadora com a mediana das premissas", () => {
     const estimate = estimateLimit(target(), [analysis(), analysis(), analysis({ modelYear: 2021 })]);
     // V 50.000 − F 7.000 − R 2.000 − M 8.000 = 33.000 = L × 1,05 → L = 31.428,57
-    expect(estimate).toEqual({ kind: "estimated", n: 3, maxBid: 3_142_857 });
+    expect(estimate).toEqual({ kind: "estimated", n: 3, maxBid: 3_142_857, marketValueFrom: "listing" });
   });
 
   it("comissão segue a modalidade da maioria: fixa com a mediana dos valores fixos", () => {
     const fixed = inputs({ commissionMode: "fixed", commissionRateBps: null, commissionFixed: cents(150_000) });
     const estimate = estimateLimit(target(), [analysis({ inputs: fixed }), analysis({ inputs: fixed }), analysis()]);
     // V 50.000 − F 7.000 − K 1.500 − R 2.000 − M 8.000 = 31.500
-    expect(estimate).toEqual({ kind: "estimated", n: 3, maxBid: 3_150_000 });
+    expect(estimate).toEqual({ kind: "estimated", n: 3, maxBid: 3_150_000, marketValueFrom: "listing" });
+  });
+
+  it("valor de mercado: a FIPE do anúncio; sem ela, a mediana das análises", () => {
+    const three = [analysis(), analysis(), analysis()];
+    // V 40.000 (anúncio) − 17.000 = 23.000 = L × 1,05 → L = 21.904,76
+    expect(estimateLimit(target({ marketValue: cents(4_000_000) }), three)).toEqual({
+      kind: "estimated",
+      n: 3,
+      maxBid: 2_190_476,
+      marketValueFrom: "listing",
+    });
+    expect(estimateLimit(target({ marketValue: null }), three)).toEqual({
+      kind: "estimated",
+      n: 3,
+      maxBid: 3_142_857,
+      marketValueFrom: "analyses",
+    });
   });
 
   it("análise incompleta não conta", () => {
@@ -191,6 +208,6 @@ describe("estimateLimit", () => {
         analysis({ inputs: expensive }),
         analysis({ inputs: expensive }),
       ]),
-    ).toEqual({ kind: "estimated", n: 3, maxBid: null });
+    ).toMatchObject({ kind: "estimated", n: 3, maxBid: null });
   });
 });
