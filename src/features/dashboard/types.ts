@@ -11,5 +11,6 @@ export type DashboardSummary = {
 /** Atalhos para concluir registros (SPEC §5): rascunhos abertos e lotes que aguardam resultado. */
 export type PendingItems = {
   drafts: { analysisId: string; version: number; lotId: string; lotLabel: string; updatedAt: Date }[];
-  awaitingResult: { lotId: string; lotLabel: string; auctionName: string; startsAt: Date }[];
+  /** `toConfirm`: lote ligado a anúncio com desfecho ambíguo (etapa 4). */
+  awaitingResult: { lotId: string; lotLabel: string; auctionName: string; startsAt: Date; toConfirm: boolean }[];
 };

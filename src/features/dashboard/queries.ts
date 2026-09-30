@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { FixedLimit } from "@/domain/finance/calculator";
+import { listingOutcome } from "@/domain/listings/outcome";
 import { cents } from "@/domain/money";
 import { compareResult, limitIndicator } from "@/domain/results/results";
 import { requireUser } from "@/server/auth";
@@ -54,13 +55,17 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
 }
 
 const PENDING_LIMIT = 5;
+const PENDING_CANDIDATES = 50;
+
+const toCents = (value: number | null) => (value === null ? null : cents(value));
 
 /**
  * Pendências do dashboard: rascunhos de análise abertos e lotes acompanhados cujo leilão já começou e ainda não
- * têm resultado. Só registros ativos.
+ * têm resultado. Lote ligado a anúncio só entra com resultado a confirmar; o resto o coletor registra. Só ativos.
  */
 export async function getPendingItems(): Promise<PendingItems> {
   const user = await requireUser();
+  const now = new Date();
   const activeLot = { archivedAt: null, auction: { archivedAt: null } };
 
   const [drafts, awaiting] = await Promise.all([
@@ -81,19 +86,53 @@ export async function getPendingItems(): Promise<PendingItems> {
         ...activeLot,
         isFollowed: true,
         results: { none: {} },
-        auction: { archivedAt: null, startsAt: { lt: new Date() } },
+        // Ligado a anúncio: só os que podem estar "a confirmar"; o filtro abaixo aplica a regra exata (listingOutcome).
+        OR: [
+          { listingId: null },
+          { listing: { status: { in: ["conditional", "unknown"] } } },
+          { listing: { status: "open", nextCheckAt: null } },
+        ],
+        auction: { archivedAt: null, startsAt: { lt: now } },
       },
       orderBy: { auction: { startsAt: "asc" } },
-      take: PENDING_LIMIT,
+      // Folga para os abertos que ainda não encerraram (saem no filtro abaixo).
+      take: PENDING_CANDIDATES,
       select: {
         id: true,
         lotNumber: true,
         brand: true,
         model: true,
         auction: { select: { name: true, startsAt: true } },
+        listing: {
+          select: { status: true, currentBidCents: true, finalBidCents: true, endsAt: true, nextCheckAt: true },
+        },
       },
     }),
   ]);
+
+  // Lote ligado a anúncio (etapa 4): só é pendência quando o desfecho é ambíguo ("a confirmar").
+  const awaitingResult = awaiting
+    .map((lot) => {
+      const outcome =
+        lot.listing &&
+        listingOutcome(
+          {
+            status: lot.listing.status,
+            currentBid: toCents(lot.listing.currentBidCents),
+            finalBid: toCents(lot.listing.finalBidCents),
+            endsAt: lot.listing.endsAt,
+            checking: lot.listing.nextCheckAt !== null,
+          },
+          now,
+        );
+      return {
+        lot,
+        toConfirm: outcome?.kind === "to_confirm",
+        automatic: outcome !== null && outcome.kind !== "to_confirm",
+      };
+    })
+    .filter((item) => !item.automatic)
+    .slice(0, PENDING_LIMIT);
 
   return {
     drafts: drafts.map(({ id, version, updatedAt, lot }) => ({
@@ -103,11 +142,12 @@ export async function getPendingItems(): Promise<PendingItems> {
       lotLabel: `Lote ${lot.lotNumber} · ${lot.brand} ${lot.model}`,
       updatedAt,
     })),
-    awaitingResult: awaiting.map((lot) => ({
+    awaitingResult: awaitingResult.map(({ lot, toConfirm }) => ({
       lotId: lot.id,
       lotLabel: `Lote ${lot.lotNumber} · ${lot.brand} ${lot.model}`,
       auctionName: lot.auction.name,
       startsAt: lot.auction.startsAt,
+      toConfirm,
     })),
   };
 }

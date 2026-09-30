@@ -76,6 +76,14 @@ enum AnalysisTiming {
   @@map("analysis_timing")
 }
 
+/// Quem registrou a revisão do resultado: o usuário ou o coletor (docs/PLANO-COLETA.md, etapa 4).
+enum ResultSource {
+  manual
+  collector
+
+  @@map("result_source")
+}
+
 /// Leilão (SPEC RF-01).
 model Auction {
   id          String        @id @default(uuid(7)) @db.Uuid
@@ -217,6 +225,7 @@ model Result {
   priorDeclared      Boolean         @default(false) @map("prior_declared")
   recordedAt         DateTime        @default(now()) @map("recorded_at") @db.Timestamptz(3)
   correctionReason   String?         @map("correction_reason")
+  source             ResultSource    @default(manual)
 
   lot        Lot       @relation(fields: [lotId, ownerId], references: [id, ownerId], onDelete: Restrict)
   // FK composta: a análise vinculada precisa ser do mesmo lote.

@@ -11,6 +11,16 @@ export type PersonalOutcome = (typeof PERSONAL_OUTCOMES)[number];
 export type AnalysisTiming = "prior" | "retrospective" | "unknown";
 
 /**
+ * Análise sugerida para o vínculo com o resultado (RF-05): a fixada mais recente que não foi feita conhecendo o
+ * resultado; sem ela, a fixada mais recente. Recebe as fixadas da mais nova para a mais antiga.
+ */
+export function suggestedAnalysis<T extends { knownResultAtCreation: boolean }>(
+  fixedNewestFirst: readonly T[],
+): T | undefined {
+  return fixedNewestFirst.find((analysis) => !analysis.knownResultAtCreation) ?? fixedNewestFirst[0];
+}
+
+/**
  * Temporalidade da análise vinculada ao resultado (SPEC §10). É anterior ao resultado quando:
  * 1. foi fixada antes do primeiro registro de resultado do lote;
  * 2. foi fixada antes do horário real do desfecho, se conhecido;

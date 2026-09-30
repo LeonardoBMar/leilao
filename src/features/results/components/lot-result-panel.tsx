@@ -18,19 +18,20 @@ import { formatDateTime } from "@/lib/format";
 
 import { OUTCOME_LABELS, PERSONAL_OUTCOME_LABELS, TIMING_LABELS } from "../labels";
 import { getLotResultContext } from "../queries";
-import type { ResultRevision } from "../types";
+import type { ResultRevision, ResultTracking } from "../types";
 import { ResultComparison } from "./result-comparison";
 
 /** Bloco de resultado da ficha do lote: revisão vigente, comparação e histórico de correções (RF-06). */
 export async function LotResultPanel({ lotId }: { lotId: string }) {
   const context = await getLotResultContext(lotId);
   if (!context) return null;
-  const { current, revisions } = context;
+  const { current, revisions, tracking } = context;
+  const toConfirm = !current && tracking?.outcome.kind === "to_confirm";
 
   const action = (
     <ButtonLink href={`/lotes/${lotId}/resultado`} variant={current ? "secondary" : "primary"}>
       {current ? <FilePen aria-hidden="true" /> : <Trophy aria-hidden="true" />}
-      {current ? "Corrigir resultado" : "Registrar resultado"}
+      {current ? "Corrigir resultado" : toConfirm ? "Confirmar resultado" : "Registrar resultado"}
     </ButtonLink>
   );
 
@@ -49,8 +50,8 @@ export async function LotResultPanel({ lotId }: { lotId: string }) {
         ) : (
           <EmptyState
             icon={Trophy}
-            title="Sem resultado registrado"
-            description="Registre o desfecho após o encerramento para comparar com o seu limite."
+            title={toConfirm ? "Resultado a confirmar" : "Sem resultado registrado"}
+            description={pendingDescription(tracking)}
             action={action}
           />
         )}
@@ -65,6 +66,7 @@ function CurrentResult({ result }: { result: ResultRevision }) {
       <div className="flex flex-wrap gap-2">
         <Badge variant={result.outcome === "sold" ? "primary" : "default"}>{OUTCOME_LABELS[result.outcome]}</Badge>
         <Badge variant="outline">{PERSONAL_OUTCOME_LABELS[result.personalOutcome]}</Badge>
+        {result.source === "collector" ? <Badge variant="outline">Registrado pelo coletor</Badge> : null}
         {result.analysis ? (
           <Badge variant={result.analysisTiming === "prior" ? "success" : "warning"}>
             {TIMING_LABELS[result.analysisTiming]}
@@ -133,6 +135,22 @@ function CurrentResult({ result }: { result: ResultRevision }) {
       </p>
     </div>
   );
+}
+
+/** O que falta para o resultado, conforme o anúncio ligado (etapa 4). Sem anúncio, o registro é manual. */
+function pendingDescription(tracking: ResultTracking | null): string {
+  if (!tracking) return "Registre o desfecho após o encerramento para comparar com o seu limite.";
+  const { outcome, sourceName } = tracking;
+  switch (outcome.kind) {
+    case "pending":
+      return `O resultado é registrado sozinho quando o lote encerrar no ${sourceName}.`;
+    case "final":
+      return `O ${sourceName} já informou o desfecho; o coletor registra na próxima coleta. Se preferir, registre agora.`;
+    case "to_confirm":
+      return outcome.reason === "conditional"
+        ? `O ${sourceName} deixou a venda como condicional, à espera do vendedor. Se o site confirmar, o resultado entra sozinho; se souber antes, confirme aqui.`
+        : `O ${sourceName} não informou o desfecho. Confirme a partir do último lance coletado.`;
+  }
 }
 
 /** Histórico de correções: revisões anteriores preservadas com data e motivo (CA-14). */

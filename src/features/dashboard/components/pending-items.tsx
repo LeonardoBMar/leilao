@@ -1,7 +1,7 @@
 import { ClipboardCheck, FilePen, Trophy } from "lucide-react";
 import Link from "next/link";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
+import { Badge, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { formatDate, formatDateTime } from "@/lib/format";
 
 import { getPendingItems } from "../queries";
@@ -34,7 +34,10 @@ export async function PendingItems() {
                   >
                     <Trophy aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted" />
                     <span className="min-w-0">
-                      <span className="block truncate text-body text-primary">{item.lotLabel}</span>
+                      <span className="flex items-center gap-2">
+                        <span className="min-w-0 truncate text-body text-primary">{item.lotLabel}</span>
+                        {item.toConfirm ? <Badge variant="warning">A confirmar</Badge> : null}
+                      </span>
                       <span className="block truncate text-caption text-muted">
                         {item.auctionName} · {formatDate(item.startsAt)}
                       </span>

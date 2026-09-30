@@ -7,7 +7,7 @@ import type { DiscoveredListing, SourceAdapter } from "@/sources/types";
 import { db } from "../db";
 import { createAlerts } from "./alerts";
 import { createPoliteFetcher, type PoliteFetcher } from "./http";
-import { syncTrackedLots } from "./lots";
+import { recordTrackedResults, syncTrackedLots } from "./lots";
 import {
   findDueVisits,
   findKnownIds,
@@ -34,6 +34,8 @@ export type CollectorSummary = {
   alertsCreated: number;
   /** Lotes de usuários cujo lance atual veio do anúncio ligado (etapa 3). */
   lotsUpdated: number;
+  /** Resultados registrados sozinhos nos lotes ligados a anúncios encerrados (etapa 4). */
+  resultsRecorded: number;
   errors: { url: string; error: string }[];
 };
 
@@ -48,7 +50,7 @@ type RunOptions = {
 /**
  * Uma execução do coletor para uma fonte (docs/PLANO-COLETA.md §3):
  * sitemap → marca vistos → anúncios ligados a lotes + revisitas vencidas + anúncios novos → baixa, lê e grava →
- * lance dos lotes ligados → alertas dos monitores → registra a execução.
+ * lance e resultado dos lotes ligados → alertas dos monitores → registra a execução.
  * Falha de um anúncio não derruba a execução; ela fica registrada em `collector_runs.errors`.
  */
 export async function runCollector({
@@ -71,6 +73,7 @@ export async function runCollector({
       failed: 0,
       alertsCreated: 0,
       lotsUpdated: 0,
+      resultsRecorded: 0,
       errors: [],
     };
   }
@@ -145,11 +148,16 @@ export async function runCollector({
     sitemapFailed = true;
   }
 
-  // Lance dos lotes ligados, com o que foi lido nesta execução. Falha aqui não impede os alertas.
+  // Lance e resultado dos lotes ligados, com o que foi lido. Falha aqui não impede os alertas.
   let lotsUpdated = 0;
+  let resultsRecorded = 0;
   let lotsFailed = false;
   try {
     lotsUpdated = await syncTrackedLots(startedAt);
+    const results = await recordTrackedResults(now());
+    resultsRecorded = results.recorded;
+    for (const { lotId, error } of results.failures) fail(`(resultado do lote ${lotId})`, describeError(error));
+    if (results.failures.length > 0) lotsFailed = true;
   } catch (error) {
     fail("(lotes)", describeError(error));
     lotsFailed = true;
@@ -179,6 +187,7 @@ export async function runCollector({
     errors,
     alertsCreated,
     lotsUpdated,
+    resultsRecorded,
     ...counters,
   };
 }

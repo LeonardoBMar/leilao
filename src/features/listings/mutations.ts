@@ -1,5 +1,6 @@
 import "server-only";
 
+import { hasEnded } from "@/domain/listings/outcome";
 import { planTracker, type TrackerSuggestions } from "@/domain/listings/tracker";
 import { bps, cents } from "@/domain/money";
 import type { Prisma } from "@/generated/prisma/client";
@@ -120,6 +121,8 @@ export async function addListingToTracker(listingId: string): Promise<Result<Add
           lotId: created.id,
           version: 1,
           status: "draft",
+          // Anúncio já encerrado: a análise é feita conhecendo o desfecho e fica fora do indicador (SPEC §10).
+          knownResultAtCreation: hasEnded(listing, now),
           ...draftFromSuggestions(suggestions, sourceName),
         },
         select: { id: true },

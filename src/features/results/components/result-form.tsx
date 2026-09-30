@@ -38,12 +38,15 @@ export function ResultForm({ action, context }: ResultFormProps) {
   const [state, formAction, pending] = useActionState(action, idleState);
   const current = context.current;
   const isCorrection = current !== null;
+  // Sem resultado ainda: parte do desfecho do anúncio ligado, quando houver (etapa 4).
+  const prefill = context.prefill;
 
-  const [outcome, setOutcome] = useState<LotOutcome | "">(current?.outcome ?? "");
+  const [outcome, setOutcome] = useState<LotOutcome | "">(current?.outcome ?? prefill?.outcome ?? "");
   const [personal, setPersonal] = useState<PersonalOutcome>(current?.personalOutcome ?? "observed");
   const [analysisId, setAnalysisId] = useState(current?.analysis?.id ?? context.suggestedAnalysisId ?? "none");
+  const initialEventAt = current ? current.eventAt : (prefill?.eventAt ?? null);
   const [eventAt, setEventAt] = useState(
-    fieldValue(state, "eventAt") ?? (current?.eventAt ? toZonedDateTimeInput(current.eventAt) : ""),
+    fieldValue(state, "eventAt") ?? (initialEventAt ? toZonedDateTimeInput(initialEventAt) : ""),
   );
 
   const value = (field: string, stored?: string | null) => fieldValue(state, field) ?? stored ?? undefined;
@@ -56,6 +59,16 @@ export function ResultForm({ action, context }: ResultFormProps) {
       {state.status === "error" && !state.fieldErrors ? (
         <Alert variant="error">
           <AlertDescription>{state.message}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      {prefill ? (
+        <Alert variant={prefill.outcome ? "info" : "warning"}>
+          <AlertDescription>
+            {prefill.outcome
+              ? "Preenchido com o desfecho informado pelo site do leilão. Confira e salve."
+              : "Resultado a confirmar: o site não informou um desfecho definitivo. Escolha o desfecho; o que foi coletado (lance, hora, link) já está preenchido."}
+          </AlertDescription>
         </Alert>
       ) : null}
 
@@ -88,7 +101,7 @@ export function ResultForm({ action, context }: ResultFormProps) {
             name="finalBid"
             label="Preço final"
             helperText="Deixe vazio se o preço for desconhecido; não haverá comparação."
-            defaultValue={value("finalBid", centsToInput(current?.finalBid ?? null))}
+            defaultValue={value("finalBid", centsToInput(current ? current.finalBid : (prefill?.finalBid ?? null)))}
             error={fieldError(state, "finalBid")}
           />
         ) : (
@@ -108,7 +121,7 @@ export function ResultForm({ action, context }: ResultFormProps) {
           type="url"
           label="Fonte (URL)"
           placeholder="https://"
-          defaultValue={value("sourceUrl", current?.sourceUrl)}
+          defaultValue={value("sourceUrl", current ? current.sourceUrl : prefill?.sourceUrl)}
           error={fieldError(state, "sourceUrl")}
         />
         <Textarea
@@ -117,7 +130,7 @@ export function ResultForm({ action, context }: ResultFormProps) {
           rows={2}
           maxLength={2_000}
           containerClassName="md:col-span-2"
-          defaultValue={value("sourceNotes", current?.sourceNotes)}
+          defaultValue={value("sourceNotes", current ? current.sourceNotes : prefill?.sourceNotes)}
           error={fieldError(state, "sourceNotes")}
         />
       </fieldset>
