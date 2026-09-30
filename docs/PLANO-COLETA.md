@@ -106,12 +106,12 @@ Cada etapa segue o fluxo da skill `leilao-padroes`:
 | 2 | **Monitores e alertas.** Telas de monitores (CRUD) e de alertas, com contador na navegação e seção no dashboard. Monitor usa os mesmos critérios de Descobertos, inclusive a condição. Lote que já existia ao criar, editar ou religar o monitor não vira alerta (aparece como "combinam agora"); mudança no lote não gera outro alerta | Lote novo compatível gera **um** alerta, com "Ver lote" ("Adicionar à análise" chega na etapa 3) |
 | 3 | **Adicionar à análise + acompanhamento automático.** Cria leilão, lote e rascunho a partir do anúncio (sem duplicar se já existir). O coletor atualiza o lance dos lotes ligados. Entregue em 30/09 (D-34): anúncio sem marca, modelo ou ano não mostra o botão; anúncio ligado é revisitado a cada execução | Um clique leva o lote ao Tracker, e o lance atual se mantém sozinho |
 | 4 | **Resultado automático** nos lotes do usuário: quando o anúncio ligado encerra, o coletor registra o resultado (desfecho, preço final, hora real) com `source = collector` e link. Desfecho ambíguo (ex.: condicional) fica como **"resultado a confirmar"**, já preenchido. Entregue em 30/09 (D-35): o formulário de "a confirmar" vem com lance, hora e link; anúncio já encerrado ao ser adicionado gera análise retrospectiva | O usuário não digita resultados; no máximo confirma |
-| 5 | **Estimativas** (§5), quando houver base | Alerta e anúncio mostram "provável R$ X (n=12) · limite estimado R$ Y" ou "sem base suficiente" |
+| 5 | **Estimativas** (§5), quando houver base. Entregue em 30/09 (D-36) com dois ajustes aprovados: comparáveis de **qualquer região** e, sem 5 comparáveis, a **proporção do valor de mercado** das vendas da mesma categoria e condição | Alerta e anúncio mostram "provável R$ X (n=12) · limite estimado R$ Y" ou "sem base suficiente" |
 | 6 | **Notificações externas** (e-mail ou push) e **segunda fonte** | Alerta chega fora do app; segunda fonte entra só com um adaptador novo |
 
 ## 7. Decisões
 
-Aprovadas e registradas em `docs/ARCHITECTURE.md` §15: **D-25** catálogo global · **D-26** coletor no GitHub Actions com `tsx` · **D-27** adaptador por estado da página + JSON-LD · **D-28** estimativas só com dados do sistema · **D-29** fotos por URL · **D-30** dados da fonte como sugestão rotulada · **D-32** alertas criados pelo coletor · **D-34** lote ligado ao anúncio e lance automático · **D-35** resultado automático.
+Aprovadas e registradas em `docs/ARCHITECTURE.md` §15: **D-25** catálogo global · **D-26** coletor no GitHub Actions com `tsx` · **D-27** adaptador por estado da página + JSON-LD · **D-28** estimativas só com dados do sistema · **D-29** fotos por URL · **D-30** dados da fonte como sugestão rotulada · **D-32** alertas criados pelo coletor · **D-34** lote ligado ao anúncio e lance automático · **D-35** resultado automático · **D-36** estimativas (região nacional e proporção do valor de mercado).
 
 ## 8. Riscos
 

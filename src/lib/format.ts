@@ -51,3 +51,8 @@ export function formatMonth(value: Date): string {
 export function formatBps(value: number): string {
   return percent.format(value / 10_000);
 }
+
+/** Proporção como porcentagem inteira: 0,534 → "53%" (ex.: lance final ÷ valor de mercado). */
+export function formatRatio(value: number): string {
+  return percent.format(Math.round(value * 100) / 100);
+}

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { listingCardSelect, toListItem } from "@/features/listings/queries";
+import { type EstimateContext, listingCardSelect, loadEstimateContext, toListItem } from "@/features/listings/queries";
 import { toWatchItem, watchSelect } from "@/features/watches/queries";
 import { watchTitle } from "@/features/watches/summary";
 import type { Prisma } from "@/generated/prisma/client";
@@ -21,7 +21,7 @@ const alertSelect = (ownerId: string) =>
 
 type AlertRow = Prisma.AlertGetPayload<{ select: ReturnType<typeof alertSelect> }>;
 
-function toAlertItem(row: AlertRow): AlertItem {
+function toAlertItem(row: AlertRow, estimates: EstimateContext | null): AlertItem {
   const watch = toWatchItem(row.watch);
   return {
     id: row.id,
@@ -29,7 +29,7 @@ function toAlertItem(row: AlertRow): AlertItem {
     readAt: row.readAt,
     watchId: watch.id,
     watchTitle: watchTitle(watch.name, watch.criteria),
-    listing: toListItem(row.listing),
+    listing: toListItem(row.listing, estimates),
   };
 }
 
@@ -53,10 +53,12 @@ export async function listAlerts(filters: AlertFilters): Promise<AlertPage> {
       ? db.watch.findFirst({ where: { id: filters.watchId, ownerId: user.id }, select: watchSelect })
       : null,
   ]);
+  // A base das estimativas só é lida quando há cartões para mostrar.
+  const estimates = rows.length > 0 ? await loadEstimateContext(new Date()) : null;
 
   const watchItem = watch ? toWatchItem(watch) : null;
   return {
-    items: rows.map(toAlertItem),
+    items: rows.map((row) => toAlertItem(row, estimates)),
     total,
     unread,
     page: filters.page,
@@ -84,5 +86,6 @@ export async function listRecentUnreadAlerts(limit: number): Promise<{ items: Al
     }),
     db.alert.count({ where }),
   ]);
-  return { items: rows.map(toAlertItem), total };
+  const estimates = rows.length > 0 ? await loadEstimateContext(new Date()) : null;
+  return { items: rows.map((row) => toAlertItem(row, estimates)), total };
 }

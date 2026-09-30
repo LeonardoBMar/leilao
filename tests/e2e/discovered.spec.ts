@@ -16,6 +16,13 @@ test("mostra a saúde da coleta e os lotes descobertos (ou o estado vazio)", asy
       .getByRole("region", { name: "Lotes descobertos" })
       .or(page.getByText(/Nenhum lote (aberto|encerrado) encontrado/)),
   ).toBeVisible();
+  // Etapa 5: lote aberto mostra as estimativas do sistema (valor ou "sem base suficiente"), com o número de casos.
+  const firstCard = page.getByRole("article").first();
+  if ((await firstCard.count()) > 0) {
+    const estimates = firstCard.getByRole("region", { name: "Estimativas do sistema" });
+    await expect(estimates.getByText("Provável")).toBeVisible();
+    await expect(estimates.getByText("Limite estimado")).toBeVisible();
+  }
 });
 
 test("filtros vão para a URL e sobrevivem ao recarregar", async ({ page }) => {

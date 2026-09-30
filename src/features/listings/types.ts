@@ -1,4 +1,5 @@
 import type { ConditionFlag, DamageLevel, InspectionResult } from "@/domain/listings/condition";
+import type { LimitEstimate, PriceEstimate } from "@/domain/listings/estimates";
 import type { CollectorHealth } from "@/domain/listings/health";
 import type { ListingStatus } from "@/domain/listings/types";
 import type { Cents } from "@/domain/money";
@@ -37,7 +38,12 @@ export type ListingListItem = {
   trackable: boolean;
   /** Lote do usuário ligado a este anúncio (já está no Tracker). */
   trackedLotId: string | null;
+  /** Só em anúncio aberto e quando a tela carrega a base (D-36). */
+  estimate: ListingEstimate | null;
 };
+
+/** Preço provável (catálogo) e limite estimado (análises do usuário), cada um com a própria base. */
+export type ListingEstimate = { price: PriceEstimate; limit: LimitEstimate };
 
 export type ListingPage = {
   items: ListingListItem[];

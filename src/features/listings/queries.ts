@@ -10,17 +10,26 @@ import {
   type ListingCriteria,
   searchTokens,
 } from "@/domain/listings/criteria";
+import {
+  type AnalysisSample,
+  buildEstimateIndex,
+  type EstimateIndex,
+  estimateLimit,
+  estimatePrice,
+  SALES_WINDOW_MS,
+} from "@/domain/listings/estimates";
 import { boundingBox, distanceKm } from "@/domain/listings/geo";
 import { collectorHealth } from "@/domain/listings/health";
 import { DEFAULT_REGION } from "@/domain/listings/region";
 import { trackerMissing } from "@/domain/listings/tracker";
 import { cents } from "@/domain/money";
+import { analysisColumns, toInputs } from "@/features/analyses/queries";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
 
 import { type ListingFilters, LISTINGS_PAGE_SIZE } from "./schemas";
-import type { CollectorStatus, ListingListItem, ListingPage } from "./types";
+import type { CollectorStatus, ListingEstimate, ListingListItem, ListingPage } from "./types";
 
 /**
  * Catálogo global (D-25): exige sessão, mas não filtra por dono, porque o anúncio é público e igual para todos.
@@ -60,6 +69,7 @@ export const listingCardSelect = (ownerId: string) =>
     bidCount: true,
     finalBidCents: true,
     marketValueCents: true,
+    category: true,
     photoUrls: true,
     source: { select: { name: true } },
     municipality: { select: { latitude: true, longitude: true } },
@@ -70,7 +80,74 @@ type ListingCardRow = Prisma.ListingGetPayload<{ select: ReturnType<typeof listi
 
 const toCents = (value: number | null) => (value === null ? null : cents(value));
 
-export function toListItem(row: ListingCardRow): ListingListItem {
+/**
+ * Base das estimativas (etapa 5, D-36): vendas do catálogo no último ano e a análise fixada mais recente de cada lote
+ * do usuário. Carregada uma vez por tela e usada em todos os cartões.
+ */
+export type EstimateContext = { index: EstimateIndex; analyses: AnalysisSample[]; now: Date };
+
+export async function loadEstimateContext(now: Date): Promise<EstimateContext> {
+  const user = await requireUser();
+  const [sales, lots] = await Promise.all([
+    db.listing.findMany({
+      where: {
+        status: "sold",
+        finalBidCents: { gt: 0 },
+        endsAt: { gte: new Date(now.getTime() - SALES_WINDOW_MS) },
+      },
+      select: {
+        brand: true,
+        model: true,
+        modelYear: true,
+        mileageKm: true,
+        category: true,
+        damageLevel: true,
+        finalBidCents: true,
+        marketValueCents: true,
+      },
+    }),
+    db.lot.findMany({
+      where: { ownerId: user.id, analyses: { some: { status: "fixed" } } },
+      select: {
+        brand: true,
+        model: true,
+        modelYear: true,
+        analyses: { where: { status: "fixed" }, orderBy: { version: "desc" }, take: 1, select: analysisColumns },
+      },
+    }),
+  ]);
+
+  return {
+    index: buildEstimateIndex(
+      sales.map(({ finalBidCents, marketValueCents, ...sale }) => ({
+        ...sale,
+        finalBid: cents(finalBidCents ?? 0),
+        marketValue: toCents(marketValueCents),
+      })),
+    ),
+    analyses: lots.flatMap(({ analyses, ...lot }) =>
+      analyses.map((analysis) => ({ ...lot, inputs: toInputs(analysis) })),
+    ),
+    now,
+  };
+}
+
+/** Só anúncio aberto: encerrado já tem o lance final. */
+function estimateFor(row: ListingCardRow, context: EstimateContext | null): ListingEstimate | null {
+  if (!context || row.status !== "open" || (row.endsAt !== null && row.endsAt <= context.now)) return null;
+  const target = {
+    brand: row.brand,
+    model: row.model,
+    modelYear: row.modelYear,
+    mileageKm: row.mileageKm,
+    category: row.category,
+    damageLevel: row.damageLevel,
+    marketValue: toCents(row.marketValueCents),
+  };
+  return { price: estimatePrice(target, context.index), limit: estimateLimit(target, context.analyses) };
+}
+
+export function toListItem(row: ListingCardRow, estimates: EstimateContext | null = null): ListingListItem {
   return {
     id: row.id,
     sourceName: row.source.name,
@@ -99,6 +176,7 @@ export function toListItem(row: ListingCardRow): ListingListItem {
     photoUrl: row.photoUrls[0] ?? null,
     trackable: trackerMissing(row).length === 0,
     trackedLotId: row.lots[0]?.id ?? null,
+    estimate: estimateFor(row, estimates),
   };
 }
 
@@ -179,6 +257,9 @@ export async function listListings(filters: ListingFilters): Promise<ListingPage
   const user = await requireUser();
   const select = listingCardSelect(user.id);
   const now = new Date();
+  // Encerrados já têm lance final: sem estimativa, sem carregar a base.
+  const estimates = filters.ended ? Promise.resolve(null) : loadEstimateContext(now);
+  const withEstimates = (context: EstimateContext | null) => (row: ListingCardRow) => toListItem(row, context);
   const criteria: ListingCriteria = {
     search: filters.search ?? null,
     yearFrom: filters.yearFrom ?? null,
@@ -199,17 +280,27 @@ export async function listListings(filters: ListingFilters): Promise<ListingPage
 
   // Sem raio, tudo é filtrável no banco: pagina lá.
   if (radius === null) {
-    const [rows, total] = await Promise.all([
+    const [rows, total, context] = await Promise.all([
       db.listing.findMany({ where, orderBy, skip: start, take: LISTINGS_PAGE_SIZE, select }),
       db.listing.count({ where }),
+      estimates,
     ]);
-    return { items: rows.map(toListItem), total, page: filters.page, pageSize: LISTINGS_PAGE_SIZE, truncated: false };
+    return {
+      items: rows.map(withEstimates(context)),
+      total,
+      page: filters.page,
+      pageSize: LISTINGS_PAGE_SIZE,
+      truncated: false,
+    };
   }
 
   // Com raio, o retângulo corta no banco e a distância exata filtra aqui, sobre no máximo MAX_CANDIDATES.
-  const rows = await db.listing.findMany({ where, orderBy, take: MAX_CANDIDATES + 1, select });
+  const [rows, context] = await Promise.all([
+    db.listing.findMany({ where, orderBy, take: MAX_CANDIDATES + 1, select }),
+    estimates,
+  ]);
   const truncated = rows.length > MAX_CANDIDATES;
-  const items = rows.slice(0, MAX_CANDIDATES).map(toListItem).filter(withinRadius(radius));
+  const items = rows.slice(0, MAX_CANDIDATES).map(withEstimates(context)).filter(withinRadius(radius));
 
   return {
     items: items.slice(start, start + LISTINGS_PAGE_SIZE),

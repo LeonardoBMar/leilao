@@ -2,7 +2,7 @@ import { Car, ClipboardCheck, ExternalLink, MapPin } from "lucide-react";
 import Image from "next/image";
 
 import { Badge, ButtonLink, Money } from "@/components/ui";
-import { formatDateTime, formatKm } from "@/lib/format";
+import { formatDateTime, formatKm, formatRatio } from "@/lib/format";
 
 import {
   CONDITION_FLAG_LABELS,
@@ -13,7 +13,7 @@ import {
   LISTING_STATUS_LABELS,
   LISTING_STATUS_VARIANTS,
 } from "../labels";
-import type { ListingListItem } from "../types";
+import type { ListingEstimate, ListingListItem } from "../types";
 import { AddToTrackerButton } from "./add-to-tracker-button";
 
 type ListingCardProps = {
@@ -92,6 +92,8 @@ export function ListingCard({ item, header, footer, eager = false }: ListingCard
           <dd className="text-right tabular-nums">{item.endsAt ? formatDateTime(item.endsAt) : "—"}</dd>
         </dl>
 
+        {item.estimate ? <EstimateLines estimate={item.estimate} /> : null}
+
         <a
           href={item.url}
           target="_blank"
@@ -106,6 +108,65 @@ export function ListingCard({ item, header, footer, eager = false }: ListingCard
         {footer}
       </div>
     </article>
+  );
+}
+
+/**
+ * Estimativas com dados do sistema (etapa 5, D-36), sempre com o número de casos. Sem base, diz o que falta em vez de
+ * inventar um número.
+ */
+function EstimateLines({ estimate }: { estimate: ListingEstimate }) {
+  const { price, limit } = estimate;
+  return (
+    <section aria-label="Estimativas do sistema" className="border-t border-border pt-3 text-caption">
+      <dl className="grid gap-2">
+        <div className="grid grid-cols-[auto_1fr] gap-x-2">
+          <dt className="text-muted">Provável</dt>
+          <dd className="text-right">
+            {price.kind === "insufficient" ? (
+              <span className="text-muted">
+                Sem base suficiente ({price.comparables} de {price.needed})
+              </span>
+            ) : (
+              <>
+                <Money value={price.median} className="font-semibold text-foreground" />{" "}
+                <span className="text-muted">(n={price.n})</span>
+              </>
+            )}
+            {price.kind === "comparables" ? (
+              <span className="block text-muted">
+                Faixa <Money value={price.low} /> a <Money value={price.high} /> em vendas parecidas
+              </span>
+            ) : null}
+            {price.kind === "market_ratio" ? (
+              <span className="block text-muted">
+                {formatRatio(price.ratio.median)} do mercado, como vendas na mesma categoria e condição (faixa{" "}
+                {formatRatio(price.ratio.low)} a {formatRatio(price.ratio.high)})
+              </span>
+            ) : null}
+          </dd>
+        </div>
+        <div className="grid grid-cols-[auto_1fr] gap-x-2">
+          <dt className="text-muted">Limite estimado</dt>
+          <dd className="text-right">
+            {limit.kind === "insufficient" ? (
+              <span className="text-muted">
+                Faça {limit.needed} análises parecidas ({limit.analyses} de {limit.needed})
+              </span>
+            ) : (
+              <>
+                {limit.maxBid === null ? (
+                  <span className="text-foreground">Sem lance viável</span>
+                ) : (
+                  <Money value={limit.maxBid} className="font-semibold text-primary" />
+                )}{" "}
+                <span className="text-muted">({limit.n} análises)</span>
+              </>
+            )}
+          </dd>
+        </div>
+      </dl>
+    </section>
   );
 }
 
