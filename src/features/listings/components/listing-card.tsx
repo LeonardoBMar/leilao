@@ -1,7 +1,7 @@
-import { Car, ExternalLink, MapPin } from "lucide-react";
+import { Car, ClipboardCheck, ExternalLink, MapPin } from "lucide-react";
 import Image from "next/image";
 
-import { Badge, Money } from "@/components/ui";
+import { Badge, ButtonLink, Money } from "@/components/ui";
 import { formatDateTime, formatKm } from "@/lib/format";
 
 import {
@@ -14,12 +14,13 @@ import {
   LISTING_STATUS_VARIANTS,
 } from "../labels";
 import type { ListingListItem } from "../types";
+import { AddToTrackerButton } from "./add-to-tracker-button";
 
 type ListingCardProps = {
   item: ListingListItem;
   /** Linha acima do conteúdo (ex.: "Novo veículo encontrado" no alerta). */
   header?: React.ReactNode;
-  /** Ações abaixo do link para a fonte (ex.: "Marcar como lido"). */
+  /** Ações abaixo de "Adicionar à análise" (ex.: "Marcar como lido"). */
   footer?: React.ReactNode;
   /** Primeira linha da lista, visível sem rolar: a foto carrega já (é a candidata a LCP), sem esperar o lazy. */
   eager?: boolean;
@@ -101,10 +102,24 @@ export function ListingCard({ item, header, footer, eager = false }: ListingCard
           <ExternalLink aria-hidden="true" className="size-4" />
           <span className="sr-only">(abre em nova aba)</span>
         </a>
+        <TrackerAction item={item} />
         {footer}
       </div>
     </article>
   );
+}
+
+/** Já no Tracker: leva ao lote. Senão, "Adicionar à análise" (só com marca, modelo e ano). */
+function TrackerAction({ item }: { item: ListingListItem }) {
+  if (item.trackedLotId) {
+    return (
+      <ButtonLink href={`/lotes/${item.trackedLotId}`} variant="secondary" size="sm" className="w-fit">
+        <ClipboardCheck aria-hidden="true" />
+        Ver no Tracker
+      </ButtonLink>
+    );
+  }
+  return item.trackable ? <AddToTrackerButton listingId={item.id} /> : null;
 }
 
 /** Condição declarada pelo leiloeiro. Sem nada declarado, não mostra nada (não afirma "sem dano"). */

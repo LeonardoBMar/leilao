@@ -1,5 +1,6 @@
 // Coletor de anúncios (docs/PLANO-COLETA.md, D-26). Uso: `npm run collect` (local) ou o workflow agendado
-// `.github/workflows/collect.yml`. Precisa só de DATABASE_URL. Roda sem usuário e só grava o catálogo global.
+// `.github/workflows/collect.yml`. Precisa só de DATABASE_URL. Roda sem usuário: grava o catálogo global,
+// o lance dos lotes ligados a anúncios (D-34) e os alertas (D-32).
 //
 // Opções: --max-visits <n> (padrão 400) limita as páginas de anúncio baixadas nesta execução.
 
@@ -17,7 +18,7 @@ async function main() {
   process.stdout.write(
     `Coleta ${summary.sourceId}: ${summary.status} · ${summary.requests} requisições · ` +
       `${summary.discovered} no sitemap · ${summary.created} novos · ${summary.updated} atualizados · ` +
-      `${summary.failed} falhas · ${summary.alertsCreated} alertas\n`,
+      `${summary.failed} falhas · ${summary.lotsUpdated} lotes com lance novo · ${summary.alertsCreated} alertas\n`,
   );
   for (const { url, error } of summary.errors) process.stdout.write(`  falha: ${url} → ${error}\n`);
   if (summary.status === "failed") process.exitCode = 1;

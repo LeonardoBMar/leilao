@@ -7,9 +7,11 @@ import type { DiscoveredListing, SourceAdapter } from "@/sources/types";
 import { db } from "../db";
 import { createAlerts } from "./alerts";
 import { createPoliteFetcher, type PoliteFetcher } from "./http";
+import { syncTrackedLots } from "./lots";
 import {
   findDueVisits,
   findKnownIds,
+  findTrackedVisits,
   loadPlaceLookup,
   markGone,
   markSeen,
@@ -30,6 +32,8 @@ export type CollectorSummary = {
   updated: number;
   failed: number;
   alertsCreated: number;
+  /** Lotes de usuários cujo lance atual veio do anúncio ligado (etapa 3). */
+  lotsUpdated: number;
   errors: { url: string; error: string }[];
 };
 
@@ -43,8 +47,8 @@ type RunOptions = {
 
 /**
  * Uma execução do coletor para uma fonte (docs/PLANO-COLETA.md §3):
- * sitemap → marca vistos → revisitas vencidas + anúncios novos → baixa, lê e grava → alertas dos monitores →
- * registra a execução.
+ * sitemap → marca vistos → anúncios ligados a lotes + revisitas vencidas + anúncios novos → baixa, lê e grava →
+ * lance dos lotes ligados → alertas dos monitores → registra a execução.
  * Falha de um anúncio não derruba a execução; ela fica registrada em `collector_runs.errors`.
  */
 export async function runCollector({
@@ -66,11 +70,13 @@ export async function runCollector({
       updated: 0,
       failed: 0,
       alertsCreated: 0,
+      lotsUpdated: 0,
       errors: [],
     };
   }
 
-  const run = await db.collectorRun.create({ data: { sourceId: source.id, startedAt: now() }, select: { id: true } });
+  const startedAt = now();
+  const run = await db.collectorRun.create({ data: { sourceId: source.id, startedAt }, select: { id: true } });
   const errors: CollectorSummary["errors"] = [];
   const counters = { discovered: 0, created: 0, updated: 0, failed: 0 };
   const fail = (url: string, error: string) => {
@@ -99,7 +105,11 @@ export async function runCollector({
     // Com o sitemap completo, "não visto agora" significa "saiu da lista da fonte" (goneStatus).
     const sitemapReadAt = sitemapFailed ? null : seenAt;
 
-    const due = await findDueVisits(source.id, now(), maxVisits);
+    // Lotes acompanhados primeiro: o lance deles é o que o usuário está olhando.
+    const due = [
+      ...(await findTrackedVisits(source.id, now(), maxVisits)),
+      ...(await findDueVisits(source.id, now(), maxVisits)),
+    ];
     const visits = planVisits({ due, discovered, knownIds, budget: maxVisits });
     const place = await loadPlaceLookup();
 
@@ -135,6 +145,16 @@ export async function runCollector({
     sitemapFailed = true;
   }
 
+  // Lance dos lotes ligados, com o que foi lido nesta execução. Falha aqui não impede os alertas.
+  let lotsUpdated = 0;
+  let lotsFailed = false;
+  try {
+    lotsUpdated = await syncTrackedLots(startedAt);
+  } catch (error) {
+    fail("(lotes)", describeError(error));
+    lotsFailed = true;
+  }
+
   // Alertas mesmo se a coleta falhou em parte: o que foi gravado já pode avisar. Falha aqui marca a execução
   // como falha, para aparecer no app; a próxima execução recupera (janela de ALERT_LOOKBACK_MS).
   let alertsCreated = 0;
@@ -146,12 +166,21 @@ export async function runCollector({
     alertsFailed = true;
   }
 
-  const status = sitemapFailed || alertsFailed ? "failed" : "succeeded";
+  const status = sitemapFailed || lotsFailed || alertsFailed ? "failed" : "succeeded";
   await db.collectorRun.update({
     where: { id: run.id },
     data: { status, finishedAt: now(), requests: fetcher.requests, errors, alertsCreated, ...counters },
   });
-  return { runId: run.id, sourceId: source.id, status, requests: fetcher.requests, errors, alertsCreated, ...counters };
+  return {
+    runId: run.id,
+    sourceId: source.id,
+    status,
+    requests: fetcher.requests,
+    errors,
+    alertsCreated,
+    lotsUpdated,
+    ...counters,
+  };
 }
 
 /** Baixa, lê e grava um anúncio. Falha esperada volta como valor; erro inesperado lança. */

@@ -93,10 +93,15 @@ model Auction {
   createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
   archivedAt  DateTime?     @map("archived_at") @db.Timestamptz(3)
+  /// Leilão criado por "Adicionar à análise" (etapa 3): a fonte e o id do leilão nela. Um por usuário, fonte e leilão.
+  sourceId    String?       @map("source_id") @db.VarChar(40)
+  externalId  String?       @map("external_id")
 
-  lots Lot[]
+  source Source? @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  lots   Lot[]
 
   @@unique([id, ownerId])
+  @@unique([ownerId, sourceId, externalId])
   @@index([ownerId, startsAt])
   @@map("auctions")
 }
@@ -122,14 +127,19 @@ model Lot {
   createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
   archivedAt           DateTime? @map("archived_at") @db.Timestamptz(3)
+  /// Anúncio coletado ligado ao lote (etapa 3): o coletor mantém o lance atual. Um lote por usuário e anúncio.
+  listingId            String?   @map("listing_id") @db.Uuid
 
   auction  Auction    @relation(fields: [auctionId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  listing  Listing?   @relation(fields: [listingId], references: [id], onDelete: Restrict)
   analyses Analysis[]
   results  Result[]
   images   LotImage[]
 
   @@unique([id, ownerId])
   @@unique([auctionId, lotNumber])
+  @@unique([ownerId, listingId])
+  @@index([listingId])
   @@index([ownerId, isFollowed])
   @@map("lots")
 }
@@ -307,6 +317,7 @@ model Source {
 
   listings Listing[]
   runs     CollectorRun[]
+  auctions Auction[]
 
   @@map("sources")
 }
@@ -399,6 +410,7 @@ model Listing {
   municipality Municipality?        @relation(fields: [municipalityId], references: [ibgeCode], onDelete: SetNull)
   observations ListingObservation[]
   alerts       Alert[]
+  lots         Lot[]
 
   @@unique([sourceId, externalId])
   @@index([nextCheckAt])

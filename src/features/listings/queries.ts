@@ -13,6 +13,7 @@ import {
 import { boundingBox, distanceKm } from "@/domain/listings/geo";
 import { collectorHealth } from "@/domain/listings/health";
 import { DEFAULT_REGION } from "@/domain/listings/region";
+import { trackerMissing } from "@/domain/listings/tracker";
 import { cents } from "@/domain/money";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
@@ -29,36 +30,43 @@ import type { CollectorStatus, ListingListItem, ListingPage } from "./types";
 /** Teto de candidatos lidos antes do filtro exato de distância: o retângulo já corta quase tudo. */
 const MAX_CANDIDATES = 2_000;
 
-/** Campos do cartão de anúncio; reusado pelos alertas. */
-export const listingCardSelect = {
-  id: true,
-  url: true,
-  lotNumber: true,
-  title: true,
-  modelYear: true,
-  mileageKm: true,
-  fuel: true,
-  recoveryType: true,
-  damageLevel: true,
-  conditionFlags: true,
-  inspectionResult: true,
-  inspectionNotes: true,
-  city: true,
-  state: true,
-  auctionName: true,
-  endsAt: true,
-  status: true,
-  currentBidCents: true,
-  minimumBidCents: true,
-  bidCount: true,
-  finalBidCents: true,
-  marketValueCents: true,
-  photoUrls: true,
-  source: { select: { name: true } },
-  municipality: { select: { latitude: true, longitude: true } },
-} satisfies Prisma.ListingSelect;
+/** Campos do cartão de anúncio; reusado pelos alertas. Traz o lote do usuário ligado ao anúncio, se houver. */
+export const listingCardSelect = (ownerId: string) =>
+  ({
+    id: true,
+    url: true,
+    lotNumber: true,
+    title: true,
+    brand: true,
+    model: true,
+    auctionExternalId: true,
+    auctionStartsAt: true,
+    startsAt: true,
+    modelYear: true,
+    mileageKm: true,
+    fuel: true,
+    recoveryType: true,
+    damageLevel: true,
+    conditionFlags: true,
+    inspectionResult: true,
+    inspectionNotes: true,
+    city: true,
+    state: true,
+    auctionName: true,
+    endsAt: true,
+    status: true,
+    currentBidCents: true,
+    minimumBidCents: true,
+    bidCount: true,
+    finalBidCents: true,
+    marketValueCents: true,
+    photoUrls: true,
+    source: { select: { name: true } },
+    municipality: { select: { latitude: true, longitude: true } },
+    lots: { where: { ownerId }, select: { id: true }, take: 1 },
+  }) satisfies Prisma.ListingSelect;
 
-type ListingCardRow = Prisma.ListingGetPayload<{ select: typeof listingCardSelect }>;
+type ListingCardRow = Prisma.ListingGetPayload<{ select: ReturnType<typeof listingCardSelect> }>;
 
 const toCents = (value: number | null) => (value === null ? null : cents(value));
 
@@ -89,6 +97,8 @@ export function toListItem(row: ListingCardRow): ListingListItem {
     finalBid: toCents(row.finalBidCents),
     marketValue: toCents(row.marketValueCents),
     photoUrl: row.photoUrls[0] ?? null,
+    trackable: trackerMissing(row).length === 0,
+    trackedLotId: row.lots[0]?.id ?? null,
   };
 }
 
@@ -166,7 +176,8 @@ const withinRadius = (radiusKm: number | null) => (item: { distanceKm: number | 
   radiusKm === null || (item.distanceKm !== null && item.distanceKm <= radiusKm);
 
 export async function listListings(filters: ListingFilters): Promise<ListingPage> {
-  await requireUser();
+  const user = await requireUser();
+  const select = listingCardSelect(user.id);
   const now = new Date();
   const criteria: ListingCriteria = {
     search: filters.search ?? null,
@@ -189,14 +200,14 @@ export async function listListings(filters: ListingFilters): Promise<ListingPage
   // Sem raio, tudo é filtrável no banco: pagina lá.
   if (radius === null) {
     const [rows, total] = await Promise.all([
-      db.listing.findMany({ where, orderBy, skip: start, take: LISTINGS_PAGE_SIZE, select: listingCardSelect }),
+      db.listing.findMany({ where, orderBy, skip: start, take: LISTINGS_PAGE_SIZE, select }),
       db.listing.count({ where }),
     ]);
     return { items: rows.map(toListItem), total, page: filters.page, pageSize: LISTINGS_PAGE_SIZE, truncated: false };
   }
 
   // Com raio, o retângulo corta no banco e a distância exata filtra aqui, sobre no máximo MAX_CANDIDATES.
-  const rows = await db.listing.findMany({ where, orderBy, take: MAX_CANDIDATES + 1, select: listingCardSelect });
+  const rows = await db.listing.findMany({ where, orderBy, take: MAX_CANDIDATES + 1, select });
   const truncated = rows.length > MAX_CANDIDATES;
   const items = rows.slice(0, MAX_CANDIDATES).map(toListItem).filter(withinRadius(radius));
 

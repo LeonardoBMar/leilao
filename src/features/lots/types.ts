@@ -32,4 +32,6 @@ export type LotDetail = LotListItem & {
   fixedAnalysisCount: number;
   resultCount: number;
   updatedAt: Date;
+  /** Anúncio coletado ligado ao lote: o coletor mantém o lance atual (etapa 3). */
+  tracking: { sourceName: string; lastCheckedAt: Date } | null;
 };

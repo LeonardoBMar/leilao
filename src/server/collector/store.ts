@@ -4,7 +4,7 @@ import { finalBidOf, goneStatus, observationChanged } from "@/domain/listings/co
 import { type Coordinates, distanceKm } from "@/domain/listings/geo";
 import { municipalityKey } from "@/domain/listings/place";
 import { DEFAULT_REGION } from "@/domain/listings/region";
-import { nextCheckAt, retryAfterFailure } from "@/domain/listings/schedule";
+import { nextCheckAt, retryAfterFailure, TRACKED_REFRESH_MS } from "@/domain/listings/schedule";
 import type { ListingInput } from "@/domain/listings/types";
 import type { Prisma } from "@/generated/prisma/client";
 
@@ -12,7 +12,7 @@ import { db } from "../db";
 
 /**
  * Gravação do catálogo global (D-25). Roda sem usuário (D-26): só o coletor chama estas funções,
- * e elas só tocam as tabelas do catálogo.
+ * e elas só gravam nas tabelas do catálogo (`findTrackedVisits` também lê `lots`).
  */
 
 /** A transação faz três idas ao banco; com latência alta (ex.: máquina local → EUA) o padrão de 5 s não basta. */
@@ -56,6 +56,25 @@ export async function findDueVisits(sourceId: string, now: Date, limit: number) 
   return db.listing.findMany({
     where: { sourceId, nextCheckAt: { lte: now } },
     orderBy: { nextCheckAt: "asc" },
+    take: limit,
+    select: { externalId: true, url: true },
+  });
+}
+
+/**
+ * Anúncios abertos ligados a lotes ativos de algum usuário e lidos há mais de TRACKED_REFRESH_MS: entram antes das
+ * revisitas comuns, para o lance do lote acompanhar a fonte (etapa 3). Só lê `lots` (D-34).
+ */
+export async function findTrackedVisits(sourceId: string, now: Date, limit: number) {
+  return db.listing.findMany({
+    where: {
+      sourceId,
+      status: "open",
+      nextCheckAt: { not: null },
+      lastCheckedAt: { lte: new Date(now.getTime() - TRACKED_REFRESH_MS) },
+      lots: { some: { archivedAt: null } },
+    },
+    orderBy: { lastCheckedAt: "asc" },
     take: limit,
     select: { externalId: true, url: true },
   });

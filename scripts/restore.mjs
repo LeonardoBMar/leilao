@@ -52,6 +52,7 @@ function validate({ tables, catalog, watches }) {
   for (const lot of tables.lots) {
     if (auctions.get(lot.auction_id)?.owner_id !== lot.owner_id)
       problems.push(`lote ${lot.id}: leilão ausente ou de outro dono`);
+    if (lot.listing_id && !listingIds.has(lot.listing_id)) problems.push(`lote ${lot.id}: anúncio ligado ausente`);
   }
   for (const analysis of tables.analyses) {
     if (lots.get(analysis.lot_id)?.owner_id !== analysis.owner_id)
@@ -108,11 +109,12 @@ async function apply(backup) {
         throw new Error(`Destino não está vazio (${table} tem ${rows[0].n} linhas). Nada foi alterado.`);
     }
 
-    await checkCatalogReferences(client, backup.catalog.listings);
+    await checkCatalogReferences(client, backup.catalog.listings, backup.tables.auctions);
 
     await client.query("BEGIN");
-    for (const table of TABLE_ORDER) await insertRows(client, table, backup.tables[table]);
+    // Catálogo primeiro: lotes podem apontar para anúncios (lots.listing_id).
     for (const table of CATALOG_ORDER) await insertRows(client, table, backup.catalog[table]);
+    for (const table of TABLE_ORDER) await insertRows(client, table, backup.tables[table]);
     for (const table of WATCH_ORDER) await insertRows(client, table, backup.watches[table]);
     await client.query("COMMIT");
   } catch (error) {
@@ -124,11 +126,12 @@ async function apply(backup) {
   console.log("Banco restaurado.");
 }
 
-/** Fontes e municípios não estão no backup: precisam existir no destino antes de inserir anúncios. */
-async function checkCatalogReferences(client, listings) {
-  if (listings.length === 0) return;
+/** Fontes e municípios não estão no backup: precisam existir no destino antes de inserir anúncios e leilões. */
+async function checkCatalogReferences(client, listings, auctions) {
+  const used = [...listings, ...auctions].map((row) => row.source_id).filter(Boolean);
+  if (used.length === 0) return;
   const sources = new Set((await client.query("select id from sources")).rows.map((row) => row.id));
-  const missingSources = [...new Set(listings.map((listing) => listing.source_id))].filter((id) => !sources.has(id));
+  const missingSources = [...new Set(used)].filter((id) => !sources.has(id));
   if (missingSources.length > 0)
     throw new Error(`Destino sem as fontes: ${missingSources.join(", ")}. Nada foi alterado.`);
   const { rows } = await client.query("select count(*)::int as n from municipalities");

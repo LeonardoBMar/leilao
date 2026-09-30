@@ -7,6 +7,11 @@ const DAY = 24 * HOUR;
 export const AFTER_END_DELAY_MS = HOUR;
 /** Anúncio aberto na região de interesse: lance atualizado a cada 6 h. */
 export const OPEN_REFRESH_MS = 6 * HOUR;
+/**
+ * Anúncio aberto ligado a um lote do usuário (etapa 3): revisitado a cada execução do coletor (de 2 em 2 horas),
+ * para o lance do lote se manter sozinho. Uma hora de folga cobre o atraso do disparo.
+ */
+export const TRACKED_REFRESH_MS = HOUR;
 /** Desfecho pendente (condicional, desconhecido ou aberto além do fim): revisita diária. */
 export const PENDING_REFRESH_MS = DAY;
 /** Passado este prazo do fim sem desfecho definitivo, para de revisitar. */

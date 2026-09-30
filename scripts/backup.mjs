@@ -16,7 +16,10 @@ import pg from "pg";
 
 nextEnv.loadEnvConfig(process.cwd(), false, { info() {}, error: console.error });
 
-/** Ordem de dependência (chaves estrangeiras). A restauração insere nesta mesma ordem. */
+/**
+ * Ordem de dependência (chaves estrangeiras). A restauração insere nesta mesma ordem, depois do catálogo: lotes podem
+ * apontar para anúncios (`lots.listing_id`, etapa 3).
+ */
 const TABLES = [
   { name: "auctions", orderBy: "created_at, id" },
   { name: "lots", orderBy: "created_at, id" },

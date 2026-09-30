@@ -33,6 +33,10 @@ export type ListingListItem = {
   /** Valor de mercado informado pela fonte (D-30). */
   marketValue: Cents | null;
   photoUrl: string | null;
+  /** Tem o que `planTracker` exige (marca, modelo, ano e leilão): pode virar lote ("Adicionar à análise"). */
+  trackable: boolean;
+  /** Lote do usuário ligado a este anúncio (já está no Tracker). */
+  trackedLotId: string | null;
 };
 
 export type ListingPage = {

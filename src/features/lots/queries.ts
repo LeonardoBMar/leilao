@@ -124,6 +124,7 @@ export async function getLot(id: string): Promise<LotDetail | null> {
       lotUrl: true,
       notes: true,
       updatedAt: true,
+      listing: { select: { lastCheckedAt: true, source: { select: { name: true } } } },
       _count: { select: { results: true, analyses: { where: { status: "fixed" } } } },
     },
   });
@@ -139,5 +140,6 @@ export async function getLot(id: string): Promise<LotDetail | null> {
     fixedAnalysisCount: row._count.analyses,
     resultCount: row._count.results,
     updatedAt: row.updatedAt,
+    tracking: row.listing && { sourceName: row.listing.source.name, lastCheckedAt: row.listing.lastCheckedAt },
   };
 }

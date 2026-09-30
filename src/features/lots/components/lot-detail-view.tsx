@@ -20,6 +20,7 @@ import { formatDate, formatDateTime, formatKm } from "@/lib/format";
 import { updateCurrentBidAction } from "../actions";
 import { getLot } from "../queries";
 import { lotIdSchema } from "../schemas";
+import type { LotDetail } from "../types";
 import { CurrentBidForm } from "./current-bid-form";
 import { FollowSwitch } from "./follow-switch";
 import { LimitBadge } from "./limit-badge";
@@ -101,12 +102,7 @@ export async function LotDetailView({ params, analysis, result, photos }: LotDet
                 <Stat label="Lance inicial">
                   <Money value={lot.startingBid} />
                 </Stat>
-                <Stat
-                  label="Lance atual"
-                  note={
-                    lot.currentBidObservedAt ? `Observado em ${formatDateTime(lot.currentBidObservedAt)}` : undefined
-                  }
-                >
+                <Stat label="Lance atual" note={currentBidNote(lot)}>
                   <Money value={lot.currentBid} />
                 </Stat>
                 <Stat
@@ -229,4 +225,13 @@ export function LotDetailSkeleton() {
       </div>
     </div>
   );
+}
+
+/** Data da observação e, com anúncio ligado, a última leitura do coletor (o lance se atualiza sozinho). */
+function currentBidNote(lot: LotDetail): string | undefined {
+  const observed = lot.currentBidObservedAt ? `Observado em ${formatDateTime(lot.currentBidObservedAt)}` : null;
+  const tracked = lot.tracking
+    ? `Acompanhado no ${lot.tracking.sourceName}, lido em ${formatDateTime(lot.tracking.lastCheckedAt)}`
+    : null;
+  return [observed, tracked].filter(Boolean).join(". ") || undefined;
 }
