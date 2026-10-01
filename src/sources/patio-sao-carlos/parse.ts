@@ -4,14 +4,14 @@ import {
   normalizeNotes,
   parseConditionNotes,
 } from "@/domain/listings/condition";
-import { normalizePlaceName } from "@/domain/listings/place";
+import { normalizePlaceName, stateCode } from "@/domain/listings/place";
 import type { ListingCategory, ListingInput, ListingStatus } from "@/domain/listings/types";
 import { bps, type Cents, parseBRL } from "@/domain/money";
 import { formatDate } from "@/lib/format";
 import { err, ok, type Result } from "@/lib/result";
 
 import { PATIO_IMAGE_ORIGIN } from "../image-origins";
-import { htmlToLines } from "../shared/extract";
+import { decodeHtmlEntities, htmlToLines } from "../shared/extract";
 import type { DiscoveredListing, ListingDetails, ParseError } from "../types";
 import { type PatioDateParts, type PatioLiveLot, patioLiveLotSchema, patioLiveResponseSchema } from "./schema";
 
@@ -102,14 +102,6 @@ type InfoField =
   | "key"
   | "recovery";
 
-/** Endereço do pátio do leiloeiro (rodapé do site). */
-const YARD: ListingInput["location"] = {
-  yardName: PATIO_NAME,
-  city: "São Carlos",
-  state: "SP",
-  address: "Estr. Mun. Washington José Pêra, 2840, Água Fria",
-};
-
 /** Horário de Brasília (o do site): UTC−3, sem horário de verão desde 2019. */
 const BRASILIA_OFFSET_HOURS = 3;
 /** Página de lote que o site já tirou do ar: responde 200 com este aviso. */
@@ -137,22 +129,47 @@ export function parsePatioLive(json: string): Result<Map<string, PatioLiveLot>, 
   return ok(lots);
 }
 
+/** Edital do lote (botão "Edital do leilão"): é onde o site diz onde o veículo está para visitação. */
+export const patioEditalUrl = (externalId: string) => `${PATIO_BASE_URL}/views/edital.php?lote=${externalId}`;
+
+/** "Endereço Pátio: Estr. ..., 2840, ÁGUA FRIA, São Carlos, SÃO PAULO, 13575-675" do edital. */
+export function parsePatioEditalAddress(html: string): string | null {
+  const match = /Endere(?:ço|&ccedil;o) P(?:á|&aacute;)tio:\s*<\/strong>\s*([^<]+)</i.exec(html);
+  const address = match?.[1] ? decodeHtmlEntities(match[1]).replace(/\s+/g, " ").trim() : "";
+  return address === "" ? null : address;
+}
+
 /** A página diz que o lote não existe mais. */
 export function isPatioPageGone(html: string): boolean {
   return html.includes(GONE_MARKER) && !html.includes("lote-page__panel-body--info");
 }
 
 /** Dado bruto guardado em `listings.raw`: a ficha, a descrição e a situação, sem quem deu lance. */
-type PatioRaw = { info: Record<string, string>; notes: string[]; description: string | null; live: PatioLiveLot };
+type PatioRaw = {
+  info: Record<string, string>;
+  notes: string[];
+  description: string | null;
+  live: PatioLiveLot;
+  /** Endereço do pátio no edital; `null` se o edital não carregou. */
+  yardAddress: string | null;
+};
 
-/** Página do lote + situação da consulta interna → anúncio no formato único. */
-export function parsePatioListing(html: string, live: PatioLiveLot, now: Date): Result<ListingInput, ParseError> {
+/**
+ * Página do lote + situação da consulta interna + endereço do edital → anúncio no formato único. O local da consulta
+ * interna não é usado: é o de origem do comitente, não onde o veículo está (o edital diz o pátio).
+ */
+export function parsePatioListing(
+  html: string,
+  live: PatioLiveLot,
+  yardAddress: string | null,
+  now: Date,
+): Result<ListingInput, ParseError> {
   const infoHtml = sliceBetween(html, "lote-page__panel-body--info", "<h2");
   if (infoHtml === null) return err("missing_data");
   const { info, notes } = readInfo(htmlToLines(infoHtml));
   const descriptionHtml = sliceBetween(html, "lote-page__descricao-texto", "</div>");
   const description = descriptionHtml === null ? null : htmlToLines(descriptionHtml).join("\n");
-  const raw: PatioRaw = { info, notes, description, live: sanitizeLive(live) };
+  const raw: PatioRaw = { info, notes, description, live: sanitizeLive(live), yardAddress };
   return ok(fromRaw(raw, html, now));
 }
 
@@ -208,7 +225,7 @@ function fromRaw(raw: PatioRaw, html: string, now: Date): ListingInput {
     condition: conditionOf(raw),
     startsAt,
     endsAt,
-    location: placeOf(live.local),
+    location: placeOf(raw.yardAddress),
     status: mapStatus(live.situacao, endsAt, now),
     sourceStatus: String(live.situacao),
     currentBid: live.count_lances > 0 ? money(live.lance.atual) : null,
@@ -267,17 +284,22 @@ function mapStatus(situacao: number, endsAt: Date | null, now: Date): ListingSta
   return endsAt !== null && endsAt < now ? "unknown" : "open";
 }
 
-/** "Curitiba, PR" → cidade e UF; vazio (", ") → pátio do leiloeiro; cidade cortada ("Aparecida de G..., PR") → só a UF. */
-function placeOf(local: string | null | undefined): ListingInput["location"] {
+/**
+ * Endereço do edital → local. Termina em "cidade, ESTADO POR EXTENSO, CEP"; o resto é logradouro e bairro.
+ * Sem edital ou fora desse formato: local desconhecido (sem distância), nunca adivinhado.
+ */
+function placeOf(address: string | null): ListingInput["location"] {
   const unknown = { yardName: null, city: null, state: null, address: null };
-  // Sem local na consulta, o lote está no pátio do leiloeiro, em São Carlos.
-  if ((local ?? "").replace(/[\s,]/g, "") === "") return YARD;
-  const match = /^\s*([^,]*?)\s*,\s*([A-Za-z]{2})\s*$/.exec(local ?? "");
-  if (!match?.[2]) return unknown;
-  const state = match[2].toUpperCase();
-  // Cidade cortada pelo site: só a UF é confiável (nunca o pátio, que poria o lote na região errada).
-  const city = match[1] && !match[1].endsWith("...") ? match[1] : null;
-  return { ...unknown, city, state };
+  if (address === null) return unknown;
+  const parts = address
+    .split(",")
+    .map((part) => part.trim())
+    .filter((part) => part !== "");
+  if (/^\d{5}-?\d{3}$/.test(parts.at(-1) ?? "")) parts.pop();
+  const state = stateCode(parts.pop() ?? "");
+  const city = parts.pop() ?? null;
+  if (state === null || city === null) return { ...unknown, address };
+  return { yardName: PATIO_NAME, city, state, address: parts.join(", ") || null };
 }
 
 function photosOf(html: string): string[] {
@@ -313,7 +335,8 @@ function readRaw(raw: unknown): PatioRaw | null {
   );
   const notes = raw.notes.filter((note): note is string => typeof note === "string");
   const description = typeof raw.description === "string" ? raw.description : null;
-  return { info, notes, description, live: live.data };
+  const yardAddress = typeof raw.yardAddress === "string" ? raw.yardAddress : null;
+  return { info, notes, description, live: live.data, yardAddress };
 }
 
 function brasiliaDate(parts: PatioDateParts): Date | null {

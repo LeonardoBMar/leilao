@@ -33,3 +33,40 @@ export function municipalityKey(city: string, state: string): string {
   const uf = state.trim().toUpperCase();
   return `${uf === "DF" ? "BRASILIA" : normalizePlaceName(city)}|${uf}`;
 }
+
+const STATE_BY_NAME: Record<string, string> = {
+  ACRE: "AC",
+  ALAGOAS: "AL",
+  AMAPA: "AP",
+  AMAZONAS: "AM",
+  BAHIA: "BA",
+  CEARA: "CE",
+  "DISTRITO FEDERAL": "DF",
+  "ESPIRITO SANTO": "ES",
+  GOIAS: "GO",
+  MARANHAO: "MA",
+  "MATO GROSSO": "MT",
+  "MATO GROSSO DO SUL": "MS",
+  "MINAS GERAIS": "MG",
+  PARA: "PA",
+  PARAIBA: "PB",
+  PARANA: "PR",
+  PERNAMBUCO: "PE",
+  PIAUI: "PI",
+  "RIO DE JANEIRO": "RJ",
+  "RIO GRANDE DO NORTE": "RN",
+  "RIO GRANDE DO SUL": "RS",
+  RONDONIA: "RO",
+  RORAIMA: "RR",
+  "SANTA CATARINA": "SC",
+  "SAO PAULO": "SP",
+  SERGIPE: "SE",
+  TOCANTINS: "TO",
+};
+
+/** UF a partir da sigla ou do nome por extenso ("SÃO PAULO", "sp"). Desconhecido: `null`. */
+export function stateCode(value: string): string | null {
+  const normalized = normalizePlaceName(value);
+  if (Object.values(STATE_BY_NAME).includes(normalized)) return normalized;
+  return STATE_BY_NAME[normalized] ?? null;
+}

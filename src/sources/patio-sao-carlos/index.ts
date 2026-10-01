@@ -1,6 +1,7 @@
 import type { DiscoveredListing, Discovery, SourceAdapter, SourceHttp } from "../types";
 import {
   isPatioPageGone,
+  parsePatioEditalAddress,
   parsePatioListing,
   parsePatioLive,
   parsePatioLotList,
@@ -8,6 +9,7 @@ import {
   PATIO_LIVE_URL,
   PATIO_NAME,
   patioDetailsFromRaw,
+  patioEditalUrl,
   patioListingUrl,
   patioListUrl,
 } from "./parse";
@@ -38,7 +40,7 @@ export const patioSaoCarlosSource: SourceAdapter = {
   discover,
   async fetchListing(http, externalId, now) {
     const page = await http.get(patioListingUrl(externalId));
-    if (!page.ok) return { ok: false, gone: page.status === 404, error: page.error };
+    if (!page.ok) return { ok: false, gone: page.status === 404 || page.status === 410, error: page.error };
     if (isPatioPageGone(page.text)) return { ok: false, gone: true, error: "lote fora do ar no site" };
 
     const live = await fetchLive(http, [externalId]);
@@ -46,7 +48,11 @@ export const patioSaoCarlosSource: SourceAdapter = {
     const lot = live.lots.get(externalId);
     if (!lot) return { ok: false, gone: false, error: "lote ausente na consulta de situação" };
 
-    const parsed = parsePatioListing(page.text, lot, now);
+    // Onde o veículo está só aparece no edital. Se ele falhar, o local fica desconhecido (nunca o da consulta).
+    const edital = await http.get(patioEditalUrl(externalId));
+    const yardAddress = edital.ok ? parsePatioEditalAddress(edital.text) : null;
+
+    const parsed = parsePatioListing(page.text, lot, yardAddress, now);
     return parsed.ok ? parsed : { ok: false, gone: false, error: parsed.error };
   },
   detailsFromRaw: patioDetailsFromRaw,

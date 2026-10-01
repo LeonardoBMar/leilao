@@ -7,6 +7,7 @@ import { finalBidOf } from "@/domain/listings/collect";
 import { isFinalStatus } from "@/domain/listings/types";
 
 import { listingContractProblems } from "../shared/contract";
+import { fetchListingPage } from "../shared/fetch";
 import { parseLeiloSitemap } from "./discover";
 import { leiloDetailsFromRaw, leiloListingUrl, parseLeiloListingPage } from "./parse";
 
@@ -262,5 +263,22 @@ describe("parseLeiloSitemap", () => {
       <url><loc>${leiloListingUrl(id)}</loc></url>
     </urlset>`;
     expect(parseLeiloSitemap(xml)).toEqual([{ externalId: id, url: leiloListingUrl(id), lastModified: null }]);
+  });
+});
+
+describe("fetchListingPage", () => {
+  it("HTTP 404 e 410 são página fora do ar (`gone`); outras falhas não", async () => {
+    const respond = (status: number) => ({
+      get: () => Promise.resolve({ ok: false as const, status, error: `HTTP ${status}` }),
+      post: () => Promise.resolve({ ok: false as const, status, error: `HTTP ${status}` }),
+    });
+    const parse = () => ({ ok: false as const, error: "invalid_data" as const });
+    for (const [status, gone] of [
+      [404, true],
+      [410, true],
+      [503, false],
+    ] as const) {
+      expect(await fetchListingPage(respond(status), "https://x", parse, new Date())).toMatchObject({ gone });
+    }
   });
 });

@@ -9,10 +9,12 @@ import type { FetchOutcome, SourceHttp } from "../types";
 import { patioSaoCarlosSource } from ".";
 import {
   isPatioPageGone,
+  parsePatioEditalAddress,
   parsePatioListing,
   parsePatioLive,
   parsePatioLotList,
   patioDetailsFromRaw,
+  patioEditalUrl,
   patioListingUrl,
 } from "./parse";
 import type { PatioLiveLot } from "./schema";
@@ -23,6 +25,7 @@ const endedPage = fixture("lote-encerrado.html");
 const motoPage = fixture("lote-moto.html");
 const gonePage = fixture("lote-fora-do-ar.html");
 const liveJson = fixture("situacao.json");
+const yardAddress = parsePatioEditalAddress(fixture("edital.html"));
 const now = new Date("2026-09-30T21:00:00Z");
 
 function liveLot(id: string): PatioLiveLot {
@@ -33,7 +36,7 @@ function liveLot(id: string): PatioLiveLot {
 }
 
 function parseOk(html: string, id: string) {
-  const result = parsePatioListing(html, liveLot(id), now);
+  const result = parsePatioListing(html, liveLot(id), yardAddress, now);
   if (!result.ok) throw new Error(`parse falhou: ${result.error}`);
   return result.value;
 }
@@ -102,8 +105,18 @@ describe("parsePatioListing — lote aberto (Yaris, lote 20 do leilão 39)", () 
     expect(listing.auction).toEqual({ externalId: "39", name: "Leilão de 02/10/2026", startsAt: null });
   });
 
-  it("cidade cortada pelo site: fica só a UF, nunca o pátio de São Carlos", () => {
-    expect(listing.location).toEqual({ yardName: null, city: null, state: "PR", address: null });
+  it("local vem do edital (pátio de visitação), não do local de origem da consulta interna", () => {
+    expect(listing.location).toEqual({
+      yardName: "Pátio Estadual São Carlos",
+      city: "São Carlos",
+      state: "SP",
+      address: "Estr. Mun. Washington José Pêra, 2840, ÁGUA FRIA",
+    });
+  });
+
+  it("sem edital: local desconhecido, nunca adivinhado", () => {
+    const result = parsePatioListing(openPage, liveLot("991"), null, now);
+    expect(result.ok && result.value.location).toEqual({ yardName: null, city: null, state: null, address: null });
   });
 
   it("fotos da galeria do lote, sem miniaturas nem fotos de outros lotes", () => {
@@ -126,6 +139,7 @@ describe("parsePatioListing — lote aberto (Yaris, lote 20 do leilão 39)", () 
       "nome",
       "situacao",
     ]);
+    expect(z.object({ yardAddress: z.string() }).parse(listing.raw).yardAddress).toMatch(/São Carlos, SÃO PAULO/);
     expect(patioDetailsFromRaw(listing.raw, now)).toEqual({
       description: listing.description,
       condition: listing.condition,
@@ -156,10 +170,6 @@ describe("parsePatioListing — lote encerrado (BYD, 30/09/2026)", () => {
     expect(listing.marketValue).toBe(16_093_500);
     expect(listing.description).toMatch(/chave reserva/);
   });
-
-  it("sem local na consulta: o lote está no pátio do leiloeiro", () => {
-    expect(listing.location).toMatchObject({ city: "São Carlos", state: "SP", yardName: "Pátio Estadual São Carlos" });
-  });
 });
 
 describe("parsePatioListing — moto (BMW F 850)", () => {
@@ -168,7 +178,6 @@ describe("parsePatioListing — moto (BMW F 850)", () => {
   it("FIPE sem dois-pontos, km em branco e categoria pelo grupo da consulta", () => {
     expect(listing.vehicle).toMatchObject({ brand: "BMW", model: "F 850", mileageKm: null, category: "Motos" });
     expect(listing.marketValue).toBe(6_784_700);
-    expect(listing.location).toMatchObject({ city: "Guarapari", state: "ES" });
   });
 });
 
@@ -181,8 +190,8 @@ describe("situações da consulta interna", () => {
   it("condicional e situação desconhecida (antes e depois do fim)", () => {
     expect(parseOk(openPage, "1225").status).toBe("conditional");
     const directSale = { ...liveLot("991"), situacao: 20 };
-    const before = parsePatioListing(openPage, directSale, now);
-    const after = parsePatioListing(openPage, directSale, new Date("2026-10-03T00:00:00Z"));
+    const before = parsePatioListing(openPage, directSale, yardAddress, now);
+    const after = parsePatioListing(openPage, directSale, yardAddress, new Date("2026-10-03T00:00:00Z"));
     expect(before.ok && before.value.status).toBe("open");
     expect(after.ok && after.value.status).toBe("unknown");
   });
@@ -246,15 +255,27 @@ describe("patioSaoCarlosSource", () => {
     expect(discovery).toMatchObject({ complete: false, listings: [] });
   });
 
-  it("lê um lote juntando a página e a consulta interna", async () => {
-    const { http } = fakeHttp({ [patioListingUrl("991")]: { ok: true, text: openPage } });
+  it("lê um lote juntando a página, a consulta interna e o edital", async () => {
+    const { http, calls } = fakeHttp({
+      [patioListingUrl("991")]: { ok: true, text: openPage },
+      [patioEditalUrl("991")]: { ok: true, text: fixture("edital.html") },
+    });
     const fetched = await patioSaoCarlosSource.fetchListing(http, "991", now);
-    expect(fetched.ok && fetched.value.externalId).toBe("991");
+    expect(fetched.ok && fetched.value.location.city).toBe("São Carlos");
+    expect(calls).toContain(`GET ${patioEditalUrl("991")}`);
   });
 
-  it("página fora do ar ('Nenhum Lote Encontrado' ou 404) é `gone`", async () => {
+  it("edital fora do ar não impede a leitura: só o local fica desconhecido", async () => {
+    const { http } = fakeHttp({ [patioListingUrl("991")]: { ok: true, text: openPage } });
+    const fetched = await patioSaoCarlosSource.fetchListing(http, "991", now);
+    expect(fetched.ok && fetched.value.location.state).toBeNull();
+  });
+
+  it("página fora do ar ('Nenhum Lote Encontrado', 404 ou 410) é `gone`", async () => {
     const { http } = fakeHttp({ [patioListingUrl("1225")]: { ok: true, text: gonePage } });
     expect(await patioSaoCarlosSource.fetchListing(http, "1225", now)).toMatchObject({ ok: false, gone: true });
     expect(await patioSaoCarlosSource.fetchListing(http, "777", now)).toMatchObject({ ok: false, gone: true });
+    const removed: SourceHttp = { ...http, get: () => Promise.resolve({ ok: false, status: 410, error: "HTTP 410" }) };
+    expect(await patioSaoCarlosSource.fetchListing(removed, "778", now)).toMatchObject({ ok: false, gone: true });
   });
 });

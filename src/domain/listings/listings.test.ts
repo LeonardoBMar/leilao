@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { boundingBox, distanceKm } from "./geo";
-import { municipalityKey, normalizePlaceName, splitBrandModel } from "./place";
+import { municipalityKey, normalizePlaceName, splitBrandModel, stateCode } from "./place";
 import { DEFAULT_REGION } from "./region";
 import {
   AFTER_END_DELAY_MS,
@@ -37,6 +37,16 @@ describe("normalizePlaceName", () => {
     ["Embu-Guaçu", "EMBU GUACU"],
   ])("%s → %s", (input, expected) => {
     expect(normalizePlaceName(input)).toBe(expected);
+  });
+});
+
+describe("stateCode", () => {
+  it("aceita nome por extenso (com ou sem acento) ou sigla; o resto é null", () => {
+    expect(stateCode("SÃO PAULO")).toBe("SP");
+    expect(stateCode("Espírito Santo")).toBe("ES");
+    expect(stateCode("mato grosso do sul")).toBe("MS");
+    expect(stateCode("pr")).toBe("PR");
+    expect(stateCode("ÁGUA FRIA")).toBeNull();
   });
 });
 

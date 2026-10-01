@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edital - Leilão de Veículos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Arial', sans-serif; color: #333; line-height: 1.6; margin: 0; padding: 0; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 20px auto; background: white; padding: 30px; border: 2px solid #2c6b36; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; }
+        /* Header card should visually match the .edital-info box */
+        .edital-header { background: #f5f5f5; border: 1px solid #ddd; border-radius: 5px; padding: 15px; text-align: center; margin: 0 0 20px 0; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+        .edital-header h1 { color: #2c6b36; }
+        .edital-header p { color: #333; }
+        .edital-header h1 { font-size: 2.5rem; margin-bottom: 15px; font-weight: bold; color: #2c6b36; }
+        .edital-header p { font-size: 1.1rem; margin: 8px 0; color: #333; }
+        .edital-section { margin-bottom: 40px; }
+        .edital-section h2 { font-size: 1.5rem; color: #2c6b36; margin-bottom: 15px; border-bottom: 2px solid #2c6b36; padding-bottom: 10px; }
+        .edital-section h3 { font-size: 1.2rem; color: #004691; margin-top: 20px; margin-bottom: 10px; font-weight: bold; }
+        .edital-section p { margin-bottom: 10px; }
+        .edital-info { background: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #ddd; }
+        .edital-info strong { color: #2c6b36; }
+        .lotes-table { width: 100%; margin-top: 20px; border-collapse: collapse; border-spacing: 0; border: 1px solid #ccc; }
+        .lotes-table thead { background: #2c6b36; color: white; }
+        .lotes-table th, .lotes-table td { padding: 12px 10px; text-align: left; border: 1px solid #ccc; vertical-align: middle; }
+        .lotes-table th { font-weight: 600; }
+        .lotes-table tr:nth-child(even) { background: #f9f9f9; }
+        .lotes-table .col-lote { display: flex; flex-direction: row; align-items: center; gap: 10px; background: transparent; }
+        .lotes-table .col-lote .lote-num { font-weight: bold; font-size: 1.1rem; color: #2c6b36; min-width: 30px; margin-right: 8px; display: inline-flex; align-items: center; justify-content: center; }
+        /* Padronizar padding da célula e remover caixas internas: manter apenas as bordas da tabela */
+        .lotes-table td.col-lote { padding: 12px 10px; background: transparent; }
+        .lotes-table td.col-lote > a { display: inline-flex; align-items: center; justify-content: center; padding: 0; margin: 0; }
+        .lotes-table td.col-lote > * { background: transparent !important; border: none !important; box-shadow: none !important; }
+        /* Remover qualquer borda/box nos elementos internos (número e imagem) mantendo as bordas da tabela */
+        .lotes-table td.col-lote > .lote-num,
+        .lotes-table td.col-lote > a,
+        .lotes-table td.col-lote > a img { border: none !important; background: transparent !important; box-shadow: none !important; }
+        .lotes-table td.col-lote > .lote-num { padding: 0; margin: 0; }
+        /* Garantir que link/imagem não tenham padding/linha adicional */
+        .lotes-table td.col-lote > a img { display: block; margin: 0; padding: 0; border: none !important; background: transparent !important; }
+        /* Use as bordas padrão das células (border-collapse) para manter separadores contínuos */
+        .lotes-table .col-lote a { display: block; flex-shrink: 0; }
+        .lotes-table .col-lote img { width: 60px; height: 45px; object-fit: cover; border-radius: 4px; border: none; display: block; transition: transform 0.2s; }
+        .lotes-table .col-lote img:hover { transform: scale(1.05); }
+        .lote-obs { font-size: 0.9rem; line-height: 1.4; }
+        .lote-obs .obs-mobile { display: none; }
+        .lote-obs .obs-desktop { display: block; }
+        /* Descrição completa: ocultar no desktop, mostrar apenas no mobile */
+        .lotes-table td[data-label="Descrição Completa"] { display: none; }
+        .btn-print { display: block; margin-top: 30px; text-align: center; }
+        .btn-print button { padding: 12px 30px; background: #2c6b36; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1rem; }
+        .btn-print button:hover { background: #1e4f26; }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .container { margin: 8px 0; padding: 10px; border: 1px solid #2c6b36; width: 100vw; position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw; }
+            .edital-header { margin: 0 0 15px 0; padding: 12px; border-radius: 5px; }
+            .edital-header h1 { font-size: 1.4rem; margin-bottom: 10px; }
+            .edital-header p { font-size: 0.85rem; margin: 6px 0; }
+            .edital-section h2 { font-size: 1.2rem; }
+            .edital-info { padding: 10px; font-size: 0.9rem; }
+            
+            /* Esconder tabela desktop */
+            .lotes-table thead { display: none; }
+            .lotes-table tbody { display: block; }
+            .lotes-table tr { 
+                display: grid;
+                grid-template-columns: 70px 1fr;
+                gap: 12px;
+                margin-bottom: 16px; 
+                border: 2px solid #2c6b36; 
+                border-radius: 8px; 
+                background: white; 
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+                padding: 12px;
+            }
+            .lotes-table td { 
+                border: none; 
+                padding: 0; 
+                text-align: left !important; 
+            }
+            .lotes-table td:before { 
+                content: attr(data-label); 
+                font-weight: bold; 
+                color: #2c6b36; 
+                display: block; 
+                margin-bottom: 4px;
+                font-size: 0.75rem;
+                text-transform: uppercase;
+            }
+            
+            /* Coluna Lote - foto esquerda */
+            .lotes-table .col-lote { 
+                grid-column: 1 / 2;
+                grid-row: 1 / 2;
+                display: flex;
+                flex-direction: column;
+                gap: 0;
+                padding: 0;
+                width: 70px;
+                flex-shrink: 0;
+            }
+            .lotes-table .col-lote:before { display: none; }
+            .lotes-table .col-lote .lote-num { 
+                display: none;
+            }
+            .lotes-table .col-lote a { 
+                display: block;
+                margin: 0;
+                height: 50px;
+                overflow: hidden;
+            }
+            .lotes-table .col-lote img { 
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                border-radius: 4px;
+                border: 1px solid #ddd;
+                display: block;
+            }
+            
+            /* Descrição - direita, mesma linha da foto */
+            .lotes-table td[data-label="Descrição"] {
+                grid-column: 2 / 3;
+                grid-row: 1 / 2;
+                display: flex;
+                align-items: center;
+                padding-left: 0;
+            }
+            .lotes-table td[data-label="Descrição"]:before {
+                display: none;
+            }
+            .lotes-table td[data-label="Descrição"] strong {
+                font-size: 0.9rem;
+                color: #333;
+                font-weight: 600;
+                line-height: 1.4;
+                display: block;
+                word-break: break-word;
+                overflow-wrap: break-word;
+                width: 100%;
+            }
+            
+            /* Valor Inicial - nova linha, spanning full width */
+            .lotes-table td[data-label="Valor Inicial"] {
+                grid-column: 1 / -1;
+                grid-row: 2 / 3;
+                display: block;
+                font-size: 0.9rem;
+                font-weight: 600;
+                color: #2c6b36;
+            }
+            .lotes-table td[data-label="Valor Inicial"]:before {
+                display: inline;
+                margin-right: 4px;
+                margin-bottom: 0;
+            }
+            
+            /* Pátio - nova linha */
+            .lotes-table td[data-label="Pátio"] {
+                grid-column: 1 / -1;
+                grid-row: 3 / 4;
+                display: block;
+                font-size: 0.85rem;
+                color: #666;
+            }
+            /* Descrição completa (mobile) - abaixo do Pátio e acima das Observações */
+            .lotes-table td[data-label="Descrição Completa"] {
+                grid-column: 1 / -1;
+                grid-row: 4 / 5;
+                display: block;
+                font-size: 0.65rem;
+                color: #444;
+                line-height: 1.2;
+                margin-top: 6px;
+                white-space: pre-wrap;
+            }
+            .lote-desc-full p { margin: 0 0 6px; }
+            .lote-desc-full strong { font-weight: 700; color: #222; }
+            .lotes-table td[data-label="Pátio"]:before {
+                display: inline;
+                margin-right: 4px;
+                margin-bottom: 0;
+            }
+            
+            /* Observações */
+            .lotes-table td[data-label="Observações"] {
+                grid-column: 1 / -1;
+                grid-row: 5 / 6;
+                display: block;
+                font-size: 0.8rem;
+                color: #666;
+                line-height: 1.4;
+            }
+            /* Mostrar versão móvel das observações e esconder a versão desktop */
+            .lote-obs .obs-mobile { display: block; font-size: 0.65rem; line-height: 1.2; color: #444; }
+            .lote-obs .obs-desktop { display: none; }
+        }
+        
+        @media print {
+            /* Reset to document-style layout for printing */
+            body { background: white; color: #000; }
+            .container { border: 1px solid #333; box-shadow: none; margin: 0; padding: 20px; width: auto; max-width: none; position: static; left: auto; right: auto; }
+            .btn-print { display: none !important; }
+
+            /* Force table layout (undo mobile grid) */
+            .lotes-table thead { display: table-header-group !important; }
+            .lotes-table tbody { display: table-row-group !important; }
+            .lotes-table tr { display: table-row !important; margin: 0 !important; border: none !important; box-shadow: none !important; background: transparent !important; padding: 0 !important; }
+            .lotes-table td, .lotes-table th { display: table-cell !important; border: 1px solid #000 !important; padding: 8px 6px !important; }
+            .lotes-table td:before, .lotes-table th:before { display: none !important; }
+
+            /* Ensure descriptions render cleanly */
+            .lote-desc-full { white-space: normal !important; font-size: 12px !important; color: #000 !important; }
+            .lote-desc-full p { margin: 0 0 6px !important; }
+
+            /* Page break rules */
+            .lotes-table { page-break-inside: auto; }
+            .lotes-table tr { page-break-inside: avoid; page-break-after: auto; }
+            @page { size: auto; margin: 10mm; }
+            /* Hide lot listing and everything after it when printing */
+            .lotes-section, .lotes-section ~ * { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container edital-body">
+        <div class="edital-header">
+            <h1>EDITAL DE LEILÃO</h1>
+            <p><strong>LEILÃO DE VEÍCULOS</strong></p>
+                        <p>CATEGORIA: VEÍCULOS</p>
+                                    <p>TIPO: ON-LINE</p>
+                                    <p>MODALIDADE: EXTRAJUDICIAL</p>
+                    </div>
+        <!-- Informações Básicas -->
+        <div class="edital-info">
+            <strong>📍 Endereço Pátio:</strong> Estr. Mun. Washington José Pêra, 2840, ÁGUA FRIA, São Carlos, SÃO PAULO, 13575-675<br>
+                        <strong>📅 Data do Leilão:</strong> 02/10/2026 às 10:00<br>
+            <strong>👁️ Visitação:</strong> No Dia do Leilão das 8h às 9h.<br>
+                        <strong>☎️ Telefone:</strong> 16 2018-2168<br>
+            <strong>📧 Email:</strong> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="593f303738373a3c302b361929382d30363c2a2d383d2c38352a3a77362b3e">[email&#160;protected]</a>        </div>
+
+        <!-- Aviso Importante -->
+        <div class="alert alert-warning" role="alert">
+</body></html>
