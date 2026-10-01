@@ -10,17 +10,18 @@ import {
   worstDamage,
 } from "@/domain/listings/condition";
 import { splitBrandModel } from "@/domain/listings/place";
-import type { ListingInput, ListingStatus } from "@/domain/listings/types";
+import { type ListingInput, type ListingStatus, toListingCategory } from "@/domain/listings/types";
 import { bps } from "@/domain/money";
 import { err, ok, type Result } from "@/lib/result";
 
+import { LEILO_IMAGE_ORIGIN } from "../image-origins";
 import { extractAssignedJson, extractJsonLd, reaisToCents } from "../shared/extract";
 import type { ListingDetails, ParseError } from "../types";
 import { type LeiloLot, leiloLotSchema, type LeiloVehicleLd, leiloVehicleLdSchema } from "./schema";
 
 const BASE_URL = "https://leilo.com.br";
 /** Fotos só do CDN do Leilo: é a origem liberada na CSP (`listingImageOrigins`, D-29). */
-const PHOTO_ORIGIN = "https://leilo.cdndp.com.br/";
+const PHOTO_ORIGIN = `${LEILO_IMAGE_ORIGIN}/`;
 
 export const leiloListingUrl = (externalId: string) => `${BASE_URL}/lote/${externalId}/`;
 
@@ -110,7 +111,7 @@ function fromLot(lot: LeiloLot, raw: unknown, ld: LeiloVehicleLd | null, now: Da
       // O estado abrevia ("Fle"); o JSON-LD traz o nome completo ("Flex").
       fuel: ld?.fuelType ?? vehicle?.combustivel ?? null,
       color: vehicle?.cor ?? ld?.color ?? null,
-      category: lot.tipo ?? ld?.category ?? null,
+      category: toListingCategory(lot.tipo ?? ld?.category),
       recoveryType: vehicle?.retomada ?? null,
       hasKey: vehicle?.possuiChave ?? null,
     },
@@ -174,7 +175,7 @@ function fromLd(ld: LeiloVehicleLd, now: Date): ListingInput | null {
       mileageKm: toInt(ld.mileageFromOdometer?.value),
       fuel: ld.fuelType ?? null,
       color: ld.color ?? null,
-      category: ld.category ?? null,
+      category: toListingCategory(ld.category),
       recoveryType: null,
       hasKey: null,
     },

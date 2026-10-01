@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { finalBidOf } from "@/domain/listings/collect";
 import { isFinalStatus } from "@/domain/listings/types";
 
+import { listingContractProblems } from "../shared/contract";
 import { parseLeiloSitemap } from "./discover";
 import { leiloDetailsFromRaw, leiloListingUrl, parseLeiloListingPage } from "./parse";
 
@@ -26,6 +27,12 @@ function parseOk(html: string, at = now) {
 
 describe("parseLeiloListingPage — lote vendido (lote 64, 21/09/2026)", () => {
   const listing = parseOk(soldPage);
+
+  it("cumpre o contrato comum dos adaptadores", () => {
+    expect(
+      listingContractProblems(listing, { externalId: listing.externalId, url: leiloListingUrl(listing.externalId) }),
+    ).toEqual([]);
+  });
 
   it("identifica o lote pela URL canônica", () => {
     expect(listing.externalId).toBe("0e06aced-c58f-452b-9050-661048524204");

@@ -456,7 +456,7 @@ model CollectorRun {
   created       Int                @default(0)
   updated       Int                @default(0)
   failed        Int                @default(0)
-  /// Alertas criados para os monitores ao fim da execução.
+  /// Alertas criados para os monitores ao fim da execução (o mesmo número em todas as fontes da execução, D-37).
   alertsCreated Int                @default(0) @map("alerts_created")
   /// Amostra dos erros (até 20), para diagnóstico.
   errors        Json               @default("[]")

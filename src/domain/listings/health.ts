@@ -20,3 +20,13 @@ export function collectorHealth(lastRun: LastRun | null, now: Date): CollectorHe
   if (lastRun.status === "failed") return "failed";
   return age(lastRun.finishedAt ?? lastRun.startedAt) > COLLECTION_LATE_AFTER_MS ? "late" : "ok";
 }
+
+/** Da melhor para a pior: a saúde de várias fontes é a da pior delas. */
+const SEVERITY: readonly CollectorHealth[] = ["ok", "running", "late", "failed"];
+
+/** Saúde da coleta com várias fontes (D-37): a pior entre as últimas execuções de cada uma. Nenhuma: `never`. */
+export function overallHealth(healths: readonly CollectorHealth[]): CollectorHealth {
+  const known = healths.filter((health) => health !== "never");
+  if (known.length === 0) return "never";
+  return known.reduce((worst, health) => (SEVERITY.indexOf(health) > SEVERITY.indexOf(worst) ? health : worst));
+}

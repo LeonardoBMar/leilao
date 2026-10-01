@@ -11,18 +11,20 @@ const HEALTH_BADGES = {
   running: { label: "Coleta em andamento", variant: "default" },
   ok: null,
   late: { label: "Coleta atrasada", variant: "warning" },
-  failed: { label: "Última coleta falhou", variant: "destructive" },
+  failed: { label: "Coleta falhou", variant: "destructive" },
 } as const satisfies Record<
   CollectorHealth,
   { label: string; variant: "outline" | "default" | "warning" | "destructive" } | null
 >;
 
 /**
- * Saúde da coleta automática: última execução, atraso do agendamento e veículos abertos na região. Falha fica visível
- * no app, não só no GitHub (docs/PLANO-COLETA.md, etapa 1). Lê a sessão: renderizar dentro de <Suspense>.
+ * Saúde da coleta automática: última execução de cada fonte, atraso do agendamento e veículos abertos na região.
+ * Falha fica visível no app, com o nome da fonte, não só no GitHub (docs/PLANO-COLETA.md, etapa 1; D-37).
+ * Lê a sessão: renderizar dentro de <Suspense>.
  */
 export async function CollectorStatusLine() {
-  const { health, lastRun, openInRegion, regionLabel, radiusKm } = await getCollectorStatus();
+  const { health, lastFinishedAt, failingSources, failedListings, openInRegion, regionLabel, radiusKm } =
+    await getCollectorStatus();
   const badge = HEALTH_BADGES[health];
 
   return (
@@ -32,18 +34,20 @@ export async function CollectorStatusLine() {
         <strong className="text-foreground tabular-nums">{openInRegion}</strong> veículos abertos até {radiusKm} km de{" "}
         {regionLabel}
       </span>
-      {lastRun ? (
+      {lastFinishedAt ? (
         <>
           <span aria-hidden="true">·</span>
-          <span>
-            Última coleta ({lastRun.sourceName}) em {formatDateTime(lastRun.finishedAt ?? lastRun.startedAt)}
-          </span>
+          <span>Última coleta em {formatDateTime(lastFinishedAt)}</span>
         </>
       ) : null}
-      {badge ? <Badge variant={badge.variant}>{badge.label}</Badge> : null}
-      {health === "ok" && lastRun && lastRun.failed > 0 ? (
-        <Badge variant="warning">{lastRun.failed} lotes com falha</Badge>
+      {badge ? (
+        <Badge variant={badge.variant}>
+          {health === "failed" && failingSources.length > 0
+            ? `${badge.label}: ${failingSources.join(", ")}`
+            : badge.label}
+        </Badge>
       ) : null}
+      {health === "ok" && failedListings > 0 ? <Badge variant="warning">{failedListings} lotes com falha</Badge> : null}
     </div>
   );
 }

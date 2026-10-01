@@ -120,17 +120,18 @@ npm run restore -- backups/<data>
 
 - **Coleta automática** (docs/PLANO-COLETA.md): workflow **Coleta** no GitHub Actions, de 2 em 2 horas.
   - **Segredo necessário** em GitHub → Settings → Secrets and variables → Actions: `DATABASE_URL` (pooler, porta 6543, o mesmo valor da Vercel). `DIRECT_URL` não é usado ali: `prisma generate` não conecta ao banco.
-  - **Saúde:** a linha "Última coleta" no dashboard e em Descobertos. Falha aparece ali e em Actions → Coleta.
+  - **Fontes** (D-37): todas as de `src/sources/index.ts`, em paralelo, cada uma com o seu registro em `collector_runs`. O log tem uma linha por fonte e, no fim, a linha dos lotes ligados e alertas. Fonte nova se cadastra em `sources` na primeira execução.
+  - **Saúde:** a linha "Última coleta" no dashboard e em Descobertos mostra a pior fonte; se uma falhar, o aviso traz o nome dela. Falha aparece ali e em Actions → Coleta.
   - **Disparo (D-33):** o `pg_cron` do Supabase dispara o workflow de 2 em 2 horas (`prisma/sql/cron.sql`); o agendamento do GitHub fica só como reserva, a cada 12 h.
     - **Token:** GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → _Generate new token_. Repositório: só `LeonardoBMar/leilao`. Permissão: **Actions: Read and write**, e nada mais. Guarde no Supabase → SQL Editor: `select vault.create_secret('SEU_TOKEN', 'github_workflow_token');`. Para trocar: `select vault.update_secret(id, 'NOVO_TOKEN') from vault.secrets where name = 'github_workflow_token';`. Nunca no repositório nem no chat.
     - **Ativar ou atualizar o agendamento:** `npm run db:cron` (idempotente; falha com aviso se o token não estiver no Vault).
     - **Diagnóstico:** `select jobname, schedule, active from cron.job;`, as execuções em `cron.job_run_details` e as respostas do GitHub em `net._http_response` (204 = disparou; 401 = token inválido ou vencido). O token expira: renove antes da data escolhida, senão a linha "Última coleta" passa a mostrar atraso.
     - **Pausar:** `select cron.unschedule('leilao-coleta');` (o `npm run db:cron` recria).
-  - **Rodar à mão:** Actions → Coleta → Run workflow, ou `npm run collect` na máquina local.
+  - **Rodar à mão:** Actions → Coleta → Run workflow, ou `npm run collect` na máquina local. Só uma fonte: `npm run collect -- --source patio-sao-carlos`.
   - **Lotes acompanhados** (D-34): anúncios abertos ligados a lotes entram primeiro em cada execução, e o lance lido vai para os lotes; o log mostra `· N lotes com lance novo · N resultados`. Resultado automático (D-35): lotes ligados sem resultado cujo anúncio encerrou com desfecho definitivo ganham a revisão 1 com `source = collector`. Falha nessa etapa marca a execução como falha com o erro `(lotes)`; a próxima leitura do anúncio corrige.
   - **Alertas** (D-32): criados ao fim de cada coleta para os monitores ligados; o log termina com `· N alertas`. Se a geração falhar, a execução fica como falha com o erro `(alertas)`, e a próxima recupera os lotes das últimas 48 h.
   - **Extração mudou** (ex.: condição do veículo, situação nova da fonte mapeada): `npm run db:reparse` relê `listings.raw` e atualiza descrição, condição e situação dos anúncios já coletados, sem baixar as páginas (serve também quando a página já saiu do ar). Só aplica situação quando o dado bruto traz um desfecho reconhecido. Idempotente. (A migration `add_listing_condition` cita o nome antigo, `db:backfill-condition`.)
-  - **Fonte com problema** (layout mudou, bloqueio): os erros ficam em `collector_runs.errors`. Para pausar uma fonte, `update sources set active = false where id = 'leilo'` (o coletor passa a ignorá-la).
+  - **Fonte com problema** (layout mudou, bloqueio): os erros ficam em `collector_runs.errors`. Para pausar uma fonte, `update sources set active = false where id = 'leilo'` (ou `'patio-sao-carlos'`; o coletor passa a ignorá-la e o cartão de saúde deixa de considerá-la). Anúncio que não cumpre o contrato comum (ex.: categoria nova que o adaptador ainda não traduz) vira falha com o motivo, sem ser gravado.
 - **Erros:** Vercel → Logs (as actions registram `console.error` sem dados pessoais).
 - **Supabase → Advisors** (Security e Performance): mensalmente e depois de cada migration.
 - **Dependências:** `npm audit` mensal. Atualizações do Next seguem o guia de upgrade em `node_modules/next/dist/docs/` e o `AGENTS.md`.

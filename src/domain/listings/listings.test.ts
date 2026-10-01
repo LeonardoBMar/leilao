@@ -12,6 +12,18 @@ import {
   PENDING_REFRESH_MS,
   retryAfterFailure,
 } from "./schedule";
+import { toListingCategory } from "./types";
+
+describe("toListingCategory", () => {
+  it("só aceita o vocabulário comum, escrito igual; o resto vira null (não se adivinha)", () => {
+    expect(toListingCategory("Carros")).toBe("Carros");
+    expect(toListingCategory("Utilitarios")).toBe("Utilitarios");
+    expect(toListingCategory("Automóveis")).toBeNull();
+    expect(toListingCategory("carros")).toBeNull();
+    expect(toListingCategory(null)).toBeNull();
+    expect(toListingCategory(undefined)).toBeNull();
+  });
+});
 
 const at = (iso: string) => new Date(iso);
 const plus = (date: Date, ms: number) => new Date(date.getTime() + ms);

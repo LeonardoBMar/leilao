@@ -19,7 +19,7 @@ import {
   SALES_WINDOW_MS,
 } from "@/domain/listings/estimates";
 import { boundingBox, distanceKm } from "@/domain/listings/geo";
-import { collectorHealth } from "@/domain/listings/health";
+import { collectorHealth, overallHealth } from "@/domain/listings/health";
 import { DEFAULT_REGION } from "@/domain/listings/region";
 import { trackerMissing } from "@/domain/listings/tracker";
 import { cents } from "@/domain/money";
@@ -331,21 +331,22 @@ export async function countOpenListings(criteria: ListingCriteria): Promise<{ co
   return { count, truncated: rows.length > MAX_CANDIDATES };
 }
 
-/** Saúde do coletor para o dashboard e para "Descobertos": última execução e abertos na região. */
+/** Saúde do coletor para o dashboard e para "Descobertos": última execução de cada fonte e abertos na região. */
 export async function getCollectorStatus(): Promise<CollectorStatus> {
   await requireUser();
   const now = new Date();
 
-  const [lastRun, openCandidates] = await Promise.all([
-    db.collectorRun.findFirst({
-      orderBy: { startedAt: "desc" },
+  const [sources, openCandidates] = await Promise.all([
+    // Última execução de cada fonte ativa (D-37): uma fonte parada não fica escondida atrás das outras.
+    db.source.findMany({
+      where: { active: true },
       select: {
-        status: true,
-        startedAt: true,
-        finishedAt: true,
-        created: true,
-        failed: true,
-        source: { select: { name: true } },
+        name: true,
+        runs: {
+          orderBy: { startedAt: "desc" },
+          take: 1,
+          select: { status: true, startedAt: true, finishedAt: true, failed: true },
+        },
       },
     }),
     db.listing.findMany({
@@ -359,17 +360,16 @@ export async function getCollectorStatus(): Promise<CollectorStatus> {
     ({ municipality }) =>
       municipality !== null && distanceKm(DEFAULT_REGION.center, municipality) <= DEFAULT_REGION.radiusKm,
   ).length;
+  const runs = sources.flatMap(({ name, runs: [run] }) =>
+    run ? [{ ...run, name, health: collectorHealth(run, now) }] : [],
+  );
+  const finished = runs.flatMap((run) => (run.finishedAt ? [run.finishedAt.getTime()] : []));
 
   return {
-    health: collectorHealth(lastRun, now),
-    lastRun: lastRun && {
-      sourceName: lastRun.source.name,
-      status: lastRun.status,
-      startedAt: lastRun.startedAt,
-      finishedAt: lastRun.finishedAt,
-      created: lastRun.created,
-      failed: lastRun.failed,
-    },
+    health: overallHealth(runs.map((run) => run.health)),
+    lastFinishedAt: finished.length > 0 ? new Date(Math.max(...finished)) : null,
+    failingSources: runs.filter((run) => run.health === "failed").map((run) => run.name),
+    failedListings: runs.reduce((total, run) => total + run.failed, 0),
     openInRegion,
     regionLabel: DEFAULT_REGION.label,
     radiusKm: DEFAULT_REGION.radiusKm,

@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+import { LISTING_IMAGE_ORIGINS } from "./src/sources/image-origins";
+
 // Decisões registradas em docs/ARCHITECTURE.md (seção "Registro de decisões").
 
 const isDev = process.env.NODE_ENV === "development";
@@ -9,7 +11,7 @@ if (process.env.VERCEL && process.env.DEV_AUTH_BYPASS) {
 }
 const supabaseOrigin = process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin : "";
 // Fotos dos anúncios coletados vêm direto da fonte, sem cópia no Storage (D-29). Uma origem por fonte.
-const listingImageOrigins = ["https://leilo.cdndp.com.br"].join(" ");
+const listingImageOrigins = LISTING_IMAGE_ORIGINS.join(" ");
 
 /**
  * CSP sem nonce (D-21): nonce exige renderização dinâmica e é incompatível com o Partial Prerendering do

@@ -8,13 +8,15 @@ async function main() {
   // As variáveis precisam existir antes de importar o banco (src/server/env.ts valida ao carregar).
   loadEnvConfig(process.cwd(), false, { info: () => undefined, error: console.error });
   const { reparseListings } = await import("@/server/collector/reparse");
-  const { leiloSource } = await import("@/sources/leilo");
+  const { SOURCES } = await import("@/sources");
 
-  const { scanned, updated, statusChanged, skipped } = await reparseListings(leiloSource, new Date());
-  process.stdout.write(
-    `${leiloSource.id}: ${scanned} lidos · ${updated} atualizados · ${statusChanged} com situação nova · ` +
-      `${skipped} sem dado bruto reconhecível\n`,
-  );
+  for (const source of SOURCES) {
+    const { scanned, updated, statusChanged, skipped } = await reparseListings(source, new Date());
+    process.stdout.write(
+      `${source.id}: ${scanned} lidos · ${updated} atualizados · ${statusChanged} com situação nova · ` +
+        `${skipped} sem dado bruto reconhecível\n`,
+    );
+  }
 }
 
 main()

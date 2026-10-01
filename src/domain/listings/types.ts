@@ -6,6 +6,27 @@ export const LISTING_STATUSES = ["open", "sold", "conditional", "unsold", "withd
 export type ListingStatus = (typeof LISTING_STATUSES)[number];
 
 /**
+ * Vocabulário comum de categorias (D-37): o do Leilo, primeira fonte. Cada adaptador traduz a categoria da sua fonte
+ * para um destes valores, para filtros, monitores e estimativas valerem para todas as fontes juntas.
+ */
+export const LISTING_CATEGORIES = [
+  "Carros",
+  "Motos",
+  "Utilitarios",
+  "Pesados",
+  "Sucatas",
+  "Equipamentos",
+  "Imoveis",
+  "Aeronaves",
+] as const;
+export type ListingCategory = (typeof LISTING_CATEGORIES)[number];
+
+/** Categoria já no vocabulário comum; qualquer outra coisa vira `null` (não se adivinha). */
+export function toListingCategory(value: string | null | undefined): ListingCategory | null {
+  return LISTING_CATEGORIES.find((category) => category === value) ?? null;
+}
+
+/**
  * Anúncio no formato único do sistema (docs/PLANO-COLETA.md §1). Todo adaptador de fonte produz este tipo;
  * campos que a fonte não informa ficam `null`, nunca inventados.
  */
@@ -24,7 +45,7 @@ export type ListingInput = {
     mileageKm: number | null;
     fuel: string | null;
     color: string | null;
-    category: string | null;
+    category: ListingCategory | null;
     recoveryType: string | null;
     hasKey: boolean | null;
   };

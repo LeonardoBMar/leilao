@@ -1,6 +1,6 @@
 import type { Cents } from "../money";
 import type { DamageLevel } from "./condition";
-import type { ListingStatus } from "./types";
+import type { ListingCategory, ListingStatus } from "./types";
 
 /**
  * Critérios de busca no catálogo: os mesmos para a tela "Descobertos" e para os monitores (etapa 2 de
@@ -14,7 +14,7 @@ export type RadiusKm = (typeof RADIUS_OPTIONS_KM)[number];
 export const DEFAULT_RADIUS_KM: RadiusKm = 150;
 
 /**
- * Grupos de categoria como a fonte escreve (Leilo). "veiculos" é o padrão: o que o fluxo de análise cobre.
+ * Grupos de categoria no vocabulário comum (`LISTING_CATEGORIES`, D-37). "veiculos" é o padrão: o que o fluxo de análise cobre.
  * Imóveis e equipamentos ficam no catálogo, mas só aparecem em "todas" (`null`).
  */
 export const CATEGORY_KEYS = ["veiculos", "carros", "motos", "utilitarios", "pesados", "sucatas", "todas"] as const;
@@ -27,7 +27,7 @@ export const CATEGORY_GROUPS = {
   pesados: ["Pesados"],
   sucatas: ["Sucatas"],
   todas: null,
-} as const satisfies Record<CategoryKey, readonly string[] | null>;
+} as const satisfies Record<CategoryKey, readonly ListingCategory[] | null>;
 export const DEFAULT_CATEGORY: CategoryKey = "veiculos";
 
 /**

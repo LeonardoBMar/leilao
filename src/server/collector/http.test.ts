@@ -18,9 +18,14 @@ function fakeClock() {
 }
 
 function fakeFetch(responses: (Response | Error)[]) {
-  const calls: { url: string; userAgent: string | null }[] = [];
+  const calls: { url: string; userAgent: string | null; method: string | undefined; body: string | null }[] = [];
   const impl: typeof fetch = (input, init) => {
-    calls.push({ url: String(input), userAgent: new Headers(init?.headers).get("user-agent") });
+    calls.push({
+      url: String(input),
+      userAgent: new Headers(init?.headers).get("user-agent"),
+      method: init?.method,
+      body: init?.body instanceof URLSearchParams ? init.body.toString() : null,
+    });
     const next = responses.shift();
     if (!next) throw new Error("sem resposta preparada");
     return next instanceof Error ? Promise.reject(next) : Promise.resolve(next);
@@ -84,5 +89,21 @@ describe("createPoliteFetcher", () => {
     });
 
     expect(await fetcher.get("https://fonte/1")).toEqual({ ok: false, status: 500, error: "HTTP 500" });
+  });
+
+  it("POST de formulário segue o mesmo ritmo e as mesmas novas tentativas", async () => {
+    const clock = fakeClock();
+    const { impl, calls } = fakeFetch([new Response("a"), new Response("", { status: 503 }), new Response("{}")]);
+    const fetcher = createPoliteFetcher({ fetchImpl: impl, sleep: clock.sleep, now: clock.now, minIntervalMs: 1_000 });
+
+    await fetcher.get("https://fonte/lista");
+    expect(await fetcher.post("https://fonte/consulta", { lotes: "1-2-", lote: "" })).toEqual({ ok: true, text: "{}" });
+    expect(calls.map(({ method, body }) => [method, body])).toEqual([
+      ["GET", null],
+      ["POST", "lotes=1-2-&lote="],
+      ["POST", "lotes=1-2-&lote="],
+    ]);
+    expect(clock.waits).toEqual([1_000, 2_000]);
+    expect(fetcher.requests).toBe(3);
   });
 });

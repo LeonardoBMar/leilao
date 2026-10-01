@@ -55,16 +55,16 @@ export type ListingPage = {
 };
 
 export type CollectorStatus = {
-  /** Resume a última execução e o agendamento: interrompida conta como falha; parada há 4 h, como atraso. */
+  /**
+   * A pior entre as últimas execuções de cada fonte ativa: interrompida conta como falha; parada há 4 h, como atraso.
+   */
   health: CollectorHealth;
-  lastRun: {
-    sourceName: string;
-    status: "running" | "succeeded" | "failed";
-    startedAt: Date;
-    finishedAt: Date | null;
-    created: number;
-    failed: number;
-  } | null;
+  /** Fim da execução mais recente, de qualquer fonte. */
+  lastFinishedAt: Date | null;
+  /** Fontes cuja última execução falhou (nome para exibir). */
+  failingSources: string[];
+  /** Anúncios com falha nas últimas execuções, somando as fontes. */
+  failedListings: number;
   /** Anúncios abertos dentro da região padrão. */
   openInRegion: number;
   regionLabel: string;

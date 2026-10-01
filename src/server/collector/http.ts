@@ -1,14 +1,15 @@
 import "server-only";
 
+import type { FetchOutcome, SourceHttp } from "@/sources/types";
+
 export const COLLECTOR_USER_AGENT = "LeilaoTracker/1.0 (+https://github.com/LeonardoBMar/leilao)";
 
-export type FetchOutcome = { ok: true; text: string } | { ok: false; status: number | null; error: string };
-
-export type PoliteFetcher = {
-  get: (url: string) => Promise<FetchOutcome>;
+export type PoliteFetcher = SourceHttp & {
   /** Requisições feitas até agora, contando novas tentativas. */
   readonly requests: number;
 };
+
+type Request = { url: string; form?: Readonly<Record<string, string>> };
 
 type Options = {
   /** Intervalo mínimo entre requisições (a mesma fonte): padrão 1 s. */
@@ -41,14 +42,16 @@ export function createPoliteFetcher({
   let lastRequestAt = Number.NEGATIVE_INFINITY;
   let requests = 0;
 
-  async function attempt(url: string): Promise<FetchOutcome & { retryAfterMs?: number; retry: boolean }> {
+  async function attempt({ url, form }: Request): Promise<FetchOutcome & { retryAfterMs?: number; retry: boolean }> {
     const wait = lastRequestAt + minIntervalMs - now();
     if (wait > 0) await sleep(wait);
     lastRequestAt = now();
     requests++;
     try {
       const response = await fetchImpl(url, {
-        headers: { "user-agent": userAgent, accept: "text/html,application/xml;q=0.9,*/*;q=0.8" },
+        method: form ? "POST" : "GET",
+        headers: { "user-agent": userAgent, accept: "text/html,application/xml,application/json;q=0.9,*/*;q=0.8" },
+        ...(form ? { body: new URLSearchParams(form) } : {}),
         redirect: "follow",
         signal: AbortSignal.timeout(timeoutMs),
       });
@@ -65,17 +68,21 @@ export function createPoliteFetcher({
     }
   }
 
+  async function send(request: Request): Promise<FetchOutcome> {
+    for (let tryNumber = 1; ; tryNumber++) {
+      const { retry, retryAfterMs, ...outcome } = await attempt(request);
+      if (outcome.ok || !retry || tryNumber >= maxAttempts) return outcome;
+      await sleep(Math.min(retryAfterMs ?? 2 ** tryNumber * 1_000, MAX_RETRY_AFTER_MS));
+    }
+  }
+
   return {
     get requests() {
       return requests;
     },
-    async get(url) {
-      for (let tryNumber = 1; ; tryNumber++) {
-        const { retry, retryAfterMs, ...outcome } = await attempt(url);
-        if (outcome.ok || !retry || tryNumber >= maxAttempts) return outcome;
-        await sleep(Math.min(retryAfterMs ?? 2 ** tryNumber * 1_000, MAX_RETRY_AFTER_MS));
-      }
-    },
+    get: (url) => send({ url }),
+    // Consulta de leitura (ex.: situação de vários lotes de uma vez): mesmas regras de ritmo e de novas tentativas.
+    post: (url, form) => send({ url, form }),
   };
 }
 

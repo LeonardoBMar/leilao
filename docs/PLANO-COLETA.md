@@ -27,6 +27,17 @@ Automatizar o fluxo **Descobrir → Filtrar → Acompanhar → Analisar → Regi
 | Desfechos (2026-09-28) | Situações vistas depois do fim: `Pago` e `AgPagamento` (vendido; aguardando pagamento), `Condicional` (lance à espera do vendedor, mesmo acima do mínimo), `CondicionalNegada` e `NaoArrematado` (não vendido). A página de lote encerrado **sem venda pode sair do ar** (HTTP 404), como aconteceu com a condicional negada e com lotes que ainda constavam como abertos | Mapeadas em `STATUS_BY_SITUACAO` com fixture de cada uma. Condicional é revisitado até o desfecho. 404 depois do fim encerra a revisita sem contar como falha (aberto vira desconhecido); `npm run db:reparse` reaplica o mapeamento a partir do dado bruto guardado |
 | Custos e valor de mercado da fonte | Ex. lote 64: valor de mercado R$ 41.247, comissão 5% (R$ 1.195), despachante R$ 50, remoção R$ 400, depósito R$ 2.350 | Entram no rascunho de "Adicionar à análise" como **sugestão rotulada com a fonte** (D-30); nunca como estimativa do sistema (D-28) |
 
+### 2.1 Segunda fonte: Pátio Estadual São Carlos (levantamento de 2026-09-30)
+
+| Item | Achado | Consequência |
+| --- | --- | --- |
+| `robots.txt` e termos | Não há `robots.txt` (a URL cai numa página de "não encontrada"). Os termos de uso não falam de robôs, mas o rodapé avisa que "cópia ou reprodução não autorizada" pode gerar penalidades, e o site bloqueia copiar e o botão direito | Uso **privado**, sem republicar: fotos por link (D-29), volume baixo (cerca de 10 requisições por execução para a descoberta, mais 2 por lote lido: a página e a consulta de situação; só lotes novos, revisitas vencidas e lotes acompanhados são lidos), coleta identificada. Aprovado pelo usuário ciente do aviso; pausa em `sources.active` |
+| Descoberta | Sem sitemap. Listas por categoria em `/lotes/?cate[]=N&pag=P` (40 por página, paginação a partir de 0; a primeira página aponta a última). Coletadas: 1 veículos e 2 motocicletas. A lista mantém lotes encerrados há semanas | Descoberta lê as listas e consulta a situação de todos de uma vez; só entram abertos e encerrados há até 3 dias |
+| Dados do lote | A página traz a ficha "Informações do bem" em texto livre (`Rótulo: valor`, que muda de leilão para leilão: "Ano Modelo" ou "Ano do Modelo", "Valor FIPE" ou "Tabela FIPE"), fotos e comissão. **Lance, situação e datas não estão na página**: vêm da consulta interna `atualizar_leiloes.php` (POST), a mesma que o site usa para atualizar a tela, que responde por vários lotes de uma vez | `fetchListing` junta a página com a consulta. Rótulos conhecidos viram campos; o resto vai para a descrição. Apelido de quem deu lance é descartado |
+| Situações | 0 em breve, 1 aberto, 2 arrematado, 3 não arrematado, 10 condicional, 20 venda direta (textos do próprio site) | 2 → vendido, 3 → não vendido, 10 → condicional; venda direta fica sem mapa (desconhecida após o fim) |
+| Local | A consulta traz "cidade, UF", às vezes vazio, às vezes cortado ("Aparecida de G..., PR") ou incoerente ("São Paulo, PR") | Vazio → pátio do leiloeiro em São Carlos; cortado → só a UF; incoerente fica sem distância (não casa com o IBGE) |
+| Página após o fim | Continua no ar por alguns dias e depois responde 200 com "Nenhum Lote Encontrado" | Tratado como página fora do ar (`gone`); a revisita 1 h após o fim grava o arremate antes disso |
+
 ## 3. Arquitetura
 
 ```text
@@ -46,7 +57,7 @@ Leilão Tracker (Vercel) ── Descobertos · Monitores · Alertas · Adicionar
 | Onde | O quê | Teste |
 | --- | --- | --- |
 | `src/domain/listings/` | Tipos do formato único, normalização (marca e modelo, cidade), chave de deduplicação, distância, casamento com monitor, estimativas. **Puro.** | Unitário, obrigatório |
-| `src/sources/<fonte>/` | Adaptador: `discover()` (URLs com `lastmod`) e `parse(html) → ListingInput`. O `parse` é puro; o acesso à rede fica isolado | Unitário com **páginas salvas** em `fixtures/`. Quando o site mudar, o teste quebra |
+| `src/sources/<fonte>/` | Adaptador: `discover(http)` (lista os anúncios) e `fetchListing(http, id) → ListingInput`. As requisições passam pela interface `SourceHttp` do coletor; a leitura das páginas é pura. Registro em `src/sources/index.ts` (D-37) | Unitário com **páginas salvas** em `fixtures/` e o contrato comum (`listingContractProblems`). Quando o site mudar, o teste quebra |
 | `src/server/collector/` | Orquestração: rede educada, gravação, execução registrada | Integração |
 | `scripts/collect.ts` | Ponto de entrada do cron | Execução a seco com fixtures no CI |
 | `src/features/listings`, `watches`, `alerts` | DAL, actions e telas | Unitário e E2E |
@@ -107,11 +118,11 @@ Cada etapa segue o fluxo da skill `leilao-padroes`:
 | 3 | **Adicionar à análise + acompanhamento automático.** Cria leilão, lote e rascunho a partir do anúncio (sem duplicar se já existir). O coletor atualiza o lance dos lotes ligados. Entregue em 30/09 (D-34): anúncio sem marca, modelo ou ano não mostra o botão; anúncio ligado é revisitado a cada execução | Um clique leva o lote ao Tracker, e o lance atual se mantém sozinho |
 | 4 | **Resultado automático** nos lotes do usuário: quando o anúncio ligado encerra, o coletor registra o resultado (desfecho, preço final, hora real) com `source = collector` e link. Desfecho ambíguo (ex.: condicional) fica como **"resultado a confirmar"**, já preenchido. Entregue em 30/09 (D-35): o formulário de "a confirmar" vem com lance, hora e link; anúncio já encerrado ao ser adicionado gera análise retrospectiva | O usuário não digita resultados; no máximo confirma |
 | 5 | **Estimativas** (§5), quando houver base. Entregue em 30/09 (D-36) com dois ajustes aprovados: comparáveis de **qualquer região** e, sem 5 comparáveis, a **proporção do valor de mercado** das vendas da mesma categoria e condição | Alerta e anúncio mostram "provável R$ X (n=12) · limite estimado R$ Y" ou "sem base suficiente" |
-| 6 | **Notificações externas** (e-mail ou push) e **segunda fonte** | Alerta chega fora do app; segunda fonte entra só com um adaptador novo |
+| 6 | **Segunda fonte e coletor para várias fontes.** Entregue em 30/09 (D-37): Pátio Estadual São Carlos (§2.1), fontes em paralelo e isoladas, passos comuns uma vez por execução, contrato comum dos anúncios e categoria no vocabulário comum. Notificações externas (e-mail ou push) **saíram do escopo** por decisão do usuário: alertas só no app | Segunda fonte entra só com um adaptador novo e a entrada em `src/sources/index.ts`; falha de uma fonte aparece no app com o nome dela |
 
 ## 7. Decisões
 
-Aprovadas e registradas em `docs/ARCHITECTURE.md` §15: **D-25** catálogo global · **D-26** coletor no GitHub Actions com `tsx` · **D-27** adaptador por estado da página + JSON-LD · **D-28** estimativas só com dados do sistema · **D-29** fotos por URL · **D-30** dados da fonte como sugestão rotulada · **D-32** alertas criados pelo coletor · **D-34** lote ligado ao anúncio e lance automático · **D-35** resultado automático · **D-36** estimativas (região nacional e proporção do valor de mercado).
+Aprovadas e registradas em `docs/ARCHITECTURE.md` §15: **D-25** catálogo global · **D-26** coletor no GitHub Actions com `tsx` · **D-27** adaptador por estado da página + JSON-LD · **D-28** estimativas só com dados do sistema · **D-29** fotos por URL · **D-30** dados da fonte como sugestão rotulada · **D-32** alertas criados pelo coletor · **D-34** lote ligado ao anúncio e lance automático · **D-35** resultado automático · **D-36** estimativas (região nacional e proporção do valor de mercado) · **D-37** várias fontes e segunda fonte.
 
 ## 8. Riscos
 
@@ -121,5 +132,5 @@ Aprovadas e registradas em `docs/ARCHITECTURE.md` §15: **D-25** catálogo globa
 | Página do lote sair do ar depois de um tempo | Revisita logo após o fim (`next_check_at` = fim + 1 h, com novas tentativas); o que não for obtido fica "desfecho desconhecido" e fora das estimativas |
 | Horário do cron no GitHub não é exato (atrasos de minutos) | Observação extra nas horas finais; se não bastar, servidor pequeno (D-26 prevê a migração) |
 | Site muda o formato | Validação Zod aponta a falha, `collector_runs` e o cartão no dashboard mostram, e o teste com fixture reproduz |
-| Volume cresce com mais fontes | Coleta incremental por `lastmod`; filtro por raio antes de baixar detalhes quando a fonte permitir |
+| Volume cresce com mais fontes | Fontes em paralelo, cada uma com o seu ritmo e limite de anúncios por execução (D-37); coleta incremental (sitemap com `lastmod` ou lista + situação em lote); o job tem 20 min |
 | Termos de uso mudam | Revisar a cada fonte nova; desligar a fonte em `sources.active` |

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { COLLECTION_LATE_AFTER_MS, collectorHealth, RUN_INTERRUPTED_AFTER_MS } from "./health";
+import { COLLECTION_LATE_AFTER_MS, collectorHealth, overallHealth, RUN_INTERRUPTED_AFTER_MS } from "./health";
 
 const now = new Date("2026-09-27T12:00:00Z");
 const ago = (ms: number) => new Date(now.getTime() - ms);
@@ -25,5 +25,14 @@ describe("collectorHealth", () => {
 
   it("falhou: falha", () => {
     expect(collectorHealth({ status: "failed", startedAt: ago(0), finishedAt: ago(0) }, now)).toBe("failed");
+  });
+});
+
+describe("overallHealth", () => {
+  it("vale a pior fonte; sem execução nenhuma, nunca coletou", () => {
+    expect(overallHealth(["ok", "late", "running"])).toBe("late");
+    expect(overallHealth(["ok", "failed", "late"])).toBe("failed");
+    expect(overallHealth(["ok", "never"])).toBe("ok");
+    expect(overallHealth([])).toBe("never");
   });
 });

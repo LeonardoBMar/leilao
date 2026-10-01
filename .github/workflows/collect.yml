@@ -1,4 +1,4 @@
-# Coletor de anúncios (docs/PLANO-COLETA.md, D-26). Grava só o catálogo global no banco.
+# Coletor de anúncios (docs/PLANO-COLETA.md, D-26, D-37): todas as fontes de src/sources/index.ts, em paralelo.
 # Segredo necessário em Settings → Secrets and variables → Actions: DATABASE_URL (pooler, porta 6543).
 name: Coleta
 
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       max_visits:
-        description: "Máximo de páginas de anúncio nesta execução"
+        description: "Máximo de anúncios lidos por fonte nesta execução"
         default: "400"
         required: false
 
