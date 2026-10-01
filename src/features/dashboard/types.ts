@@ -1,12 +1,13 @@
-/** Contagens dos cards do dashboard (SPEC §5 `/dashboard`). */
-export type DashboardSummary = {
+/** Contagens do resumo do dashboard (SPEC §5 `/dashboard`). */
+export type DashboardCounts = {
   activeAuctions: number;
   activeLots: number;
   followedLotsWithoutResult: number;
   analyzedLots: number;
-  /** Indicador inicial do SPEC §10: comparáveis com análise anterior e quantos ficaram dentro do limite. */
-  indicator: { comparable: number; withinLimit: number };
 };
+
+/** Indicador inicial do SPEC §10: comparáveis com análise anterior e quantos ficaram dentro do limite. */
+export type LimitIndicator = { comparable: number; withinLimit: number };
 
 /** Atalhos para concluir registros (SPEC §5): rascunhos abertos e lotes que aguardam resultado. */
 export type PendingItems = {

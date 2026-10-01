@@ -1,6 +1,6 @@
 # Leilão Tracker — Design System
 
-> Versão: 2.0 • Data: 01/10/2026 • Status: fonte de verdade visual. Direção A, "refinado e silencioso".
+> Versão: 2.1 • Data: 01/10/2026 • Status: fonte de verdade visual. Direção A, "refinado e silencioso".
 >
 > Este documento complementa o [`SPEC.md`](./SPEC.md). O `SPEC.md` define produto, domínio e comportamento; este arquivo define apresentação, composição e interação.
 
@@ -289,10 +289,11 @@ O design é mobile first. Breakpoint indica mudança de composição, não uma c
 
 Ordem obrigatória:
 
-1. Breadcrumb opcional.
-2. Linha com título e ação principal.
-3. Descrição ou metadado curto, quando necessário.
-4. Tabs ou filtros, quando pertencem à página inteira.
+1. Breadcrumb opcional (`Breadcrumbs`, `BreadcrumbLink`, `BreadcrumbPage` em `src/components/layout/breadcrumbs.tsx`).
+2. Linha de contexto opcional em mono (`eyebrow`): "LOTE 0152 · 02/10/2030, 10:00".
+3. Título (`heading-1`) com as ações alinhadas à base, à direita.
+4. Descrição curta em `muted` e, abaixo, a situação (`meta`): badges e data de fixação.
+5. Tabs ou filtros, quando pertencem à página inteira.
 
 No mobile, ações secundárias podem ir para menu. A ação principal continua visível e pode ocupar a largura inteira.
 
@@ -376,6 +377,8 @@ Variantes:
 
 Cards não devem conter cards idênticos aninhados. Para subdivisões internas, use `surface-subtle`, divisores ou grupos sem borda.
 
+**Section (direção A).** Na maior parte das telas o conteúdo não vai em caixa: `Section` + `SectionHeader` + `SectionTitle` (`heading-3`, 15/22) e o conteúdo separado por linhas finas. `DataList` + `DataRow` formam linhas de rótulo e valor com divisor `border` (`emphasis` para totais, com `border-strong`). Card fica para o que precisa de destaque: o painel rebaixado (Summary) com o número que decide, pendências e indicadores.
+
 ### 5.5 Badge / StatusBadge
 
 - Pílula: altura mínima de 22 px, padding horizontal de 8 px, `radius-full`, texto `12/16` peso 500, só o fundo suave, sem borda.
@@ -424,7 +427,7 @@ Cards não devem conter cards idênticos aninhados. Para subdivisões internas, 
 
 ### 5.11 Table / DataTable
 
-- Cabeçalho com `surface-subtle`, texto `12/16` semibold e altura mínima de 40 px.
+- Cabeçalho sem fundo, texto `caption` peso 500 em `muted`, divisor `border` e altura mínima de 40 px. A primeira e a última coluna encostam nas bordas da seção (sem padding externo), alinhadas ao título.
 - Linha padrão com altura mínima de 48 px; até 56 px quando há descrição secundária.
 - Bordas horizontais; evitar grade completa entre todas as células.
 - Hover suave apenas quando a linha é interativa.
@@ -457,6 +460,8 @@ As listas de leilões e lotes devem preferir linhas empilhadas no mobile. Histó
 - Respeitar `prefers-reduced-motion`.
 
 ### 5.14 EmptyState
+
+Variante `inline` (dentro de uma seção): faixa com borda `border`, título e descrição à esquerda e a ação à direita, sem ícone. Use quando a ausência é de um bloco da página (sem análise, sem resultado, sem fotos); a variante padrão fica para a página ou a lista inteira vazia.
 
 Composição:
 
@@ -574,8 +579,10 @@ Ordem inicial:
 5. Monitores (buscas salvas que geram alertas).
 6. Leilões.
 7. Lotes.
-8. Divisor flexível.
-9. Conta/sair.
+8. Grupo **Acompanhando**: até 5 lotes acompanhados sem resultado, com um ponto pela situação do lance (`success` abaixo, `warning` no limite, `error` acima, `muted-subtle` sem comparação; o texto da situação vai para leitores de tela) e o número do lote em mono. Some quando não há nenhum.
+9. Espaço flexível.
+10. Cartão **Próximo leilão** (véu de 3% de tinta, `radius-lg`): data e hora, nome e quantidade de lotes; leva ao leilão. Some sem leilão próximo.
+11. Conta: avatar neutro, e-mail e botão só com ícone "Sair".
 
 - A sidebar fica sobre o papel (`background`), sem borda; um divisor `border-strong` separa a conta.
 - Item: altura mínima de 40 px, `radius-md`, 1 px entre itens, ícone 16 px em `muted-subtle`, texto `body` peso 500 em `foreground-secondary`.
@@ -586,7 +593,7 @@ Ordem inicial:
 ### Navegação mobile
 
 - Topbar de 56 px com marca/contexto e botão de menu.
-- Menu abre drawer lateral com os mesmos destinos e ordem da sidebar.
+- Menu abre drawer lateral com os mesmos destinos, extras e ordem da sidebar; qualquer link clicado fecha o drawer.
 - Não criar navegação inferior enquanto existirem poucos destinos e ações contextuais importantes.
 
 ### Breadcrumbs
@@ -720,13 +727,14 @@ Easing padrão: `cubic-bezier(0.2, 0, 0, 1)`. Saída pode usar `cubic-bezier(0.4
 
 ### 15.1 Dashboard
 
-1. PageHeader com título “Dashboard” e ação “Novo leilão”.
-2. Grid de quatro MetricCards.
-3. Seção “Lotes acompanhados” como conteúdo operacional principal.
-4. Seção “Próximos leilões”.
-5. EmptyState em cada seção quando necessário.
+1. PageHeader com título “Dashboard”, as contagens numa linha ("1 leilão · 3 lotes · 2 acompanhados · 1 com análise fixada") e a ação “Novo leilão”.
+2. Alertas não lidos, quando houver.
+3. Duas colunas no desktop amplo (1,7 : 1):
+   - à esquerda, “Lotes acompanhados” em linhas (número do lote em mono, veículo, lance atual "de" limite e a barra de posição com a diferença em texto) e “Próximos leilões” agrupados por dia (dia grande, mês e dia da semana à esquerda; hora, nome e lotes à direita);
+   - à direita, “Registros pendentes” no painel rebaixado, “Suas decisões antes do resultado” (o indicador, com o denominador) e a linha da coleta com “Ver descobertos”.
+4. EmptyState `inline` em cada seção quando necessário.
 
-Métricas usam o mesmo peso visual. Não destacar “economia potencial” ou “lucro” no MVP, pois não são resultados garantidos.
+Não destacar “economia potencial” ou “lucro” no MVP, pois não são resultados garantidos.
 
 ### 15.2 Listagem
 
@@ -746,12 +754,14 @@ Filtros ativos permanecem visíveis ou resumidos. O estado vazio por filtro ofer
 4. Conteúdo dividido em seções/cards.
 5. Histórico ou itens relacionados por último.
 
-No lote, valores observados e última análise fixada aparecem antes de notas extensas.
+No lote (direção A): logo abaixo do cabeçalho, o painel rebaixado "Lance e limite" com o número que decide (folga até o limite em `display`, `success`; ou "acima do seu limite em" em `error`), lance atual e meu limite em `heading-2`, a barra do lance até o limite e o formulário do novo lance. Depois, duas colunas (1,75 : 1): análise (tabela de versões) e resultado à esquerda; veículo (`dl` em duas colunas), fotos, "Acompanhar lote" e observações à direita, separados por linhas finas.
+
+No leilão: dados do evento numa faixa rebaixada (data, local, edital, plataforma) e a lista de lotes em largura total.
 
 ### 15.4 Análise financeira
 
-- Desktop amplo: formulário à esquerda e AnalysisSummary à direita.
-- O resumo contém valor de mercado, custos, reserva, margem desejada, lance máximo e situação do lance simulado.
+- Desktop amplo: premissas (formulário ou linhas em leitura) à esquerda e AnalysisSummary à direita, numa coluna de 460 px.
+- O resumo é o painel rebaixado: lance máximo em `display`; a composição do valor de venda numa barra (lance máximo em tinta, custos, comissão, reserva e margem em tons até `success`), repetida em texto como conta (valor de venda − partes = lance máximo); e a simulação de lance com custo total, margem estimada e a situação numa faixa branca ("R$ X de folga").
 - “Lance máximo” é a maior saída visual, mas permanece acompanhado de rótulo e premissas.
 - Ações ficam ao final do formulário; o resumo não contém ação duplicada.
 - Análise fixada usa modo leitura, badge “Fixada”, data/hora e ação “Criar nova versão”.

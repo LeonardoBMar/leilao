@@ -14,6 +14,7 @@ export * from "./input";
 export * from "./money";
 export * from "./pagination";
 export * from "./radio-group";
+export * from "./section";
 export * from "./select";
 export * from "./skeleton";
 export * from "./spinner";

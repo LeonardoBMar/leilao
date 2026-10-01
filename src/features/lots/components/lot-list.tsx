@@ -22,6 +22,7 @@ import { listLots } from "../queries";
 import { type LotFilters, lotFiltersSchema } from "../schemas";
 import type { LotListItem } from "../types";
 import { LimitBadge } from "./limit-badge";
+import { LimitProgress } from "./limit-progress";
 import { LotFilters as LotFiltersBar, type LotFilterValues } from "./lot-filters";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -108,81 +109,87 @@ async function LotList({
   return (
     <section aria-label="Lotes" className="grid gap-4">
       {/* Mobile: linha empilhada (DESIGN.md §19.5). */}
-      <ul className="grid gap-3 md:hidden">
+      <ul className="border-b border-border md:hidden">
         {result.items.map((lot) => (
-          <li key={lot.id} className="rounded-lg border border-border bg-surface p-4">
-            <div className="flex items-start justify-between gap-3">
-              <Link href={`/lotes/${lot.id}`} className="min-w-0 text-body font-semibold text-accent hover:underline">
+          <li key={lot.id} className="grid gap-3 border-t border-border py-4">
+            <div className="min-w-0">
+              <Link href={`/lotes/${lot.id}`} className="text-body font-semibold text-foreground hover:underline">
                 {vehicleTitle(lot)}
               </Link>
-              <StateBadges lot={lot} />
+              <p className="text-caption text-muted">
+                <span className="font-mono">Lote {lot.lotNumber}</span>
+                {showAuction ? ` · ${lot.auction.name}` : null} · {formatDate(lot.auction.startsAt)}
+              </p>
             </div>
-            <p className="mt-1 text-caption text-muted">
-              Lote {lot.lotNumber}
-              {showAuction ? ` · ${lot.auction.name}` : null}
-            </p>
-            <dl className="mt-3 grid gap-2 text-caption">
-              <div className="flex justify-between gap-4">
-                <dt className="text-muted">Lance atual</dt>
+            <dl className="grid grid-cols-2 gap-3 text-body">
+              <div>
+                <dt className="text-caption text-muted">Lance atual</dt>
                 <dd>
                   <Money value={lot.currentBid} />
                 </dd>
               </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-muted">Meu limite</dt>
+              <div>
+                <dt className="text-caption text-muted">Meu limite</dt>
                 <dd>
                   <Money value={lot.limit?.maxBid ?? null} />
                 </dd>
               </div>
             </dl>
-            <div className="mt-3">
-              <LimitBadge limit={lot.limit} bid={lot.currentBid} />
-            </div>
+            <LimitProgress limit={lot.limit} bid={lot.currentBid} />
+            <StateBadges lot={lot} />
           </li>
         ))}
       </ul>
 
       {/* Tablet e desktop: tabela. */}
-      <div className="hidden overflow-x-auto rounded-lg border border-border bg-surface md:block">
-        <Table>
+      <div className="hidden md:block">
+        <Table className="min-w-200">
           <TableHeader>
             <TableRow>
-              <TableHead>Lote</TableHead>
-              <TableHead>Veículo</TableHead>
-              {showAuction ? <TableHead>Leilão</TableHead> : null}
+              <TableHead className="w-18">Lote</TableHead>
+              <TableHead>{showAuction ? "Veículo e leilão" : "Veículo"}</TableHead>
               <TableHead className="text-right">Lance atual</TableHead>
               <TableHead className="text-right">Meu limite</TableHead>
+              <TableHead className="w-56 pl-6">Posição</TableHead>
               <TableHead>Situação</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {result.items.map((lot) => (
               <TableRow key={lot.id}>
-                <TableCell className="font-mono whitespace-nowrap">{lot.lotNumber}</TableCell>
-                <TableCell>
-                  <Link href={`/lotes/${lot.id}`} className="font-semibold text-accent hover:underline">
+                <TableCell className="font-mono text-label font-normal whitespace-nowrap text-foreground-secondary">
+                  {lot.lotNumber}
+                </TableCell>
+                <TableCell className="py-4">
+                  <Link href={`/lotes/${lot.id}`} className="font-semibold text-foreground hover:underline">
                     {vehicleTitle(lot)}
                   </Link>
-                  <div className="mt-1">
-                    <StateBadges lot={lot} />
-                  </div>
+                  <p className="mt-0.5 text-caption text-muted">
+                    {showAuction ? (
+                      <>
+                        <Link href={`/leiloes/${lot.auction.id}`} className="hover:text-foreground hover:underline">
+                          {lot.auction.name}
+                        </Link>
+                        {" · "}
+                      </>
+                    ) : null}
+                    {formatDate(lot.auction.startsAt)}
+                  </p>
                 </TableCell>
-                {showAuction ? (
-                  <TableCell>
-                    <Link href={`/leiloes/${lot.auction.id}`} className="hover:underline">
-                      {lot.auction.name}
-                    </Link>
-                    <p className="text-caption text-muted">{formatDate(lot.auction.startsAt)}</p>
-                  </TableCell>
-                ) : null}
                 <TableCell className="text-right">
                   <Money value={lot.currentBid} />
                 </TableCell>
                 <TableCell className="text-right">
                   <Money value={lot.limit?.maxBid ?? null} />
                 </TableCell>
+                <TableCell className="pl-6">
+                  <LimitProgress limit={lot.limit} bid={lot.currentBid} />
+                </TableCell>
                 <TableCell>
-                  <LimitBadge limit={lot.limit} bid={lot.currentBid} />
+                  <div className="grid justify-items-start gap-1">
+                    <LimitBadge limit={lot.limit} bid={lot.currentBid} />
+                    <StateBadges lot={lot} />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -208,8 +215,8 @@ function vehicleTitle(lot: LotListItem) {
 function StateBadges({ lot }: { lot: LotListItem }) {
   const isArchived = lot.archivedAt !== null || lot.auction.archivedAt !== null;
   return (
-    <span className="flex flex-wrap gap-1">
-      {lot.isFollowed ? <Badge variant="primary">Acompanhando</Badge> : null}
+    <span className="flex flex-wrap gap-1 empty:hidden">
+      {lot.isFollowed ? <Badge>Acompanhando</Badge> : null}
       {lot.hasResult ? <Badge>Com resultado</Badge> : null}
       {isArchived ? <Badge variant="outline">Arquivado</Badge> : null}
     </span>

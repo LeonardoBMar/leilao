@@ -129,7 +129,7 @@ export function AnalysisEditor({ analysis }: { analysis: AnalysisDetail }) {
   );
 
   return (
-    <div className="grid gap-6 xl:grid-cols-12">
+    <div className="grid items-start gap-9 xl:grid-cols-[minmax(0,1fr)_28.75rem] xl:gap-14">
       <form
         key={formKey}
         id={formId}
@@ -137,7 +137,7 @@ export function AnalysisEditor({ analysis }: { analysis: AnalysisDetail }) {
         action={formAction}
         onInput={() => recompute()}
         noValidate
-        className="grid content-start gap-8 xl:col-span-7"
+        className="grid content-start gap-8"
       >
         {state.status === "error" ? (
           <Alert variant={state.fieldErrors ? "warning" : "error"}>
@@ -357,9 +357,7 @@ export function AnalysisEditor({ analysis }: { analysis: AnalysisDetail }) {
         </div>
       </form>
 
-      <div className="xl:col-span-5">
-        <AnalysisSummary model={liveSummary(inputs)} currentBid={analysis.lot.currentBid} />
-      </div>
+      <AnalysisSummary model={liveSummary(inputs)} currentBid={analysis.lot.currentBid} />
     </div>
   );
 }

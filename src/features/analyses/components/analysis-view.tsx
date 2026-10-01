@@ -1,9 +1,9 @@
 import { FilePen, GitBranchPlus } from "lucide-react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BreadcrumbLink, BreadcrumbPage, Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { PageHeader } from "@/components/layout/page-header";
-import { Alert, AlertDescription, Badge, ButtonLink, Skeleton } from "@/components/ui";
+import { Alert, AlertDescription, Badge, ButtonLink, Section, SectionTitle, Skeleton } from "@/components/ui";
 import { FORMULA_VERSION } from "@/domain/finance/calculator";
 import { formatDateTime } from "@/lib/format";
 
@@ -26,26 +26,30 @@ export async function AnalysisView({ params }: { params: Promise<{ id: string }>
   const { lot } = analysis;
 
   return (
-    <div className="grid gap-6">
-      <nav aria-label="Trilha" className="text-caption text-muted">
-        <Link href={`/leiloes/${lot.auction.id}`} className="hover:text-foreground hover:underline">
-          {lot.auction.name}
-        </Link>
-        <span aria-hidden="true"> / </span>
-        <Link href={`/lotes/${lot.id}`} className="hover:text-foreground hover:underline">
-          Lote {lot.lotNumber}
-        </Link>
-        <span aria-hidden="true"> / </span>
-        <span className="text-foreground">Análise v{analysis.version}</span>
-      </nav>
+    <div className="grid gap-7">
+      <Breadcrumbs>
+        <BreadcrumbLink href={`/leiloes/${lot.auction.id}`}>{lot.auction.name}</BreadcrumbLink>
+        <BreadcrumbLink href={`/lotes/${lot.id}`}>Lote {lot.lotNumber}</BreadcrumbLink>
+        <BreadcrumbPage>Análise v{analysis.version}</BreadcrumbPage>
+      </Breadcrumbs>
 
       <PageHeader
         eyebrow={`Lote ${lot.lotNumber} · ${lot.title}`}
-        title={`Análise financeira v${analysis.version}`}
-        description={
-          isFixed && analysis.fixedAt
-            ? `Fixada em ${formatDateTime(analysis.fixedAt)} · fórmula v${analysis.outputs?.formulaVersion ?? "?"}`
-            : `Rascunho atualizado em ${formatDateTime(analysis.updatedAt)}`
+        title={
+          <>
+            Análise financeira <span className="font-mono font-medium text-muted">v{analysis.version}</span>
+          </>
+        }
+        meta={
+          <>
+            {isFixed ? <Badge>Fixada</Badge> : <Badge variant="warning">Rascunho</Badge>}
+            {analysis.references.knownResultAtCreation ? <Badge variant="warning">Retrospectiva</Badge> : null}
+            <span className="ml-1">
+              {isFixed && analysis.fixedAt
+                ? `Fixada em ${formatDateTime(analysis.fixedAt)} · fórmula v${analysis.outputs?.formulaVersion ?? "?"} · não pode ser editada`
+                : `Rascunho atualizado em ${formatDateTime(analysis.updatedAt)}`}
+            </span>
+          </>
         }
         actions={
           isFixed ? (
@@ -55,7 +59,7 @@ export async function AnalysisView({ params }: { params: Promise<{ id: string }>
                 Continuar rascunho
               </ButtonLink>
             ) : (
-              <CreateAnalysisButton lotId={lot.id} sourceId={analysis.id}>
+              <CreateAnalysisButton lotId={lot.id} sourceId={analysis.id} variant="secondary">
                 <GitBranchPlus aria-hidden="true" />
                 Criar nova versão
               </CreateAnalysisButton>
@@ -63,11 +67,6 @@ export async function AnalysisView({ params }: { params: Promise<{ id: string }>
           ) : undefined
         }
       />
-
-      <div className="flex flex-wrap gap-2">
-        {isFixed ? <Badge variant="success">Fixada</Badge> : <Badge>Rascunho</Badge>}
-        {analysis.references.knownResultAtCreation ? <Badge variant="warning">Retrospectiva</Badge> : null}
-      </div>
 
       {analysis.references.knownResultAtCreation ? (
         <Alert variant="warning">
@@ -89,24 +88,22 @@ export async function AnalysisView({ params }: { params: Promise<{ id: string }>
 
       {isFixed ? <AnalysisReadonly analysis={analysis} /> : <AnalysisEditor analysis={analysis} />}
 
-      <section aria-labelledby="analysis-history" className="grid gap-4">
-        <h2 id="analysis-history" className="text-heading-2 text-foreground">
-          Histórico de versões
-        </h2>
+      <Section aria-labelledby="analysis-history" className="border-t border-border pt-7">
+        <SectionTitle id="analysis-history">Histórico de versões</SectionTitle>
         <AnalysisHistory versions={versions} currentId={analysis.id} />
-      </section>
+      </Section>
     </div>
   );
 }
 
 export function AnalysisViewSkeleton() {
   return (
-    <div className="grid gap-6" aria-hidden="true">
+    <div className="grid gap-7" aria-hidden="true">
       <Skeleton className="h-5 w-72" />
       <Skeleton className="h-20" />
-      <div className="grid gap-6 xl:grid-cols-12">
-        <Skeleton className="h-150 xl:col-span-7" />
-        <Skeleton className="h-96 xl:col-span-5" />
+      <div className="grid gap-9 xl:grid-cols-[minmax(0,1fr)_28.75rem] xl:gap-14">
+        <Skeleton className="h-150" />
+        <Skeleton className="h-96" />
       </div>
     </div>
   );

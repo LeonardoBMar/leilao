@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, ImageOff, ImagePlus, Star, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, ImagePlus, Star, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { type ChangeEvent, useRef, useState, useTransition } from "react";
 
@@ -89,9 +89,9 @@ export function LotGallery({ lotId, images }: LotGalleryProps) {
   return (
     <div className="grid gap-4">
       {images.length === 0 ? (
-        <EmptyState icon={ImageOff} title="Sem fotos" description="Adicione fotos do edital ou da vistoria." />
+        <EmptyState variant="inline" title="Sem fotos" description="Adicione fotos do edital ou da vistoria." />
       ) : (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3" aria-label="Fotos do lote">
+        <ul className="grid grid-cols-2 gap-3" aria-label="Fotos do lote">
           {images.map((image, index) => (
             <GalleryItem key={image.id} image={image} isFirst={index === 0} isLast={index === images.length - 1} />
           ))}
@@ -120,7 +120,7 @@ export function LotGallery({ lotId, images }: LotGalleryProps) {
           Adicionar fotos
         </Button>
         <p className="text-caption text-muted" aria-live="polite">
-          {progress ?? `${images.length} de ${MAX_IMAGES_PER_LOT} · JPEG, PNG ou WebP até 5 MB`}
+          {progress ?? "JPEG, PNG ou WebP até 5 MB."}
         </p>
       </div>
     </div>
@@ -164,11 +164,7 @@ function GalleryItem({ image, isFirst, isLast }: { image: LotImageItem; isFirst:
             Não foi possível carregar a foto
           </div>
         )}
-        {image.isCover ? (
-          <Badge variant="primary" className="absolute top-2 left-2">
-            Capa
-          </Badge>
-        ) : null}
+        {image.isCover ? <Badge className="absolute top-2 left-2 bg-surface shadow-sm">Capa</Badge> : null}
       </div>
       <div className="flex items-center justify-between gap-1">
         <div className="flex gap-1">

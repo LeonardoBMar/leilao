@@ -3,10 +3,15 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { PageHeader } from "@/components/layout/page-header";
-import { ButtonLink } from "@/components/ui";
+import { ButtonLink, Section, SectionHeader, SectionTitle } from "@/components/ui";
 import { RecentAlerts } from "@/features/alerts/components/recent-alerts";
 import { UpcomingAuctions, UpcomingAuctionsSkeleton } from "@/features/auctions/components/upcoming-auctions";
-import { DashboardSummary, DashboardSummarySkeleton } from "@/features/dashboard/components/dashboard-summary";
+import {
+  DashboardCounts,
+  DashboardCountsSkeleton,
+  DecisionIndicator,
+  DecisionIndicatorSkeleton,
+} from "@/features/dashboard/components/dashboard-summary";
 import { PendingItems } from "@/features/dashboard/components/pending-items";
 import { CollectorStatusLine, CollectorStatusLineSkeleton } from "@/features/listings/components/collector-status";
 import { FollowedLots, FollowedLotsSkeleton } from "@/features/lots/components/followed-lots";
@@ -16,10 +21,14 @@ export const metadata: Metadata = { title: "Dashboard · Leilão Tracker" };
 /** Visão geral (SPEC §5, DESIGN.md §15.1). Cada seção carrega de forma independente. */
 export default function DashboardPage() {
   return (
-    <div className="grid gap-10 lg:gap-12">
+    <div className="grid gap-9">
       <PageHeader
         title="Dashboard"
-        description="Visão geral dos leilões e lotes acompanhados."
+        description={
+          <Suspense fallback={<DashboardCountsSkeleton />}>
+            <DashboardCounts />
+          </Suspense>
+        }
         actions={
           <ButtonLink href="/leiloes/novo">
             <Plus aria-hidden="true" />
@@ -28,50 +37,52 @@ export default function DashboardPage() {
         }
       />
 
-      <Suspense fallback={<DashboardSummarySkeleton />}>
-        <DashboardSummary />
-      </Suspense>
-
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Suspense fallback={<CollectorStatusLineSkeleton />}>
-          <CollectorStatusLine />
-        </Suspense>
-        <ButtonLink href="/descobertos" variant="secondary" size="sm">
-          Ver descobertos
-        </ButtonLink>
-      </div>
-
       {/* Sem alertas não lidos, a seção não aparece: fallback vazio evita um bloco que some depois. */}
       <Suspense fallback={null}>
         <RecentAlerts />
       </Suspense>
 
-      <Suspense fallback={null}>
-        <PendingItems />
-      </Suspense>
+      <div className="grid gap-10 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] xl:gap-14">
+        <div className="grid content-start gap-10">
+          <Section aria-labelledby="followed-lots" className="gap-2">
+            <SectionHeader>
+              <SectionTitle id="followed-lots">Lotes acompanhados</SectionTitle>
+              <ButtonLink href="/lotes?acompanhados=1&resultado=sem" variant="link" className="h-auto px-0">
+                Ver todos
+              </ButtonLink>
+            </SectionHeader>
+            <Suspense fallback={<FollowedLotsSkeleton />}>
+              <FollowedLots />
+            </Suspense>
+          </Section>
 
-      <Section id="followed-lots" title="Lotes acompanhados">
-        <Suspense fallback={<FollowedLotsSkeleton />}>
-          <FollowedLots />
-        </Suspense>
-      </Section>
+          <Section aria-labelledby="upcoming-auctions" className="gap-2">
+            <SectionTitle id="upcoming-auctions">Próximos leilões</SectionTitle>
+            <Suspense fallback={<UpcomingAuctionsSkeleton />}>
+              <UpcomingAuctions />
+            </Suspense>
+          </Section>
+        </div>
 
-      <Section id="upcoming-auctions" title="Próximos leilões">
-        <Suspense fallback={<UpcomingAuctionsSkeleton />}>
-          <UpcomingAuctions />
-        </Suspense>
-      </Section>
+        <aside className="grid content-start gap-5" aria-label="Pendências e indicadores">
+          <Suspense fallback={null}>
+            <PendingItems />
+          </Suspense>
+
+          <Suspense fallback={<DecisionIndicatorSkeleton />}>
+            <DecisionIndicator />
+          </Suspense>
+
+          <section aria-label="Coleta automática" className="grid gap-3 border-t border-border pt-5">
+            <Suspense fallback={<CollectorStatusLineSkeleton />}>
+              <CollectorStatusLine />
+            </Suspense>
+            <ButtonLink href="/descobertos" variant="secondary" className="w-fit">
+              Ver descobertos
+            </ButtonLink>
+          </section>
+        </aside>
+      </div>
     </div>
-  );
-}
-
-function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
-  return (
-    <section aria-labelledby={id} className="grid gap-4">
-      <h2 id={id} className="text-heading-2 text-foreground">
-        {title}
-      </h2>
-      {children}
-    </section>
   );
 }

@@ -1,4 +1,4 @@
-import { LogOut } from "lucide-react";
+import { LogOut, UserRound } from "lucide-react";
 
 import { Badge, Button } from "@/components/ui";
 import { requireUser } from "@/server/auth";
@@ -12,19 +12,26 @@ export async function UserMenu() {
   return (
     <div className="grid gap-2">
       {user.devBypass ? (
-        <Badge variant="warning" className="mx-3 justify-self-start">
+        <Badge variant="warning" className="mx-2 justify-self-start">
           Modo dev: login desligado
         </Badge>
       ) : null}
-      <p className="truncate px-3 text-caption text-muted" title={user.email ?? undefined}>
-        {user.email ?? "Conta"}
-      </p>
-      <form action={logoutAction}>
-        <Button type="submit" variant="ghost" className="w-full justify-start">
-          <LogOut aria-hidden="true" />
-          Sair
-        </Button>
-      </form>
+      <div className="flex items-center gap-2.5 pl-2">
+        <span
+          aria-hidden="true"
+          className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary-subtle text-foreground-secondary"
+        >
+          <UserRound className="size-4" />
+        </span>
+        <p className="min-w-0 flex-1 truncate text-label text-foreground-secondary" title={user.email ?? undefined}>
+          {user.email ?? "Sua conta"}
+        </p>
+        <form action={logoutAction}>
+          <Button type="submit" variant="ghost" size="icon" aria-label="Sair" className="text-muted">
+            <LogOut aria-hidden="true" />
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }

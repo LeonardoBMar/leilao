@@ -1,69 +1,54 @@
-import { Target } from "lucide-react";
+import { cardVariants, Skeleton } from "@/components/ui";
+import { cn } from "@/lib/utils";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, Skeleton } from "@/components/ui";
+import { getDashboardCounts, getLimitIndicator } from "../queries";
 
-import { getDashboardSummary } from "../queries";
-import type { DashboardSummary as Summary } from "../types";
+const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
 
-const METRICS = [
-  { key: "activeAuctions", label: "Leilões cadastrados", hint: "Não arquivados" },
-  { key: "activeLots", label: "Lotes cadastrados", hint: "Não arquivados" },
-  { key: "followedLotsWithoutResult", label: "Lotes acompanhados", hint: "Ainda sem resultado" },
-  { key: "analyzedLots", label: "Lotes analisados", hint: "Com análise fixada" },
-] as const satisfies readonly { key: Exclude<keyof Summary, "indicator">; label: string; hint: string }[];
-
-const GRID = "grid gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-4";
-
-export async function DashboardSummary() {
-  const summary = await getDashboardSummary();
-
-  return (
-    <div className="grid gap-6">
-      <section aria-label="Resumo" className={GRID}>
-        {METRICS.map(({ key, label, hint }) => (
-          <Card key={key}>
-            <CardHeader>
-              <CardDescription>{label}</CardDescription>
-              <CardTitle className="text-display tabular-nums">{summary[key]}</CardTitle>
-            </CardHeader>
-            <CardContent className="text-caption text-muted">{hint}</CardContent>
-          </Card>
-        ))}
-      </section>
-      <LimitIndicator indicator={summary.indicator} />
-    </div>
-  );
+/** Resumo em uma linha abaixo do título (DESIGN.md §15.1): leilões, lotes, acompanhados e analisados. */
+export async function DashboardCounts() {
+  const counts = await getDashboardCounts();
+  const parts = [
+    plural(counts.activeAuctions, "leilão", "leilões"),
+    plural(counts.activeLots, "lote", "lotes"),
+    plural(counts.followedLotsWithoutResult, "acompanhado", "acompanhados"),
+    `${counts.analyzedLots} com análise fixada`,
+  ];
+  return <span className="tabular-nums">{parts.join(" · ")}</span>;
 }
 
-export function DashboardSummarySkeleton() {
+export function DashboardCountsSkeleton() {
   return (
-    <div className={GRID} aria-hidden="true">
-      {METRICS.map(({ key }) => (
-        <Skeleton key={key} className="h-32" />
-      ))}
-    </div>
+    <span className="inline-block h-4 w-72 max-w-full animate-pulse rounded-md bg-border/70 motion-reduce:animate-none" />
   );
 }
 
 /** "X de Y resultados comparáveis ficaram dentro do limite" (SPEC §10), sempre com o denominador. */
-function LimitIndicator({ indicator }: { indicator: Summary["indicator"] }) {
+export async function DecisionIndicator() {
+  const indicator = await getLimitIndicator();
   return (
-    <Card>
-      <CardHeader>
-        <CardDescription className="flex items-center gap-2">
-          <Target aria-hidden="true" className="size-4" />
-          Decisões anteriores ao resultado
-        </CardDescription>
-        <CardTitle>
-          {indicator.comparable === 0
-            ? "Ainda sem resultados comparáveis"
-            : `${indicator.withinLimit} de ${indicator.comparable} resultados comparáveis ficaram dentro do limite`}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="text-caption text-muted">
+    <section aria-labelledby="decision-indicator" className={cn(cardVariants(), "grid gap-3 p-5 md:p-6")}>
+      <h2 id="decision-indicator" className="text-heading-3 text-foreground">
+        Suas decisões antes do resultado
+      </h2>
+      {indicator.comparable === 0 ? (
+        <p className="text-body text-foreground-secondary">Ainda sem resultados comparáveis.</p>
+      ) : (
+        <p className="grid gap-1 text-body text-foreground-secondary">
+          <span className="text-display text-foreground tabular-nums">
+            {indicator.withinLimit} <span className="font-medium text-muted-subtle">de {indicator.comparable}</span>
+          </span>{" "}
+          resultados comparáveis ficaram dentro do limite
+        </p>
+      )}
+      <p className="border-t border-border pt-3 text-caption text-muted">
         Considera lotes ativos arrematados, com preço final conhecido e análise fixada antes do desfecho. Estar dentro
         do limite não significa que seria possível arrematar por esse preço.
-      </CardContent>
-    </Card>
+      </p>
+    </section>
   );
+}
+
+export function DecisionIndicatorSkeleton() {
+  return <Skeleton className="h-48" aria-hidden="true" />;
 }

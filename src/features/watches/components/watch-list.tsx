@@ -30,7 +30,7 @@ export async function WatchList() {
   }
 
   return (
-    <ul className="grid gap-4 lg:grid-cols-2">
+    <ul className="border-b border-border">
       {watches.map((watch) => (
         <li key={watch.id}>
           <WatchCard watch={watch} />
@@ -45,31 +45,30 @@ function WatchCard({ watch }: { watch: WatchListItem }) {
   const matches = `${watch.openMatches}${watch.openMatchesTruncated ? "+" : ""}`;
 
   return (
-    <article className="grid h-full content-start gap-4 rounded-lg border border-border bg-surface p-4">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h2 className="text-body font-semibold text-foreground">{title}</h2>
-          <p className="text-caption text-muted">{describeCriteria(watch.criteria)}</p>
+    <article className="grid gap-3 border-t border-border py-4.5 md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-6">
+      <div className="grid min-w-0 gap-1.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className={watch.active ? "text-heading-3 text-foreground" : "text-heading-3 text-muted"}>{title}</h2>
+          <Badge variant={watch.active ? "success" : "default"}>{watch.active ? "Ligado" : "Desligado"}</Badge>
         </div>
-        <Badge variant={watch.active ? "success" : "outline"}>{watch.active ? "Ligado" : "Desligado"}</Badge>
-      </div>
-
-      <ul className="grid gap-1 text-caption text-foreground-secondary">
-        <li>
-          <Link href={discoveredHref(watch.criteria) as Route} className="text-accent hover:underline">
-            {watch.openMatches === 1 ? "1 lote aberto combina agora" : `${matches} lotes abertos combinam agora`}
-          </Link>
-        </li>
-        <li>
-          {watch.unreadAlerts > 0 ? (
-            <Link href={`/alertas?monitor=${watch.id}` as Route} className="text-accent hover:underline">
-              {watch.unreadAlerts === 1 ? "1 alerta não lido" : `${watch.unreadAlerts} alertas não lidos`}
+        <p className="text-label font-normal text-muted">{describeCriteria(watch.criteria)}</p>
+        <ul className="flex flex-wrap gap-x-4 gap-y-1 text-label font-normal text-foreground-secondary">
+          <li>
+            <Link href={discoveredHref(watch.criteria) as Route} className="text-accent hover:underline">
+              {watch.openMatches === 1 ? "1 lote aberto combina agora" : `${matches} lotes abertos combinam agora`}
             </Link>
-          ) : (
-            "Nenhum alerta não lido"
-          )}
-        </li>
-      </ul>
+          </li>
+          <li>
+            {watch.unreadAlerts > 0 ? (
+              <Link href={`/alertas?monitor=${watch.id}` as Route} className="text-accent hover:underline">
+                {watch.unreadAlerts === 1 ? "1 alerta não lido" : `${watch.unreadAlerts} alertas não lidos`}
+              </Link>
+            ) : (
+              "Nenhum alerta não lido"
+            )}
+          </li>
+        </ul>
+      </div>
 
       <WatchActions watchId={watch.id} title={title} active={watch.active} />
     </article>
@@ -78,9 +77,9 @@ function WatchCard({ watch }: { watch: WatchListItem }) {
 
 export function WatchListSkeleton() {
   return (
-    <div className="grid gap-4 lg:grid-cols-2" aria-hidden="true">
-      <Skeleton className="h-44" />
-      <Skeleton className="h-44" />
+    <div className="grid gap-3" aria-hidden="true">
+      <Skeleton className="h-24" />
+      <Skeleton className="h-24" />
     </div>
   );
 }

@@ -56,3 +56,43 @@ export function formatBps(value: number): string {
 export function formatRatio(value: number): string {
   return percent.format(Math.round(value * 100) / 100);
 }
+
+const dayParts = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+  weekday: "long",
+  timeZone: APP_TIME_ZONE,
+});
+const time = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: APP_TIME_ZONE });
+const shortDateTime = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: APP_TIME_ZONE,
+});
+
+/** Partes de um dia para agendas: { key: "2030-10-02", day: "02", month: "out 2030", weekday: "quarta" }. */
+export function formatDayParts(value: Date): { key: string; day: string; month: string; weekday: string } {
+  const parts = Object.fromEntries(dayParts.formatToParts(value).map((part) => [part.type, part.value]));
+  const month = (parts.month ?? "").replace(".", "");
+  return {
+    key: `${parts.year}-${month}-${parts.day}`,
+    day: parts.day ?? "",
+    month: `${month} ${parts.year ?? ""}`,
+    weekday: (parts.weekday ?? "").replace("-feira", ""),
+  };
+}
+
+/** Só a hora: "10:00". */
+export function formatTime(value: Date): string {
+  return time.format(value);
+}
+
+/** Data e hora com mês abreviado: "02 de out. de 2030, 10:00" → "02 out 2030, 10:00". */
+export function formatShortDateTime(value: Date): string {
+  const parts = Object.fromEntries(shortDateTime.formatToParts(value).map((part) => [part.type, part.value]));
+  return `${parts.day} ${(parts.month ?? "").replace(".", "")} ${parts.year}, ${parts.hour}:${parts.minute}`;
+}

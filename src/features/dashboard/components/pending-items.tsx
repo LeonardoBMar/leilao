@@ -1,82 +1,78 @@
-import { ClipboardCheck, FilePen, Trophy } from "lucide-react";
 import Link from "next/link";
 
-import { Badge, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
+import { Badge, cardVariants } from "@/components/ui";
 import { formatDate, formatDateTime } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 import { getPendingItems } from "../queries";
 
 /** Atalhos para concluir registros pendentes (SPEC §5). Não renderiza nada quando não há pendências. */
 export async function PendingItems() {
   const { drafts, awaitingResult } = await getPendingItems();
-  if (drafts.length === 0 && awaitingResult.length === 0) return null;
+  const total = drafts.length + awaitingResult.length;
+  if (total === 0) return null;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <ClipboardCheck aria-hidden="true" className="size-5 text-muted" />
+    <section
+      aria-labelledby="pending-items"
+      className={cn(cardVariants({ variant: "summary" }), "grid gap-4 px-6 py-5.5")}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <h2 id="pending-items" className="text-heading-3 text-foreground">
           Registros pendentes
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="grid gap-6 md:grid-cols-2">
-        {awaitingResult.length > 0 ? (
-          <section aria-labelledby="pending-results" className="grid content-start gap-2">
-            <h3 id="pending-results" className="text-label text-foreground-secondary">
-              Aguardando resultado
-            </h3>
-            <ul className="grid gap-2">
-              {awaitingResult.map((item) => (
-                <li key={item.lotId}>
-                  <Link
-                    href={`/lotes/${item.lotId}/resultado`}
-                    className="flex items-start gap-2 rounded-md p-2 hover:bg-surface-subtle"
-                  >
-                    <Trophy aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted" />
-                    <span className="min-w-0">
-                      <span className="flex items-center gap-2">
-                        <span className="min-w-0 truncate text-body text-accent">{item.lotLabel}</span>
-                        {item.toConfirm ? <Badge variant="warning">A confirmar</Badge> : null}
-                      </span>
-                      <span className="block truncate text-caption text-muted">
-                        {item.auctionName} · {formatDate(item.startsAt)}
-                      </span>
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
+        </h2>
+        <Badge variant="warning" className="tabular-nums">
+          {total}
+        </Badge>
+      </div>
 
-        {drafts.length > 0 ? (
-          <section aria-labelledby="pending-drafts" className="grid content-start gap-2">
-            <h3 id="pending-drafts" className="text-label text-foreground-secondary">
-              Rascunhos de análise
-            </h3>
-            <ul className="grid gap-2">
-              {drafts.map((draft) => (
-                <li key={draft.analysisId}>
-                  <Link
-                    href={`/analise/${draft.analysisId}`}
-                    className="flex items-start gap-2 rounded-md p-2 hover:bg-surface-subtle"
-                  >
-                    <FilePen aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted" />
-                    <span className="min-w-0">
-                      <span className="block truncate text-body text-accent">
-                        {draft.lotLabel} · v{draft.version}
-                      </span>
-                      <span className="block text-caption text-muted">
-                        Atualizado em {formatDateTime(draft.updatedAt)}
-                      </span>
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-      </CardContent>
-    </Card>
+      {awaitingResult.length > 0 ? (
+        <Group id="pending-results" title="Aguardando resultado">
+          {awaitingResult.map((item) => (
+            <li key={item.lotId} className="grid gap-0.5">
+              <span className="flex flex-wrap items-center gap-2">
+                <Link
+                  href={`/lotes/${item.lotId}/resultado`}
+                  className="min-w-0 truncate font-semibold text-foreground hover:underline"
+                >
+                  {item.lotLabel}
+                </Link>
+                {item.toConfirm ? <Badge variant="warning">A confirmar</Badge> : null}
+              </span>
+              <span className="truncate text-caption text-muted">
+                {item.auctionName} · {formatDate(item.startsAt)}
+              </span>
+            </li>
+          ))}
+        </Group>
+      ) : null}
+
+      {drafts.length > 0 ? (
+        <Group id="pending-drafts" title="Rascunhos de análise">
+          {drafts.map((draft) => (
+            <li key={draft.analysisId} className="grid gap-0.5">
+              <Link
+                href={`/analise/${draft.analysisId}`}
+                className="truncate font-semibold text-foreground hover:underline"
+              >
+                {draft.lotLabel} · v{draft.version}
+              </Link>
+              <span className="text-caption text-muted">Atualizado em {formatDateTime(draft.updatedAt)}</span>
+            </li>
+          ))}
+        </Group>
+      ) : null}
+    </section>
+  );
+}
+
+function Group({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
+  return (
+    <section aria-labelledby={id} className="grid gap-2.5 border-t border-border-strong pt-3.5">
+      <h3 id={id} className="text-caption text-muted">
+        {title}
+      </h3>
+      <ul className="grid gap-3 text-body">{children}</ul>
+    </section>
   );
 }

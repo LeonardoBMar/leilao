@@ -5,15 +5,17 @@ import { MobileNav } from "@/components/layout/mobile-nav";
 import { NavLinks } from "@/components/layout/nav-links";
 import { Skeleton } from "@/components/ui";
 import { UnreadAlertsBadge } from "@/features/alerts/components/unread-alerts-badge";
+import { NextAuctionCard } from "@/features/auctions/components/next-auction-card";
 import { UserMenu } from "@/features/auth/components/user-menu";
+import { FollowedLotsNav } from "@/features/lots/components/followed-lots-nav";
 
 /**
  * Casca da área privada. Não verifica a sessão aqui (layouts não re-renderizam a cada navegação):
- * a proteção está no proxy (otimista) e em requireUser() na DAL. Só a conta lê a sessão, em <Suspense>.
+ * a proteção está no proxy (otimista) e em requireUser() na DAL. Conta, contador e extras leem a sessão, em <Suspense>.
  */
 export default function PrivateLayout({ children }: LayoutProps<"/">) {
   const account = (
-    <Suspense fallback={<Skeleton className="h-18" />}>
+    <Suspense fallback={<Skeleton className="h-10" />}>
       <UserMenu />
     </Suspense>
   );
@@ -25,23 +27,38 @@ export default function PrivateLayout({ children }: LayoutProps<"/">) {
       </Suspense>
     ),
   } as const;
+  // Extras do menu (DESIGN.md §9): somem enquanto carregam e quando não há o que mostrar.
+  const followed = (
+    <Suspense fallback={null}>
+      <FollowedLotsNav />
+    </Suspense>
+  );
+  const nextAuction = (
+    <Suspense fallback={null}>
+      <NextAuctionCard />
+    </Suspense>
+  );
 
   return (
     // Direção A (DESIGN.md §9): menu no papel quente, conteúdo num painel branco embutido (no celular, tela cheia).
     <div className="min-h-dvh bg-background lg:grid lg:grid-cols-[248px_1fr]">
-      <aside className="sticky top-0 hidden h-dvh flex-col gap-7 px-3 pt-4 pb-3 lg:flex">
+      <aside className="sticky top-0 hidden h-dvh flex-col gap-7 overflow-y-auto px-3 pt-4 pb-3 lg:flex">
         <div className="px-2">
           <Brand />
         </div>
-        <nav aria-label="Principal" className="flex-1">
+        <nav aria-label="Principal">
           <NavLinks badges={badges} />
         </nav>
-        <div className="border-t border-border-strong pt-3">{account}</div>
+        {followed}
+        <div className="mt-auto grid gap-2.5">
+          {nextAuction}
+          <div className="border-t border-border-strong pt-2.5">{account}</div>
+        </div>
       </aside>
 
       <div className="flex min-h-dvh min-w-0 flex-col lg:py-2.5 lg:pr-2.5">
         <header className="sticky top-0 z-40 flex h-14 items-center gap-2 border-b border-border bg-background px-4 lg:hidden">
-          <MobileNav account={account} badges={badges} />
+          <MobileNav account={account} badges={badges} followed={followed} nextAuction={nextAuction} />
           <Brand />
         </header>
         <div className="flex-1 bg-surface lg:rounded-lg lg:shadow-sm">

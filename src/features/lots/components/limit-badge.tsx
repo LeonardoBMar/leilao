@@ -10,8 +10,10 @@ export function toFixedLimit(limit: LotLimit | null): FixedLimit | null {
   return limit.isViable && limit.maxBid !== null ? { isViable: true, maxBid: limit.maxBid } : { isViable: false };
 }
 
-/** Situação do lance atual frente ao limite fixado (SPEC §7.5). Texto sempre presente junto da cor. */
+/** Situação do lance atual frente ao limite fixado (SPEC §7.5). Texto sempre presente junto da cor; nada quando indisponível. */
 export function LimitBadge({ limit, bid }: { limit: LotLimit | null; bid: Cents | null }) {
   const comparison = compareToFixedLimit(toFixedLimit(limit), bid);
+  // Sem limite ou sem lance, a barra de posição (LimitProgress) já diz o que falta.
+  if (comparison === "unavailable") return null;
   return <Badge variant={LIMIT_COMPARISON_VARIANTS[comparison]}>{LIMIT_COMPARISON_LABELS[comparison]}</Badge>;
 }

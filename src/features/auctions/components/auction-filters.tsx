@@ -58,7 +58,7 @@ export function AuctionFilters({ values }: { values: AuctionFilterValues }) {
       onSubmit={handleSubmit}
       // Remonta com os valores da URL após navegar (ex.: "Limpar filtros").
       key={JSON.stringify(values)}
-      className="grid gap-4 rounded-lg border border-border bg-surface p-4 md:grid-cols-2 xl:grid-cols-[2fr_1fr_1fr_1fr_1fr]"
+      className="grid gap-4 border-b border-border pb-5 md:grid-cols-2 xl:grid-cols-[2fr_1fr_1fr_1fr_1fr]"
     >
       <Input
         name="busca"

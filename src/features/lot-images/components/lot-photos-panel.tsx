@@ -1,4 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle, Skeleton } from "@/components/ui";
+import { Section, SectionHeader, SectionTitle, Skeleton } from "@/components/ui";
+import { MAX_IMAGES_PER_LOT } from "@/domain/lot-images";
 
 import { listLotImages } from "../queries";
 import { LotGallery } from "./lot-gallery";
@@ -8,14 +9,15 @@ export async function LotPhotosPanel({ lotId }: { lotId: string }) {
   const images = await listLotImages(lotId);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Fotos</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <LotGallery lotId={lotId} images={images} />
-      </CardContent>
-    </Card>
+    <Section>
+      <SectionHeader>
+        <SectionTitle>Fotos</SectionTitle>
+        <span className="text-caption text-muted tabular-nums">
+          {images.length} de {MAX_IMAGES_PER_LOT}
+        </span>
+      </SectionHeader>
+      <LotGallery lotId={lotId} images={images} />
+    </Section>
   );
 }
 

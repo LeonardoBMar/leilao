@@ -1,7 +1,7 @@
 "use client";
 
 import { Menu } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { type MouseEvent, type ReactNode, useState } from "react";
 
 import { Button, Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui";
 
@@ -12,11 +12,19 @@ type MobileNavProps = {
   /** Conta/sair, renderizado no servidor. */
   account: ReactNode;
   badges?: NavBadges;
+  /** Extras do menu (acompanhados, próximo leilão), renderizados no servidor. */
+  followed?: ReactNode;
+  nextAuction?: ReactNode;
 };
 
 /** Gaveta lateral abaixo de `lg`, com os mesmos destinos e ordem da sidebar (DESIGN.md §9). */
-export function MobileNav({ account, badges }: MobileNavProps) {
+export function MobileNav({ account, badges, followed, nextAuction }: MobileNavProps) {
   const [isOpen, setIsOpen] = useState(false);
+
+  // Os extras vêm prontos do servidor (sem `onClick` próprio): qualquer link clicado dentro deles fecha a gaveta.
+  function closeOnLink(event: MouseEvent<HTMLDivElement>) {
+    if (event.target instanceof Element && event.target.closest("a")) setIsOpen(false);
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -25,7 +33,7 @@ export function MobileNav({ account, badges }: MobileNavProps) {
           <Menu aria-hidden="true" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="top-0 left-0 flex h-dvh max-h-dvh w-72 max-w-[85vw] translate-x-0 translate-y-0 scale-100 flex-col gap-6 rounded-none border-y-0 border-l-0 bg-background p-4 data-[state=open]:scale-100">
+      <DialogContent className="top-0 left-0 flex h-dvh max-h-dvh w-72 max-w-[85vw] translate-x-0 translate-y-0 scale-100 flex-col gap-6 overflow-y-auto rounded-none border-y-0 border-l-0 bg-background p-4 data-[state=open]:scale-100">
         <div className="pr-10">
           <DialogTitle asChild>
             <div>
@@ -34,11 +42,17 @@ export function MobileNav({ account, badges }: MobileNavProps) {
           </DialogTitle>
           <DialogDescription className="sr-only">Navegação principal</DialogDescription>
         </div>
-        <nav aria-label="Principal" className="flex-1">
+        <nav aria-label="Principal">
           {/* Fecha ao navegar: com <Activity> a rota anterior fica montada e a gaveta ficaria aberta. */}
           <NavLinks onNavigate={() => setIsOpen(false)} badges={badges} />
         </nav>
-        <div className="border-t border-border-strong pt-3">{account}</div>
+        <div onClick={closeOnLink} className="contents">
+          {followed}
+        </div>
+        <div onClick={closeOnLink} className="mt-auto grid gap-2.5">
+          {nextAuction}
+          <div className="border-t border-border-strong pt-2.5">{account}</div>
+        </div>
       </DialogContent>
     </Dialog>
   );

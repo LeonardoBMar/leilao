@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { Badge, Card, CardContent, CardHeader, CardTitle, CurrencyInput, Money } from "@/components/ui";
+import { Badge, Card, CurrencyInput, Money } from "@/components/ui";
 import { compareToLimit, differenceToLimit, simulateBid } from "@/domain/finance/calculator";
 import { type Cents, cents, parseBRL } from "@/domain/money";
 import { formatBRL } from "@/lib/format";
@@ -19,9 +19,9 @@ type AnalysisSummaryProps = {
 };
 
 /**
- * Resumo da análise (DESIGN.md §15.4): premissas, lance máximo como saída principal e simulação de lance.
- * A simulação é exploratória: não altera o lance atual do lote nem é gravada (SPEC RF-04). Renderizar fora do
- * <form> da análise, para o lance simulado nunca ser enviado.
+ * Resumo da análise (DESIGN.md §15.4): lance máximo como o número que decide, a composição do valor de venda e a
+ * simulação de lance. A simulação é exploratória: não altera o lance atual do lote nem é gravada (SPEC RF-04).
+ * Renderizar fora do <form> da análise, para o lance simulado nunca ser enviado.
  */
 export function AnalysisSummary({ model, currentBid }: AnalysisSummaryProps) {
   const { outcome, complete } = model;
@@ -32,104 +32,127 @@ export function AnalysisSummary({ model, currentBid }: AnalysisSummaryProps) {
   const comparison = compareToLimit(outcome, bid);
 
   return (
-    <Card className="xl:sticky xl:top-6">
-      <CardHeader>
-        <CardTitle>Resumo</CardTitle>
-      </CardHeader>
-      <CardContent className="grid gap-6">
-        <section aria-label="Lance máximo" className="grid gap-1">
-          <p className="text-label text-foreground-secondary">Lance máximo</p>
-          {outcome.kind === "viable" ? (
-            <p className="text-display text-foreground tabular-nums">{formatBRL(outcome.maxBid)}</p>
-          ) : outcome.kind === "not_viable" ? (
-            <p className="text-heading-2 text-foreground">Sem lance viável com estas premissas</p>
-          ) : (
-            <div className="grid gap-1">
-              <p className="text-heading-3 text-muted">Faltam dados para calcular</p>
-              <p className="text-caption text-muted">
-                Pendente: {outcome.missing.map((field) => FIELD_LABELS[field]).join(", ")}.
-              </p>
-            </div>
-          )}
-          <p className="text-caption text-muted">
-            Maior lance que preserva a margem desejada. Não considera incrementos mínimos da plataforma.
-          </p>
-        </section>
+    <Card variant="summary" className="grid gap-5.5 p-5 md:p-7 xl:sticky xl:top-6">
+      <section aria-label="Lance máximo" className="grid gap-1.5">
+        <p className="text-caption text-muted">Lance máximo</p>
+        {outcome.kind === "viable" ? (
+          <p className="text-display text-foreground tabular-nums">{formatBRL(outcome.maxBid)}</p>
+        ) : outcome.kind === "not_viable" ? (
+          <p className="text-heading-2 text-foreground">Sem lance viável com estas premissas</p>
+        ) : (
+          <div className="grid gap-1">
+            <p className="text-heading-2 text-muted">Faltam dados para calcular</p>
+            <p className="text-caption text-muted">
+              Pendente: {outcome.missing.map((field) => FIELD_LABELS[field]).join(", ")}.
+            </p>
+          </div>
+        )}
+        <p className="text-label font-normal text-muted">
+          Maior lance que preserva a margem desejada. Não considera incrementos mínimos da plataforma.
+        </p>
+      </section>
 
-        {complete ? (
-          <dl className="grid gap-2 border-t border-border pt-4 text-body">
-            <Row label="Valor de venda esperado">
-              <Money value={complete.marketValue} />
+      {complete && outcome.kind === "viable" ? (
+        <Composition
+          parts={[
+            { label: "Custos fixos", value: complete.fixedCosts, tone: "bg-muted" },
+            { label: "Comissão no limite", value: outcome.commissionAtMaxBid, tone: "bg-muted-subtle" },
+            { label: "Reserva para imprevistos", value: complete.riskReserve, tone: "bg-control-border" },
+            { label: "Margem estimada no limite", value: outcome.marginAtMaxBid, tone: "bg-success" },
+          ]}
+          marketValue={complete.marketValue}
+          maxBid={outcome.maxBid}
+        />
+      ) : complete ? (
+        <dl className="grid gap-0.5 text-label font-normal">
+          <Row label="Valor de venda esperado">
+            <Money value={complete.marketValue} />
+          </Row>
+          <Row label="Custos fixos">
+            <Money value={complete.fixedCosts} />
+          </Row>
+          <Row label="Reserva para imprevistos">
+            <Money value={complete.riskReserve} />
+          </Row>
+          <Row label="Margem desejada">
+            <Money value={complete.desiredMargin} />
+          </Row>
+        </dl>
+      ) : null}
+
+      <section aria-label="Simulação de lance" className="grid gap-3 border-t border-border-strong pt-5">
+        <CurrencyInput
+          label="Lance simulado"
+          helperText="Não altera o lance atual do lote."
+          value={bidText}
+          onChange={(event) => setBidText(event.target.value)}
+        />
+        {simulation ? (
+          <dl className="grid gap-0.5 text-label font-normal" aria-live="polite">
+            <Row label="Comissão">
+              <Money value={simulation.commission} />
             </Row>
-            <Row label="Custos fixos">
-              <Money value={complete.fixedCosts} />
+            <Row label="Custo total estimado">
+              <Money value={simulation.totalCost} />
             </Row>
-            {outcome.kind === "viable" ? (
-              <Row label="Comissão no limite">
-                <Money value={outcome.commissionAtMaxBid} />
-              </Row>
-            ) : null}
-            <Row label="Reserva para imprevistos">
-              <Money value={complete.riskReserve} />
+            <Row label="Margem estimada" strong>
+              <MarginValue value={simulation.estimatedMargin} />
             </Row>
-            <Row label="Margem desejada">
-              <Money value={complete.desiredMargin} />
-            </Row>
-            {outcome.kind === "viable" ? (
-              <>
-                <Row label="Custo total no limite" strong>
-                  <Money value={outcome.totalAtMaxBid} />
-                </Row>
-                <Row label="Margem estimada no limite" strong>
-                  <MarginValue value={outcome.marginAtMaxBid} />
-                </Row>
-              </>
-            ) : null}
           </dl>
         ) : null}
-
-        <section aria-label="Simulação de lance" className="grid gap-4 border-t border-border pt-4">
-          <CurrencyInput
-            label="Lance simulado"
-            helperText="Não altera o lance atual do lote."
-            value={bidText}
-            onChange={(event) => setBidText(event.target.value)}
-          />
-          {simulation ? (
-            <dl className="grid gap-2 text-body" aria-live="polite">
-              <Row label="Comissão">
-                <Money value={simulation.commission} />
-              </Row>
-              <Row label="Custos fora do lance">
-                <Money value={simulation.costsBesidesBid} />
-              </Row>
-              <Row label="Custo total estimado" strong>
-                <Money value={simulation.totalCost} />
-              </Row>
-              <Row label="Margem estimada" strong>
-                <MarginValue value={simulation.estimatedMargin} />
-              </Row>
-              {outcome.kind === "viable" ? (
-                <Row label="Diferença para o limite">
-                  <DifferenceText value={differenceToLimit(outcome.maxBid, simulation.bid)} />
-                </Row>
-              ) : null}
-            </dl>
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface px-3.5 py-3">
+          <Badge variant={LIMIT_COMPARISON_VARIANTS[comparison]}>{LIMIT_COMPARISON_LABELS[comparison]}</Badge>
+          {simulation && outcome.kind === "viable" ? (
+            <DifferenceText value={differenceToLimit(outcome.maxBid, simulation.bid)} />
           ) : null}
-          <div>
-            <Badge variant={LIMIT_COMPARISON_VARIANTS[comparison]}>{LIMIT_COMPARISON_LABELS[comparison]}</Badge>
-          </div>
-        </section>
-      </CardContent>
+        </div>
+      </section>
     </Card>
   );
 }
 
-function Row({ label, strong, children }: { label: string; strong?: boolean; children: React.ReactNode }) {
+type Part = { label: string; value: Cents; tone: string };
+
+/** Valor de venda decomposto até o lance máximo: a barra é decorativa, a lista ao lado diz o mesmo em texto. */
+function Composition({ parts, marketValue, maxBid }: { parts: Part[]; marketValue: Cents; maxBid: Cents }) {
+  const width = (value: number) => `${marketValue > 0 ? (Math.max(value, 0) / marketValue) * 100 : 0}%`;
   return (
-    <div className="flex items-baseline justify-between gap-4">
-      <dt className={cn("text-foreground-secondary", strong && "font-semibold text-foreground")}>{label}</dt>
-      <dd className={cn("text-right", strong && "font-semibold")}>{children}</dd>
+    <div className="grid gap-2.5">
+      <div aria-hidden="true" className="flex h-2.5 gap-0.5 overflow-hidden rounded-full">
+        <div className="bg-foreground" style={{ width: width(maxBid) }} />
+        {parts.map((part) => (
+          <div key={part.label} className={part.tone} style={{ width: width(part.value) }} />
+        ))}
+      </div>
+      <dl className="grid text-label font-normal">
+        <Row label="Valor de venda esperado">
+          <Money value={marketValue} />
+        </Row>
+        {parts.map((part) => (
+          <Row key={part.label} label={part.label} swatch={part.tone}>
+            − <Money value={part.value} />
+          </Row>
+        ))}
+        <Row label="Lance máximo" swatch="bg-foreground" strong className="mt-1 border-t border-border-strong pt-2">
+          <Money value={maxBid} />
+        </Row>
+      </dl>
+    </div>
+  );
+}
+
+type RowProps = { label: string; strong?: boolean; swatch?: string; className?: string; children: React.ReactNode };
+
+function Row({ label, strong, swatch, className, children }: RowProps) {
+  return (
+    <div className={cn("flex items-baseline justify-between gap-4 py-1.5", className)}>
+      <dt
+        className={cn("flex items-center gap-2 text-foreground-secondary", strong && "font-semibold text-foreground")}
+      >
+        {swatch ? <span aria-hidden="true" className={cn("size-2 shrink-0 rounded-xs", swatch)} /> : null}
+        {label}
+      </dt>
+      <dd className={cn("text-right whitespace-nowrap tabular-nums", strong && "font-semibold")}>{children}</dd>
     </div>
   );
 }
@@ -145,11 +168,11 @@ function MarginValue({ value }: { value: Cents }) {
 
 /** Diferença com sinal e frase completa (DESIGN.md §15.5). */
 function DifferenceText({ value }: { value: Cents }) {
-  if (value === 0) return <span>No limite</span>;
+  if (value === 0) return <span className="text-label">No limite</span>;
   const amount = formatBRL(cents(Math.abs(value)));
   return value > 0 ? (
-    <span className="tabular-nums">{amount} abaixo do limite</span>
+    <span className="text-body font-semibold text-success tabular-nums">{amount} de folga</span>
   ) : (
-    <span className="text-error tabular-nums">{amount} acima do limite</span>
+    <span className="text-body font-semibold text-error tabular-nums">{amount} acima do limite</span>
   );
 }

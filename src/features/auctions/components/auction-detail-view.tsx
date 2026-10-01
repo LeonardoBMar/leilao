@@ -1,7 +1,7 @@
 import { ExternalLink, Pencil, Plus } from "lucide-react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BreadcrumbLink, BreadcrumbPage, Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { PageHeader } from "@/components/layout/page-header";
 import {
   Alert,
@@ -9,9 +9,9 @@ import {
   Badge,
   ButtonLink,
   Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
+  Section,
+  SectionHeader,
+  SectionTitle,
   Skeleton,
 } from "@/components/ui";
 import { formatDateTime } from "@/lib/format";
@@ -36,18 +36,22 @@ export async function AuctionDetailView({ params, lots }: AuctionDetailViewProps
   const location = [auction.city, auction.state].filter(Boolean).join(" — ");
 
   return (
-    <div className="grid gap-6">
-      <nav aria-label="Trilha" className="text-caption text-muted">
-        <Link href="/leiloes" className="hover:text-foreground hover:underline">
-          Leilões
-        </Link>
-        <span aria-hidden="true"> / </span>
-        <span className="text-foreground">{auction.name}</span>
-      </nav>
+    <div className="grid gap-7">
+      <Breadcrumbs>
+        <BreadcrumbLink href="/leiloes">Leilões</BreadcrumbLink>
+        <BreadcrumbPage>{auction.name}</BreadcrumbPage>
+      </Breadcrumbs>
 
       <PageHeader
+        eyebrow={`${ORIGIN_LABELS[auction.origin]} · ${formatDateTime(auction.startsAt)}`}
         title={auction.name}
-        description={`${formatDateTime(auction.startsAt)} · ${auction.auctioneer}`}
+        description={auction.auctioneer}
+        meta={
+          <>
+            <Badge variant={STATUS_BADGE_VARIANTS[auction.status]}>{STATUS_LABELS[auction.status]}</Badge>
+            {auction.archivedAt ? <Badge variant="warning">Arquivado</Badge> : null}
+          </>
+        }
         actions={
           <>
             <ButtonLink href={`/leiloes/${auction.id}/editar`} variant="secondary">
@@ -72,47 +76,35 @@ export async function AuctionDetailView({ params, lots }: AuctionDetailViewProps
         </Alert>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
-        <section aria-labelledby="auction-lots" className="grid content-start gap-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 id="auction-lots" className="text-heading-2 text-foreground">
-              Lotes
-            </h2>
-            <ButtonLink href={`/leiloes/${auction.id}/lotes/novo`}>
-              <Plus aria-hidden="true" />
-              Adicionar lote
-            </ButtonLink>
-          </div>
-          {lots}
-        </section>
+      <Card variant="summary" aria-label="Dados do evento" className="p-5 md:px-8 md:py-6">
+        <dl className="grid gap-x-8 gap-y-4 text-body sm:grid-cols-2 xl:grid-cols-4">
+          <Detail label="Data e hora">{formatDateTime(auction.startsAt)}</Detail>
+          <Detail label="Local">{location || <span className="text-muted">Não informado</span>}</Detail>
+          <Detail label="Edital">
+            <ExternalAnchor href={auction.noticeUrl} />
+          </Detail>
+          <Detail label="Plataforma">
+            <ExternalAnchor href={auction.platformUrl} />
+          </Detail>
+          {auction.notes ? (
+            <div className="grid gap-1 sm:col-span-2 xl:col-span-4">
+              <dt className="text-caption text-muted">Observações</dt>
+              <dd className="whitespace-pre-line text-foreground-secondary">{auction.notes}</dd>
+            </div>
+          ) : null}
+        </dl>
+      </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Dados do evento</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <dl className="grid gap-4 text-body">
-              <Detail label="Status">
-                <Badge variant={STATUS_BADGE_VARIANTS[auction.status]}>{STATUS_LABELS[auction.status]}</Badge>
-              </Detail>
-              <Detail label="Origem">{ORIGIN_LABELS[auction.origin]}</Detail>
-              <Detail label="Data e hora">{formatDateTime(auction.startsAt)}</Detail>
-              <Detail label="Local">{location || "Não informado"}</Detail>
-              <Detail label="Edital">
-                <ExternalAnchor href={auction.noticeUrl} />
-              </Detail>
-              <Detail label="Plataforma">
-                <ExternalAnchor href={auction.platformUrl} />
-              </Detail>
-              {auction.notes ? (
-                <Detail label="Observações">
-                  <p className="whitespace-pre-line">{auction.notes}</p>
-                </Detail>
-              ) : null}
-            </dl>
-          </CardContent>
-        </Card>
-      </div>
+      <Section aria-labelledby="auction-lots">
+        <SectionHeader>
+          <SectionTitle id="auction-lots">Lotes</SectionTitle>
+          <ButtonLink href={`/leiloes/${auction.id}/lotes/novo`}>
+            <Plus aria-hidden="true" />
+            Adicionar lote
+          </ButtonLink>
+        </SectionHeader>
+        {lots}
+      </Section>
     </div>
   );
 }
@@ -145,13 +137,11 @@ function ExternalAnchor({ href }: { href: string | null }) {
 
 export function AuctionDetailSkeleton() {
   return (
-    <div className="grid gap-6" aria-hidden="true">
+    <div className="grid gap-7" aria-hidden="true">
       <Skeleton className="h-5 w-48" />
-      <Skeleton className="h-16" />
-      <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
-        <Skeleton className="h-64" />
-        <Skeleton className="h-96" />
-      </div>
+      <Skeleton className="h-20" />
+      <Skeleton className="h-24" />
+      <Skeleton className="h-96" />
     </div>
   );
 }

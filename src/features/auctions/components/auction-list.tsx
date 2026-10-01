@@ -69,10 +69,10 @@ async function AuctionList({
   return (
     <section aria-label="Leilões" className="grid gap-4">
       {/* Mobile: linhas empilhadas. */}
-      <ul className="grid gap-3 md:hidden">
+      <ul className="border-b border-border md:hidden">
         {result.items.map((auction) => (
-          <li key={auction.id} className="rounded-lg border border-border bg-surface p-4">
-            <Link href={`/leiloes/${auction.id}`} className="text-body font-semibold text-accent hover:underline">
+          <li key={auction.id} className="border-t border-border py-4">
+            <Link href={`/leiloes/${auction.id}`} className="text-body font-semibold text-foreground hover:underline">
               {auction.name}
             </Link>
             <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-caption">
@@ -89,7 +89,7 @@ async function AuctionList({
       </ul>
 
       {/* Tablet e desktop: tabela. */}
-      <div className="hidden overflow-x-auto rounded-lg border border-border bg-surface md:block">
+      <div className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -105,11 +105,13 @@ async function AuctionList({
             {result.items.map((auction) => (
               <TableRow key={auction.id}>
                 <TableCell className="font-semibold">
-                  <Link href={`/leiloes/${auction.id}`} className="text-accent hover:underline">
+                  <Link href={`/leiloes/${auction.id}`} className="text-foreground hover:underline">
                     {auction.name}
                   </Link>
                 </TableCell>
-                <TableCell className="whitespace-nowrap tabular-nums">{formatDateTime(auction.startsAt)}</TableCell>
+                <TableCell className="whitespace-nowrap text-foreground-secondary tabular-nums">
+                  {formatDateTime(auction.startsAt)}
+                </TableCell>
                 <TableCell>{auction.auctioneer}</TableCell>
                 <TableCell>{ORIGIN_LABELS[auction.origin]}</TableCell>
                 <TableCell>

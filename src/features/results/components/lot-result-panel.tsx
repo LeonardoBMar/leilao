@@ -6,12 +6,11 @@ import {
   AlertDescription,
   Badge,
   ButtonLink,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
   EmptyState,
   Money,
+  Section,
+  SectionHeader,
+  SectionTitle,
   Skeleton,
 } from "@/components/ui";
 import { formatDateTime } from "@/lib/format";
@@ -29,19 +28,19 @@ export async function LotResultPanel({ lotId }: { lotId: string }) {
   const toConfirm = !current && tracking?.outcome.kind === "to_confirm";
 
   const action = (
-    <ButtonLink href={`/lotes/${lotId}/resultado`} variant={current ? "secondary" : "primary"}>
+    <ButtonLink href={`/lotes/${lotId}/resultado`} variant="secondary">
       {current ? <FilePen aria-hidden="true" /> : <Trophy aria-hidden="true" />}
       {current ? "Corrigir resultado" : toConfirm ? "Confirmar resultado" : "Registrar resultado"}
     </ButtonLink>
   );
 
   return (
-    <Card>
-      <CardHeader className="flex-row flex-wrap items-center justify-between gap-3">
-        <CardTitle>Resultado</CardTitle>
+    <Section>
+      <SectionHeader>
+        <SectionTitle>Resultado</SectionTitle>
         {current ? action : null}
-      </CardHeader>
-      <CardContent className="grid gap-6">
+      </SectionHeader>
+      <div className="grid gap-6">
         {current ? (
           <>
             <CurrentResult result={current} />
@@ -49,14 +48,14 @@ export async function LotResultPanel({ lotId }: { lotId: string }) {
           </>
         ) : (
           <EmptyState
-            icon={Trophy}
+            variant="inline"
             title={toConfirm ? "Resultado a confirmar" : "Sem resultado registrado"}
             description={pendingDescription(tracking)}
             action={action}
           />
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </Section>
   );
 }
 
@@ -64,7 +63,7 @@ function CurrentResult({ result }: { result: ResultRevision }) {
   return (
     <div className="grid gap-4">
       <div className="flex flex-wrap gap-2">
-        <Badge variant={result.outcome === "sold" ? "primary" : "default"}>{OUTCOME_LABELS[result.outcome]}</Badge>
+        <Badge>{OUTCOME_LABELS[result.outcome]}</Badge>
         <Badge variant="outline">{PERSONAL_OUTCOME_LABELS[result.personalOutcome]}</Badge>
         {result.source === "collector" ? <Badge variant="outline">Registrado pelo coletor</Badge> : null}
         {result.analysis ? (
@@ -85,7 +84,7 @@ function CurrentResult({ result }: { result: ResultRevision }) {
         </Alert>
       ) : null}
 
-      <dl className="grid gap-4 sm:grid-cols-3">
+      <dl className="grid gap-4 border-y border-border py-4 sm:grid-cols-3">
         <Stat label="Preço final">
           <Money value={result.finalBid} />
         </Stat>
@@ -107,7 +106,7 @@ function CurrentResult({ result }: { result: ResultRevision }) {
       <ResultComparison result={result} />
 
       {result.decisionReason || result.notes || result.sourceUrl || result.sourceNotes ? (
-        <dl className="grid gap-3 border-t border-border pt-4 text-body">
+        <dl className="grid gap-3 text-body">
           {result.decisionReason ? <Text label="Motivo da decisão">{result.decisionReason}</Text> : null}
           {result.notes ? <Text label="Observações">{result.notes}</Text> : null}
           {result.sourceUrl || result.sourceNotes ? (
@@ -156,7 +155,7 @@ function pendingDescription(tracking: ResultTracking | null): string {
 /** Histórico de correções: revisões anteriores preservadas com data e motivo (CA-14). */
 function Corrections({ revisions }: { revisions: ResultRevision[] }) {
   return (
-    <details className="rounded-lg border border-border p-4">
+    <details className="border-t border-border pt-4">
       <summary className="cursor-pointer text-label text-foreground">
         Histórico de correções ({revisions.length - 1})
       </summary>

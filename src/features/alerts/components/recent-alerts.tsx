@@ -13,14 +13,14 @@ export async function RecentAlerts() {
   return (
     <section aria-labelledby="recent-alerts" className="grid gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="recent-alerts" className="text-heading-2 text-foreground">
+        <h2 id="recent-alerts" className="text-heading-3 text-foreground">
           Alertas não lidos ({total})
         </h2>
         <ButtonLink href="/alertas?situacao=nao-lidos" variant="secondary" size="sm">
           Ver todos os alertas
         </ButtonLink>
       </div>
-      <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <ul className="grid gap-x-7 gap-y-11 sm:grid-cols-2 xl:grid-cols-3">
         {items.map((alert) => (
           <li key={alert.id}>
             <AlertCard alert={alert} />

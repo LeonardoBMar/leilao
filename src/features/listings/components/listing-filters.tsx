@@ -67,7 +67,7 @@ export function ListingFilters({ values }: { values: ListingFilterValues }) {
       aria-label="Filtrar lotes descobertos"
       onSubmit={handleSubmit}
       key={JSON.stringify(values)}
-      className="grid gap-4 rounded-lg border border-border bg-surface p-4 md:grid-cols-2 xl:grid-cols-6"
+      className="grid gap-4 border-b border-border pb-5 md:grid-cols-2 xl:grid-cols-6"
     >
       <Input
         name="busca"

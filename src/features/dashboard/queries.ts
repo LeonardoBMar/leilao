@@ -7,33 +7,39 @@ import { compareResult, limitIndicator } from "@/domain/results/results";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
 
-import type { DashboardSummary, PendingItems } from "./types";
+import type { DashboardCounts, LimitIndicator, PendingItems } from "./types";
 
-export async function getDashboardSummary(): Promise<DashboardSummary> {
+export async function getDashboardCounts(): Promise<DashboardCounts> {
   const user = await requireUser();
   // Lote ativo: não arquivado e de leilão não arquivado (RF-08).
   const activeLot = { ownerId: user.id, archivedAt: null, auction: { archivedAt: null } };
 
-  const [activeAuctions, activeLots, followedLotsWithoutResult, analyzedLots, currentResults] = await Promise.all([
+  const [activeAuctions, activeLots, followedLotsWithoutResult, analyzedLots] = await Promise.all([
     db.auction.count({ where: { ownerId: user.id, archivedAt: null } }),
     db.lot.count({ where: activeLot }),
     db.lot.count({ where: { ...activeLot, isFollowed: true, results: { none: {} } } }),
     db.lot.count({ where: { ...activeLot, analyses: { some: { status: "fixed" } } } }),
-    // Revisão vigente de cada lote: a de maior número (distinct após ordenar).
-    db.result.findMany({
-      where: { ownerId: user.id, lot: { archivedAt: null, auction: { archivedAt: null } } },
-      orderBy: [{ lotId: "asc" }, { revision: "desc" }],
-      distinct: ["lotId"],
-      select: {
-        outcome: true,
-        finalBidCents: true,
-        analysisTiming: true,
-        analysis: { select: { isViable: true, maxBidCents: true } },
-      },
-    }),
   ]);
+  return { activeAuctions, activeLots, followedLotsWithoutResult, analyzedLots };
+}
 
-  const indicator = limitIndicator(
+/** Indicador do SPEC §10 sobre a revisão vigente de cada lote ativo. */
+export async function getLimitIndicator(): Promise<LimitIndicator> {
+  const user = await requireUser();
+  // Revisão vigente de cada lote: a de maior número (distinct após ordenar).
+  const currentResults = await db.result.findMany({
+    where: { ownerId: user.id, lot: { archivedAt: null, auction: { archivedAt: null } } },
+    orderBy: [{ lotId: "asc" }, { revision: "desc" }],
+    distinct: ["lotId"],
+    select: {
+      outcome: true,
+      finalBidCents: true,
+      analysisTiming: true,
+      analysis: { select: { isViable: true, maxBidCents: true } },
+    },
+  });
+
+  return limitIndicator(
     currentResults.map((result) => {
       const limit: FixedLimit | null = !result.analysis
         ? null
@@ -50,8 +56,6 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
       };
     }),
   );
-
-  return { activeAuctions, activeLots, followedLotsWithoutResult, analyzedLots, indicator };
 }
 
 const PENDING_LIMIT = 5;

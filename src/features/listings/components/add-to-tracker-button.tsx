@@ -14,6 +14,7 @@ export function AddToTrackerButton({ listingId }: { listingId: string }) {
   return (
     <Button
       size="sm"
+      variant="secondary"
       className="w-fit"
       loading={isPending}
       loadingLabel="Adicionando…"

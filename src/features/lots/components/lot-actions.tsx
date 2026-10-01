@@ -42,7 +42,7 @@ export function LotActions({ lotId, lotLabel, isArchived, canDelete }: LotAction
   return (
     <>
       <Button
-        variant="secondary"
+        variant="ghost"
         loading={isPending && !isDeleteOpen}
         onClick={() => run(() => setLotArchivedAction(lotId, !isArchived))}
       >

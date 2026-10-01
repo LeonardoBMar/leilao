@@ -1,4 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle, Money } from "@/components/ui";
+import { DataList, DataRow, Money, Section, SectionTitle } from "@/components/ui";
+import { completeInputs } from "@/domain/finance/calculator";
 import { formatBps, formatCalendarDate, formatMonth } from "@/lib/format";
 
 import { FIXED_COST_LABELS } from "../labels";
@@ -6,113 +7,113 @@ import { fixedSummary } from "../summary-model";
 import type { AnalysisDetail } from "../types";
 import { AnalysisSummary } from "./analysis-summary";
 
-/** Versão fixada em modo leitura (RF-05, DESIGN.md §15.4). */
+/** Versão fixada em modo leitura (RF-05, DESIGN.md §15.4): premissas em linhas à esquerda, resumo ao lado. */
 export function AnalysisReadonly({ analysis }: { analysis: AnalysisDetail }) {
   const { inputs, references, outputs } = analysis;
+  const complete = completeInputs(inputs);
 
   return (
-    <div className="grid gap-6 xl:grid-cols-12">
-      <div className="grid content-start gap-6 xl:col-span-7">
-        <Card>
-          <CardHeader>
-            <CardTitle>Referências de preço</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <dl className="grid gap-4 sm:grid-cols-2">
-              <Item label="Valor de venda esperado">
-                <Money value={inputs.marketValue} />
-              </Item>
-              <Item label="Referência">
-                {[
+    <div className="grid items-start gap-9 xl:grid-cols-[minmax(0,1fr)_28.75rem] xl:gap-14">
+      <div className="grid content-start gap-8">
+        <Section className="gap-2.5">
+          <SectionTitle>Referências de preço</SectionTitle>
+          <DataList>
+            <DataRow label="Valor de venda esperado">
+              <Money value={inputs.marketValue} className="font-semibold" />
+            </DataRow>
+            <DataRow label="Referência">
+              <Joined
+                parts={[
                   references.marketReferenceDate ? formatCalendarDate(references.marketReferenceDate) : null,
                   references.marketReferenceSource,
-                ]
-                  .filter(Boolean)
-                  .join(" · ") || <Muted />}
-              </Item>
-              <Item label="FIPE">
-                <Money value={references.fipeValue} />
-              </Item>
-              <Item label="Referência FIPE">
-                {[
+                ]}
+              />
+            </DataRow>
+            <DataRow label="FIPE">
+              <Money value={references.fipeValue} />
+            </DataRow>
+            <DataRow label="Referência FIPE">
+              <Joined
+                parts={[
                   references.fipeReferenceMonth ? formatMonth(references.fipeReferenceMonth) : null,
                   references.fipeReferenceSource,
-                ]
-                  .filter(Boolean)
-                  .join(" · ") || <Muted />}
-              </Item>
-            </dl>
-          </CardContent>
-        </Card>
+                ]}
+              />
+            </DataRow>
+          </DataList>
+        </Section>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Custos, comissão e estratégia</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <dl className="grid gap-4 sm:grid-cols-2">
-              {FIXED_COST_LABELS.map(([field, label]) => (
-                <Item key={field} label={label}>
-                  <Money value={inputs[field]} />
-                </Item>
-              ))}
-              <Item label="Comissão">
-                {inputs.commissionMode === "fixed" ? (
-                  <>
-                    <Money value={inputs.commissionFixed} /> (fixa)
-                  </>
-                ) : inputs.commissionMode === "percentage" && inputs.commissionRateBps !== null ? (
-                  `${formatBps(inputs.commissionRateBps)} sobre o lance`
-                ) : (
-                  <Muted />
-                )}
-              </Item>
-              <Item label="Reserva para imprevistos">
-                <Money value={inputs.riskReserve} />
-                {inputs.riskReserveRateBps === null
-                  ? null
-                  : ` (${formatBps(inputs.riskReserveRateBps)} do valor de venda)`}
-              </Item>
-              <Item label="Margem desejada">
-                <Money value={inputs.desiredMargin} />
-                {inputs.desiredMarginRateBps === null
-                  ? null
-                  : ` (${formatBps(inputs.desiredMarginRateBps)} do valor de venda)`}
-              </Item>
-            </dl>
-          </CardContent>
-        </Card>
+        <Section className="gap-2.5">
+          <SectionTitle>Custos fora do lance</SectionTitle>
+          <DataList>
+            {FIXED_COST_LABELS.map(([field, label]) => (
+              <DataRow key={field} label={label}>
+                <Money value={inputs[field]} />
+              </DataRow>
+            ))}
+            <DataRow label="Custos fixos" emphasis>
+              <Money value={complete.ok ? complete.value.fixedCosts : null} />
+            </DataRow>
+          </DataList>
+        </Section>
+
+        <Section className="gap-2.5">
+          <SectionTitle>Comissão e estratégia</SectionTitle>
+          <DataList>
+            <DataRow
+              label={
+                <>
+                  Comissão{" "}
+                  <span className="text-caption text-muted">
+                    {inputs.commissionMode === "fixed" ? "valor fixo" : "sobre o lance"}
+                  </span>
+                </>
+              }
+            >
+              {inputs.commissionMode === "fixed" ? (
+                <Money value={inputs.commissionFixed} />
+              ) : inputs.commissionMode === "percentage" && inputs.commissionRateBps !== null ? (
+                formatBps(inputs.commissionRateBps)
+              ) : (
+                <Muted />
+              )}
+            </DataRow>
+            <DataRow label={<WithRate label="Reserva para imprevistos" rate={inputs.riskReserveRateBps} />}>
+              <Money value={inputs.riskReserve} />
+            </DataRow>
+            <DataRow label={<WithRate label="Margem desejada" rate={inputs.desiredMarginRateBps} />}>
+              <Money value={inputs.desiredMargin} />
+            </DataRow>
+          </DataList>
+        </Section>
 
         {references.notes ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Notas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-body whitespace-pre-line text-foreground">{references.notes}</p>
-            </CardContent>
-          </Card>
+          <Section className="gap-2.5">
+            <SectionTitle>Notas</SectionTitle>
+            <p className="text-body whitespace-pre-line text-foreground-secondary">{references.notes}</p>
+          </Section>
         ) : null}
       </div>
 
-      <div className="xl:col-span-5">
-        {outputs ? (
-          <AnalysisSummary model={fixedSummary(inputs, outputs)} currentBid={analysis.lot.currentBid} />
-        ) : null}
-      </div>
+      {outputs ? <AnalysisSummary model={fixedSummary(inputs, outputs)} currentBid={analysis.lot.currentBid} /> : null}
     </div>
   );
 }
 
-function Item({ label, children }: { label: string; children: React.ReactNode }) {
+function WithRate({ label, rate }: { label: string; rate: number | null }) {
   return (
-    <div className="grid content-start gap-1">
-      <dt className="text-caption text-muted">{label}</dt>
-      <dd className="text-body text-foreground">{children}</dd>
-    </div>
+    <>
+      {label}
+      {rate === null ? null : <span className="text-caption text-muted"> {formatBps(rate)} do valor de venda</span>}
+    </>
   );
+}
+
+function Joined({ parts }: { parts: (string | null)[] }) {
+  const text = parts.filter(Boolean).join(" · ");
+  return text ? <span className="text-foreground-secondary">{text}</span> : <Muted />;
 }
 
 function Muted() {
-  return <span className="text-muted">Não informado</span>;
+  return <span className="text-muted-subtle">—</span>;
 }

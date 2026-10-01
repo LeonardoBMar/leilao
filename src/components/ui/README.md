@@ -17,8 +17,8 @@ Esta pasta contém as primitivas reutilizáveis do Leilão Tracker. Os contratos
 | --- | --- | --- |
 | Ação | `Button`, `ButtonLink` | Ações primary, secondary, outline, ghost, destructive e link. Suporta loading. |
 | Formulário | `Input`, `Textarea`, `SelectField`, `Checkbox`, `RadioGroup`, `Switch` | Entrada acessível com label, descrição e erro. |
-| Estrutura | `Card`, `Table`, `Tabs`, `Pagination` | Composição de conteúdo e navegação local. |
-| Estado | `Badge`, `Alert`, `Skeleton`, `Spinner`, `EmptyState` | Estado semântico, carregamento e ausência de dados. |
+| Estrutura | `Section`, `SectionHeader`, `SectionTitle`, `DataList`, `DataRow`, `Card`, `Table`, `Tabs`, `Pagination` | Seções com linhas finas (padrão da direção A), painéis em destaque e navegação local. |
+| Estado | `Badge`, `Alert`, `Skeleton`, `Spinner`, `EmptyState` | Estado semântico, carregamento e ausência de dados (`EmptyState variant="inline"` dentro de seções). |
 | Overlay | `Dialog`, `DropdownMenu`, `Tooltip` | Interações acessíveis providas por Radix. |
 | Feedback | `Toaster`, `toast` | Confirmações e falhas globais breves. |
 

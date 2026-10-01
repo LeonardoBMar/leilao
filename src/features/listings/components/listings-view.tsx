@@ -74,7 +74,7 @@ async function ListingList({ filters, values }: { filters: Filters; values: List
           </AlertDescription>
         </Alert>
       ) : null}
-      <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <ul className="grid gap-x-7 gap-y-11 sm:grid-cols-2 xl:grid-cols-3">
         {page.items.map((item, index) => (
           <li key={item.id}>
             <ListingCard item={item} eager={index < FIRST_ROW} />

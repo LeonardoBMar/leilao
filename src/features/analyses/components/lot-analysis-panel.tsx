@@ -1,8 +1,7 @@
 import { Calculator, FilePen, GitBranchPlus } from "lucide-react";
 import Link from "next/link";
 
-import { ButtonLink, Card, CardContent, CardHeader, CardTitle, EmptyState, Money, Skeleton } from "@/components/ui";
-import { formatDateTime } from "@/lib/format";
+import { ButtonLink, EmptyState, Section, SectionHeader, SectionTitle, Skeleton } from "@/components/ui";
 
 import { listLotAnalyses } from "../queries";
 import { AnalysisHistory } from "./analysis-history";
@@ -15,57 +14,49 @@ export async function LotAnalysisPanel({ lotId }: { lotId: string }) {
   const latestFixed = versions.find((version) => version.status === "fixed");
 
   const action = draft ? (
-    <ButtonLink href={`/analise/${draft.id}`}>
+    <ButtonLink href={`/analise/${draft.id}`} variant="secondary">
       <FilePen aria-hidden="true" />
       Continuar rascunho v{draft.version}
     </ButtonLink>
   ) : (
-    <CreateAnalysisButton lotId={lotId} sourceId={latestFixed?.id}>
+    <CreateAnalysisButton lotId={lotId} sourceId={latestFixed?.id} variant={latestFixed ? "secondary" : "primary"}>
       {latestFixed ? <GitBranchPlus aria-hidden="true" /> : <Calculator aria-hidden="true" />}
       {latestFixed ? "Revisar premissas" : "Analisar lote"}
     </CreateAnalysisButton>
   );
 
   return (
-    <Card>
-      <CardHeader className="flex-row flex-wrap items-center justify-between gap-3">
-        <CardTitle>Análise financeira</CardTitle>
-        {versions.length > 0 ? action : null}
-      </CardHeader>
-      <CardContent className="grid gap-6">
+    <Section>
+      <SectionHeader>
+        <SectionTitle>Análise financeira</SectionTitle>
+        {versions.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-3">
+            {latestFixed ? (
+              <Link href={`/analise/${latestFixed.id}`} className="text-label text-accent hover:underline">
+                Abrir v{latestFixed.version}
+              </Link>
+            ) : null}
+            {action}
+          </div>
+        ) : null}
+      </SectionHeader>
+      <div className="grid gap-5">
         {versions.length === 0 ? (
           <EmptyState
-            icon={Calculator}
+            variant="inline"
             title="Nenhuma análise"
             description="Calcule quanto pode pagar por este lote considerando custos e margem."
             action={action}
           />
         ) : null}
 
-        {latestFixed ? (
-          <div className="grid gap-1">
-            <p className="text-caption text-muted">
-              Limite da v{latestFixed.version}, fixada em{" "}
-              {latestFixed.fixedAt ? formatDateTime(latestFixed.fixedAt) : "—"}
-            </p>
-            {latestFixed.isViable ? (
-              <p className="text-heading-2 text-foreground tabular-nums">
-                <Money value={latestFixed.maxBid} />
-              </p>
-            ) : (
-              <p className="text-heading-3 text-foreground">Sem lance viável com estas premissas</p>
-            )}
-            <Link href={`/analise/${latestFixed.id}`} className="w-fit text-caption text-accent hover:underline">
-              Ver análise fixada
-            </Link>
-          </div>
-        ) : versions.length > 0 ? (
+        {versions.length > 0 && !latestFixed ? (
           <p className="text-body text-muted">Nenhuma versão fixada ainda. Fixe o rascunho para registrar o limite.</p>
         ) : null}
 
         <AnalysisHistory versions={versions} />
-      </CardContent>
-    </Card>
+      </div>
+    </Section>
   );
 }
 

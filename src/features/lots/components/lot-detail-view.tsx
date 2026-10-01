@@ -1,32 +1,19 @@
 import { ExternalLink, Pencil } from "lucide-react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BreadcrumbLink, BreadcrumbPage, Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { PageHeader } from "@/components/layout/page-header";
-import {
-  Alert,
-  AlertDescription,
-  Badge,
-  ButtonLink,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Money,
-  Skeleton,
-} from "@/components/ui";
-import { formatDate, formatDateTime, formatKm } from "@/lib/format";
+import { Alert, AlertDescription, Badge, ButtonLink, Section, SectionTitle, Skeleton } from "@/components/ui";
+import { formatDateTime, formatKm } from "@/lib/format";
 
-import { updateCurrentBidAction } from "../actions";
 import { getLot } from "../queries";
 import { lotIdSchema } from "../schemas";
 import type { LotDetail } from "../types";
-import { CurrentBidForm } from "./current-bid-form";
+import { BidLimitPanel } from "./bid-limit-panel";
 import { FollowSwitch } from "./follow-switch";
-import { LimitBadge } from "./limit-badge";
 import { LotActions } from "./lot-actions";
 
-/** Ficha do lote (SPEC `/lotes/[id]`, DESIGN.md §15.3). Valores observados e limite antes das notas. */
+/** Ficha do lote (SPEC `/lotes/[id]`, DESIGN.md §15.3). Lance e limite primeiro; depois análise, resultado e veículo. */
 type LotDetailViewProps = {
   params: Promise<{ id: string }>;
   /** Blocos de análise e resultado, compostos pela rota (outras features não são importadas aqui). */
@@ -45,37 +32,36 @@ export async function LotDetailView({ params, analysis, result, photos }: LotDet
   const isArchived = lot.archivedAt !== null || lot.auction.archivedAt !== null;
 
   return (
-    <div className="grid gap-6">
-      <nav aria-label="Trilha" className="text-caption text-muted">
-        <Link href="/leiloes" className="hover:text-foreground hover:underline">
-          Leilões
-        </Link>
-        <span aria-hidden="true"> / </span>
-        <Link href={`/leiloes/${lot.auction.id}`} className="hover:text-foreground hover:underline">
-          {lot.auction.name}
-        </Link>
-        <span aria-hidden="true"> / </span>
-        <span className="text-foreground">Lote {lot.lotNumber}</span>
-      </nav>
+    <div className="grid gap-7">
+      <Breadcrumbs>
+        <BreadcrumbLink href="/leiloes">Leilões</BreadcrumbLink>
+        <BreadcrumbLink href={`/leiloes/${lot.auction.id}`}>{lot.auction.name}</BreadcrumbLink>
+        <BreadcrumbPage>Lote {lot.lotNumber}</BreadcrumbPage>
+      </Breadcrumbs>
 
       <PageHeader
-        eyebrow={`Lote ${lot.lotNumber}`}
+        eyebrow={`Lote ${lot.lotNumber} · ${formatDateTime(lot.auction.startsAt)}`}
         title={title}
-        description={[lot.vehicleVersion, `${lot.auction.name} · ${formatDateTime(lot.auction.startsAt)}`]
-          .filter(Boolean)
-          .join(" · ")}
+        description={lot.vehicleVersion ?? undefined}
+        meta={
+          <>
+            {lot.isFollowed ? <Badge>Acompanhando</Badge> : null}
+            {lot.limit ? <Badge>Análise v{lot.limit.version} fixada</Badge> : null}
+            {isArchived ? <Badge variant="warning">Arquivado</Badge> : null}
+          </>
+        }
         actions={
           <>
-            <ButtonLink href={`/lotes/${lot.id}/editar`} variant="secondary">
-              <Pencil aria-hidden="true" />
-              Editar
-            </ButtonLink>
             <LotActions
               lotId={lot.id}
               lotLabel={`Lote ${lot.lotNumber} — ${title}`}
               isArchived={lot.archivedAt !== null}
               canDelete={lot.fixedAnalysisCount === 0 && lot.resultCount === 0}
             />
+            <ButtonLink href={`/lotes/${lot.id}/editar`} variant="secondary">
+              <Pencil aria-hidden="true" />
+              Editar
+            </ButtonLink>
           </>
         }
       />
@@ -91,135 +77,87 @@ export async function LotDetailView({ params, analysis, result, photos }: LotDet
         </Alert>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
-        <div className="grid content-start gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Lances e limite</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-6">
-              <dl className="grid gap-4 sm:grid-cols-3">
-                <Stat label="Lance inicial">
-                  <Money value={lot.startingBid} />
-                </Stat>
-                <Stat label="Lance atual" note={currentBidNote(lot)}>
-                  <Money value={lot.currentBid} />
-                </Stat>
-                <Stat
-                  label="Meu limite"
-                  note={
-                    lot.limit
-                      ? `Análise v${lot.limit.version} fixada em ${formatDate(lot.limit.fixedAt)}`
-                      : "Sem análise fixada"
-                  }
-                >
-                  <Money value={lot.limit?.maxBid ?? null} className="text-foreground" />
-                </Stat>
-              </dl>
-              <div>
-                <LimitBadge limit={lot.limit} bid={lot.currentBid} />
-              </div>
-              <CurrentBidForm action={updateCurrentBidAction.bind(null, lot.id)} currentBid={lot.currentBid} />
-            </CardContent>
-          </Card>
+      <BidLimitPanel lot={lot} bidNote={currentBidNote(lot)} />
 
+      <div className="grid gap-9 xl:grid-cols-[minmax(0,1.75fr)_minmax(0,1fr)] xl:gap-14">
+        <div className="grid content-start gap-9">
           {analysis}
-
           {result}
         </div>
 
-        <div className="grid content-start gap-6">
-          <Card>
-            <CardContent className="pt-6">
-              <FollowSwitch lotId={lot.id} isFollowed={lot.isFollowed} />
-            </CardContent>
-          </Card>
+        <aside className="grid content-start gap-6" aria-label="Veículo e fotos">
+          <Section>
+            <SectionTitle>Veículo</SectionTitle>
+            <dl className="grid grid-cols-[minmax(0,9rem)_minmax(0,1fr)] gap-x-4 gap-y-2.5 text-body">
+              <Detail label="Marca e modelo">
+                {lot.brand} {lot.model}
+              </Detail>
+              <Detail label="Versão">{lot.vehicleVersion ?? <Unknown />}</Detail>
+              <Detail label="Ano fab./modelo">
+                <span className="tabular-nums">
+                  {lot.manufactureYear ?? "—"} / {lot.modelYear}
+                </span>
+              </Detail>
+              <Detail label="Quilometragem">{lot.mileageKm === null ? <Unknown /> : formatKm(lot.mileageKm)}</Detail>
+              <Detail label="Página do lote">
+                {lot.lotUrl ? (
+                  <a
+                    href={lot.lotUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex max-w-full items-center gap-1 text-accent hover:underline"
+                  >
+                    <span className="truncate">{new URL(lot.lotUrl).hostname}</span>
+                    <ExternalLink aria-hidden="true" className="size-4 shrink-0" />
+                    <span className="sr-only">(abre em nova aba)</span>
+                  </a>
+                ) : (
+                  <Unknown />
+                )}
+              </Detail>
+            </dl>
+          </Section>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Veículo</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <dl className="grid gap-4 text-body">
-                <Detail label="Marca e modelo">
-                  {lot.brand} {lot.model}
-                </Detail>
-                <Detail label="Versão">{lot.vehicleVersion ?? <Unknown />}</Detail>
-                <Detail label="Ano (fabricação/modelo)">
-                  {lot.manufactureYear ?? "—"}/{lot.modelYear}
-                </Detail>
-                <Detail label="Quilometragem">{lot.mileageKm === null ? <Unknown /> : formatKm(lot.mileageKm)}</Detail>
-                <Detail label="Página do lote">
-                  {lot.lotUrl ? (
-                    <a
-                      href={lot.lotUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex max-w-full items-center gap-1 text-accent hover:underline"
-                    >
-                      <span className="truncate">{new URL(lot.lotUrl).hostname}</span>
-                      <ExternalLink aria-hidden="true" className="size-4 shrink-0" />
-                      <span className="sr-only">(abre em nova aba)</span>
-                    </a>
-                  ) : (
-                    <Unknown />
-                  )}
-                </Detail>
-              </dl>
-            </CardContent>
-          </Card>
+          <div className="border-t border-border pt-6">{photos}</div>
 
-          {photos}
+          <div className="border-t border-border pt-4">
+            <FollowSwitch lotId={lot.id} isFollowed={lot.isFollowed} />
+          </div>
 
           {lot.notes ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Observações</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-body whitespace-pre-line text-foreground">{lot.notes}</p>
-              </CardContent>
-            </Card>
+            <Section className="border-t border-border pt-6">
+              <SectionTitle>Observações</SectionTitle>
+              <p className="text-body whitespace-pre-line text-foreground">{lot.notes}</p>
+            </Section>
           ) : null}
-        </div>
+        </aside>
       </div>
 
-      <div className="flex flex-wrap gap-2 text-caption text-muted">
-        <Badge variant="outline">Atualizado em {formatDateTime(lot.updatedAt)}</Badge>
-      </div>
-    </div>
-  );
-}
-
-function Stat({ label, note, children }: { label: string; note?: string; children: React.ReactNode }) {
-  return (
-    <div className="grid content-start gap-1">
-      <dt className="text-caption text-muted">{label}</dt>
-      <dd className="text-heading-3 text-foreground">{children}</dd>
-      {note ? <dd className="text-caption text-muted">{note}</dd> : null}
+      <p className="text-caption text-muted">Atualizado em {formatDateTime(lot.updatedAt)}</p>
     </div>
   );
 }
 
 function Detail({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="grid gap-1">
-      <dt className="text-caption text-muted">{label}</dt>
-      <dd className="text-foreground">{children}</dd>
-    </div>
+    <>
+      <dt className="text-muted">{label}</dt>
+      <dd className="min-w-0 text-foreground">{children}</dd>
+    </>
   );
 }
 
 function Unknown() {
-  return <span className="text-muted">Não informado</span>;
+  return <span className="text-muted-subtle">—</span>;
 }
 
 export function LotDetailSkeleton() {
   return (
-    <div className="grid gap-6" aria-hidden="true">
+    <div className="grid gap-7" aria-hidden="true">
       <Skeleton className="h-5 w-64" />
       <Skeleton className="h-20" />
-      <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
+      <Skeleton className="h-64" />
+      <div className="grid gap-9 xl:grid-cols-[minmax(0,1.75fr)_minmax(0,1fr)] xl:gap-14">
         <Skeleton className="h-96" />
         <Skeleton className="h-96" />
       </div>

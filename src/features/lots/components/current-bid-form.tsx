@@ -26,13 +26,13 @@ export function CurrentBidForm({ action, currentBid }: CurrentBidFormProps) {
       <CurrencyInput
         name="currentBid"
         label="Novo lance atual"
-        containerClassName="sm:flex-1"
+        containerClassName="sm:w-72"
         defaultValue={fieldValue(state, "currentBid") ?? saved}
         error={fieldError(state, "currentBid")}
         helperText="Deixe vazio para limpar."
       />
       <Button type="submit" variant="secondary" className="sm:mt-7" loading={pending} loadingLabel="Salvando…">
-        Atualizar
+        Atualizar lance
       </Button>
     </form>
   );

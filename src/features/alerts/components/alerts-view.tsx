@@ -72,7 +72,7 @@ export async function AlertsView({ searchParams }: { searchParams: SearchParams 
         />
       ) : (
         <section aria-label="Alertas" className="grid gap-4">
-          <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <ul className="grid gap-x-7 gap-y-11 sm:grid-cols-2 xl:grid-cols-3">
             {page.items.map((alert, index) => (
               <li key={alert.id}>
                 <AlertCard alert={alert} eager={index < FIRST_ROW} />
