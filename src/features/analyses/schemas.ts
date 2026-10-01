@@ -54,8 +54,11 @@ export const analysisFormSchema = z.object({
   commissionMode: z.preprocess(emptyToUndefined, z.enum(["fixed", "percentage"]).optional()),
   commissionFixed: optionalBrlAmount(),
   commissionRate: optionalPercent(),
+  /** Em R$: só análises anteriores ao % (D-38) mostram estes campos. */
   riskReserve: optionalBrlAmount(),
   desiredMargin: optionalBrlAmount(),
+  riskReserveRate: optionalPercent(),
+  desiredMarginRate: optionalPercent(),
   notes: optionalText().pipe(z.string().max(10_000, "Use até 10.000 caracteres.").optional()),
   knownResultAtCreation: checkbox(),
   /** Botão acionado: "Salvar rascunho" ou "Fixar análise". */
@@ -76,8 +79,11 @@ export function toAnalysisInputs(form: AnalysisForm): AnalysisInputs {
     commissionMode: form.commissionMode ?? null,
     commissionFixed: form.commissionMode === "fixed" ? (form.commissionFixed ?? null) : null,
     commissionRateBps: form.commissionMode === "percentage" ? (form.commissionRate ?? null) : null,
-    riskReserve: form.riskReserve ?? null,
-    desiredMargin: form.desiredMargin ?? null,
+    // Informado em %, o valor em R$ é derivado (não fica um número velho guardado).
+    riskReserve: form.riskReserveRate === undefined ? (form.riskReserve ?? null) : null,
+    riskReserveRateBps: form.riskReserveRate ?? null,
+    desiredMargin: form.desiredMarginRate === undefined ? (form.desiredMargin ?? null) : null,
+    desiredMarginRateBps: form.desiredMarginRate ?? null,
   };
 }
 

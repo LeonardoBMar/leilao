@@ -1,6 +1,6 @@
 "use client";
 
-import { Lock, Save, Trash2 } from "lucide-react";
+import { Calculator, Lock, Save, Trash2 } from "lucide-react";
 import { useActionState, useEffect, useId, useRef, useState, useTransition } from "react";
 
 import {
@@ -24,8 +24,11 @@ import {
   toast,
 } from "@/components/ui";
 import type { CommissionMode } from "@/domain/finance/calculator";
+import { estimateFromFipe } from "@/domain/finance/defaults";
+import { parseBRL } from "@/domain/money";
 import { fieldError, fieldValue, idleState } from "@/lib/action-state";
 import { toCalendarDateInput, toMonthInput } from "@/lib/dates";
+import { formatBps } from "@/lib/format";
 
 import { discardDraftAction, saveAnalysisAction } from "../actions";
 import { FIXED_COST_LABELS } from "../labels";
@@ -55,6 +58,9 @@ export function AnalysisEditor({ analysis }: { analysis: AnalysisDetail }) {
   const [mode, setMode] = useState<CommissionMode | "">(analysis.inputs.commissionMode ?? "");
   const [intent, setIntent] = useState<"draft" | "fix">("draft");
   const [isFixOpen, setIsFixOpen] = useState(false);
+  // "Estimar a partir da FIPE" remonta o formulário com os valores atuais mais os estimados (campos não controlados).
+  const [prefill, setPrefill] = useState<Record<string, string> | null>(null);
+  const [formKey, setFormKey] = useState(0);
 
   useEffect(() => {
     if (state.status === "success" && state.message) toast.success(state.message);
@@ -67,8 +73,51 @@ export function AnalysisEditor({ analysis }: { analysis: AnalysisDetail }) {
     setInputs(readAnalysisInputs(formData));
   }
 
+  function estimateSaleAndRepairs() {
+    if (!formRef.current) return;
+    const formData = new FormData(formRef.current);
+    const typed = formData.get("fipeValue");
+    const fipe = typeof typed === "string" ? parseBRL(typed) : null;
+    if (fipe === null || fipe <= 0) {
+      toast.error("Informe a FIPE para estimar.");
+      return;
+    }
+    const estimate = estimateFromFipe({ fipe, ...analysis.vehicle });
+    if (estimate.marketValue === null || estimate.repairCost === null || estimate.saleDiscount === null) {
+      toast.error("Sucata não tem valor de venda padrão. Informe o valor de venda e os reparos.");
+      return;
+    }
+    const current: Record<string, string> = {};
+    for (const [key, entry] of formData) if (typeof entry === "string") current[key] = entry;
+    const next = {
+      ...current,
+      marketValue: centsToInput(estimate.marketValue) ?? "",
+      repairCost: centsToInput(estimate.repairCost) ?? "",
+      marketReferenceSource: `FIPE − ${formatBps(estimate.saleDiscount)} (premissa padrão)`,
+    };
+    for (const [key, entry] of Object.entries(next)) formData.set(key, entry);
+    setPrefill(next);
+    setFormKey((key) => key + 1);
+    setInputs(readAnalysisInputs(formData));
+    toast.success("Valor de venda e reparos estimados a partir da FIPE.");
+  }
+
   const { inputs: saved, references } = analysis;
-  const value = (field: string, stored?: string) => fieldValue(state, field) ?? stored;
+  const value = (field: string, stored?: string) => fieldValue(state, field) ?? prefill?.[field] ?? stored;
+  const percent = (name: "riskReserveRate" | "desiredMarginRate", label: string, helperText: string) => (
+    <Input
+      name={name}
+      label={label}
+      inputMode="decimal"
+      placeholder={name === "riskReserveRate" ? "5" : "15"}
+      helperText={helperText}
+      defaultValue={value(
+        name,
+        bpsToInput(name === "riskReserveRate" ? saved.riskReserveRateBps : saved.desiredMarginRateBps),
+      )}
+      error={fieldError(state, name)}
+    />
+  );
   const money = (name: MoneyField, label: string, helperText?: string) => (
     <CurrencyInput
       name={name}
@@ -82,6 +131,7 @@ export function AnalysisEditor({ analysis }: { analysis: AnalysisDetail }) {
   return (
     <div className="grid gap-6 xl:grid-cols-12">
       <form
+        key={formKey}
         id={formId}
         ref={formRef}
         action={formAction}
@@ -99,8 +149,8 @@ export function AnalysisEditor({ analysis }: { analysis: AnalysisDetail }) {
           <legend className="mb-4 text-heading-3 text-foreground">Referências de preço</legend>
           <CurrencyInput
             name="marketValue"
-            label="Valor de mercado"
-            helperText="Na condição considerada após os reparos."
+            label="Valor de venda esperado"
+            helperText="Quanto o veículo vale após os reparos. Padrão: FIPE menos o desconto pela condição."
             containerClassName="md:col-span-2"
             defaultValue={value("marketValue", centsToInput(saved.marketValue))}
             error={fieldError(state, "marketValue")}
@@ -126,10 +176,16 @@ export function AnalysisEditor({ analysis }: { analysis: AnalysisDetail }) {
           <CurrencyInput
             name="fipeValue"
             label="FIPE (opcional)"
-            helperText="Referência separada; não substitui o valor de mercado."
+            helperText="Base das premissas padrão de valor de venda e reparos."
             defaultValue={value("fipeValue", centsToInput(references.fipeValue))}
             error={fieldError(state, "fipeValue")}
           />
+          <div className="flex items-end">
+            <Button type="button" variant="secondary" onClick={estimateSaleAndRepairs}>
+              <Calculator aria-hidden="true" />
+              Estimar a partir da FIPE
+            </Button>
+          </div>
           <Input
             name="fipeReferenceMonth"
             type="month"
@@ -144,7 +200,6 @@ export function AnalysisEditor({ analysis }: { analysis: AnalysisDetail }) {
             name="fipeReferenceSource"
             label="Fonte da FIPE"
             maxLength={200}
-            containerClassName="md:col-span-2"
             defaultValue={value("fipeReferenceSource", references.fipeReferenceSource ?? undefined)}
             error={fieldError(state, "fipeReferenceSource")}
           />
@@ -205,8 +260,19 @@ export function AnalysisEditor({ analysis }: { analysis: AnalysisDetail }) {
 
         <fieldset className="grid gap-4 md:grid-cols-2 md:gap-6">
           <legend className="mb-4 text-heading-3 text-foreground">Estratégia</legend>
-          {money("riskReserve", "Reserva para imprevistos")}
-          {money("desiredMargin", "Margem desejada", "Lucro pretendido ou economia mínima para uso próprio.")}
+          {percent("riskReserveRate", "Reserva para imprevistos (%)", "Do valor de venda.")}
+          {percent(
+            "desiredMarginRate",
+            "Margem desejada (%)",
+            "Do valor de venda: lucro pretendido ou economia mínima.",
+          )}
+          {/* Análises anteriores ao % (D-38) guardavam R$; o campo aparece até o % ser preenchido. */}
+          {saved.riskReserve !== null && saved.riskReserveRateBps === null
+            ? money("riskReserve", "Reserva em R$ (versão anterior)", "Vale enquanto o % estiver vazio.")
+            : null}
+          {saved.desiredMargin !== null && saved.desiredMarginRateBps === null
+            ? money("desiredMargin", "Margem em R$ (versão anterior)", "Vale enquanto o % estiver vazio.")
+            : null}
         </fieldset>
 
         <fieldset className="grid gap-4">
@@ -226,7 +292,9 @@ export function AnalysisEditor({ analysis }: { analysis: AnalysisDetail }) {
             defaultChecked={
               state.status === "error"
                 ? fieldValue(state, "knownResultAtCreation") !== undefined
-                : references.knownResultAtCreation
+                : prefill
+                  ? prefill.knownResultAtCreation !== undefined
+                  : references.knownResultAtCreation
             }
           />
         </fieldset>

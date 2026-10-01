@@ -1,10 +1,11 @@
 import "server-only";
 
-import { calculateMaxBid, FORMULA_VERSION } from "@/domain/finance/calculator";
+import { calculateMaxBid, completeInputs, FORMULA_VERSION } from "@/domain/finance/calculator";
 import { err, ok, type Result } from "@/lib/result";
 import { requireUser } from "@/server/auth";
 import { db, isUniqueViolation } from "@/server/db";
 
+import { defaultsInputFromListing, draftDefaults, listingForDefaultsSelect, UNKNOWN_VEHICLE } from "./draft-defaults";
 import { analysisColumns } from "./queries";
 import { type AnalysisForm, toAnalysisInputs, toAnalysisReferences } from "./schemas";
 
@@ -24,7 +25,9 @@ function toAnalysisData(form: AnalysisForm) {
     commissionFixedCents: inputs.commissionFixed,
     commissionRateBps: inputs.commissionRateBps,
     riskReserveCents: inputs.riskReserve,
+    riskReserveBps: inputs.riskReserveRateBps,
     desiredMarginCents: inputs.desiredMargin,
+    desiredMarginBps: inputs.desiredMarginRateBps,
     marketReferenceDate: references.marketReferenceDate,
     marketReferenceSource: references.marketReferenceSource,
     fipeValueCents: references.fipeValue,
@@ -39,13 +42,18 @@ export type CreateDraftError = "lot_not_found" | "source_not_found";
 
 /**
  * Abre um rascunho para o lote (RF-05). Se já existir um, devolve o existente (no máximo um por lote).
- * Revisar uma versão fixada copia suas premissas; sem origem indicada, parte da última fixada, se houver.
+ * Revisar uma versão fixada copia suas premissas; sem origem indicada, parte da última fixada, se houver. Sem versão
+ * fixada, nasce com as premissas padrão (D-38), a partir do anúncio ligado ao lote quando houver.
  */
 export async function createDraft(lotId: string, sourceId?: string): Promise<Result<{ id: string }, CreateDraftError>> {
   const user = await requireUser();
   const lot = await db.lot.findFirst({
     where: { id: lotId, ownerId: user.id },
-    select: { id: true, _count: { select: { results: true } } },
+    select: {
+      id: true,
+      _count: { select: { results: true } },
+      listing: { select: { ...listingForDefaultsSelect, lastCheckedAt: true, source: { select: { name: true } } } },
+    },
   });
   if (!lot) return err("lot_not_found");
 
@@ -69,13 +77,22 @@ export async function createDraft(lotId: string, sourceId?: string): Promise<Res
     },
   });
   if (sourceId && !source) return err("source_not_found");
+  const { listing } = lot;
+  const premises =
+    source ??
+    (listing
+      ? draftDefaults(defaultsInputFromListing(listing), {
+          name: listing.source.name,
+          referenceDate: listing.lastCheckedAt,
+        })
+      : draftDefaults(UNKNOWN_VEHICLE, null));
 
   try {
     const draft = await db.$transaction(async (tx) => {
       const { _max } = await tx.analysis.aggregate({ where: { lotId }, _max: { version: true } });
       return tx.analysis.create({
         data: {
-          ...source,
+          ...premises,
           ownerId: user.id,
           lotId,
           version: (_max.version ?? 0) + 1,
@@ -120,7 +137,8 @@ export async function fixAnalysis(id: string, form: AnalysisForm): Promise<Resul
   const user = await requireUser();
   const inputs = toAnalysisInputs(form);
   const outcome = calculateMaxBid(inputs);
-  if (outcome.kind === "incomplete") return err("incomplete");
+  const complete = completeInputs(inputs);
+  if (outcome.kind === "incomplete" || !complete.ok) return err("incomplete");
   if (inputs.marketValue === null || inputs.marketValue <= 0) return err("market_value_not_positive");
 
   const outputs =
@@ -137,6 +155,9 @@ export async function fixAnalysis(id: string, form: AnalysisForm): Promise<Resul
     where: { id, ownerId: user.id, status: "draft" },
     data: {
       ...toAnalysisData(form),
+      // Reserva e margem em %: a versão fixada guarda também o valor aplicado em R$ (D-38).
+      riskReserveCents: complete.value.riskReserve,
+      desiredMarginCents: complete.value.desiredMargin,
       ...outputs,
       formulaVersion: FORMULA_VERSION,
       status: "fixed",

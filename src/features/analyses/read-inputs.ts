@@ -14,7 +14,12 @@ export function readAnalysisInputs(formData: FormData): AnalysisInputs {
   };
   const mode = formData.get("commissionMode");
   const commissionMode = mode === "fixed" || mode === "percentage" ? mode : null;
-  const rate = formData.get("commissionRate");
+  const percent = (name: string) => {
+    const value = formData.get(name);
+    return typeof value === "string" && value.trim() !== "" ? parsePercent(value) : null;
+  };
+  const reserveRate = percent("riskReserveRate");
+  const marginRate = percent("desiredMarginRate");
 
   return {
     marketValue: money("marketValue"),
@@ -26,9 +31,10 @@ export function readAnalysisInputs(formData: FormData): AnalysisInputs {
     otherFees: money("otherFees"),
     commissionMode,
     commissionFixed: commissionMode === "fixed" ? money("commissionFixed") : null,
-    commissionRateBps:
-      commissionMode === "percentage" && typeof rate === "string" && rate.trim() !== "" ? parsePercent(rate) : null,
-    riskReserve: money("riskReserve"),
-    desiredMargin: money("desiredMargin"),
+    commissionRateBps: commissionMode === "percentage" ? percent("commissionRate") : null,
+    riskReserve: reserveRate === null ? money("riskReserve") : null,
+    riskReserveRateBps: reserveRate,
+    desiredMargin: marginRate === null ? money("desiredMargin") : null,
+    desiredMarginRateBps: marginRate,
   };
 }

@@ -59,17 +59,21 @@ test("análise: exemplos do SPEC, pendências e fixação (CA-03, CA-04, CA-05, 
   await page.goto(`/lotes/${lotId}`);
   await page.getByRole("button", { name: "Analisar lote" }).click();
   await expect(page.getByRole("heading", { name: "Análise financeira v1" })).toBeVisible();
+  // D-38: o rascunho nasce com as premissas padrão (lote sem anúncio: custos fixos, reserva e margem em %).
+  await expect(field(page, "Pneus")).toHaveValue("2400,00");
+  await expect(field(page, "Margem desejada (%)")).toHaveValue("15");
 
+  // Reserva 4% e margem 12% de R$ 50.000 = R$ 2.000 e R$ 6.000, os valores do SPEC.
   await fillFields(page, {
-    "Valor de mercado": "50.000",
+    "Valor de venda esperado": "50.000",
     Reparos: "5.000",
     Documentação: "1.000",
     "Transporte/guincho": "800",
     Pneus: "0",
     Revisão: "0",
     "Outras taxas fixas": "0",
-    "Reserva para imprevistos": "2.000",
-    "Margem desejada": "6.000",
+    "Reserva para imprevistos (%)": "4",
+    "Margem desejada (%)": "12",
   });
   await page.getByRole("radio", { name: "Valor fixo" }).click();
   await field(page, "Comissão fixa").fill("2.000");
@@ -118,7 +122,7 @@ test("revisar premissas cria nova versão e preserva a fixada (CA-08)", async ({
   await page.getByRole("button", { name: "Revisar premissas" }).click();
   await expect(page.getByRole("heading", { name: "Análise financeira v2" })).toBeVisible();
   // Premissas copiadas da v1.
-  await expect(field(page, "Valor de mercado")).toHaveValue("50000,00");
+  await expect(field(page, "Valor de venda esperado")).toHaveValue("50000,00");
   await expect(page.getByRole("link", { name: "v1" })).toBeVisible();
 
   // Descarta o rascunho: a v1 continua intacta.
@@ -158,9 +162,9 @@ test("nova versão depois do resultado não muda a comparação vinculada (CA-09
   // Criada com resultado já registrado: retrospectiva (SPEC §10).
   await expect(page.getByText("Retrospectiva", { exact: true }).first()).toBeVisible();
 
-  // Limite novo bem diferente: R$ 43.200,00.
-  await field(page, "Valor de mercado").fill("60.000");
-  await expect(section(page, "Lance máximo")).toContainText(brl("43.200,00"));
+  // Limite novo bem diferente: reserva e margem em % acompanham a venda (2.400 e 7.200) → R$ 41.600,00.
+  await field(page, "Valor de venda esperado").fill("60.000");
+  await expect(section(page, "Lance máximo")).toContainText(brl("41.600,00"));
   await page.getByRole("button", { name: "Fixar análise" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Fixar análise" }).click();
   await expect(page.getByText(/^Fixada em /)).toBeVisible();

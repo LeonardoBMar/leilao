@@ -144,7 +144,9 @@ describe("estimateLimit", () => {
     commissionFixed: null,
     commissionRateBps: bps(500),
     riskReserve: cents(200_000),
+    riskReserveRateBps: null,
     desiredMargin: cents(800_000),
+    desiredMarginRateBps: null,
     ...overrides,
   });
   const analysis = (overrides: Partial<AnalysisSample> = {}): AnalysisSample => ({
@@ -155,28 +157,31 @@ describe("estimateLimit", () => {
     ...overrides,
   });
 
-  it("com 3 análises parecidas: calculadora com a mediana das premissas", () => {
+  it("com 3 análises parecidas: calculadora com a mediana das premissas; reserva e margem em % da venda", () => {
     const estimate = estimateLimit(target(), [analysis(), analysis(), analysis({ modelYear: 2021 })]);
-    // V 50.000 − F 7.000 − R 2.000 − M 8.000 = 33.000 = L × 1,05 → L = 31.428,57
-    expect(estimate).toEqual({ kind: "estimated", n: 3, maxBid: 3_142_857, marketValueFrom: "listing" });
+    // Venda = FIPE 50.000 − 13% = 43.500. R = 4% (2.000/50.000) = 1.740; M = 16% = 6.960.
+    // 43.500 − F 7.000 − 1.740 − 6.960 = 27.800 = L × 1,05 → L = 26.476,19
+    expect(estimate).toEqual({ kind: "estimated", n: 3, maxBid: 2_647_619, marketValueFrom: "listing" });
   });
 
   it("comissão segue a modalidade da maioria: fixa com a mediana dos valores fixos", () => {
     const fixed = inputs({ commissionMode: "fixed", commissionRateBps: null, commissionFixed: cents(150_000) });
     const estimate = estimateLimit(target(), [analysis({ inputs: fixed }), analysis({ inputs: fixed }), analysis()]);
-    // V 50.000 − F 7.000 − K 1.500 − R 2.000 − M 8.000 = 31.500
-    expect(estimate).toEqual({ kind: "estimated", n: 3, maxBid: 3_150_000, marketValueFrom: "listing" });
+    // V 43.500 − F 7.000 − K 1.500 − R 1.740 − M 6.960 = 26.300
+    expect(estimate).toEqual({ kind: "estimated", n: 3, maxBid: 2_630_000, marketValueFrom: "listing" });
   });
 
-  it("valor de mercado: a FIPE do anúncio; sem ela, a mediana das análises", () => {
+  it("valor de venda: FIPE do anúncio menos o desconto pela condição; sem ela, a mediana das análises", () => {
     const three = [analysis(), analysis(), analysis()];
-    // V 40.000 (anúncio) − 17.000 = 23.000 = L × 1,05 → L = 21.904,76
+    // FIPE 40.000 − 13% = 34.800; − F 7.000 − R 1.392 − M 5.568 = 20.840 = L × 1,05 → L = 19.847,62 (com a comissão arredondada)
     expect(estimateLimit(target({ marketValue: cents(4_000_000) }), three)).toEqual({
       kind: "estimated",
       n: 3,
-      maxBid: 2_190_476,
+      maxBid: 1_984_762,
       marketValueFrom: "listing",
     });
+    // Média monta: FIPE 50.000 − 30% = 35.000; − 7.000 − 1.400 − 5.600 = 21.000 → L = 20.000
+    expect(estimateLimit(target({ damageLevel: "medium" }), three)).toMatchObject({ maxBid: 2_000_000 });
     expect(estimateLimit(target({ marketValue: null }), three)).toEqual({
       kind: "estimated",
       n: 3,

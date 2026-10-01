@@ -2,7 +2,7 @@ import type { AnalysisField } from "@/domain/finance/calculator";
 
 /** Nomes dos campos em pt-BR, usados na lista de pendências para fixar (SPEC §7.6). */
 export const FIELD_LABELS = {
-  marketValue: "Valor de mercado",
+  marketValue: "Valor de venda esperado",
   repairCost: "Reparos",
   documentationCost: "Documentação",
   transportCost: "Transporte/guincho",
@@ -28,8 +28,8 @@ export const FORM_FIELD = {
   commissionMode: "commissionMode",
   commissionFixed: "commissionFixed",
   commissionRateBps: "commissionRate",
-  riskReserve: "riskReserve",
-  desiredMargin: "desiredMargin",
+  riskReserve: "riskReserveRate",
+  desiredMargin: "desiredMarginRate",
 } satisfies Record<AnalysisField, string>;
 
 export const FIXED_COST_LABELS = [

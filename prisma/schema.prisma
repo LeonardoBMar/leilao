@@ -181,6 +181,9 @@ model Analysis {
   // Estratégia (R, M)
   riskReserveCents       Int?            @map("risk_reserve_cents")
   desiredMarginCents     Int?            @map("desired_margin_cents")
+  /// Reserva e margem em % do valor de venda (D-38). Na fixação, as colunas em centavos guardam o valor aplicado.
+  riskReserveBps         Int?            @map("risk_reserve_bps")
+  desiredMarginBps       Int?            @map("desired_margin_bps")
   notes                  String?
   // Saídas preservadas ao fixar
   maxBidCents            Int?            @map("max_bid_cents")

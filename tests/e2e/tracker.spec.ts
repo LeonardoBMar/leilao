@@ -22,7 +22,7 @@ test("adiciona um anúncio à análise, não duplica e leva ao lote acompanhado"
   await card.getByRole("button", { name: "Adicionar à análise" }).click();
   await expect(page).toHaveURL(/\/analise\/[0-9a-f-]+$/);
   await expect(page.getByRole("heading", { name: "Análise financeira v1", level: 1 })).toBeVisible();
-  await expect(page.locator("textarea[name=notes]")).toHaveValue(/^Preenchido com o anúncio no /);
+  await expect(page.locator("textarea[name=notes]")).toHaveValue(/^Premissas padrão, pessimistas/);
 
   // De volta ao catálogo, o mesmo anúncio aparece como já adicionado e leva ao lote.
   await page.goto(CATALOG);

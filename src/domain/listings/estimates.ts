@@ -1,4 +1,11 @@
-import { type AnalysisInputs, calculateMaxBid, type CommissionMode, missingFields } from "../finance/calculator";
+import {
+  type AnalysisInputs,
+  calculateMaxBid,
+  type CommissionMode,
+  completeInputs,
+  missingFields,
+} from "../finance/calculator";
+import { estimateFromFipe } from "../finance/defaults";
 import { bps, type Cents, cents } from "../money";
 import type { DamageLevel } from "./condition";
 import { normalizePlaceName } from "./place";
@@ -160,8 +167,9 @@ export type LimitEstimate =
 
 /**
  * Limite estimado: mediana de cada premissa das análises fixadas do usuário para veículos da mesma marca, modelo base
- * e ano ±1, na calculadora atual. O valor de mercado é o do próprio anúncio (a FIPE que a fonte mostra), que é do
- * veículo exato; sem ele, a mediana das análises. A comissão segue a modalidade mais usada nessas análises.
+ * e ano ±1, na calculadora atual. O valor de venda sai da FIPE do próprio anúncio (do veículo exato) menos o desconto
+ * pela condição (D-38); sem ela, a mediana das análises. Reserva e margem entram em % do valor de venda (mediana do %
+ * de cada análise). A comissão segue a modalidade mais usada nessas análises.
  */
 export function estimateLimit(target: EstimateTarget, analyses: readonly AnalysisSample[]): LimitEstimate {
   const key = vehicleKey(target.brand, target.model);
@@ -184,7 +192,23 @@ export function estimateLimit(target: EstimateTarget, analyses: readonly Analysi
   const commissionMode: CommissionMode = percentageCount * 2 >= inputs.length ? "percentage" : "fixed";
   const rate = median((input) => (input.commissionMode === "percentage" ? input.commissionRateBps : null));
   const fixed = median((input) => (input.commissionMode === "fixed" ? input.commissionFixed : null));
-  const listingValue = target.marketValue !== null && target.marketValue > 0 ? target.marketValue : null;
+  const listingValue = estimateFromFipe({
+    fipe: target.marketValue,
+    isMotorcycle: target.category === "Motos",
+    damageLevel: target.damageLevel,
+    airbagDeployed: false,
+    missingParts: false,
+  }).marketValue;
+  const shareOfSale = (pick: (complete: { marketValue: Cents; riskReserve: Cents; desiredMargin: Cents }) => Cents) =>
+    medianOf(
+      inputs.map((input) => {
+        const complete = completeInputs(input);
+        if (!complete.ok || complete.value.marketValue <= 0) return null;
+        return Math.min(10_000, (pick(complete.value) * 10_000) / complete.value.marketValue);
+      }),
+    );
+  const reserveRate = shareOfSale((complete) => complete.riskReserve);
+  const marginRate = shareOfSale((complete) => complete.desiredMargin);
 
   const outcome = calculateMaxBid({
     marketValue: listingValue ?? toCents(median((input) => input.marketValue)),
@@ -197,8 +221,10 @@ export function estimateLimit(target: EstimateTarget, analyses: readonly Analysi
     commissionMode,
     commissionRateBps: commissionMode === "percentage" && rate !== null ? bps(Math.round(rate)) : null,
     commissionFixed: commissionMode === "fixed" ? toCents(fixed) : null,
-    riskReserve: toCents(median((input) => input.riskReserve)),
-    desiredMargin: toCents(median((input) => input.desiredMargin)),
+    riskReserve: null,
+    riskReserveRateBps: reserveRate === null ? null : bps(Math.round(reserveRate)),
+    desiredMargin: null,
+    desiredMarginRateBps: marginRate === null ? null : bps(Math.round(marginRate)),
   });
   // Só entram análises completas, e cada premissa tem ao menos um valor: "incompleto" não acontece. Por segurança,
   // sem limite em vez de um número montado com lacunas.

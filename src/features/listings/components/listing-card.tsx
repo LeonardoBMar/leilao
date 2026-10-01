@@ -161,7 +161,7 @@ function EstimateLines({ estimate }: { estimate: ListingEstimate }) {
                   <Money value={limit.maxBid} className="font-semibold text-primary" />
                 )}{" "}
                 <span className="text-muted">
-                  ({limit.n} análises{limit.marketValueFrom === "listing" ? ", FIPE do anúncio" : ""})
+                  ({limit.n} análises{limit.marketValueFrom === "listing" ? ", venda pela FIPE do anúncio" : ""})
                 </span>
               </>
             )}

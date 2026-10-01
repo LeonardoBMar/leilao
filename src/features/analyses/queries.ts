@@ -23,6 +23,8 @@ export const analysisColumns = {
   commissionRateBps: true,
   riskReserveCents: true,
   desiredMarginCents: true,
+  riskReserveBps: true,
+  desiredMarginBps: true,
 } satisfies Prisma.AnalysisSelect;
 
 type InputRow = Prisma.AnalysisGetPayload<{ select: typeof analysisColumns }>;
@@ -41,7 +43,9 @@ export function toInputs(row: InputRow): AnalysisInputs {
     commissionFixed: money(row.commissionFixedCents),
     commissionRateBps: row.commissionRateBps === null ? null : bps(row.commissionRateBps),
     riskReserve: money(row.riskReserveCents),
+    riskReserveRateBps: row.riskReserveBps === null ? null : bps(row.riskReserveBps),
     desiredMargin: money(row.desiredMarginCents),
+    desiredMarginRateBps: row.desiredMarginBps === null ? null : bps(row.desiredMarginBps),
   };
 }
 
@@ -81,6 +85,7 @@ export async function getAnalysis(id: string): Promise<AnalysisDetail | null> {
           auction: { select: { id: true, name: true } },
           analyses: { where: { status: "draft" }, select: { id: true } },
           _count: { select: { results: true } },
+          listing: { select: { category: true, damageLevel: true, conditionFlags: true } },
         },
       },
     },
@@ -114,6 +119,13 @@ export async function getAnalysis(id: string): Promise<AnalysisDetail | null> {
         : null,
     fixedAt: row.fixedAt,
     createdAt: row.createdAt,
+    // Sem anúncio ligado, o botão "Estimar a partir da FIPE" supõe carro sem sinistro declarado.
+    vehicle: {
+      isMotorcycle: lot.listing?.category === "Motos",
+      damageLevel: lot.listing?.damageLevel ?? null,
+      airbagDeployed: lot.listing?.conditionFlags.includes("airbag_deployed") ?? false,
+      missingParts: lot.listing?.conditionFlags.includes("missing_parts") ?? false,
+    },
     updatedAt: row.updatedAt,
     lot: {
       id: lot.id,

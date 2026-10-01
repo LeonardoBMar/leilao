@@ -4,6 +4,7 @@ import { z } from "zod";
 import { calculateMaxBid, missingFields, simulateBid } from "@/domain/finance/calculator";
 import { cents } from "@/domain/money";
 
+import { defaultsInputFromListing, draftDefaults, UNKNOWN_VEHICLE } from "./draft-defaults";
 import { FORM_FIELD } from "./labels";
 import { readAnalysisInputs } from "./read-inputs";
 import { analysisFormSchema, toAnalysisInputs } from "./schemas";
@@ -158,5 +159,68 @@ describe("fixedSummary", () => {
       formulaVersion: 1,
     });
     expect(model.outcome.kind).toBe("not_viable");
+  });
+});
+
+describe("reserva e margem em % (D-38)", () => {
+  it("formulário em %: o valor em R$ não é guardado e o limite usa o % do valor de venda", () => {
+    const form = analysisFormSchema.parse({
+      ...fixedCommissionForm,
+      riskReserve: "",
+      desiredMargin: "999",
+      riskReserveRate: "4",
+      desiredMarginRate: "12",
+    });
+    const inputs = toAnalysisInputs(form);
+    expect(inputs).toMatchObject({ riskReserve: null, riskReserveRateBps: 400, desiredMargin: null });
+    expect(calculateMaxBid(inputs)).toEqual(
+      calculateMaxBid(toAnalysisInputs(analysisFormSchema.parse(fixedCommissionForm))),
+    );
+  });
+
+  it("prévia no navegador lê o %", () => {
+    const inputs = readAnalysisInputs(toFormData({ ...fixedCommissionForm, desiredMarginRate: "15" }));
+    expect(inputs).toMatchObject({ desiredMargin: null, desiredMarginRateBps: 1_500 });
+  });
+});
+
+describe("draftDefaults", () => {
+  it("rascunho padrão de anúncio: colunas preenchidas e nota com a origem de cada número", () => {
+    const draft = draftDefaults(
+      defaultsInputFromListing({
+        marketValueCents: 8_000_000,
+        category: "Carros",
+        damageLevel: "small",
+        conditionFlags: ["airbag_deployed"],
+        commissionBps: 500,
+        dispatcherFeeCents: null,
+        removalFeeCents: 55_000,
+        storageFeeCents: 235_000,
+        inspectionFeeCents: 25_000,
+        otherFeesCents: null,
+        municipality: null,
+      }),
+      { name: "Leilo", referenceDate: new Date("2026-10-01T12:00:00Z") },
+    );
+    expect(draft).toMatchObject({
+      marketValueCents: 6_400_000,
+      repairCostCents: 2_000_000,
+      fipeValueCents: 8_000_000,
+      transportCostCents: 55_000,
+      otherFeesCents: 260_000,
+      documentationCostCents: 150_000,
+      commissionMode: "percentage",
+      riskReserveBps: 500,
+      desiredMarginBps: 1_500,
+    });
+    expect(draft.notes).toMatch(/FIPE R\$\s80\.000,00 − 20% \(pequena monta\)/);
+    expect(draft.notes).toMatch(/airbag acionado/);
+    expect(draft.notes).toMatch(/Transporte: remoção do anúncio no Leilo/);
+  });
+
+  it("lote sem anúncio: só os custos fixos; venda e reparos esperam a FIPE", () => {
+    const draft = draftDefaults(UNKNOWN_VEHICLE, null);
+    expect(draft).toMatchObject({ marketValueCents: null, repairCostCents: null, tiresCostCents: 240_000 });
+    expect(draft.notes).toMatch(/Estimar a partir da FIPE/);
   });
 });

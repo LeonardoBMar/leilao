@@ -1,11 +1,10 @@
 import "server-only";
 
 import { hasEnded } from "@/domain/listings/outcome";
-import { planTracker, type TrackerSuggestions } from "@/domain/listings/tracker";
-import { bps, cents } from "@/domain/money";
+import { planTracker } from "@/domain/listings/tracker";
+import { cents } from "@/domain/money";
+import { defaultsInputFromListing, draftDefaults, listingForDefaultsSelect } from "@/features/analyses/draft-defaults";
 import type { Prisma } from "@/generated/prisma/client";
-import { calendarDateToUtc, toCalendarDateInput } from "@/lib/dates";
-import { formatBps, formatBRL } from "@/lib/format";
 import { err, ok, type Result } from "@/lib/result";
 import { requireUser } from "@/server/auth";
 import { db, isUniqueViolation } from "@/server/db";
@@ -59,21 +58,17 @@ export async function addListingToTracker(listingId: string): Promise<Result<Add
       status: listing.status,
       currentBid: toCents(listing.currentBidCents),
       minimumBid: toCents(listing.minimumBidCents),
-      marketValue: toCents(listing.marketValueCents),
-      commissionRate: listing.commissionBps === null ? null : bps(listing.commissionBps),
-      dispatcherFee: toCents(listing.dispatcherFeeCents),
-      removalFee: toCents(listing.removalFeeCents),
-      storageFee: toCents(listing.storageFeeCents),
-      inspectionFee: toCents(listing.inspectionFeeCents),
-      otherFees: toCents(listing.otherFeesCents),
       lastCheckedAt: listing.lastCheckedAt,
     },
     now,
   );
   // A tela só oferece o botão com marca, modelo e ano; aqui cobre o anúncio que mudou nesse meio-tempo.
   if (!planned.ok) return err("incomplete");
-  const { auction, lot, suggestions } = planned.value;
-  const sourceName = listing.source.name;
+  const { auction, lot } = planned.value;
+  const premises = draftDefaults(defaultsInputFromListing(listing), {
+    name: listing.source.name,
+    referenceDate: listing.lastCheckedAt,
+  });
 
   try {
     return await db.$transaction(async (tx) => {
@@ -123,7 +118,7 @@ export async function addListingToTracker(listingId: string): Promise<Result<Add
           status: "draft",
           // Anúncio já encerrado: a análise é feita conhecendo o desfecho e fica fora do indicador (SPEC §10).
           knownResultAtCreation: hasEnded(listing, now),
-          ...draftFromSuggestions(suggestions, sourceName),
+          ...premises,
         },
         select: { id: true },
       });
@@ -137,34 +132,6 @@ export async function addListingToTracker(listingId: string): Promise<Result<Add
     if (!winner) throw error;
     return ok({ kind: "existing", lotId: winner.id });
   }
-}
-
-/** Sugestões da fonte → colunas do rascunho, com a origem registrada na referência e nas observações (D-30). */
-function draftFromSuggestions(suggestions: TrackerSuggestions, sourceName: string) {
-  const referenceDate = calendarDateToUtc(toCalendarDateInput(suggestions.referenceDate));
-  const lines = [
-    suggestions.marketValue === null ? null : `valor de mercado ${formatBRL(suggestions.marketValue)}`,
-    suggestions.commissionRate === null ? null : `comissão ${formatBps(suggestions.commissionRate)}`,
-    suggestions.documentationCost === null ? null : `despachante ${formatBRL(suggestions.documentationCost)}`,
-    suggestions.transportCost === null ? null : `remoção ${formatBRL(suggestions.transportCost)} (transporte)`,
-    suggestions.otherFees === null ? null : `depósito, vistoria e outras ${formatBRL(suggestions.otherFees)}`,
-  ].filter((line) => line !== null);
-
-  return {
-    marketValueCents: suggestions.marketValue,
-    marketReferenceDate: suggestions.marketValue === null ? null : referenceDate,
-    marketReferenceSource: suggestions.marketValue === null ? null : `${sourceName} (informado no anúncio)`,
-    commissionMode: suggestions.commissionRate === null ? null : ("percentage" as const),
-    commissionRateBps: suggestions.commissionRate,
-    documentationCostCents: suggestions.documentationCost,
-    transportCostCents: suggestions.transportCost,
-    otherFeesCents: suggestions.otherFees,
-    notes:
-      lines.length === 0
-        ? null
-        : `Preenchido com o anúncio no ${sourceName} (revise antes de fixar): ${lines.join("; ")}. ` +
-          "Reparos, pneus, revisão, reserva e margem ficam com você.",
-  };
 }
 
 const trackerSelect = {
@@ -187,13 +154,7 @@ const trackerSelect = {
   status: true,
   currentBidCents: true,
   minimumBidCents: true,
-  marketValueCents: true,
-  commissionBps: true,
-  dispatcherFeeCents: true,
-  removalFeeCents: true,
-  storageFeeCents: true,
-  inspectionFeeCents: true,
-  otherFeesCents: true,
+  ...listingForDefaultsSelect,
   lastCheckedAt: true,
   source: { select: { name: true } },
 } satisfies Prisma.ListingSelect;

@@ -19,7 +19,7 @@ export function AnalysisReadonly({ analysis }: { analysis: AnalysisDetail }) {
           </CardHeader>
           <CardContent>
             <dl className="grid gap-4 sm:grid-cols-2">
-              <Item label="Valor de mercado">
+              <Item label="Valor de venda esperado">
                 <Money value={inputs.marketValue} />
               </Item>
               <Item label="Referência">
@@ -69,9 +69,15 @@ export function AnalysisReadonly({ analysis }: { analysis: AnalysisDetail }) {
               </Item>
               <Item label="Reserva para imprevistos">
                 <Money value={inputs.riskReserve} />
+                {inputs.riskReserveRateBps === null
+                  ? null
+                  : ` (${formatBps(inputs.riskReserveRateBps)} do valor de venda)`}
               </Item>
               <Item label="Margem desejada">
                 <Money value={inputs.desiredMargin} />
+                {inputs.desiredMarginRateBps === null
+                  ? null
+                  : ` (${formatBps(inputs.desiredMarginRateBps)} do valor de venda)`}
               </Item>
             </dl>
           </CardContent>

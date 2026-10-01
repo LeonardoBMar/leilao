@@ -34,14 +34,22 @@ Na página do leilão, **Adicionar lote**.
 
 Na ficha do lote, **Analisar lote**. A análise calcula o **lance máximo**: o maior lance que ainda deixa a margem que você quer.
 
-| Campo | O que é |
-| --- | --- |
-| Valor de mercado | Por quanto o carro vale/vende depois de pronto. É a base do cálculo. |
-| FIPE (opcional) | Só referência. Não substitui o valor de mercado. |
-| Custos fixos | Reparos, documentação, transporte, pneus, revisão e outras taxas. |
-| Comissão | Valor fixo **ou** percentual sobre o lance. |
-| Reserva para imprevistos | Dinheiro separado para surpresas. |
-| Margem desejada | Quanto você quer que sobre. |
+**O rascunho já vem preenchido** com premissas padrão, de propósito pessimistas; você só revisa. *Notas* explica de onde veio cada número. Num lote cadastrado à mão, digite a FIPE e clique **Estimar a partir da FIPE** para preencher valor de venda e reparos.
+
+| Campo | O que é | Padrão |
+| --- | --- | --- |
+| Valor de venda esperado | Por quanto o carro vende depois de pronto. É a base do cálculo. | FIPE − 13% sem sinistro; 20% pequena, 30% média e 40% grande monta. Sucata: em branco |
+| FIPE | Base das premissas padrão. | A do anúncio |
+| Reparos | | 5% da FIPE sem sinistro (mín. R$ 2.000; moto R$ 800); 15%, 30% e 50% por monta; + R$ 8.000 airbag acionado e + R$ 3.000 peças faltando |
+| Documentação | | Despachante do anúncio, senão R$ 1.500 |
+| Transporte/guincho | | Remoção do anúncio, senão R$ 300 + R$ 6/km até o pátio (linha reta × 1,3); sem local, R$ 1.500 |
+| Pneus e revisão | | Carro R$ 2.400 e R$ 1.500; moto R$ 900 e R$ 600 |
+| Outras taxas | | Depósito, vistoria e outras do anúncio, senão 0 |
+| Comissão | Valor fixo **ou** percentual sobre o lance. | A do anúncio, senão 5% |
+| Reserva para imprevistos | Dinheiro separado para surpresas, em % do valor de venda. | 5% |
+| Margem desejada | Quanto você quer que sobre, em % do valor de venda. | 15% |
+
+Reserva e margem em % acompanham o valor de venda: se você mudar o valor, elas mudam junto. Ao fixar, a análise guarda também o valor em R$. Análises antigas, feitas em R$, mostram o campo em R$ até você preencher o %.
 
 ```text
 lance máximo = maior lance em que  lance + custos + comissão + reserva + margem ≤ valor de mercado
@@ -49,7 +57,7 @@ lance máximo = maior lance em que  lance + custos + comissão + reserva + marge
 
 - **Campo em branco não vira zero.** Enquanto faltar algo, o painel lista o que falta. Se um custo não existe, digite 0.
 - **Lance simulado:** teste qualquer valor e veja custo total, margem e se ficou abaixo, no ou acima do limite. Não altera o lance do lote.
-- **Sem lance viável:** se os custos e a margem já consomem o valor de mercado, o app avisa em vez de sugerir número negativo.
+- **Sem lance viável:** se os custos e a margem já consomem o valor de venda, o app avisa em vez de sugerir número negativo.
 - **Salvar rascunho** guarda sem compromisso. Rascunhos podem ter campos em branco.
 
 ## 5. Fixar a análise
@@ -99,9 +107,9 @@ O app coleta sozinho, de 2 em 2 horas, os lotes dos sites de leilão (hoje o Lei
 - **Monitores:** buscas salvas. Crie em *Monitores → Novo monitor* com pelo menos marca ou modelo, um ano ou um lance máximo (ex.: "VW Fox, 2011–2013, até R$ 25.000, até pequena monta"). Cada monitor mostra quantos lotes abertos **combinam agora**, com link para Descobertos já filtrado.
 - **Alertas:** a cada coleta, lote **novo** que combina com um monitor ligado vira um alerta ("Novo veículo encontrado"), com o contador ao lado de *Alertas* no menu e uma seção no Dashboard. Lotes que já existiam quando você criou, editou ou religou o monitor não viram alerta (estão em "combinam agora"). Se o lance ou os dados do lote mudarem depois, não chega outro alerta: o alerta mostra sempre os dados da última coleta.
 - **Desligar** um monitor para de gerar alertas sem apagar os antigos; **Excluir** apaga o monitor e os alertas dele.
-- **Adicionar à análise:** no cartão do lote (em Descobertos ou num alerta), cria de uma vez o leilão, o lote (já acompanhado) e um rascunho de análise, e abre o rascunho. O rascunho vem com o que o site informa: valor de mercado, comissão, despachante (documentação), remoção (transporte) e depósito e vistoria (outras taxas), com a origem anotada em *Notas*. Reparos, pneus, revisão, reserva e margem ficam com você; confira tudo antes de fixar. Clicar de novo não duplica: o cartão passa a mostrar **Ver no Tracker**. Lotes do mesmo leilão do site ficam no mesmo leilão do Tracker. O botão só aparece quando o site informa marca, modelo, ano e o leilão. Se o leilão estava arquivado no Tracker, ele volta à lista.
+- **Adicionar à análise:** no cartão do lote (em Descobertos ou num alerta), cria de uma vez o leilão, o lote (já acompanhado) e um rascunho de análise, e abre o rascunho. O rascunho vem com as premissas padrão (seção 4), usando a FIPE, a condição declarada e as taxas que o site informa, com a origem anotada em *Notas*; confira tudo antes de fixar. Clicar de novo não duplica: o cartão passa a mostrar **Ver no Tracker**. Lotes do mesmo leilão do site ficam no mesmo leilão do Tracker. O botão só aparece quando o site informa marca, modelo, ano e o leilão. Se o leilão estava arquivado no Tracker, ele volta à lista.
 - **Resultado automático:** quando o lote adicionado assim encerra no site, o coletor registra o resultado sozinho (arrematado com o preço final, não vendido ou retirado), com o link e a hora do fim, marcado **Registrado pelo coletor** e ligado à sua análise fixada. Sua participação fica como "acompanhei": se você arrematou, corrija o resultado (vira uma nova revisão). Venda **condicional** ou desfecho desconhecido aparecem como **Resultado a confirmar** na ficha e no Dashboard, com o formulário já preenchido; se o site confirmar depois, o resultado entra sozinho. Adicionar um lote que já encerrou cria a análise como "feita conhecendo o resultado".
-- **Estimativas:** nos lotes abertos (Descobertos e alertas), o cartão mostra o **provável** lance final e o seu **limite estimado**, sempre com o número de casos. O provável vem de vendas parecidas já encerradas no catálogo (mesma marca e modelo, ano ±1, mesma condição, km próxima; de qualquer região). Sem 5 vendas parecidas, usa quanto veículos da mesma categoria e condição costumam sair em relação ao valor de mercado informado pelo site. Sem nenhuma base, diz "Sem base suficiente". O limite estimado aplica a calculadora às premissas das suas análises fixadas de veículos parecidos, com a FIPE do próprio anúncio como valor de mercado, e aparece a partir de 3 delas. São referências: a decisão continua sendo a sua análise fixada.
+- **Estimativas:** nos lotes abertos (Descobertos e alertas), o cartão mostra o **provável** lance final e o seu **limite estimado**, sempre com o número de casos. O provável vem de vendas parecidas já encerradas no catálogo (mesma marca e modelo, ano ±1, mesma condição, km próxima; de qualquer região). Sem 5 vendas parecidas, usa quanto veículos da mesma categoria e condição costumam sair em relação ao valor de mercado informado pelo site. Sem nenhuma base, diz "Sem base suficiente". O limite estimado aplica a calculadora às premissas das suas análises fixadas de veículos parecidos, com o valor de venda pela FIPE do próprio anúncio (menos o desconto pela condição) e reserva e margem em % desse valor, e aparece a partir de 3 delas. São referências: a decisão continua sendo a sua análise fixada.
 - **Lance automático:** num lote adicionado assim, o coletor atualiza o **lance atual** a cada coleta, enquanto o lote não estiver arquivado (a ficha mostra "Acompanhado no Leilo, lido em …", com o nome do site de origem). Você ainda pode digitar um lance; ele vale até a próxima leitura do site com lance diferente.
 
 ## 10. Backup

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { bps, cents } from "../money";
+import { cents } from "../money";
 import { auctionOrigin, planTracker, shouldSyncBid, type TrackerListing, trackerMissing } from "./tracker";
 
 const now = new Date("2026-09-30T12:00:00Z");
@@ -27,13 +27,6 @@ const listing = (overrides: Partial<TrackerListing> = {}): TrackerListing => ({
   status: "open",
   currentBid: cents(2_900_000),
   minimumBid: cents(2_800_000),
-  marketValue: cents(5_291_800),
-  commissionRate: bps(500),
-  dispatcherFee: cents(0),
-  removalFee: cents(55_000),
-  storageFee: cents(235_000),
-  inspectionFee: cents(25_000),
-  otherFees: cents(0),
   lastCheckedAt: checkedAt,
   ...overrides,
 });
@@ -116,38 +109,6 @@ describe('trackerMissing — quando o cartão oferece "Adicionar à análise"', 
   it("mesma exigência de planTracker: texto em branco e ano fora da faixa contam como ausentes", () => {
     expect(trackerMissing(listing({ brand: "  ", modelYear: 1800 }))).toEqual(["brand", "model_year"]);
     expect(trackerMissing(listing({ auctionStartsAt: null, startsAt: null, endsAt: null }))).toEqual(["auction"]);
-  });
-});
-
-describe("planTracker — sugestões para a análise (D-30)", () => {
-  it("valor de mercado, comissão e custos da fonte; depósito e vistoria somam em outras taxas", () => {
-    expect(plan().suggestions).toEqual({
-      marketValue: 5_291_800,
-      commissionRate: 500,
-      documentationCost: 0,
-      transportCost: 55_000,
-      otherFees: 260_000,
-      referenceDate: checkedAt,
-    });
-  });
-
-  it("o que a fonte não informa fica vazio, nunca zero inventado", () => {
-    const { suggestions } = plan({
-      marketValue: null,
-      commissionRate: null,
-      dispatcherFee: null,
-      removalFee: null,
-      storageFee: null,
-      inspectionFee: null,
-      otherFees: null,
-    });
-    expect(suggestions).toMatchObject({
-      marketValue: null,
-      commissionRate: null,
-      documentationCost: null,
-      transportCost: null,
-      otherFees: null,
-    });
   });
 });
 

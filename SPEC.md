@@ -266,7 +266,7 @@ Regras:
 | `K` | Comissão fixa, caso escolhida essa modalidade. |
 | `p` | Taxa de comissão sobre o lance, em forma decimal, caso escolhida a modalidade percentual. |
 | `R` | Reserva para imprevistos. |
-| `M` | Margem financeira mínima desejada em reais. |
+| `M` | Margem financeira mínima desejada, em reais ou em % do valor de venda (`M = m × V`; D-38). A reserva `R` também aceita % (`R = r × V`). |
 | `L` | Lance utilizado na simulação ou preço final usado na comparação. |
 
 A margem `M` pode representar lucro pretendido ou economia mínima desejada para uso próprio. O produto usará o rótulo **“Margem desejada”**, sem pressupor que haverá revenda.
@@ -295,7 +295,7 @@ diferença para o limite(L) = lance máximo − L
 - Se nem um lance positivo couber no orçamento, mostrar **“Sem lance viável com estas premissas”**. Não apresentar um limite negativo como sugestão de lance.
 - O limite financeiro não considera os incrementos mínimos permitidos pela plataforma de leilão.
 - Alterar o lance simulado atualiza custo e margem. O limite só muda quando suas premissas mudam.
-- FIPE será uma referência separada e opcional; não substituirá o valor de mercado automaticamente.
+- FIPE é referência separada. Desde a D-38, ela é a base das **premissas padrão** do rascunho (valor de venda = FIPE menos o desconto pela condição declarada), sempre editáveis e anotadas nas notas; o usuário continua decidindo ao fixar.
 
 ### 7.3 Exemplo com comissão fixa
 

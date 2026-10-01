@@ -58,7 +58,7 @@ export function AnalysisSummary({ model, currentBid }: AnalysisSummaryProps) {
 
         {complete ? (
           <dl className="grid gap-2 border-t border-border pt-4 text-body">
-            <Row label="Valor de mercado">
+            <Row label="Valor de venda esperado">
               <Money value={complete.marketValue} />
             </Row>
             <Row label="Custos fixos">

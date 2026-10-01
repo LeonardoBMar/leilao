@@ -30,7 +30,9 @@ const fixedExample: AnalysisInputs = {
   commissionFixed: reais(2_000),
   commissionRateBps: null,
   riskReserve: reais(2_000),
+  riskReserveRateBps: null,
   desiredMargin: reais(6_000),
+  desiredMarginRateBps: null,
 };
 
 /** SPEC §7.4: mesmas premissas com 5% de comissão sobre o lance. */
@@ -234,5 +236,31 @@ describe("compareToFixedLimit", () => {
     expect(compareToFixedLimit({ isViable: false }, reais(1))).toBe("no_viable_bid");
     expect(compareToFixedLimit(null, reais(1))).toBe("unavailable");
     expect(compareToFixedLimit(limit, null)).toBe("unavailable");
+  });
+});
+
+describe("reserva e margem em % do valor de venda (D-38)", () => {
+  it("4% e 12% de R$ 50.000 dão o mesmo limite que R$ 2.000 e R$ 6.000", () => {
+    const byRate = calculateMaxBid({
+      ...fixedExample,
+      riskReserve: null,
+      riskReserveRateBps: bps(400),
+      desiredMargin: null,
+      desiredMarginRateBps: bps(1_200),
+    });
+    expect(byRate).toEqual(calculateMaxBid(fixedExample));
+  });
+
+  it("o % tem precedência sobre o valor em R$ e acompanha o valor de venda", () => {
+    const inputs = { ...fixedExample, desiredMarginRateBps: bps(1_000) };
+    const complete = completeInputs(inputs);
+    expect(complete.ok && complete.value.desiredMargin).toBe(reais(5_000));
+    const cheaper = completeInputs({ ...inputs, marketValue: reais(40_000) });
+    expect(cheaper.ok && cheaper.value.desiredMargin).toBe(reais(4_000));
+  });
+
+  it("pendente só quando nem R$ nem % foram informados", () => {
+    const inputs = { ...fixedExample, riskReserve: null, desiredMargin: null, desiredMarginRateBps: bps(1_500) };
+    expect(missingFields(inputs)).toEqual(["riskReserve"]);
   });
 });

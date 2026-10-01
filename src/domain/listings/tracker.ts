@@ -1,10 +1,9 @@
-import type { Bps, Cents } from "../money";
-import { cents } from "../money";
+import type { Cents } from "../money";
 import type { ListingStatus } from "./types";
 
 /**
  * "Adicionar à análise" (docs/PLANO-COLETA.md, etapa 3): do anúncio coletado para leilão, lote e rascunho do
- * Tracker. Só copia o que a fonte informa; valor de mercado e custos entram como sugestão rotulada (D-30).
+ * Tracker. Só copia o que a fonte informa; as premissas do rascunho são as padrão (D-38), montadas pela feature.
  */
 
 /** Limites dos formulários de lote (src/features/lots/schemas.ts): o lote criado precisa poder ser editado. */
@@ -36,13 +35,6 @@ export type TrackerListing = {
   status: ListingStatus;
   currentBid: Cents | null;
   minimumBid: Cents | null;
-  marketValue: Cents | null;
-  commissionRate: Bps | null;
-  dispatcherFee: Cents | null;
-  removalFee: Cents | null;
-  storageFee: Cents | null;
-  inspectionFee: Cents | null;
-  otherFees: Cents | null;
   lastCheckedAt: Date;
 };
 
@@ -74,21 +66,7 @@ export type TrackerLot = {
   lotUrl: string;
 };
 
-/**
- * Sugestões para o rascunho, só com o que a fonte informou. Remoção do pátio conta como transporte;
- * depósito, vistoria e demais taxas somam em "outras taxas".
- */
-export type TrackerSuggestions = {
-  marketValue: Cents | null;
-  commissionRate: Bps | null;
-  documentationCost: Cents | null;
-  transportCost: Cents | null;
-  otherFees: Cents | null;
-  /** Data de referência dos dados da fonte (última leitura do anúncio). */
-  referenceDate: Date;
-};
-
-export type TrackerPlan = { auction: TrackerAuction; lot: TrackerLot; suggestions: TrackerSuggestions };
+export type TrackerPlan = { auction: TrackerAuction; lot: TrackerLot };
 
 /** O que falta no anúncio para virar lote (ex.: imóvel, equipamento ou veículo sem ano). */
 export type TrackerMissing = "brand" | "model" | "model_year" | "auction";
@@ -165,14 +143,6 @@ export function planTracker(listing: TrackerListing, now: Date): TrackerPlanResu
         currentBidObservedAt: positive(listing.currentBid) === null ? null : listing.lastCheckedAt,
         lotUrl: listing.url,
       },
-      suggestions: {
-        marketValue: positive(listing.marketValue),
-        commissionRate: listing.commissionRate,
-        documentationCost: listing.dispatcherFee,
-        transportCost: listing.removalFee,
-        otherFees: sumKnown([listing.storageFee, listing.inspectionFee, listing.otherFees]),
-        referenceDate: listing.lastCheckedAt,
-      },
     },
   };
 }
@@ -202,12 +172,6 @@ function validYear(year: number | null): number | null {
 
 function positive(value: Cents | null): Cents | null {
   return value !== null && value > 0 ? value : null;
-}
-
-/** Soma o que foi informado; nada informado fica `null` (zero informado continua zero). */
-function sumKnown(values: readonly (Cents | null)[]): Cents | null {
-  const known = values.filter((value) => value !== null);
-  return known.length === 0 ? null : cents(known.reduce((total, value) => total + value, 0));
 }
 
 /**

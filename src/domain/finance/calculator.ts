@@ -8,10 +8,13 @@ import { applyRate, type Bps, type Cents, cents, sumCents } from "@/domain/money
  *   custo total(L)     = L + F + comissão(L) + R
  *   margem(L)          = V − custo total(L)
  *   lance máximo       = maior L em centavos com custo total(L) + M ≤ V
+ *
+ * Reserva (R) e margem (M) podem ser informadas em R$ ou em % do valor de venda (V); em %, R = r × V e M = m × V,
+ * arredondados ao centavo (D-38).
  */
 
 /** Muda sempre que uma fórmula mudar. É persistida com cada análise fixada e nunca recalculada (SPEC §8). */
-export const FORMULA_VERSION = 1;
+export const FORMULA_VERSION = 2;
 
 export type CommissionMode = "fixed" | "percentage";
 
@@ -28,10 +31,15 @@ export type AnalysisInputs = {
   commissionFixed: Cents | null;
   commissionRateBps: Bps | null;
   riskReserve: Cents | null;
+  /** Reserva em % do valor de venda; quando informada, vale no lugar de `riskReserve`. */
+  riskReserveRateBps: Bps | null;
   desiredMargin: Cents | null;
+  /** Margem em % do valor de venda; quando informada, vale no lugar de `desiredMargin`. */
+  desiredMarginRateBps: Bps | null;
 };
 
-export type AnalysisField = keyof AnalysisInputs;
+/** Campos da lista de pendências: reserva e margem contam uma vez cada, em R$ ou em %. */
+export type AnalysisField = Exclude<keyof AnalysisInputs, "riskReserveRateBps" | "desiredMarginRateBps">;
 
 /** Uma modalidade de comissão por análise: a desativada não participa da conta (SPEC §7.1). */
 export type Commission = { mode: "fixed"; amount: Cents } | { mode: "percentage"; rate: Bps };
@@ -86,8 +94,8 @@ export function missingFields(inputs: AnalysisInputs): AnalysisField[] {
   if (inputs.commissionMode === null) missing.push("commissionMode");
   if (inputs.commissionMode === "fixed" && inputs.commissionFixed === null) missing.push("commissionFixed");
   if (inputs.commissionMode === "percentage" && inputs.commissionRateBps === null) missing.push("commissionRateBps");
-  if (inputs.riskReserve === null) missing.push("riskReserve");
-  if (inputs.desiredMargin === null) missing.push("desiredMargin");
+  if (inputs.riskReserve === null && inputs.riskReserveRateBps === null) missing.push("riskReserve");
+  if (inputs.desiredMargin === null && inputs.desiredMarginRateBps === null) missing.push("desiredMargin");
   return missing;
 }
 
@@ -96,7 +104,9 @@ export function completeInputs(
   inputs: AnalysisInputs,
 ): { ok: true; value: CompleteInputs } | { ok: false; missing: AnalysisField[] } {
   const missing = missingFields(inputs);
-  const { marketValue, riskReserve, desiredMargin } = inputs;
+  const { marketValue } = inputs;
+  const riskReserve = byRateOrAmount(marketValue, inputs.riskReserveRateBps, inputs.riskReserve);
+  const desiredMargin = byRateOrAmount(marketValue, inputs.desiredMarginRateBps, inputs.desiredMargin);
   const commission = toCommission(inputs);
   const costs = FIXED_COST_FIELDS.map((field) => inputs[field]).filter((cost): cost is Cents => cost !== null);
   if (
@@ -202,6 +212,12 @@ function findMaxBid(inputs: CompleteInputs): Cents | null {
   while (candidate > 0 && !fitsBudget(inputs, cents(candidate))) candidate -= 1;
 
   return candidate >= 1 ? cents(candidate) : null;
+}
+
+/** Valor em R$ de uma premissa que pode vir em % do valor de venda. O % tem precedência. */
+function byRateOrAmount(marketValue: Cents | null, rate: Bps | null, amount: Cents | null): Cents | null {
+  if (rate === null) return amount;
+  return marketValue === null || marketValue < 0 ? null : applyRate(marketValue, rate);
 }
 
 function toCommission(inputs: AnalysisInputs): Commission | null {
