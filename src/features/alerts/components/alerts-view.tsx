@@ -50,7 +50,7 @@ export async function AlertsView({ searchParams }: { searchParams: SearchParams 
           {page.watchTitle ? (
             <span className="text-caption text-muted">
               Monitor “{page.watchTitle}” ·{" "}
-              <Link href="/alertas" className="text-primary hover:underline">
+              <Link href="/alertas" className="text-accent hover:underline">
                 ver de todos
               </Link>
             </span>
@@ -99,7 +99,7 @@ function FilterLink({ href, active, children }: { href: Route; active: boolean; 
       aria-current={active ? "page" : undefined}
       className={cn(
         "inline-flex min-h-8 items-center rounded-md px-3 text-foreground-secondary hover:bg-surface-subtle",
-        active && "bg-primary-subtle font-semibold text-primary-active hover:bg-primary-subtle",
+        active && "bg-surface font-semibold text-foreground shadow-sm hover:bg-surface",
       )}
     >
       {children}

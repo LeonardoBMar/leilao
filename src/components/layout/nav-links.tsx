@@ -46,7 +46,7 @@ function ActiveNavList({ onNavigate, badges }: NavLinksProps) {
 
 function NavList({ pathname, onNavigate, badges }: NavLinksProps & { pathname: string | null }) {
   return (
-    <ul className="grid gap-1">
+    <ul className="grid gap-px">
       {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
         const isActive = pathname !== null && (pathname === href || pathname.startsWith(`${href}/`));
         return (
@@ -56,11 +56,17 @@ function NavList({ pathname, onNavigate, badges }: NavLinksProps & { pathname: s
               onClick={onNavigate}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex min-h-10 items-center gap-3 rounded-md px-3 text-label text-foreground-secondary transition-colors duration-120 outline-none hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-primary",
-                isActive && "bg-primary-subtle font-semibold text-primary-active hover:bg-primary-subtle",
+                "group flex min-h-10 items-center gap-2.5 rounded-md px-2.5 text-body font-medium text-foreground-secondary transition-colors duration-120 outline-none hover:bg-foreground/5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent",
+                isActive && "bg-surface font-semibold text-foreground shadow-sm hover:bg-surface",
               )}
             >
-              <Icon aria-hidden="true" className="size-5 shrink-0" />
+              <Icon
+                aria-hidden="true"
+                className={cn(
+                  "size-4 shrink-0 text-muted-subtle transition-colors duration-120 group-hover:text-foreground",
+                  isActive && "text-foreground",
+                )}
+              />
               {label}
               {badges?.[href]}
             </Link>

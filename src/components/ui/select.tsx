@@ -16,7 +16,7 @@ function SelectTrigger({ className, children, ...props }: SelectPrimitive.Select
   return (
     <SelectPrimitive.Trigger
       className={cn(
-        "flex h-10 w-full items-center justify-between gap-2 rounded-md border border-control-border bg-surface px-3 text-body text-foreground transition-[border-color,box-shadow] duration-120 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-surface-subtle disabled:text-muted-subtle data-[placeholder]:text-placeholder [&>span]:truncate",
+        "flex h-10 w-full items-center justify-between gap-2 rounded-md border border-control-border bg-surface px-3 text-body text-foreground transition-[border-color,box-shadow] duration-120 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:bg-surface-subtle disabled:text-muted-subtle data-[placeholder]:text-placeholder [&>span]:truncate",
         className,
       )}
       {...props}
@@ -71,7 +71,7 @@ function SelectItem({ className, children, ...props }: SelectPrimitive.SelectIte
   return (
     <SelectPrimitive.Item
       className={cn(
-        "relative flex min-h-10 w-full cursor-default items-center rounded-md py-2 pr-8 pl-2 text-body outline-none select-none focus:bg-primary-subtle focus:text-primary-active data-[disabled]:pointer-events-none data-[disabled]:text-muted-subtle",
+        "relative flex min-h-10 w-full cursor-default items-center rounded-md py-2 pr-8 pl-2 text-body outline-none select-none focus:bg-foreground/5 focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:text-muted-subtle",
         className,
       )}
       {...props}

@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
-    <div className="relative w-full max-w-full min-w-0 overflow-x-auto rounded-lg border border-border bg-surface">
+    <div className="relative w-full max-w-full min-w-0 overflow-x-auto bg-surface">
       <table className={cn("w-full caption-bottom text-body", className)} {...props} />
     </div>
   );
@@ -24,7 +24,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   return (
     <tr
       className={cn(
-        "min-h-12 border-b border-border transition-colors duration-120 data-[interactive=true]:hover:bg-surface-subtle/70 data-[state=selected]:bg-primary-subtle",
+        "min-h-12 border-b border-border transition-colors duration-120 data-[interactive=true]:hover:bg-background data-[state=selected]:bg-accent-subtle",
         className,
       )}
       {...props}
@@ -36,7 +36,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   return (
     <th
       className={cn(
-        "h-10 px-3 text-left align-middle text-caption font-semibold whitespace-nowrap text-foreground-secondary",
+        "h-10 border-b border-border px-3 text-left align-middle text-caption font-medium whitespace-nowrap text-muted",
         className,
       )}
       {...props}

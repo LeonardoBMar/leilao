@@ -134,7 +134,7 @@ function ExternalAnchor({ href }: { href: string | null }) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex max-w-full items-center gap-1 text-primary hover:underline"
+      className="inline-flex max-w-full items-center gap-1 text-accent hover:underline"
     >
       <span className="truncate">{new URL(href).hostname}</span>
       <ExternalLink aria-hidden="true" className="size-4 shrink-0" />

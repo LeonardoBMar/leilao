@@ -49,13 +49,13 @@ export async function LotAnalysisPanel({ lotId }: { lotId: string }) {
               {latestFixed.fixedAt ? formatDateTime(latestFixed.fixedAt) : "—"}
             </p>
             {latestFixed.isViable ? (
-              <p className="text-heading-2 text-primary">
+              <p className="text-heading-2 text-foreground tabular-nums">
                 <Money value={latestFixed.maxBid} />
               </p>
             ) : (
               <p className="text-heading-3 text-foreground">Sem lance viável com estas premissas</p>
             )}
-            <Link href={`/analise/${latestFixed.id}`} className="w-fit text-caption text-primary hover:underline">
+            <Link href={`/analise/${latestFixed.id}`} className="w-fit text-caption text-accent hover:underline">
               Ver análise fixada
             </Link>
           </div>

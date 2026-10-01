@@ -22,7 +22,7 @@ function Toaster() {
           title: "!text-body !font-semibold",
           description: "!text-body !text-foreground-secondary",
           closeButton:
-            "!border-border !bg-surface !text-foreground-secondary hover:!bg-surface-subtle focus:!ring-2 focus:!ring-primary",
+            "!border-border !bg-surface !text-foreground-secondary hover:!bg-surface-subtle focus:!ring-2 focus:!ring-accent",
         },
       }}
     />

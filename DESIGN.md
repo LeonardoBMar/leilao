@@ -1,6 +1,6 @@
 # Leilão Tracker — Design System
 
-> Versão: 1.2 • Data: 20/09/2026 • Status: fonte de verdade visual para o MVP.
+> Versão: 2.0 • Data: 01/10/2026 • Status: fonte de verdade visual. Direção A, "refinado e silencioso".
 >
 > Este documento complementa o [`SPEC.md`](./SPEC.md). O `SPEC.md` define produto, domínio e comportamento; este arquivo define apresentação, composição e interação.
 
@@ -8,10 +8,10 @@
 
 O projeto possui a fundação em Next.js 16, Tailwind CSS 4 e uma primeira biblioteca reutilizável em `src/components/ui`. Portanto:
 
-- `#2454F8` é uma definição fornecida pelo usuário e é a cor primária obrigatória.
-- Geist Sans e Geist Mono são definições fornecidas pelo usuário e são as fontes obrigatórias.
-- Os demais valores deste documento são decisões iniciais adotadas pela implementação para manter consistência.
-- A direção adotada é um dashboard claro, sóbrio, profissional e orientado a dados, com densidade confortável.
+- Em 01/10/2026 o usuário escolheu a **Direção A, "refinado e silencioso"** (tinta, papel e um número que decide). Ela substitui as definições anteriores (azul `#2454F8` e fontes Geist).
+- Fontes obrigatórias: **Hanken Grotesk** na interface e **IBM Plex Mono** em códigos (número do lote, leilão, identificadores).
+- Ação principal em **tinta** (`#15171C`). O azul **`#2B45C8`** é acento: link, foco e seleção, nunca botão principal nem decoração.
+- Dashboard claro, sóbrio e orientado a dados: papel quente ao fundo, conteúdo num painel branco, hierarquia por troca de superfície e linhas finas, quase sem sombra.
 - O MVP terá tema claro. Tema escuro só poderá ser adicionado como um conjunto completo de tokens, nunca por estilos isolados.
 - Os componentes fundamentais documentados abaixo já possuem implementação. Componentes de domínio continuam como contratos para as próximas features.
 
@@ -88,48 +88,50 @@ Os nomes semânticos são a API visual do projeto. O código deve consumir `back
 
 | Token | Valor | Uso | Não usar para |
 | --- | --- | --- | --- |
-| `background` | `#F6F8FC` | Fundo geral da aplicação privada. | Fundo de campos ou cards internos. |
-| `surface` | `#FFFFFF` | Cards, tabelas, formulários e painéis. | Criar camadas sem necessidade. |
-| `surface-subtle` | `#F0F3F9` | Agrupar conteúdo secundário e cabeçalhos suaves. | Estados selecionados ou alertas. |
+| `background` | `#F7F7F4` | Papel quente: fundo da casca (menu e topbar) e painéis rebaixados dentro do conteúdo, como o de lance e limite. | Fundo de campos. |
+| `surface` | `#FFFFFF` | Painel principal de conteúdo, cards, tabelas e formulários. | Criar camadas sem necessidade. |
+| `surface-subtle` | `#F0F0EB` | Superfície rebaixada: campos readonly e grupos secundários. | Estados selecionados ou alertas. |
 | `surface-elevated` | `#FFFFFF` | Dialogs, menus e popovers com sombra. | Cards comuns que não flutuam. |
-| `foreground` | `#172033` | Texto principal e títulos. | Texto sobre fundos escuros sem verificar contraste. |
-| `foreground-secondary` | `#465269` | Descrições e informação complementar. | Placeholder ou texto desabilitado. |
-| `muted` | `#667085` | Metadados, captions e ícones secundários. | Corpo longo abaixo de 14 px. |
-| `muted-subtle` | `#98A2B3` | Conteúdo desabilitado. | Placeholder ou informação necessária para completar uma tarefa. |
-| `placeholder` | `#667085` | Sugestão de preenchimento, com contraste de texto normal. | Substituir o label. |
-| `border` | `#D7DCE5` | Bordas decorativas de cards e divisores. | Identificar controles, erro ou foco. |
-| `border-strong` | `#B8C0CF` | Divisores e separações decorativas mais marcadas. | Identificar limites de campos ou controles. |
-| `control-border` | `#7B879B` | Inputs, selects, checkbox, radio e contorno de botão Secondary. | Contornar todos os cards. |
-| `overlay` | `rgba(23, 32, 51, 0.56)` | Fundo atrás de dialogs e drawers. | Superfícies permanentes. |
+| `foreground` | `#15171C` | Tinta: texto principal, títulos e os números que decidem. | Texto sobre fundos escuros sem verificar contraste. |
+| `foreground-secondary` | `#3F434C` | Descrições, itens da navegação e informação complementar. | Placeholder ou texto desabilitado. |
+| `muted` | `#63676F` | Metadados, captions, rótulos de dado e cabeçalhos de tabela. Mantém 4,5:1 até sobre `surface-subtle`. | Corpo de texto longo. |
+| `muted-subtle` | `#8A8E96` | Ícones da navegação em repouso e conteúdo desabilitado. | Informação necessária para completar uma tarefa. |
+| `placeholder` | `#63676F` | Sugestão de preenchimento, com contraste de texto normal. | Substituir o label. |
+| `border` | `#EFEEEA` | Linhas finas: divisores, linhas de tabela e borda de cards. | Identificar controles, erro ou foco. |
+| `border-strong` | `#E4E3DD` | Divisores mais marcados e contorno do botão Secondary. | Identificar limites de campos. |
+| `control-border` | `#CFD0D3` | Inputs, selects, checkbox e radio. | Contornar todos os cards. |
+| `overlay` | `rgba(21, 23, 28, 0.48)` | Fundo atrás de dialogs e drawers. | Superfícies permanentes. |
 
-#### Primária e interação
+#### Tinta, acento e interação
 
 | Token | Valor | Uso | Não usar para |
 | --- | --- | --- | --- |
-| `primary` | `#2454F8` | Ação principal, link, seleção e foco. | Decoração extensa ou todos os ícones. |
-| `primary-hover` | `#1D46D9` | Hover de elementos primários. | Estado permanente. |
-| `primary-active` | `#1738B5` | Pressionado/ativo. | Item apenas selecionado; use `primary-subtle`. |
-| `primary-subtle` | `#EAF0FF` | Fundo de item selecionado e informação ligada à ação principal. | Botão principal. |
-| `primary-subtle-hover` | `#DCE6FF` | Hover sobre seleção suave. | Alertas informativos genéricos. |
-| `primary-disabled` | `#B9C7FB` | Fundo de ação primária desabilitada. | Estado de carregamento ativo. |
-| `focus-ring` | `#2454F8` | Anel de foco externo. | Borda estática de campos. |
+| `primary` | `#15171C` | Tinta: botão principal, checkbox, radio e switch marcados, marca. | Links e foco (use `accent`). |
+| `primary-hover` | `#2C2F37` | Hover do botão principal. | Estado permanente. |
+| `primary-active` | `#000000` | Pressionado. | Item apenas selecionado. |
+| `primary-subtle` | `#EFEEE9` | Fundo do badge neutro. | Botão principal. |
+| `primary-subtle-hover` | `#E4E3DD` | Hover sobre o fundo neutro. | Alertas. |
+| `primary-disabled` | `#A9ABB0` | Fundo de ação principal desabilitada. | Estado de carregamento ativo. |
+| `accent` | `#2B45C8` | Link, anel de foco, borda de campo em foco, seleção e contador de alertas. | Botão principal, decoração e ícones em geral. |
+| `accent-hover` | `#1E34A0` | Hover de link e texto selecionado. | Estado permanente. |
+| `accent-subtle` | `#E9ECFA` | Linha selecionada, seleção de texto e hover do botão Outline. | Alertas informativos genéricos. |
 
-Texto sobre `primary`, `primary-hover` e `primary-active` deve ser `#FFFFFF`. Texto sobre `primary-subtle` deve usar `#1738B5`.
+Texto sobre `primary`, `primary-hover` e `primary-active` deve ser `#FFFFFF`. O item ativo da navegação não usa azul: é uma cápsula branca (`surface` com `shadow-sm`) com texto e ícone em tinta.
 
-Ações destrutivas usam `error-hover: #AD2424` e `error-active: #922020`; não reduzir opacidade do fundo, pois isso reduz o contraste do texto branco. `control-border` mantém pelo menos 3:1 contra `surface` e `surface-subtle`; `placeholder` mantém pelo menos 4,5:1 nessas superfícies.
+Ações destrutivas usam `error-hover: #9E1F1F` e `error-active: #851A1A`; não reduzir opacidade do fundo, pois isso reduz o contraste do texto branco. `control-border` mantém pelo menos 3:1 contra `surface` e `surface-subtle`; `placeholder` mantém pelo menos 4,5:1 nessas superfícies.
 
 #### Estados semânticos
 
 | Papel | Base | Fundo suave | Borda suave | Finalidade |
 | --- | --- | --- | --- | --- |
-| `success` | `#137A4E` | `#EAF8F1` | `#A8DFC5` | Operação concluída e valor dentro do limite. |
-| `warning` | `#9A5B00` | `#FFF6E6` | `#EBC98E` | Atenção, dado incompleto ou proximidade do limite. |
-| `error` | `#C52A2A` | `#FDECEC` | `#F2B8B8` | Falha, validação inválida e valor acima do limite. |
-| `info` | `#2454F8` | `#EAF0FF` | `#B9C7FB` | Informação contextual e orientação neutra. |
+| `success` | `#0F6B47` | `#E7F3EC` | `#BFE0CD` | Operação concluída, valor abaixo do limite e folga positiva. |
+| `warning` | `#7A4A00` | `#FBF1DE` | `#ECD3A3` | Atenção, dado incompleto ou proximidade do limite. |
+| `error` | `#B42323` | `#FBEAEA` | `#F0C4C4` | Falha, validação inválida e valor acima do limite. |
+| `info` | `#2B45C8` | `#E9ECFA` | `#C6CEF2` | Informação contextual e orientação neutra. |
 
 Regras:
 
-- Use a cor base para texto e ícones; use fundo e borda suaves para badges e alerts.
+- Use a cor base para texto e ícones. Badges usam só o fundo suave (pílula sem borda); alerts usam fundo e borda suaves.
 - “Abaixo do limite” usa `success`; “No limite” e “Sem lance viável” usam `warning`; “Acima do limite” usa `error`.
 - Status de domínio como “Agendado”, “Encerrado” ou “Rascunho” não deve herdar automaticamente sucesso ou erro. Use aparência neutra, salvo quando o estado exigir ação.
 - `success` significa que uma condição foi atendida; não significa compra segura, lucro garantido ou recomendação.
@@ -138,7 +140,7 @@ Regras:
 #### Valores financeiros
 
 - Valores comuns usam `foreground`.
-- O lance máximo pode usar `primary` como ênfase quando é a principal saída da tela.
+- O lance máximo e a folga até o limite são "o número que decide": `display` em tinta (a folga pode usar `success` ou `error`), no máximo um por tela.
 - Margem positiva usa `success` apenas quando acompanhada do rótulo “Margem estimada”.
 - Margem negativa usa `error` e sinal negativo explícito.
 - Valores desconhecidos usam travessão `—` com `muted`, nunca `R$ 0,00`.
@@ -148,15 +150,13 @@ Regras:
 #### Famílias
 
 ```css
---font-sans: "Geist", "Geist Sans", ui-sans-serif, system-ui, -apple-system,
-  BlinkMacSystemFont, "Segoe UI", sans-serif;
---font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Consolas,
-  "Liberation Mono", monospace;
+--font-sans: var(--font-hanken-grotesk); /* Hanken Grotesk via next/font/google, pesos 400–700 */
+--font-mono: var(--font-plex-mono);      /* IBM Plex Mono via next/font/google, pesos 400 e 500 */
 ```
 
-- Use **Geist Sans** em toda a interface.
-- Use **Geist Mono** somente em identificadores técnicos ou valores cuja comparação vertical se beneficia de largura fixa, como número do lote em tabelas densas.
-- Valores monetários comuns permanecem em Geist Sans com numerais tabulares; não usar monospace como estilo decorativo.
+- Use **Hanken Grotesk** em toda a interface.
+- Use **IBM Plex Mono** em códigos: a linha de contexto acima do título ("LOTE 0152 · DETRAN · 14/10"), número de versão e identificadores técnicos.
+- Valores monetários ficam em Hanken Grotesk com numerais tabulares; não usar monospace como estilo decorativo.
 - Não introduzir outras famílias sem atualizar este documento.
 
 #### Pesos
@@ -172,20 +172,20 @@ Regras:
 
 | Token | Tamanho / linha | Peso padrão | Uso |
 | --- | --- | ---: | --- |
-| `display` | `32px / 40px` | `700` | Valor ou título excepcional no desktop; não usar em toda página. |
-| `heading-1` | `28px / 36px` | `700` | Título da página. |
-| `heading-2` | `22px / 30px` | `600` | Título de seção principal ou dialog. |
-| `heading-3` | `18px / 26px` | `600` | Título de card, subseção e painel. |
-| `body-lg` | `16px / 24px` | `400` | Introdução, descrição importante e valor de apoio. |
-| `body` | `14px / 20px` | `400` | Texto padrão, controles e células. |
-| `label` | `14px / 20px` | `500` | Labels, navegação e tabs. |
-| `caption` | `12px / 16px` | `400` | Metadado, helper e timestamp. |
-| `overline` | `12px / 16px` | `600` | Categoria curta; opcionalmente caixa alta com `0.04em`. |
+| `display` | `46px / 50px` | `600` | O número que decide (lance máximo, folga até o limite). No máximo um por tela. Espaçamento `-0.035em`. |
+| `heading-1` | `32px / 38px` | `600` | Título da página. Espaçamento `-0.02em`. |
+| `heading-2` | `24px / 30px` | `500` | Valores de apoio (lance atual, meu limite) e título de dialog. Espaçamento `-0.02em`. |
+| `heading-3` | `15px / 22px` | `600` | Título de seção, card e grupo de formulário. |
+| `body-lg` | `16px / 24px` | `400` | Introdução e descrição importante. |
+| `body` | `14px / 20px` | `400` | Texto padrão, controles, células e navegação (500). |
+| `label` | `13px / 18px` | `500` | Labels de campo e tabs. |
+| `caption` | `12px / 16px` | `400` | Metadado, helper, timestamp e cabeçalho de tabela (500). |
+| `overline` | `12px / 16px` | `400` | Linha de contexto em `font-mono`, caixa alta, `0.02em`, cor `muted`. |
 
 Regras:
 
 - Não usar texto menor que 12 px.
-- Abaixo de `md` (768 px), `heading-1` usa `24px / 32px`; a partir de `md`, usa `28px / 36px`. Os demais tokens permanecem.
+- Abaixo de `md` (768 px), `display` usa `36px / 42px` e `heading-1` usa `26px / 32px`. Os demais tokens permanecem.
 - A escala é implementada em `@theme inline`: use `text-heading-1`, `text-heading-2`, `text-heading-3`, `text-body-lg`, `text-body`, `text-label`, `text-caption` e `text-overline`. Cada classe aplica tamanho e linha; títulos, label e overline também aplicam seu peso semântico. Botões aplicam `font-semibold`.
 - `cn()` reconhece esses nomes como tamanhos tipográficos, permitindo combinar `text-heading-2` e `text-foreground` sem apagar nenhuma classe.
 - Corpo de texto não usa peso 500 para compensar contraste insuficiente.
@@ -224,10 +224,10 @@ Regras:
 | --- | ---: | --- |
 | `radius-none` | `0` | Divisores e mídia que encosta nos limites do container. |
 | `radius-sm` | `4px` | Badges pequenos e elementos compactos. |
-| `radius-md` | `8px` | Inputs, botões, selects e tooltips. |
-| `radius-lg` | `12px` | Cards, alerts, dropdowns e popovers. |
+| `radius-md` | `7px` | Inputs, botões, selects, tooltips e itens da navegação. |
+| `radius-lg` | `12px` | Painel principal, cards, alerts, dropdowns e popovers. |
 | `radius-xl` | `16px` | Dialogs, drawers e cards de destaque. |
-| `radius-full` | `9999px` | Avatares e indicadores circulares; badges pill somente quando necessário. |
+| `radius-full` | `9999px` | Badges (pílula), contadores, avatares e indicadores circulares. |
 
 Não misturar raios diferentes em elementos equivalentes. Inputs e botões lado a lado devem compartilhar `radius-md`.
 
@@ -235,12 +235,14 @@ Não misturar raios diferentes em elementos equivalentes. Inputs e botões lado 
 
 ```text
 shadow-none: none
-shadow-sm: 0 1px 2px rgba(23, 32, 51, 0.06)
-shadow-md: 0 8px 24px rgba(23, 32, 51, 0.10)
-shadow-lg: 0 20px 48px rgba(23, 32, 51, 0.16)
+shadow-xs: 0 1px 1px rgba(21, 23, 28, 0.03)
+shadow-sm: 0 1px 2px rgba(21, 23, 28, 0.06), 0 0 0 1px rgba(21, 23, 28, 0.035)
+shadow-md: 0 8px 24px rgba(21, 23, 28, 0.10), 0 0 0 1px rgba(21, 23, 28, 0.04)
+shadow-lg: 0 20px 48px rgba(21, 23, 28, 0.16), 0 0 0 1px rgba(21, 23, 28, 0.04)
 ```
 
-- Cards comuns usam borda e `shadow-sm` opcional; não precisam de elevação perceptível.
+- A hierarquia vem da troca de superfície (papel, branco, papel rebaixado) e de linhas finas, não de sombra. Cards comuns usam só a borda `border`.
+- `shadow-xs` fica no botão Secondary; `shadow-sm` no painel principal e no item ativo da navegação.
 - Menus e popovers usam `shadow-md`.
 - Dialogs e drawers usam `shadow-lg` com overlay.
 - Nunca usar sombra colorida, glow ou múltiplas sombras decorativas.
@@ -266,11 +268,11 @@ O design é mobile first. Breakpoint indica mudança de composição, não uma c
 
 ### 4.1 Estrutura privada
 
-- Em `lg` ou maior, usar sidebar fixa de `248px` e área principal flexível.
-- A barra superior da área principal tem `64px` de altura e contém contexto da página e ações globais necessárias.
-- A área de conteúdo usa largura máxima de `1440px`, centralizada dentro do espaço disponível.
-- Padding horizontal: `16px` no mobile, `24px` em `md` e `32px` em `xl`.
-- Padding vertical da página: `24px` no mobile e `32px` no desktop.
+- Em `lg` ou maior, a sidebar fixa de `248px` fica sobre o papel (`background`), sem borda. O conteúdo fica num **painel branco embutido** (`surface`, `radius-lg`, `shadow-sm`) com `10px` de margem no topo, à direita e embaixo.
+- Abaixo de `lg`, uma barra superior de `56px` sobre o papel traz a marca e o menu; o conteúdo ocupa a largura toda em `surface`.
+- A área de conteúdo usa largura máxima de `1440px`, centralizada dentro do painel.
+- Padding horizontal: `16px` no mobile, `24px` em `md` e `48px` em `lg`.
+- Padding vertical da página: `24px` no mobile; `28px` no topo e `40px` embaixo no desktop.
 - Espaço entre cabeçalho de página e conteúdo: `24px`.
 - Espaço entre seções: `40px` no mobile e `48px` no desktop.
 
@@ -313,12 +315,12 @@ Alturas: `sm 40px`, `md 40px`, `lg 48px`; `icon 40 × 40px`. O tamanho padrão �
 
 | Variante | Aparência | Uso |
 | --- | --- | --- |
-| Primary | Fundo `primary`, texto branco | Uma ação principal por região: salvar, cadastrar, fixar análise. |
-| Secondary | Superfície branca, borda `control-border` | Ação relevante que não é a principal. |
-| Outline | Borda e texto `primary`, fundo transparente | Ação contextual com ênfase intermediária. |
-| Ghost | Sem fundo ou borda; hover suave | Toolbar, ações de linha e navegação discreta. |
+| Primary | Fundo `primary` (tinta), texto branco | Uma ação principal por região: salvar, cadastrar, fixar análise. |
+| Secondary | Superfície branca, borda `border-strong`, `shadow-xs`; hover em `background` | Ação relevante que não é a principal. |
+| Outline | Borda e texto `accent`, fundo transparente; hover em `accent-subtle` | Ação contextual com ênfase intermediária. |
+| Ghost | Sem fundo ou borda; hover com véu de 5% de tinta | Toolbar, ações de linha e navegação discreta. |
 | Destructive | Fundo `error`, texto branco | Exclusão definitiva ou ação irreversível. |
-| Link | Texto `primary`, fundo transparente e alvo mínimo de 40 px | Ação ou navegação discreta. Dentro de frases, usar um link de texto nativo. |
+| Link | Texto `accent`, fundo transparente e alvo mínimo de 40 px | Ação ou navegação discreta. Dentro de frases, usar um link de texto nativo. |
 
 Estados:
 
@@ -337,7 +339,7 @@ Não usar Primary para duas ações concorrentes dentro do mesmo card ou dialog.
 - Altura de input/select: `40px`; textarea mínima: `96px`.
 - Padding horizontal: `12px`.
 - Borda `control-border`, fundo `surface`, texto `foreground`, `radius-md`.
-- Focus: borda `primary` e anel externo de 2 px com transparência visual equivalente a 20%.
+- Focus: borda `accent` e anel externo de 2 px com transparência visual equivalente a 20%.
 - Error: borda `error`; mensagem abaixo com ícone opcional e texto `error`.
 - Readonly: `surface-subtle`, texto normal, foco ainda visível.
 - Disabled: `surface-subtle`, `muted-subtle`, sem interação.
@@ -367,16 +369,16 @@ Não usar Primary para duas ações concorrentes dentro do mesmo card ou dialog.
 
 Variantes:
 
-- **Default:** `surface`, borda, `radius-lg`, padding de 20 px abaixo de `md` e 24 px a partir de `md`. Título usa `heading-3` (18/26).
+- **Default:** `surface`, borda `border` sem sombra, `radius-lg`, padding de 20 px abaixo de `md` e 24 px a partir de `md`. Título usa `heading-3` (15/22).
 - **Metric:** valor principal, label, contexto e tendência/estado opcional; sem ícone decorativo obrigatório.
-- **Summary:** destaca cálculo ou decisão; pode usar borda primária e fundo `primary-subtle` com parcimônia.
+- **Summary:** destaca cálculo ou decisão; painel rebaixado em `background` (papel), sem borda.
 - **Interactive:** o card inteiro pode ser clicável somente se tiver um único destino e foco visível.
 
 Cards não devem conter cards idênticos aninhados. Para subdivisões internas, use `surface-subtle`, divisores ou grupos sem borda.
 
 ### 5.5 Badge / StatusBadge
 
-- Altura mínima de 24 px, padding horizontal de 8 px, `radius-sm`, texto `12/16` semibold.
+- Pílula: altura mínima de 22 px, padding horizontal de 8 px, `radius-full`, texto `12/16` peso 500, só o fundo suave, sem borda.
 - Variante neutra para status de domínio.
 - Variantes success, warning, error e info apenas com o significado definido nos tokens.
 - Texto curto e explícito: “Rascunho”, “Fixada”, “Acima do limite”.
@@ -403,7 +405,7 @@ Cards não devem conter cards idênticos aninhados. Para subdivisões internas, 
 - Drawer lateral para filtros complexos no desktop; drawer inferior ou lateral no mobile conforme altura do conteúdo.
 - Formulários longos e análises financeiras devem ter página própria.
 - Larguras de dialog: 480 px para confirmação; 640 px para formulário curto; máximo de 800 px para conteúdo especial.
-- Título usa `heading-2` (22/30). Ações ficam no rodapé, secundária seguida de Primary no DOM e visualmente. A partir de `md`, Primary fica à direita; abaixo de `md`, ações empilhadas em largura total, Primary por último. Não inverter a ordem visual em relação ao foco.
+- Título usa `heading-2` (24/30). Ações ficam no rodapé, secundária seguida de Primary no DOM e visualmente. A partir de `md`, Primary fica à direita; abaixo de `md`, ações empilhadas em largura total, Primary por último. Não inverter a ordem visual em relação ao foco.
 - Fechar com Escape quando seguro. Mudanças não salvas pedem confirmação.
 
 ### 5.9 Dropdown menu e Tooltip
@@ -416,7 +418,7 @@ Cards não devem conter cards idênticos aninhados. Para subdivisões internas, 
 ### 5.10 Tabs
 
 - Use para alternar visões irmãs do mesmo recurso, como “Resumo”, “Análises” e “Resultado”.
-- Estado ativo usa texto `primary`, peso 600 e indicador inferior de 2 px.
+- Estado ativo usa texto `foreground` (tinta), peso 600 e indicador inferior de 2 px em tinta.
 - Não usar tabs como substituto de navegação principal ou etapa obrigatória de formulário.
 - Em mobile, permitir rolagem horizontal com indicação visual, sem cortar o rótulo ativo.
 
@@ -565,7 +567,7 @@ Usar para informação faltante, análise retrospectiva, resultado não compará
 
 Ordem inicial:
 
-1. Marca “Leilão Tracker”.
+1. Marca: quadrado de 28 px em tinta com o martelo, “Leilão Tracker” e “Uso pessoal” (`src/components/layout/brand.tsx`).
 2. Dashboard.
 3. Descobertos (lotes coletados automaticamente, docs/PLANO-COLETA.md): porta de entrada do fluxo descobrir → analisar.
 4. Alertas (lotes novos que combinaram com um monitor), com contador de não lidos.
@@ -575,10 +577,11 @@ Ordem inicial:
 8. Divisor flexível.
 9. Conta/sair.
 
-- Item: altura mínima de 40 px, `radius-md`, ícone 20 px, texto label.
-- Ativo: `primary-subtle`, texto e ícone `primary-active`, peso 600.
-- Hover: `surface-subtle`.
-- Não usar badges de contagem na navegação salvo necessidade operacional validada. Única exceção validada: **não lidos em Alertas** (etapa 2 de docs/PLANO-COLETA.md), pílula `primary` com texto branco alinhada à direita, some quando é zero.
+- A sidebar fica sobre o papel (`background`), sem borda; um divisor `border-strong` separa a conta.
+- Item: altura mínima de 40 px, `radius-md`, 1 px entre itens, ícone 16 px em `muted-subtle`, texto `body` peso 500 em `foreground-secondary`.
+- Ativo: cápsula branca (`surface` com `shadow-sm`), texto e ícone em tinta, peso 600.
+- Hover: véu de 5% de tinta, texto e ícone em tinta.
+- Não usar badges de contagem na navegação salvo necessidade operacional validada. Única exceção validada: **não lidos em Alertas** (etapa 2 de docs/PLANO-COLETA.md), pílula `accent` com texto branco alinhada à direita, some quando é zero.
 
 ### Navegação mobile
 
@@ -594,7 +597,7 @@ Ordem inicial:
 
 ### Links
 
-- Link inline usa `primary`, sublinhado no hover e foco visível.
+- Link inline usa `accent`, sublinhado no hover e foco visível.
 - Link externo tem ícone de 16 px e indicação acessível de nova aba quando aplicável.
 - Não usar texto azul para conteúdo que não é interativo.
 
@@ -777,7 +780,7 @@ No lote, valores observados e última análise fixada aparecem antes de notas ex
 
 ### Do
 
-- Usar `#2454F8` em ações e interações primárias.
+- Usar tinta (`primary`) na ação principal e o azul `accent` só em link, foco e seleção.
 - Reutilizar tokens e componentes antes de criar variações.
 - Manter números financeiros com rótulo, unidade e numerais tabulares.
 - Usar texto explícito junto de cores semânticas.
@@ -811,7 +814,7 @@ No lote, valores observados e última análise fixada aparecem antes de notas ex
 5. Não duplique componente sob outro nome.
 6. Não use valores arbitrários quando existir token equivalente.
 7. Não crie cor nova dentro de JSX, CSS module ou classe Tailwind.
-8. Não introduza fonte além de Geist Sans e Geist Mono.
+8. Não introduza fonte além de Hanken Grotesk e IBM Plex Mono.
 9. Siga a escala tipográfica e a escala de espaçamento.
 10. Preserve estados default, hover, focus-visible, active, disabled, loading e error.
 11. Implemente acesso por teclado e nome acessível junto do componente.
@@ -851,7 +854,7 @@ Checklist para uma nova página:
 - Next.js App Router + TypeScript.
 - Tailwind CSS.
 - shadcn/ui com primitivas Radix.
-- `next/font` para Geist Sans e Geist Mono.
+- `next/font/google` para Hanken Grotesk e IBM Plex Mono.
 - Lucide React para ícones.
 
 A estrutura atual relevante ao design system é:
@@ -860,7 +863,7 @@ A estrutura atual relevante ao design system é:
 src/
   app/
     globals.css                 # tokens CSS, Tailwind e estilos base
-    layout.tsx                  # Geist, metadados e Providers globais
+    layout.tsx                  # fontes, metadados e Providers globais
     providers.tsx               # TooltipProvider e Toaster
     page.tsx                    # referência visual temporária da fundação
     component-showcase.tsx      # exemplos interativos da biblioteca
@@ -888,25 +891,26 @@ Referência inicial:
 
 ```css
 :root {
-  --background: #f6f8fc;
+  --background: #f7f7f4;
   --surface: #ffffff;
-  --surface-subtle: #f0f3f9;
-  --foreground: #172033;
-  --foreground-secondary: #465269;
-  --muted: #667085;
-  --muted-subtle: #98a2b3;
-  --border: #d7dce5;
-  --border-strong: #b8c0cf;
-  --control-border: #7b879b;
-  --placeholder: #667085;
-  --primary: #2454f8;
-  --primary-hover: #1d46d9;
-  --primary-active: #1738b5;
-  --primary-subtle: #eaf0ff;
-  --success: #137a4e;
-  --warning: #9a5b00;
-  --error: #c52a2a;
-  --radius: 0.5rem;
+  --surface-subtle: #f0f0eb;
+  --foreground: #15171c;
+  --foreground-secondary: #3f434c;
+  --muted: #63676f;
+  --muted-subtle: #8a8e96;
+  --border: #efeeea;
+  --border-strong: #e4e3dd;
+  --control-border: #cfd0d3;
+  --placeholder: #63676f;
+  --primary: #15171c;
+  --primary-hover: #2c2f37;
+  --primary-active: #000000;
+  --accent: #2b45c8;
+  --accent-hover: #1e34a0;
+  --accent-subtle: #e9ecfa;
+  --success: #0f6b47;
+  --warning: #7a4a00;
+  --error: #b42323;
 }
 ```
 
@@ -914,7 +918,7 @@ Esse trecho é um resumo; a configuração completa está em `src/app/globals.cs
 
 ### Fonte
 
-Carregar Geist Sans e Geist Mono por `next/font` no layout raiz. Associar as fontes a variáveis CSS e usar Geist Sans no `body`. Ativar numerais tabulares em classes utilitárias próprias para valores financeiros e tabelas.
+Carregar Hanken Grotesk (`--font-hanken-grotesk`, pesos 400–700) e IBM Plex Mono (`--font-plex-mono`, 400 e 500) por `next/font/google` no layout raiz e usar Hanken Grotesk no `body`. Ativar numerais tabulares em classes utilitárias próprias para valores financeiros e tabelas.
 
 ### Componentes shadcn
 

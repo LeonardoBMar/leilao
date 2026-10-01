@@ -91,7 +91,7 @@ function CurrentResult({ result }: { result: ResultRevision }) {
         </Stat>
         <Stat label="Limite da análise vinculada">
           {result.analysis ? (
-            <Link href={`/analise/${result.analysis.id}`} className="text-primary hover:underline">
+            <Link href={`/analise/${result.analysis.id}`} className="text-accent hover:underline">
               {result.analysis.isViable ? <Money value={result.analysis.maxBid} /> : "Sem lance viável"} · v
               {result.analysis.version}
             </Link>
@@ -117,7 +117,7 @@ function CurrentResult({ result }: { result: ResultRevision }) {
                   href={result.sourceUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-primary hover:underline"
+                  className="inline-flex items-center gap-1 text-accent hover:underline"
                 >
                   {new URL(result.sourceUrl).hostname}
                   <ExternalLink aria-hidden="true" className="size-4" />

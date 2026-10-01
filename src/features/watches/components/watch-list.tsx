@@ -56,13 +56,13 @@ function WatchCard({ watch }: { watch: WatchListItem }) {
 
       <ul className="grid gap-1 text-caption text-foreground-secondary">
         <li>
-          <Link href={discoveredHref(watch.criteria) as Route} className="text-primary hover:underline">
+          <Link href={discoveredHref(watch.criteria) as Route} className="text-accent hover:underline">
             {watch.openMatches === 1 ? "1 lote aberto combina agora" : `${matches} lotes abertos combinam agora`}
           </Link>
         </li>
         <li>
           {watch.unreadAlerts > 0 ? (
-            <Link href={`/alertas?monitor=${watch.id}` as Route} className="text-primary hover:underline">
+            <Link href={`/alertas?monitor=${watch.id}` as Route} className="text-accent hover:underline">
               {watch.unreadAlerts === 1 ? "1 alerta não lido" : `${watch.unreadAlerts} alertas não lidos`}
             </Link>
           ) : (

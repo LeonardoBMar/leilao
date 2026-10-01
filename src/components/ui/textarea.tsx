@@ -43,7 +43,7 @@ function Textarea({
         aria-invalid={Boolean(error) || undefined}
         aria-describedby={describedBy || undefined}
         className={cn(
-          "min-h-24 w-full resize-y rounded-md border border-control-border bg-surface px-3 py-2.5 text-body text-foreground transition-[border-color,box-shadow] duration-120 outline-none placeholder:text-placeholder read-only:bg-surface-subtle focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-surface-subtle disabled:text-muted-subtle",
+          "min-h-24 w-full resize-y rounded-md border border-control-border bg-surface px-3 py-2.5 text-body text-foreground transition-[border-color,box-shadow] duration-120 outline-none placeholder:text-placeholder read-only:bg-surface-subtle focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:bg-surface-subtle disabled:text-muted-subtle",
           error && "border-error focus:border-error focus:ring-error/20",
           className,
         )}

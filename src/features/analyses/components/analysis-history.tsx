@@ -27,7 +27,7 @@ export function AnalysisHistory({ versions, currentId }: { versions: AnalysisVer
                 {version.id === currentId ? (
                   <span>v{version.version} (esta)</span>
                 ) : (
-                  <Link href={`/analise/${version.id}`} className="text-primary hover:underline">
+                  <Link href={`/analise/${version.id}`} className="text-accent hover:underline">
                     v{version.version}
                   </Link>
                 )}

@@ -15,7 +15,7 @@ export async function PendingItems() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <ClipboardCheck aria-hidden="true" className="size-5 text-primary" />
+          <ClipboardCheck aria-hidden="true" className="size-5 text-muted" />
           Registros pendentes
         </CardTitle>
       </CardHeader>
@@ -35,7 +35,7 @@ export async function PendingItems() {
                     <Trophy aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted" />
                     <span className="min-w-0">
                       <span className="flex items-center gap-2">
-                        <span className="min-w-0 truncate text-body text-primary">{item.lotLabel}</span>
+                        <span className="min-w-0 truncate text-body text-accent">{item.lotLabel}</span>
                         {item.toConfirm ? <Badge variant="warning">A confirmar</Badge> : null}
                       </span>
                       <span className="block truncate text-caption text-muted">
@@ -63,7 +63,7 @@ export async function PendingItems() {
                   >
                     <FilePen aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted" />
                     <span className="min-w-0">
-                      <span className="block truncate text-body text-primary">
+                      <span className="block truncate text-body text-accent">
                         {draft.lotLabel} · v{draft.version}
                       </span>
                       <span className="block text-caption text-muted">

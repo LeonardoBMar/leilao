@@ -21,6 +21,9 @@
   --color-primary-subtle: var(--primary-subtle);
   --color-primary-subtle-hover: var(--primary-subtle-hover);
   --color-primary-disabled: var(--primary-disabled);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-subtle: var(--accent-subtle);
   --color-success: var(--success);
   --color-success-subtle: var(--success-subtle);
   --color-success-border: var(--success-border);
@@ -35,84 +38,100 @@
   --color-info: var(--info);
   --color-info-subtle: var(--info-subtle);
   --color-info-border: var(--info-border);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --text-display: 2rem;
-  --text-display--line-height: 2.5rem;
-  --text-display--font-weight: 700;
+  --font-sans: var(--font-hanken-grotesk);
+  --font-mono: var(--font-plex-mono);
+  /* Escala da direção A (DESIGN.md §3.2): figure, title, value, section, body, label, caption, mono. */
+  --text-display: var(--display-size);
+  --text-display--line-height: var(--display-line);
+  --text-display--font-weight: 600;
+  --text-display--letter-spacing: -0.035em;
   --text-heading-1: var(--heading-1-size);
   --text-heading-1--line-height: var(--heading-1-line);
-  --text-heading-1--font-weight: 700;
-  --text-heading-2: 1.375rem;
+  --text-heading-1--font-weight: 600;
+  --text-heading-1--letter-spacing: -0.02em;
+  --text-heading-2: 1.5rem;
   --text-heading-2--line-height: 1.875rem;
-  --text-heading-2--font-weight: 600;
-  --text-heading-3: 1.125rem;
-  --text-heading-3--line-height: 1.625rem;
+  --text-heading-2--font-weight: 500;
+  --text-heading-2--letter-spacing: -0.02em;
+  --text-heading-3: 0.9375rem;
+  --text-heading-3--line-height: 1.375rem;
   --text-heading-3--font-weight: 600;
   --text-body-lg: 1rem;
   --text-body-lg--line-height: 1.5rem;
   --text-body: 0.875rem;
   --text-body--line-height: 1.25rem;
-  --text-label: 0.875rem;
-  --text-label--line-height: 1.25rem;
+  --text-label: 0.8125rem;
+  --text-label--line-height: 1.125rem;
   --text-label--font-weight: 500;
   --text-caption: 0.75rem;
   --text-caption--line-height: 1rem;
   --text-overline: 0.75rem;
   --text-overline--line-height: 1rem;
-  --text-overline--font-weight: 600;
-  --text-overline--letter-spacing: 0.04em;
+  --text-overline--font-weight: 400;
+  --text-overline--letter-spacing: 0.02em;
   --radius-sm: 0.25rem;
-  --radius-md: 0.5rem;
+  --radius-md: 0.4375rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
-  --shadow-sm: 0 1px 2px rgb(23 32 51 / 6%);
-  --shadow-md: 0 8px 24px rgb(23 32 51 / 10%);
-  --shadow-lg: 0 20px 48px rgb(23 32 51 / 16%);
+  --shadow-xs: 0 1px 1px rgb(21 23 28 / 3%);
+  --shadow-sm: 0 1px 2px rgb(21 23 28 / 6%), 0 0 0 1px rgb(21 23 28 / 3.5%);
+  --shadow-md: 0 8px 24px rgb(21 23 28 / 10%), 0 0 0 1px rgb(21 23 28 / 4%);
+  --shadow-lg: 0 20px 48px rgb(21 23 28 / 16%), 0 0 0 1px rgb(21 23 28 / 4%);
 }
 
+/*
+ * Direção A, "refinado e silencioso" (DESIGN.md): papel quente, painel branco, tinta para a ação principal e um azul
+ * só para link, foco e seleção. `primary` é a tinta (botão principal, controles marcados); `accent` é o azul.
+ */
 :root {
-  --background: #f6f8fc;
+  --background: #f7f7f4;
   --surface: #ffffff;
-  --surface-subtle: #f0f3f9;
+  --surface-subtle: #f0f0eb;
   --surface-elevated: #ffffff;
-  --foreground: #172033;
-  --foreground-secondary: #465269;
-  --muted: #667085;
-  --muted-subtle: #98a2b3;
-  --border: #d7dce5;
-  --border-strong: #b8c0cf;
-  --control-border: #7b879b;
-  --placeholder: #667085;
-  --primary: #2454f8;
-  --primary-hover: #1d46d9;
-  --primary-active: #1738b5;
-  --primary-subtle: #eaf0ff;
-  --primary-subtle-hover: #dce6ff;
-  --primary-disabled: #b9c7fb;
-  --success: #137a4e;
-  --success-subtle: #eaf8f1;
-  --success-border: #a8dfc5;
-  --warning: #9a5b00;
-  --warning-subtle: #fff6e6;
-  --warning-border: #ebc98e;
-  --error: #c52a2a;
-  --error-hover: #ad2424;
-  --error-active: #922020;
-  --error-subtle: #fdecec;
-  --error-border: #f2b8b8;
-  --info: #2454f8;
-  --info-subtle: #eaf0ff;
-  --info-border: #b9c7fb;
-  --overlay: rgb(23 32 51 / 56%);
-  --heading-1-size: 1.5rem;
+  --foreground: #15171c;
+  --foreground-secondary: #3f434c;
+  --muted: #63676f;
+  --muted-subtle: #8a8e96;
+  --border: #efeeea;
+  --border-strong: #e4e3dd;
+  --control-border: #cfd0d3;
+  --placeholder: #63676f;
+  --primary: #15171c;
+  --primary-hover: #2c2f37;
+  --primary-active: #000000;
+  --primary-subtle: #efeee9;
+  --primary-subtle-hover: #e4e3dd;
+  --primary-disabled: #a9abb0;
+  --accent: #2b45c8;
+  --accent-hover: #1e34a0;
+  --accent-subtle: #e9ecfa;
+  --success: #0f6b47;
+  --success-subtle: #e7f3ec;
+  --success-border: #bfe0cd;
+  --warning: #7a4a00;
+  --warning-subtle: #fbf1de;
+  --warning-border: #ecd3a3;
+  --error: #b42323;
+  --error-hover: #9e1f1f;
+  --error-active: #851a1a;
+  --error-subtle: #fbeaea;
+  --error-border: #f0c4c4;
+  --info: #2b45c8;
+  --info-subtle: #e9ecfa;
+  --info-border: #c6cef2;
+  --overlay: rgb(21 23 28 / 48%);
+  --display-size: 2.25rem;
+  --display-line: 2.625rem;
+  --heading-1-size: 1.625rem;
   --heading-1-line: 2rem;
 }
 
 @media (min-width: 48rem) {
   :root {
-    --heading-1-size: 1.75rem;
-    --heading-1-line: 2.25rem;
+    --display-size: 2.875rem;
+    --display-line: 3.125rem;
+    --heading-1-size: 2rem;
+    --heading-1-line: 2.375rem;
   }
 }
 
@@ -130,7 +149,8 @@
     min-height: 100vh;
     background: var(--background);
     color: var(--foreground);
-    font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-hanken-grotesk), ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
     font-size: var(--text-body);
     line-height: var(--text-body--line-height);
     text-rendering: optimizeLegibility;
@@ -142,8 +162,8 @@
   }
 
   ::selection {
-    background: var(--primary-subtle-hover);
-    color: var(--primary-active);
+    background: var(--accent-subtle);
+    color: var(--accent-hover);
   }
 }
 

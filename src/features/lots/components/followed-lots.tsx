@@ -45,7 +45,7 @@ export async function FollowedLots() {
         {page.items.slice(0, SHOWN).map((lot) => (
           <li key={lot.id} className="grid content-start gap-3 rounded-lg border border-border bg-surface p-4">
             <div className="min-w-0">
-              <Link href={`/lotes/${lot.id}`} className="font-semibold text-primary hover:underline">
+              <Link href={`/lotes/${lot.id}`} className="font-semibold text-accent hover:underline">
                 {lot.brand} {lot.model} {lot.modelYear}
               </Link>
               <p className="truncate text-caption text-muted">
@@ -83,7 +83,7 @@ export async function FollowedLots() {
         ))}
       </ul>
       {page.total > SHOWN ? (
-        <Link href={ALL_FOLLOWED_HREF} className="w-fit text-body text-primary hover:underline">
+        <Link href={ALL_FOLLOWED_HREF} className="w-fit text-body text-accent hover:underline">
           Ver todos os {page.total} lotes acompanhados
         </Link>
       ) : null}

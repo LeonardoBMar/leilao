@@ -112,7 +112,7 @@ async function LotList({
         {result.items.map((lot) => (
           <li key={lot.id} className="rounded-lg border border-border bg-surface p-4">
             <div className="flex items-start justify-between gap-3">
-              <Link href={`/lotes/${lot.id}`} className="min-w-0 text-body font-semibold text-primary hover:underline">
+              <Link href={`/lotes/${lot.id}`} className="min-w-0 text-body font-semibold text-accent hover:underline">
                 {vehicleTitle(lot)}
               </Link>
               <StateBadges lot={lot} />
@@ -160,7 +160,7 @@ async function LotList({
               <TableRow key={lot.id}>
                 <TableCell className="font-mono whitespace-nowrap">{lot.lotNumber}</TableCell>
                 <TableCell>
-                  <Link href={`/lotes/${lot.id}`} className="font-semibold text-primary hover:underline">
+                  <Link href={`/lotes/${lot.id}`} className="font-semibold text-accent hover:underline">
                     {vehicleTitle(lot)}
                   </Link>
                   <div className="mt-1">

@@ -34,7 +34,7 @@ export async function UpcomingAuctions() {
           className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between"
         >
           <div className="min-w-0">
-            <Link href={`/leiloes/${auction.id}`} className="font-semibold text-primary hover:underline">
+            <Link href={`/leiloes/${auction.id}`} className="font-semibold text-accent hover:underline">
               {auction.name}
             </Link>
             <p className="text-caption text-muted">

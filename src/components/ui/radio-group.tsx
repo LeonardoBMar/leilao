@@ -23,7 +23,7 @@ function RadioItem({ id, label, description, className, ...props }: RadioItemPro
       <RadioGroupPrimitive.Item
         id={radioId}
         className={cn(
-          "group flex size-10 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-default disabled:opacity-60",
+          "group flex size-10 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-default disabled:opacity-60",
           className,
         )}
         {...props}

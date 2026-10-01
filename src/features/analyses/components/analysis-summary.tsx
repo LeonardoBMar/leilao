@@ -40,7 +40,7 @@ export function AnalysisSummary({ model, currentBid }: AnalysisSummaryProps) {
         <section aria-label="Lance máximo" className="grid gap-1">
           <p className="text-label text-foreground-secondary">Lance máximo</p>
           {outcome.kind === "viable" ? (
-            <p className="text-display text-primary tabular-nums">{formatBRL(outcome.maxBid)}</p>
+            <p className="text-display text-foreground tabular-nums">{formatBRL(outcome.maxBid)}</p>
           ) : outcome.kind === "not_viable" ? (
             <p className="text-heading-2 text-foreground">Sem lance viável com estas premissas</p>
           ) : (

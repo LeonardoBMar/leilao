@@ -2,14 +2,14 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-const cardVariants = cva("rounded-lg border border-border bg-surface text-foreground shadow-sm", {
+const cardVariants = cva("rounded-lg border border-border bg-surface text-foreground", {
   variants: {
     variant: {
       default: "",
       metric: "",
-      summary: "border-primary bg-primary-subtle/50",
+      summary: "border-transparent bg-background",
       interactive:
-        "transition-colors duration-120 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 hover:border-border-strong hover:bg-surface-subtle",
+        "transition-colors duration-120 focus-within:ring-2 focus-within:ring-accent focus-within:ring-offset-2 hover:border-border-strong hover:bg-surface-subtle",
     },
   },
   defaultVariants: {

@@ -50,7 +50,7 @@ function Input({
           aria-describedby={describedBy || undefined}
           aria-busy={loading || undefined}
           className={cn(
-            "h-10 w-full rounded-md border border-control-border bg-surface px-3 text-body text-foreground transition-[border-color,box-shadow] duration-120 outline-none placeholder:text-placeholder read-only:bg-surface-subtle read-only:text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-surface-subtle disabled:text-muted-subtle",
+            "h-10 w-full rounded-md border border-control-border bg-surface px-3 text-body text-foreground transition-[border-color,box-shadow] duration-120 outline-none placeholder:text-placeholder read-only:bg-surface-subtle read-only:text-foreground focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:bg-surface-subtle disabled:text-muted-subtle",
             error && "border-error focus:border-error focus:ring-error/20",
             loading && "pr-10",
             className,

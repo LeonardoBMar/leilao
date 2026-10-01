@@ -21,7 +21,7 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
     <main className="flex min-h-dvh items-center justify-center bg-background px-4 py-16">
       <Card className="w-full max-w-100">
         <CardHeader>
-          <p className="text-overline text-primary uppercase">Leilão Tracker</p>
+          <p className="font-mono text-overline text-muted uppercase">Leilão Tracker</p>
           <CardTitle>Entrar</CardTitle>
           <CardDescription>Acesse com a conta autorizada.</CardDescription>
         </CardHeader>

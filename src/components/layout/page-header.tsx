@@ -11,7 +11,7 @@ function PageHeader({ title, description, eyebrow, actions, className, ...props 
   return (
     <header className={cn("flex flex-col gap-4 md:flex-row md:items-start md:justify-between", className)} {...props}>
       <div className="min-w-0">
-        {eyebrow ? <p className="mb-1 text-overline text-primary uppercase">{eyebrow}</p> : null}
+        {eyebrow ? <p className="mb-1.5 font-mono text-overline text-muted uppercase">{eyebrow}</p> : null}
         <h1 className="text-heading-1 text-foreground">{title}</h1>
         {description ? (
           <p className="mt-2 max-w-3xl text-body text-foreground-secondary md:text-body-lg md:leading-6">

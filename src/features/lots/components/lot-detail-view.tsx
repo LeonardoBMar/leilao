@@ -113,7 +113,7 @@ export async function LotDetailView({ params, analysis, result, photos }: LotDet
                       : "Sem análise fixada"
                   }
                 >
-                  <Money value={lot.limit?.maxBid ?? null} className="text-primary" />
+                  <Money value={lot.limit?.maxBid ?? null} className="text-foreground" />
                 </Stat>
               </dl>
               <div>
@@ -155,7 +155,7 @@ export async function LotDetailView({ params, analysis, result, photos }: LotDet
                       href={lot.lotUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex max-w-full items-center gap-1 text-primary hover:underline"
+                      className="inline-flex max-w-full items-center gap-1 text-accent hover:underline"
                     >
                       <span className="truncate">{new URL(lot.lotUrl).hostname}</span>
                       <ExternalLink aria-hidden="true" className="size-4 shrink-0" />

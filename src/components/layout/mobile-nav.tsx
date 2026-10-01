@@ -5,6 +5,7 @@ import { type ReactNode, useState } from "react";
 
 import { Button, Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui";
 
+import { Brand } from "./brand";
 import { type NavBadges, NavLinks } from "./nav-links";
 
 type MobileNavProps = {
@@ -24,16 +25,20 @@ export function MobileNav({ account, badges }: MobileNavProps) {
           <Menu aria-hidden="true" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="top-0 left-0 flex h-dvh max-h-dvh w-72 max-w-[85vw] translate-x-0 translate-y-0 scale-100 flex-col gap-6 rounded-none border-y-0 border-l-0 p-4 data-[state=open]:scale-100">
+      <DialogContent className="top-0 left-0 flex h-dvh max-h-dvh w-72 max-w-[85vw] translate-x-0 translate-y-0 scale-100 flex-col gap-6 rounded-none border-y-0 border-l-0 bg-background p-4 data-[state=open]:scale-100">
         <div className="pr-10">
-          <DialogTitle className="text-body font-semibold">Leilão Tracker</DialogTitle>
+          <DialogTitle asChild>
+            <div>
+              <Brand />
+            </div>
+          </DialogTitle>
           <DialogDescription className="sr-only">Navegação principal</DialogDescription>
         </div>
         <nav aria-label="Principal" className="flex-1">
           {/* Fecha ao navegar: com <Activity> a rota anterior fica montada e a gaveta ficaria aberta. */}
           <NavLinks onNavigate={() => setIsOpen(false)} badges={badges} />
         </nav>
-        <div className="border-t border-border pt-4">{account}</div>
+        <div className="border-t border-border-strong pt-3">{account}</div>
       </DialogContent>
     </Dialog>
   );

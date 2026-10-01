@@ -39,7 +39,7 @@ function DialogContent({ className, children, ...props }: DialogPrimitive.Dialog
         {children}
         <DialogPrimitive.Close
           aria-label="Fechar"
-          className="absolute top-4 right-4 flex size-10 items-center justify-center rounded-md text-muted transition-colors duration-120 outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          className="absolute top-4 right-4 flex size-10 items-center justify-center rounded-md text-muted transition-colors duration-120 outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
         >
           <X aria-hidden="true" className="size-5" />
         </DialogPrimitive.Close>

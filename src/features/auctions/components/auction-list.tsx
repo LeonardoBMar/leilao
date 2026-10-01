@@ -72,7 +72,7 @@ async function AuctionList({
       <ul className="grid gap-3 md:hidden">
         {result.items.map((auction) => (
           <li key={auction.id} className="rounded-lg border border-border bg-surface p-4">
-            <Link href={`/leiloes/${auction.id}`} className="text-body font-semibold text-primary hover:underline">
+            <Link href={`/leiloes/${auction.id}`} className="text-body font-semibold text-accent hover:underline">
               {auction.name}
             </Link>
             <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-caption">
@@ -105,7 +105,7 @@ async function AuctionList({
             {result.items.map((auction) => (
               <TableRow key={auction.id}>
                 <TableCell className="font-semibold">
-                  <Link href={`/leiloes/${auction.id}`} className="text-primary hover:underline">
+                  <Link href={`/leiloes/${auction.id}`} className="text-accent hover:underline">
                     {auction.name}
                   </Link>
                 </TableCell>

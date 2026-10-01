@@ -28,7 +28,7 @@ function Checkbox({ id, label, description, error, containerClassName, className
           aria-invalid={Boolean(error) || undefined}
           aria-describedby={error || description ? messageId : undefined}
           className={cn(
-            "group flex size-10 shrink-0 items-center justify-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-default disabled:opacity-60",
+            "group flex size-10 shrink-0 items-center justify-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-default disabled:opacity-60",
             className,
           )}
           {...props}

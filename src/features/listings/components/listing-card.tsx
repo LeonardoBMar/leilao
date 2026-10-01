@@ -98,7 +98,7 @@ export function ListingCard({ item, header, footer, eager = false }: ListingCard
           href={item.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex w-fit items-center gap-1 text-caption text-primary hover:underline"
+          className="inline-flex w-fit items-center gap-1 text-caption text-accent hover:underline"
         >
           Ver lote {item.lotNumber ?? ""} no {item.sourceName}
           <ExternalLink aria-hidden="true" className="size-4" />
@@ -158,7 +158,7 @@ function EstimateLines({ estimate }: { estimate: ListingEstimate }) {
                 {limit.maxBid === null ? (
                   <span className="text-foreground">Sem lance viável</span>
                 ) : (
-                  <Money value={limit.maxBid} className="font-semibold text-primary" />
+                  <Money value={limit.maxBid} className="font-semibold text-foreground" />
                 )}{" "}
                 <span className="text-muted">
                   ({limit.n} análises{limit.marketValueFrom === "listing" ? ", venda pela FIPE do anúncio" : ""})
