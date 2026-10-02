@@ -76,6 +76,20 @@ Ainda não implementada; precisa de aprovação para virar etapa. Primeira da or
 | Resultado | O lote **vendido sai da lista do leilão**, mas a página dele continua no ar com "Vendido (data)" e o lance final; "Sem Licitante" fica na lista com lance 0 (conferido no leilão de Caieiras de 01/10 e no de Osasco de jan/2026). Leilão antigo removido redireciona (302) | Revisitar o anúncio pela URL guardada, como no Leilo; sair da lista não é `gone` |
 | Dados pessoais | Placa e chassi já vêm mascarados pelo site ("ESE****8", "***…079") | Redação comum (D-40) por garantia |
 
+### 2.5 Candidata: Rico Leilões, plataforma Soleon (levantamento de 2026-10-02)
+
+Ainda não implementada; precisa de aprovação. A plataforma Soleon também serve Benozzati, Calil e Guariglia ([`FONTES-PENDENTES.md`](FONTES-PENDENTES.md)); um adaptador pode valer para os quatro, se as páginas forem iguais.
+
+| Item | Achado | Consequência |
+| --- | --- | --- |
+| `robots.txt` e termos | `robots.txt` barra só `/painel`, `/auditorio`, `/licitante`, `/bloqueio` e `/comitentes`. Não há página de termos de uso (só política de cookies) | Mesmo regime das outras fontes; nada do que a coleta usa está barrado |
+| Acesso sem navegador | HTML no servidor, Cloudflare sem desafio. ~80 pedidos simples com o `User-Agent` do coletor em 02/10, todos 200 | Cabe na `SourceHttp` atual |
+| Descoberta | A página inicial lista os leilões atuais (`/leilao/{id}/lotes`, 30 lotes por página, `?page=N`); `/leiloes/encerrados` lista os encerrados. Em 02/10, ~1.500 lotes abertos: Detran-SP (pátio de Tatuí, ~200 km), DMI (Mogi das Cruzes), prefeituras de Indaiatuba (~150 km), São José dos Campos, Poloni e Jarinu. Encerrados recentes **perto de São Carlos**: prefeituras de Nova Europa, Araraquara e Dourado e RP Mobi (Ribeirão Preto) | A fonte com mais leilões no raio, mas espaçados (prefeituras e RP Mobi) |
+| Dados do lote | O **cartão da lista** já traz marca/modelo, placa mascarada, ano/modelo, cor, combustível, descrição, local de exposição (endereço e cidade/UF), situação e maior lance. A página `/item/{id}/detalhes` acrescenta situação documental ("CONSERVADO (COM DIREITO A DOCUMENTO)", "SUCATA APROVEITÁVEL", "MOTOR INSERVÍVEL"), **comissão (5%) e despesas (R$)**, lance inicial, incremento, encerramento, observações e fotos em CloudFront (`d289au1mr74r1o.cloudfront.net`). **Sem km, sem valor de mercado** | Condição pela situação documental e pelas observações (remarcação, motor). Custos reais na análise |
+| Lance | Maior lance, data e os últimos lances com **apelido mascarado** ("a*****p") | Apelido descartado |
+| Resultado | Os leilões encerrados **mantêm todos os lotes na lista** com o desfecho (Vendido, Sem Lance, Cancelado). Mas **o valor final some** quando o leilão termina: a página do lote, o cartão e o relatório de lances mostram só o lance inicial. Durante o leilão, "Vendido" já aparece em lote com lance que garante a venda, com o maior lance visível | **Desfecho automático sim, preço final não.** O preço só vem do último lance visto antes do encerramento, que pode estar abaixo do final (lances nos últimos minutos, com prorrogação) |
+| Dados pessoais | Placa mascarada pelo site; apelidos mascarados nos lances | Apelidos não são guardados; redação comum (D-40) por garantia |
+
 ## 3. Arquitetura
 
 ```text
