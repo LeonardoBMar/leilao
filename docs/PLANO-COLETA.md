@@ -80,7 +80,7 @@ Ainda não implementada; precisa de aprovação para virar etapa. Primeira da or
 
 ### 2.5 Candidata: Rico Leilões, plataforma Soleon (levantamento de 2026-10-02)
 
-**Não implementada** (02/10): o preço final some depois do leilão, e a regra do §2 exige o preço final. Fica como candidata caso a plataforma passe a mostrá-lo. A plataforma Soleon também serve Benozzati, Calil e Guariglia ([`FONTES-PENDENTES.md`](FONTES-PENDENTES.md)); um adaptador pode valer para os quatro, se as páginas forem iguais.
+**Não implementada** (02/10): o preço final some depois do leilão, e a regra do §2 exige o preço final. Fica como candidata caso a plataforma passe a mostrá-lo. **Mesmo resultado no resto da plataforma (conferido em 02/10):** a Guariglia (veículos de financeira em Caçapava/SP) mostra "Vendido · ENCERRADO" só com o lance inicial; a Benozzati (Polícia Civil de Araçatuba e Praia Grande) mantém o maior lance visível depois do fim, mas o lote fica em "Fechado para Lances" sem nunca dizer se foi vendido (leilão de 21/08 ainda assim em 02/10); a Calil só tinha imóveis entre os encerrados, sem lote vendido para conferir. Nenhuma das três atende à regra. A plataforma Soleon também serve Benozzati, Calil e Guariglia ([`FONTES-PENDENTES.md`](FONTES-PENDENTES.md)); um adaptador pode valer para os quatro, se as páginas forem iguais.
 
 | Item | Achado | Consequência |
 | --- | --- | --- |
