@@ -33,11 +33,11 @@ export async function FollowedLotsNav() {
   if (page.total === 0) return null;
 
   return (
-    <section aria-labelledby="nav-followed" className="grid gap-1.5">
+    <section aria-labelledby="nav-followed" className="grid grid-cols-1 gap-1.5">
       <h2 id="nav-followed" className="px-2.5 text-caption font-medium text-muted">
         Acompanhando
       </h2>
-      <ul className="grid gap-px">
+      <ul className="grid grid-cols-1 gap-px">
         {page.items.slice(0, SHOWN).map((lot) => {
           const comparison = compareToFixedLimit(toFixedLimit(lot.limit), lot.currentBid);
           return (

@@ -50,7 +50,7 @@ export default function PrivateLayout({ children }: LayoutProps<"/">) {
           <NavLinks badges={badges} />
         </nav>
         {followed}
-        <div className="mt-auto grid gap-2.5">
+        <div className="mt-auto grid grid-cols-1 gap-2.5">
           {nextAuction}
           <div className="border-t border-border-strong pt-2.5">{account}</div>
         </div>
