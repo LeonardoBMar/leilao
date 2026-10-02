@@ -38,6 +38,29 @@ Automatizar o fluxo **Descobrir → Filtrar → Acompanhar → Analisar → Regi
 | Local | O "local" da consulta é a origem do comitente (ex.: "Curitiba, PR"), não onde o veículo está. O endereço de visitação só aparece no edital do lote (`/views/edital.php?lote={id}`, "Endereço Pátio: …, cidade, ESTADO, CEP"); nos lotes conferidos em 01/10, todos em São Carlos | Local lido do edital (estado por extenso vira UF); o da consulta é ignorado. Edital fora do ar ou fora do formato → local desconhecido, sem distância, nunca adivinhado. Corrigido em 01/10/2026 |
 | Página após o fim | Continua no ar por alguns dias e depois responde 200 com "Nenhum Lote Encontrado" | Tratado como página fora do ar (`gone`); a revisita 1 h após o fim grava o arremate antes disso |
 
+### 2.2 Candidata a terceira fonte: Freitas Leiloeiro (levantamento de 2026-10-01)
+
+Ainda não implementada; precisa de aprovação para virar etapa.
+
+| Item | Achado | Consequência |
+| --- | --- | --- |
+| `robots.txt` e termos | Não há `robots.txt` (404). Não há página de termos de uso; privacidade, "Como funciona" e Dúvidas não falam de robôs, extração ou cópia | Mesmo regime do Pátio: uso privado, volume baixo, coleta identificada, pausa em `sources.active` |
+| Acesso sem navegador | Sem anti-robô. Pedidos simples com o `User-Agent` do coletor (lista de leilões, lotes de um leilão, página do lote e consulta de lance) responderam 200 com o dado (teste de 01/10) | Cabe na `SourceHttp` atual, sem navegador |
+| Descoberta | Site ASP.NET com HTML no servidor. `/Leiloes/ListarLeiloes` lista a agenda (imóveis, materiais e judiciais misturados); `/Leiloes/Lotes?leilaoId=N` lista os lotes. Em 01/10: Pátio Utinga (Santo André/SP) com 300 lotes em 02/10 e 6 em 06/10; Pátio Santa Bárbara (Santa Bárbara d'Oeste/SP, ~110 km) com 80 em 07/10 | Descoberta filtra os leilões de veículos pelo título ("PÁTIO … VEÍCULOS") |
+| Dados do lote | `/Leiloes/LoteDetalhes?leilaoId=N&loteNumero=M`: título "MARCA MODELO – ano/ano", descrição, data e hora, comissão (5%), despesas operacionais (R$ 2.350), endereço de retirada, condição em texto (sinistrado, sucata) e fotos em `cdn3.freitasleiloeiro.com.br`. **Sem valor de mercado (FIPE) e sem km** nos lotes vistos | Estimativa só por comparáveis de venda, sem a proporção do valor de mercado. Condição pelo extrator comum |
+| Lance | Consulta à parte `/Leiloes/RetornarMaiorLanceLote` (HTML com `hdMaiorLance`, data e apelido de quem deu o lance) | Apelido descartado |
+| Resultado | A página do lote **continua no ar depois do fim** com o desfecho (VENDIDO, SEM LICITANTE, CONDICIONAL, RETIRADO), e a consulta de lance mantém o último valor (ex.: leilão 8074, lote 1, condicional a R$ 1.500) | Arremate automático como no Leilo. Leilão removido responde 500: tratar como página fora do ar |
+| Dados pessoais | A descrição às vezes traz placa completa, chassi e Renavam | Placa, chassi e Renavam **apagados da descrição** antes de gravar (decisão do usuário, 01/10) |
+
+### 2.3 Fontes avaliadas e descartadas
+
+| Fonte | Data | Motivo | Para reabrir |
+| --- | --- | --- | --- |
+| Copart (`copart.com.br`) | 01/10/2026 | `robots.txt` libera tudo e os termos de membro (cl. 47) permitem uso pessoal não comercial, e a busca usa uma API JSON rica (lance, valor de referência, monta, sinistro, pátio). Mas o site está atrás do **Imperva/Incapsula**: pedido simples recebe a página de desafio em JavaScript (sitemap) ou erro (API). Passar exigiria navegador automatizado ou reaproveitar sessão, o que é contornar a proteção | Autorização ou API oficial da Copart |
+| Sodré Santoro (`sodresantoro.com.br`) | 01/10/2026 | `robots.txt` libera tudo e a busca (`POST /api/search-lots`, consulta Elasticsearch repassada) traz dados excelentes, inclusive custos do lote. Mas um firewall responde **403** a qualquer pedido fora do navegador, até à página de termos (teste de 01/10). Além disso, os lotes vendidos somem do índice da busca e a página do lote encerrado não mostrou o desfecho | Liberação de acesso pela Sodré |
+| Loop Leilões (`loopleiloes.com.br`) | 01/10/2026 | `robots.txt` libera tudo e as Condições Gerais não falam de robôs. A busca (`api.loopleiloes.com.br/search/leilao`) responde a pedido simples e devolve tudo de uma vez, mas sem FIPE, custos, condição nem pátio de retirada. A página do lote, que tem esses dados, fica atrás do **desafio anti-robô da Vercel** (429 com `X-Vercel-Mitigated: challenge`, até no `robots.txt`). A API de detalhe exige um token que não foi emitido para nós. Lotes encerrados somem da busca e a página não mostra o valor final. Em 01/10, nenhum lote em leilão a menos de ~150 km de São Carlos (só 46 loteados, o mais perto em Jundiaí) | Acesso liberado às páginas e pátio no interior de SP |
+| Superbid (`superbid.net`) | 01/10/2026 | `robots.txt` barra só as páginas de categoria (`Disallow: /categorias/[...categoryId]`); os termos estão num PDF que não foi lido. A API `offer-query.superbid.net/offers/` é a mais rica de todas (filtro por cidade, coordenadas, comissão, ~4.800 lotes abertos até ~150 km de São Carlos e encerrados desde 2013), mas o **Cloudflare Bot Management** responde 403 com desafio a pedido simples, tanto na API quanto na página do lote. A API também devolve o lance final que a página esconde de quem não está logado | API ou feed oficial da Superbid |
+
 ## 3. Arquitetura
 
 ```text
