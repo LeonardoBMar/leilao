@@ -16,6 +16,8 @@ Automatizar o fluxo **Descobrir → Filtrar → Acompanhar → Analisar → Regi
 
 ## 2. Primeira fonte: Leilo (levantamento de 2026-09-27)
 
+**Regra para novas fontes (decisão do usuário, 02/10/2026): a fonte precisa dar o preço final dos lotes vendidos**, lido depois do encerramento (página, lista ou consulta). Fonte que só mostra o desfecho, ou cujo preço só se aproxima pelo último lance visto, não é implementada: o preço final alimenta resultados e estimativas.
+
 | Item | Achado | Consequência |
 | --- | --- | --- |
 | `robots.txt` | `Allow: /` para todos, com sitemap | Coleta permitida pelo site |
@@ -78,7 +80,7 @@ Ainda não implementada; precisa de aprovação para virar etapa. Primeira da or
 
 ### 2.5 Candidata: Rico Leilões, plataforma Soleon (levantamento de 2026-10-02)
 
-Ainda não implementada; precisa de aprovação. A plataforma Soleon também serve Benozzati, Calil e Guariglia ([`FONTES-PENDENTES.md`](FONTES-PENDENTES.md)); um adaptador pode valer para os quatro, se as páginas forem iguais.
+**Não implementada** (02/10): o preço final some depois do leilão, e a regra do §2 exige o preço final. Fica como candidata caso a plataforma passe a mostrá-lo. A plataforma Soleon também serve Benozzati, Calil e Guariglia ([`FONTES-PENDENTES.md`](FONTES-PENDENTES.md)); um adaptador pode valer para os quatro, se as páginas forem iguais.
 
 | Item | Achado | Consequência |
 | --- | --- | --- |
@@ -89,6 +91,18 @@ Ainda não implementada; precisa de aprovação. A plataforma Soleon também ser
 | Lance | Maior lance, data e os últimos lances com **apelido mascarado** ("a*****p") | Apelido descartado |
 | Resultado | Os leilões encerrados **mantêm todos os lotes na lista** com o desfecho (Vendido, Sem Lance, Cancelado). Mas **o valor final some** quando o leilão termina: a página do lote, o cartão e o relatório de lances mostram só o lance inicial. Durante o leilão, "Vendido" já aparece em lote com lance que garante a venda, com o maior lance visível | **Desfecho automático sim, preço final não.** O preço só vem do último lance visto antes do encerramento, que pode estar abaixo do final (lances nos últimos minutos, com prorrogação) |
 | Dados pessoais | Placa mascarada pelo site; apelidos mascarados nos lances | Apelidos não são guardados; redação comum (D-40) por garantia |
+
+### 2.6 Candidata: Mega Leilões (levantamento de 2026-10-02)
+
+Ainda não implementada; precisa de aprovação. **Passa na regra do preço final.**
+
+| Item | Achado | Consequência |
+| --- | --- | --- |
+| `robots.txt` e termos | `Allow: /`, barra só `/login`, com sitemap. O regulamento trata de venda, pagamento e impedimentos legais; não fala de robôs, extração ou cópia | Mesmo regime das outras fontes |
+| Acesso sem navegador | HTML no servidor (Yii), Cloudflare sem desafio. ~20 pedidos simples com o `User-Agent` do coletor em 02/10, todos 200 | Cabe na `SourceHttp` atual |
+| Descoberta | `/veiculos?pagina=N` (carros, motos, caminhões); a URL do lote traz tipo, UF e cidade (`/veiculos/motos/sp/porto-ferreira/...-j128513`). Em 02/10: **~75 lotes de veículo no país**, quase todos **judiciais** (75) e 4 de venda direta; 17 sem cidade informada, 14 em Tatuí. Perto de São Carlos: 1 em Porto Ferreira (~50 km), 1 em Americana, 1 em Amparo, 1 em Campinas | Volume pequeno e de leilão judicial (veículo com o depositário, débitos e restrições judiciais) |
+| Dados do lote | Valor inicial (e o da 2ª praça), **valor de avaliação** (referência de mercado), datas das praças, número de lances, localização com endereço e cidade, descrição do cartório (marca, modelo, ano, cor, combustível, débitos, restrições). **Sem km**; comissão de 5% na tabela de lances. A página também traz processo, vara, **autor e réu (nomes de pessoas)** e, na descrição, placa, chassi e Renavam completos | Valor de avaliação como valor de mercado rotulado (D-30). **Nomes das partes e número do processo não são guardados**; placa, chassi e Renavam apagados (D-40) |
+| Lance e resultado | Depois do encerramento a página continua no ar com "Leilão encerrado R$ X" (o maior lance), o número de lances e a **tabela completa de lances** (valor, comissão, data; usuário mascarado, "vit*/*/*/*"). Na lista `/leiloes-realizados` o cartão diz "Finalizado" e o vendido ganha o selo "ARREMATADO" (ex.: Gol 2006 em Artur Nogueira, 3 lances, final R$ 10.961,50) | **Preço final disponível.** Usuários dos lances descartados. Arrematação judicial ainda depende do juiz; tratar "ARREMATADO" como vendido |
 
 ## 3. Arquitetura
 
