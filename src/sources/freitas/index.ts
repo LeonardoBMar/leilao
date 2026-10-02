@@ -59,6 +59,8 @@ export const freitasSource: SourceAdapter = {
   id: "freitas",
   name: FREITAS_NAME,
   baseUrl: FREITAS_BASE_URL,
+  // ~2 requisições por lote aberto (página e fotos) a 1 s cada, mais as listas: 250 lotes cabem em ~10 min do job.
+  maxVisitsPerRun: 250,
   listingUrl: freitasListingUrl,
   discover,
   async fetchListing(http, externalId, now) {

@@ -46,6 +46,11 @@ export type SourceAdapter = {
   /** Nome exibido no app (ex.: leiloeiro do lote criado por "Adicionar à análise"). */
   name: string;
   baseUrl: string;
+  /**
+   * Teto próprio de anúncios lidos por execução, abaixo do geral (`--max-visits`), para a fonte que gasta mais
+   * requisições por anúncio caber no tempo do job agendado.
+   */
+  maxVisitsPerRun?: number;
   /** URL canônica do anúncio, para revisitar depois que ele sai da lista da fonte. */
   listingUrl: (externalId: string) => string;
   /** Lista os anúncios disponíveis agora. */

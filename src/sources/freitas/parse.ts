@@ -182,7 +182,8 @@ export function parseFreitasCards(html: string): FreitasCard[] {
     const date = /cardLote-data">\s*<span[^>]*>([^<]*)<\/span>\s*<span[^>]*>([^<]*)</.exec(block);
     cards.push({
       lotNumber,
-      lotLabel: plain(/cardLote-lote">([^<]*)</.exec(block)?.[1] ?? String(lotNumber)),
+      // Lote "em loteamento" vem sem o número no cartão.
+      lotLabel: plain(/cardLote-lote">([^<]*)</.exec(block)?.[1] ?? "") || String(lotNumber).padStart(3, "0"),
       date: plain(date?.[1] ?? ""),
       time: plain(date?.[2] ?? ""),
       description: redactVehicleIds(plain(/cardLote-descVeic">\s*<span>([^<]*)</.exec(block)?.[1] ?? "")),
@@ -389,7 +390,16 @@ function placeOf(raw: FreitasRaw): ListingInput["location"] {
   const match = address ? /^(.*)\s-\s*([^-/]+?)\s*\/\s*([A-Z]{2})$/i.exec(address) : null;
   const city = match?.[2] ? match[2].replace(/\bD\s+(?=[AEIOU])/gi, "D'") : null;
   const state = match?.[3] ? stateCode(match[3]) : null;
-  if (city && state) return { yardName: yard?.name ?? null, city, state, address: match?.[1]?.trim() || null };
+  if (city && state) {
+    // Mesma cidade do pátio: o nome da tabela, bem escrito ("Santo André" e não "SANTO ANDRE").
+    const sameCity = yard?.state === state && normalizePlaceName(yard.city) === normalizePlaceName(city);
+    return {
+      yardName: yard?.name ?? null,
+      city: sameCity ? yard.city : city,
+      state,
+      address: match?.[1]?.trim() || null,
+    };
+  }
   if (yard) return { yardName: yard.name, city: yard.city, state: yard.state, address };
   return { yardName: null, city: null, state: null, address };
 }
@@ -403,17 +413,22 @@ type CardVehicle = {
   color: string | null;
 };
 
-/** "I/BYD DOLPHIN MINI GS EV, 24/25, PLACA: E__-___2, ELETR/FONTE EXT, PRETA". "I/" marca importado. */
+/**
+ * "I/BYD DOLPHIN MINI GS EV, 24/25, PLACA: E__-___2, ELETR/FONTE EXT, PRETA". "I/" marca importado. Máquina sem placa
+ * traz um ano só, com 4 dígitos ("TRATOR JOHN DEERE 6170M, 2020 , DIESEL, VERDE").
+ */
 function vehicleOf(description: string, now: Date): CardVehicle {
   const parts = description.split(",").map((part) => part.trim());
   const name = (parts[0] ?? "").replace(/^I\//i, "");
   const { brand, model } = name.includes("/")
     ? splitBrandModel(name)
     : { brand: name.split(" ")[0] || null, model: name.split(" ").slice(1).join(" ") || null };
-  const yearsAt = parts.findIndex((part) => /^\d{2}\/\d{2}$/.test(part));
-  const [made, modelYear] = yearsAt < 0 ? [] : (parts[yearsAt]?.split("/") ?? []);
+  const yearsAt = parts.findIndex((part) => /^(?:\d{2}|\d{4})(?:\/(?:\d{2}|\d{4}))?$/.test(part));
+  const [made, modelYear = made] = yearsAt < 0 ? [] : (parts[yearsAt]?.split("/") ?? []);
   const plateAt = parts.findIndex((part) => /^PLACA\b/i.test(part));
-  const rest = plateAt < 0 ? [] : parts.slice(plateAt + 1);
+  // Combustível e cor vêm depois da placa ou, sem placa, depois do ano.
+  const after = plateAt >= 0 ? plateAt : yearsAt;
+  const rest = after < 0 ? [] : parts.slice(after + 1);
   return {
     brand,
     model,
@@ -437,8 +452,9 @@ function keyOf(description: string | null): boolean | null {
   return null;
 }
 
-/** Ano de 2 dígitos do site: até o ano que vem é 20xx; depois, 19xx. */
+/** Ano de 2 dígitos do site: até o ano que vem é 20xx; depois, 19xx. Com 4 dígitos, como está. */
 function toYear(value: string | undefined, now: Date): number | null {
+  if (value !== undefined && /^\d{4}$/.test(value)) return Number(value);
   if (value === undefined || !/^\d{2}$/.test(value)) return null;
   const twoDigits = Number(value);
   const nextYear = (now.getUTCFullYear() + 1) % 100;

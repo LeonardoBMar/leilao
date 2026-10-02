@@ -167,13 +167,18 @@ describe("buildFreitasListing — lote aberto com a página (Santa Bárbara, lot
     expect(listing.costs).toMatchObject({ commissionRate: 500, otherFees: 235_000 });
   });
 
-  it("local pelo endereço de retirada, com 'D OESTE' escrito como no IBGE", () => {
+  it("local pelo endereço de retirada; na cidade do pátio, com o nome bem escrito da tabela", () => {
     expect(listing.location).toEqual({
       yardName: "Pátio Santa Bárbara",
-      city: "SANTA BARBARA D'OESTE",
+      city: "Santa Bárbara d'Oeste",
       state: "SP",
       address: "AV. JUSCELINO K. DE OLIVEIRA, 1350/1360 MARGINAL DA SP304",
     });
+  });
+
+  it("sem pátio conhecido, a cidade do endereço, com 'D OESTE' escrito como no IBGE", () => {
+    const withoutYard = buildFreitasListing(raw({ card: card(openCards, 1), page, yardId: null }), [], now);
+    expect(withoutYard.location).toMatchObject({ yardName: null, city: "SANTA BARBARA D'OESTE", state: "SP" });
   });
 
   it("descrição com destaques e observação; sem chave nem condição declarada", () => {
@@ -216,6 +221,28 @@ describe("buildFreitasListing — lotes encerrados, só com o cartão (a página
 
   it("pátio desconhecido e sem página: local desconhecido (nunca adivinhado)", () => {
     expect(ended(1, { yardId: null }).location).toEqual({ yardName: null, city: null, state: null, address: null });
+  });
+
+  it("lote em loteamento: sem número no cartão e sem valor ('-'); máquina sem placa com ano de 4 dígitos", () => {
+    const [loteamento] = parseFreitasCards(
+      fixture("lista-encerrado.html")
+        .replace(/cardLote-lote">[^<]*</, 'cardLote-lote"><')
+        .replace(/cardLote-vlr">[^<]*</, 'cardLote-vlr">-<')
+        .replace(
+          /cardLote-descVeic">\s*<span>[^<]*</,
+          'cardLote-descVeic"><span>TRATOR JOHN DEERE 6170M, 2020 , DIESEL, VERDE<',
+        ),
+    );
+    if (!loteamento) throw new Error("cartão fora da fixture");
+    const listing = buildFreitasListing(raw({ auctionId: "8066", card: loteamento, yardId: 1 }), [], now);
+    expect(listing).toMatchObject({ lotNumber: "001", currentBid: null, minimumBid: null });
+    expect(listing.vehicle).toMatchObject({
+      brand: "TRATOR",
+      modelYear: 2020,
+      manufactureYear: 2020,
+      fuel: "DIESEL",
+      color: "VERDE",
+    });
   });
 
   it("tipo fora do vocabulário comum ('Desconto Desp. OPE') fica sem categoria", () => {
@@ -294,7 +321,7 @@ describe("freitasSource", () => {
     expect(first.ok && first.value).toMatchObject({
       vehicle: { category: "Carros" },
       condition: { damageLevel: "small" },
-      location: { city: "SANTA BARBARA D'OESTE" },
+      location: { city: "Santa Bárbara d'Oeste" },
       costs: { commissionRate: 500 },
     });
     expect(first.ok && first.value.photoUrls).toHaveLength(19);

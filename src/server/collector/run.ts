@@ -165,7 +165,7 @@ async function collectSource(input: {
       discoveryFailed = await collectListings({
         source,
         fetcher,
-        maxVisits,
+        maxVisits: Math.min(maxVisits, source.maxVisitsPerRun ?? maxVisits),
         place: places.lookup,
         now,
         fail,
