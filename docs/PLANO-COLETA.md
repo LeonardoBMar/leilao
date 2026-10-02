@@ -62,6 +62,20 @@ Implementada em 01/10 (etapa 7, D-40). Ajustes vistos na implementação: a pág
 | Superbid (`superbid.net`) | 01/10/2026 | `robots.txt` barra só as páginas de categoria (`Disallow: /categorias/[...categoryId]`); os termos estão num PDF que não foi lido. A API `offer-query.superbid.net/offers/` é a mais rica de todas (filtro por cidade, coordenadas, comissão, ~4.800 lotes abertos até ~150 km de São Carlos e encerrados desde 2013), mas o **Cloudflare Bot Management** responde 403 com desafio a pedido simples, tanto na API quanto na página do lote. A API também devolve o lance final que a página esconde de quem não está logado | API ou feed oficial da Superbid |
 | Chui Leilões (`chuileiloes.com.br`) | 02/10/2026 | Pátio municipal de Campinas (Emdec), ~90 km. `robots.txt` libera tudo e a página responde a pedido simples, mas é uma **loja da plataforma Superbid** (S4B Digital): o HTML é só a casca da aplicação e os lotes vêm de `offer-query.superbid.net` e `event-query.superbid.net`, que respondem 403 com o desafio do **Cloudflare** (como na Superbid); `api.s4bdigital.net` exige `client_id`. Termos não lidos, por não haver acesso possível | O mesmo da Superbid (API ou feed oficial) |
 
+### 2.4 Candidata: Sumaré Leilões (levantamento de 2026-10-02)
+
+Ainda não implementada; precisa de aprovação para virar etapa. Primeira da ordem da triagem em [`FONTES-PENDENTES.md`](FONTES-PENDENTES.md).
+
+| Item | Achado | Consequência |
+| --- | --- | --- |
+| `robots.txt` e termos | Não há `robots.txt` (404) nem sitemap. Os termos de uso tratam de cadastro, lances e pagamento; não falam de robôs, extração ou cópia | Mesmo regime do Pátio e da Freitas: uso privado, volume baixo, coleta identificada, pausa em `sources.active` |
+| Acesso sem navegador | Laravel com HTML no servidor, sem anti-robô (nginx). ~150 pedidos simples com o `User-Agent` do coletor em 02/10, todos 200 | Cabe na `SourceHttp` atual, sem cookie: a paginação também aceita `GET` (`?pagina=N`, 50 lotes por página) |
+| Descoberta | A página inicial lista os leilões em andamento (`/leiloes/{id}`), misturados: Detran-SP, prefeituras, PRF, Fundo Social e varas judiciais (imóveis e bens diversos). Em 02/10: Detran-SP com 254 conservados (fecha 16/10), 555 sucatas aproveitáveis (20/10) e 1 sucata inservível, todos no **pátio do Tremembé, São Paulo/SP** (~230 km); veículos de prefeituras em Ouro Verde, Santo Anastácio, Osasco e João Pinheiro/MG; PRF no ES. **Nenhum lote de veículo até 150 km de São Carlos** (Jaboticabal e Araraquara têm só terrenos). Os leilões do Detran-SP no interior citados no levantamento não estavam na agenda | Descoberta filtra os lotes de veículo pelo título ("MARCA/MODELO, AA/AA"); o valor depende de a Sumaré voltar a ter leilões do Detran-SP no interior |
+| Dados do lote | `/lotes/{uuid}`: título "MARCA/MODELO, AA/AA", situação documental ("COM DIREITO A DOCUMENTO/CIRCULAÇÃO", "SUCATA PARA DESMONTE", "INSERVÍVEL"), cor, combustível, local de visitação com cidade/UF, data de fechamento, lance inicial, lance atual, incremento e fotos em `sumares3.s3.sa-east-1.amazonaws.com`. **Sem km, sem valor de mercado; comissão e despesas só no edital em PDF** | Condição pela situação documental (sucata → salvage). Comissão pelo padrão da análise. Estimativa só por comparáveis |
+| Lance | Lance atual na própria página do lote; nenhum dado de quem deu o lance | Nada a descartar |
+| Resultado | O lote **vendido sai da lista do leilão**, mas a página dele continua no ar com "Vendido (data)" e o lance final; "Sem Licitante" fica na lista com lance 0 (conferido no leilão de Caieiras de 01/10 e no de Osasco de jan/2026). Leilão antigo removido redireciona (302) | Revisitar o anúncio pela URL guardada, como no Leilo; sair da lista não é `gone` |
+| Dados pessoais | Placa e chassi já vêm mascarados pelo site ("ESE****8", "***…079") | Redação comum (D-40) por garantia |
+
 ## 3. Arquitetura
 
 ```text
