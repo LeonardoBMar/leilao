@@ -38,9 +38,9 @@ Automatizar o fluxo **Descobrir → Filtrar → Acompanhar → Analisar → Regi
 | Local | O "local" da consulta é a origem do comitente (ex.: "Curitiba, PR"), não onde o veículo está. O endereço de visitação só aparece no edital do lote (`/views/edital.php?lote={id}`, "Endereço Pátio: …, cidade, ESTADO, CEP"); nos lotes conferidos em 01/10, todos em São Carlos | Local lido do edital (estado por extenso vira UF); o da consulta é ignorado. Edital fora do ar ou fora do formato → local desconhecido, sem distância, nunca adivinhado. Corrigido em 01/10/2026 |
 | Página após o fim | Continua no ar por alguns dias e depois responde 200 com "Nenhum Lote Encontrado" | Tratado como página fora do ar (`gone`); a revisita 1 h após o fim grava o arremate antes disso |
 
-### 2.2 Candidata a terceira fonte: Freitas Leiloeiro (levantamento de 2026-10-01)
+### 2.2 Terceira fonte: Freitas Leiloeiro (levantamento de 2026-10-01)
 
-Ainda não implementada; precisa de aprovação para virar etapa.
+Implementada em 01/10 (etapa 7, D-40). Ajustes vistos na implementação: a página do lote **dá erro 500 depois de VENDIDO, CONDICIONAL e RETIRADO** (só SEM LICITANTES e BAIXA OFERTA seguem no ar), mas o cartão da lista (`/Leiloes/ListarLotes`) continua com o desfecho e o último valor, e as fotos (`/Leiloes/ListarFotosLote`) seguem disponíveis. Monta, pátio e tipo vêm dos filtros da própria lista (`Condicao`, `PatioId`, `TipoLoteId`); pátios conhecidos: 1 Utinga, 2 Santo André, 3 Santa Bárbara. BAIXA OFERTA não tem desfecho correspondente e fica desconhecida. Outras fontes ainda não avaliadas estão em [`FONTES-PENDENTES.md`](FONTES-PENDENTES.md).
 
 | Item | Achado | Consequência |
 | --- | --- | --- |
@@ -49,7 +49,7 @@ Ainda não implementada; precisa de aprovação para virar etapa.
 | Descoberta | Site ASP.NET com HTML no servidor. `/Leiloes/ListarLeiloes` lista a agenda (imóveis, materiais e judiciais misturados); `/Leiloes/Lotes?leilaoId=N` lista os lotes. Em 01/10: Pátio Utinga (Santo André/SP) com 300 lotes em 02/10 e 6 em 06/10; Pátio Santa Bárbara (Santa Bárbara d'Oeste/SP, ~110 km) com 80 em 07/10 | Descoberta filtra os leilões de veículos pelo título ("PÁTIO … VEÍCULOS") |
 | Dados do lote | `/Leiloes/LoteDetalhes?leilaoId=N&loteNumero=M`: título "MARCA MODELO – ano/ano", descrição, data e hora, comissão (5%), despesas operacionais (R$ 2.350), endereço de retirada, condição em texto (sinistrado, sucata) e fotos em `cdn3.freitasleiloeiro.com.br`. **Sem valor de mercado (FIPE) e sem km** nos lotes vistos | Estimativa só por comparáveis de venda, sem a proporção do valor de mercado. Condição pelo extrator comum |
 | Lance | Consulta à parte `/Leiloes/RetornarMaiorLanceLote` (HTML com `hdMaiorLance`, data e apelido de quem deu o lance) | Apelido descartado |
-| Resultado | A página do lote **continua no ar depois do fim** com o desfecho (VENDIDO, SEM LICITANTE, CONDICIONAL, RETIRADO), e a consulta de lance mantém o último valor (ex.: leilão 8074, lote 1, condicional a R$ 1.500) | Arremate automático como no Leilo. Leilão removido responde 500: tratar como página fora do ar |
+| Resultado | (Corrigido na implementação, ver acima.) A página do lote **continua no ar depois do fim** com o desfecho (VENDIDO, SEM LICITANTE, CONDICIONAL, RETIRADO), e a consulta de lance mantém o último valor (ex.: leilão 8074, lote 1, condicional a R$ 1.500) | Arremate automático pelo cartão da lista; a página do lote só é pedida enquanto ele está aberto. Lote fora da lista é página fora do ar |
 | Dados pessoais | A descrição às vezes traz placa completa, chassi e Renavam | Placa, chassi e Renavam **apagados da descrição** antes de gravar (decisão do usuário, 01/10) |
 
 ### 2.3 Fontes avaliadas e descartadas
@@ -142,10 +142,11 @@ Cada etapa segue o fluxo da skill `leilao-padroes`:
 | 4 | **Resultado automático** nos lotes do usuário: quando o anúncio ligado encerra, o coletor registra o resultado (desfecho, preço final, hora real) com `source = collector` e link. Desfecho ambíguo (ex.: condicional) fica como **"resultado a confirmar"**, já preenchido. Entregue em 30/09 (D-35): o formulário de "a confirmar" vem com lance, hora e link; anúncio já encerrado ao ser adicionado gera análise retrospectiva | O usuário não digita resultados; no máximo confirma |
 | 5 | **Estimativas** (§5), quando houver base. Entregue em 30/09 (D-36) com dois ajustes aprovados: comparáveis de **qualquer região** e, sem 5 comparáveis, a **proporção do valor de mercado** das vendas da mesma categoria e condição | Alerta e anúncio mostram "provável R$ X (n=12) · limite estimado R$ Y" ou "sem base suficiente" |
 | 6 | **Segunda fonte e coletor para várias fontes.** Entregue em 30/09 (D-37): Pátio Estadual São Carlos (§2.1), fontes em paralelo e isoladas, passos comuns uma vez por execução, contrato comum dos anúncios e categoria no vocabulário comum. Notificações externas (e-mail ou push) **saíram do escopo** por decisão do usuário: alertas só no app | Segunda fonte entra só com um adaptador novo e a entrada em `src/sources/index.ts`; falha de uma fonte aparece no app com o nome dela |
+| 7 | **Terceira fonte: Freitas Leiloeiro** (§2.2). Entregue em 01/10 (D-40): leilões de pátio e veículos da agenda, monta, pátio e tipo pelos filtros do site, custos da página enquanto o lote está aberto, desfecho pelo cartão e placa, chassi e Renavam apagados da descrição | Lotes da Freitas aparecem em Descobertos com local, condição e categoria, e o arremate é gravado sem pedir a página encerrada |
 
 ## 7. Decisões
 
-Aprovadas e registradas em `docs/ARCHITECTURE.md` §15: **D-25** catálogo global · **D-26** coletor no GitHub Actions com `tsx` · **D-27** adaptador por estado da página + JSON-LD · **D-28** estimativas só com dados do sistema · **D-29** fotos por URL · **D-30** dados da fonte como sugestão rotulada · **D-32** alertas criados pelo coletor · **D-34** lote ligado ao anúncio e lance automático · **D-35** resultado automático · **D-36** estimativas (região nacional e proporção do valor de mercado) · **D-37** várias fontes e segunda fonte.
+Aprovadas e registradas em `docs/ARCHITECTURE.md` §15: **D-25** catálogo global · **D-26** coletor no GitHub Actions com `tsx` · **D-27** adaptador por estado da página + JSON-LD · **D-28** estimativas só com dados do sistema · **D-29** fotos por URL · **D-30** dados da fonte como sugestão rotulada · **D-32** alertas criados pelo coletor · **D-34** lote ligado ao anúncio e lance automático · **D-35** resultado automático · **D-36** estimativas (região nacional e proporção do valor de mercado) · **D-37** várias fontes e segunda fonte · **D-40** terceira fonte (Freitas).
 
 ## 8. Riscos
 
