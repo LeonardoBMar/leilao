@@ -104,6 +104,19 @@ Ainda não implementada; precisa de aprovação. **Passa na regra do preço fina
 | Dados do lote | Valor inicial (e o da 2ª praça), **valor de avaliação** (referência de mercado), datas das praças, número de lances, localização com endereço e cidade, descrição do cartório (marca, modelo, ano, cor, combustível, débitos, restrições). **Sem km**; comissão de 5% na tabela de lances. A página também traz processo, vara, **autor e réu (nomes de pessoas)** e, na descrição, placa, chassi e Renavam completos | Valor de avaliação como valor de mercado rotulado (D-30). **Nomes das partes e número do processo não são guardados**; placa, chassi e Renavam apagados (D-40) |
 | Lance e resultado | Depois do encerramento a página continua no ar com "Leilão encerrado R$ X" (o maior lance), o número de lances e a **tabela completa de lances** (valor, comissão, data; usuário mascarado, "vit*/*/*/*"). Na lista `/leiloes-realizados` o cartão diz "Finalizado" e o vendido ganha o selo "ARREMATADO" (ex.: Gol 2006 em Artur Nogueira, 3 lances, final R$ 10.961,50) | **Preço final disponível.** Usuários dos lances descartados. Arrematação judicial ainda depende do juiz; tratar "ARREMATADO" como vendido |
 
+### 2.7 Candidata: plataforma Suporte Leilões (Leilão Brasil, Leilões PB, Gustavo Reis; levantamento de 2026-10-02)
+
+Ainda não implementada; precisa de aprovação. **Passa na regra do preço final.** Os três sites usam a mesma plataforma (fotos em `static.suporteleiloes.com.br`), então um adaptador valeria para os três.
+
+| Item | Achado | Consequência |
+| --- | --- | --- |
+| `robots.txt` e termos | Leilões PB: só os comentários de "content signals" do Cloudflare, sem regra nem sinal definido. Leilão Brasil e Gustavo Reis: sem regras. Termos de uso (`/termos-uso`) não lidos a fundo | Sem restrição declarada; ler os termos antes de implementar |
+| Acesso sem navegador | HTML no servidor (Symfony), Cloudflare sem desafio; ~60 pedidos simples em 02/10, todos 200 | Cabe na `SourceHttp` atual |
+| Descoberta | Um **evento por bem** (`/eventos/leilao/{id}/{slug}/lote` redireciona ao lote `/eventos/leilao/{slug}/lote/{loteId}/{slug}`; o slug pode ser qualquer texto). Na Leilão Brasil, ~40 eventos de veículo abertos, **judiciais**, espalhados (São Paulo, Guarulhos, Mauá, Limeira, Bilac, MG); encerrados listados sem link, mas com o id do evento. Leilões PB: pátios em Bayeux/PB e Feira de Santana/BA (seguradoras HDI/Yelum, bancos), **fora da região**. Gustavo Reis: 1 lote de veículo | Volume perto de São Carlos muito pequeno (Limeira, ~100 km) |
+| Dados do lote | Estado do lote em **JSON embutido na página**: situação numérica, lance inicial, avaliação, número de lances, data de fechamento (fuso `America/Fortaleza`), UF; endereço do bem; processo e comitente. Leilões PB mostra "valor médio de mercado" | Avaliação como valor de mercado rotulado (D-30) |
+| Resultado | Depois do fim o JSON mantém **`valorArremate`** no vendido (ex.: Renault Clio 2014/2015, R$ 8.805,10; VW Up 2014/2015, R$ 23.742,74) e `null` no sem lance | **Preço final disponível** |
+| Dados pessoais | O lance traz `autor` com id, cidade, UF e apelido de quem deu o lance; o lote judicial traz número do processo | `autor` e processo descartados antes de gravar; redação comum (D-40) |
+
 ## 3. Arquitetura
 
 ```text
