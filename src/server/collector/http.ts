@@ -20,7 +20,14 @@ type Options = {
   fetchImpl?: typeof fetch;
   sleep?: (ms: number) => Promise<void>;
   now?: () => number;
+  /**
+   * Fim do tempo da execução (ms desde a época, no relógio de `now`). Depois dele nenhuma requisição sai, nem nova
+   * tentativa: a resposta é uma falha na hora. Uma fonte fora do ar não segura a coleta inteira até o job ser morto.
+   */
+  deadline?: number;
 };
+
+export const DEADLINE_ERROR = "tempo da execução esgotado";
 
 const RETRY_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
 const MAX_RETRY_AFTER_MS = 60_000;
@@ -38,6 +45,7 @@ export function createPoliteFetcher({
   fetchImpl = fetch,
   sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
   now = Date.now,
+  deadline = Number.POSITIVE_INFINITY,
 }: Options = {}): PoliteFetcher {
   let lastRequestAt = Number.NEGATIVE_INFINITY;
   let requests = 0;
@@ -45,6 +53,7 @@ export function createPoliteFetcher({
   async function attempt({ url, form }: Request): Promise<FetchOutcome & { retryAfterMs?: number; retry: boolean }> {
     const wait = lastRequestAt + minIntervalMs - now();
     if (wait > 0) await sleep(wait);
+    if (now() >= deadline) return { ok: false, status: null, error: DEADLINE_ERROR, retry: false };
     lastRequestAt = now();
     requests++;
     try {
@@ -53,7 +62,8 @@ export function createPoliteFetcher({
         headers: { "user-agent": userAgent, accept: "text/html,application/xml,application/json;q=0.9,*/*;q=0.8" },
         ...(form ? { body: new URLSearchParams(form) } : {}),
         redirect: "follow",
-        signal: AbortSignal.timeout(timeoutMs),
+        // O tempo da requisição também para no fim da execução.
+        signal: AbortSignal.timeout(Math.max(1, Math.min(timeoutMs, deadline - now()))),
       });
       if (response.ok) return { ok: true, text: await response.text(), retry: false };
       return {

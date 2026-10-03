@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createPoliteFetcher } from "./http";
+import { createPoliteFetcher, DEADLINE_ERROR } from "./http";
 
 /** Relógio e espera falsos: `sleep` só avança o relógio e registra quanto esperou. */
 function fakeClock() {
@@ -89,6 +89,24 @@ describe("createPoliteFetcher", () => {
     });
 
     expect(await fetcher.get("https://fonte/1")).toEqual({ ok: false, status: 500, error: "HTTP 500" });
+  });
+
+  it("depois do fim do tempo da execução não faz requisição nem nova tentativa", async () => {
+    const clock = fakeClock();
+    const { impl, calls } = fakeFetch([new Error("fetch failed"), new Response("ok")]);
+    const fetcher = createPoliteFetcher({
+      fetchImpl: impl,
+      sleep: clock.sleep,
+      now: clock.now,
+      minIntervalMs: 0,
+      deadline: 1_000,
+    });
+
+    // A primeira tentativa sai; a espera de 2 s passa do fim e a segunda não sai.
+    expect(await fetcher.get("https://fonte/1")).toEqual({ ok: false, status: null, error: DEADLINE_ERROR });
+    expect(await fetcher.get("https://fonte/2")).toEqual({ ok: false, status: null, error: DEADLINE_ERROR });
+    expect(calls).toHaveLength(1);
+    expect(fetcher.requests).toBe(1);
   });
 
   it("POST de formulário segue o mesmo ritmo e as mesmas novas tentativas", async () => {

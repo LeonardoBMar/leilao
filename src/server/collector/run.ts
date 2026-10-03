@@ -7,7 +7,7 @@ import type { SourceAdapter } from "@/sources/types";
 
 import { db } from "../db";
 import { createAlerts } from "./alerts";
-import { createPoliteFetcher, type PoliteFetcher } from "./http";
+import { createPoliteFetcher, DEADLINE_ERROR, type PoliteFetcher } from "./http";
 import { recordTrackedResults, syncTrackedLots } from "./lots";
 import {
   findDueVisits,
@@ -22,6 +22,15 @@ import {
 } from "./store";
 
 const MAX_ERROR_SAMPLES = 20;
+/**
+ * Tempo das fontes numa execução. O job tem 20 min (`.github/workflows/collect.yml`); sobram ~8 para instalar, para
+ * os passos comuns (lotes ligados, alertas) e para fechar os registros.
+ */
+const DEFAULT_BUDGET_MS = 12 * 60_000;
+/** Falhas seguidas que param a fonte nesta execução: o site caiu ou bloqueou o coletor, não vale insistir. */
+const MAX_CONSECUTIVE_FAILURES = 10;
+/** Execução ainda "running" depois disto foi morta antes de fechar o registro (o job passa de 20 min). */
+const STALE_RUN_MS = 30 * 60_000;
 
 type RunError = { url: string; error: string };
 
@@ -54,8 +63,13 @@ type RunOptions = {
   sources: readonly SourceAdapter[];
   /** Limite de anúncios lidos por fonte nesta execução (a descoberta não conta). */
   maxVisits?: number;
-  /** Um acesso educado por fonte: o intervalo mínimo vale por site, então fontes diferentes andam em paralelo. */
-  createFetcher?: (source: SourceAdapter) => PoliteFetcher;
+  /**
+   * Um acesso educado por fonte: o intervalo mínimo vale por site, então fontes diferentes andam em paralelo. Recebe o
+   * fim do tempo da execução (ms desde a época), depois do qual o acesso não faz mais requisições.
+   */
+  createFetcher?: (source: SourceAdapter, deadline: number) => PoliteFetcher;
+  /** Tempo das fontes nesta execução; depois dele as fontes param e os passos comuns rodam. */
+  budgetMs?: number;
   now?: () => Date;
 };
 
@@ -67,17 +81,22 @@ type RunOptions = {
 export async function runCollection({
   sources,
   maxVisits = 400,
-  createFetcher = () => createPoliteFetcher(),
+  createFetcher = (_source, deadline) => createPoliteFetcher({ deadline }),
+  budgetMs = DEFAULT_BUDGET_MS,
   now = () => new Date(),
 }: RunOptions): Promise<CollectionSummary> {
   const startedAt = now();
+  const deadline = startedAt.getTime() + budgetMs;
+  await closeStaleRuns(startedAt);
   // Uma leitura dos municípios para todas as fontes; se falhar, cada fonte registra a falha na sua execução.
   const place = loadPlaceLookup().then(
     (lookup): PlaceLoad => ({ ok: true, lookup }),
     (error: unknown): PlaceLoad => ({ ok: false, error }),
   );
   const runs = await Promise.all(
-    sources.map((source) => collectSource({ source, fetcher: createFetcher(source), maxVisits, place, now })),
+    sources.map((source) =>
+      collectSource({ source, fetcher: createFetcher(source, deadline), maxVisits, deadline, place, now }),
+    ),
   );
 
   const errors: RunError[] = [];
@@ -120,6 +139,21 @@ export async function runCollection({
 /** Municípios carregados uma vez para todas as fontes; a falha vira erro registrado de cada fonte. */
 type PlaceLoad = { ok: true; lookup: PlaceLookup } | { ok: false; error: unknown };
 
+/**
+ * Fecha como falha as execuções que ficaram "running": o job foi morto antes de gravar o fim (ex.: uma fonte travada
+ * segurou a coleta até o limite do GitHub). Sem isso o app mostraria uma coleta eternamente em andamento.
+ */
+async function closeStaleRuns(startedAt: Date) {
+  await db.collectorRun.updateMany({
+    where: { status: "running", startedAt: { lt: new Date(startedAt.getTime() - STALE_RUN_MS) } },
+    data: {
+      status: "failed",
+      finishedAt: startedAt,
+      errors: [{ url: "(execução)", error: "interrompida antes do fim (tempo do job esgotado)" }],
+    },
+  });
+}
+
 type FinishInput = { errors: readonly RunError[]; alertsCreated: number; finishedAt: Date };
 type SourceRun = { finish: (common: FinishInput) => Promise<SourceRunSummary> };
 
@@ -131,10 +165,11 @@ async function collectSource(input: {
   source: SourceAdapter;
   fetcher: PoliteFetcher;
   maxVisits: number;
+  deadline: number;
   place: Promise<PlaceLoad>;
   now: () => Date;
 }): Promise<SourceRun> {
-  const { source, fetcher, maxVisits, place, now } = input;
+  const { source, fetcher, maxVisits, deadline, place, now } = input;
   const errors: RunError[] = [];
   const counters = { discovered: 0, created: 0, updated: 0, failed: 0 };
   const fail = (url: string, error: string) => {
@@ -166,6 +201,7 @@ async function collectSource(input: {
         source,
         fetcher,
         maxVisits: Math.min(maxVisits, source.maxVisitsPerRun ?? maxVisits),
+        deadline,
         place: places.lookup,
         now,
         fail,
@@ -208,12 +244,13 @@ async function collectListings(input: {
   source: SourceAdapter;
   fetcher: PoliteFetcher;
   maxVisits: number;
+  deadline: number;
   place: PlaceLookup;
   now: () => Date;
   fail: (url: string, error: string) => void;
   counters: { discovered: number; created: number; updated: number; failed: number };
 }): Promise<boolean> {
-  const { source, fetcher, maxVisits, place, now, fail, counters } = input;
+  const { source, fetcher, maxVisits, deadline, place, now, fail, counters } = input;
   const discovery = await source.discover(fetcher, now());
   for (const { url, error } of discovery.errors) fail(url, error);
   counters.discovered = discovery.listings.length;
@@ -232,7 +269,19 @@ async function collectListings(input: {
   ];
   const visits = planVisits({ due, discovered: discovery.listings, knownIds, budget: maxVisits });
 
-  for (const visit of visits) {
+  let consecutiveFailures = 0;
+  for (const [index, visit] of visits.entries()) {
+    // Fim do tempo ou fonte que só falha: o resto fica para a próxima execução, com um registro só.
+    const stop =
+      now().getTime() >= deadline
+        ? DEADLINE_ERROR
+        : consecutiveFailures >= MAX_CONSECUTIVE_FAILURES
+          ? `${MAX_CONSECUTIVE_FAILURES} falhas seguidas`
+          : null;
+    if (stop) {
+      fail("(execução)", `${stop}; ${visits.length - index} anúncios ficaram para a próxima execução`);
+      return true;
+    }
     const url = source.listingUrl(visit.externalId);
     // Qualquer falha afeta só este anúncio. Revisita que falha é reagendada com espera crescente,
     // para não gastar o limite de toda execução com o mesmo anúncio.
@@ -241,6 +290,7 @@ async function collectListings(input: {
       const outcome = await visitListing(source, fetcher, visit.externalId, { now: now(), place }, listReadAt);
       if (outcome.ok) {
         counters[outcome.value]++;
+        consecutiveFailures = 0;
         continue;
       }
       problem = outcome.error;
@@ -248,6 +298,7 @@ async function collectListings(input: {
       // Erro inesperado (ex.: dado recusado por um CHECK do banco).
       problem = describeError(error);
     }
+    consecutiveFailures++;
     fail(url, problem);
     if (visit.reason === "due") await recordCheckFailure(source.id, visit.externalId, now());
   }
