@@ -10,7 +10,8 @@ export async function UserMenu() {
   const user = await requireUser();
 
   return (
-    <div className="grid gap-2">
+    // Coluna que encolhe (minmax(0, 1fr)): sem ela, o e-mail longo alarga a grade e o menu ganha rolagem horizontal.
+    <div className="grid grid-cols-1 gap-2">
       {user.devBypass ? (
         <Badge variant="warning" className="mx-2 justify-self-start">
           Modo dev: login desligado
