@@ -47,6 +47,6 @@ test("adiciona um anúncio à análise, não duplica e leva ao lote acompanhado"
   if (await empty.isVisible()) {
     await page.getByRole("button", { name: "Excluir" }).click();
     await page.getByRole("dialog").getByRole("button", { name: "Excluir definitivamente" }).click();
-    await expect(page).toHaveURL(/\/leiloes$/);
+    await expect(page).toHaveURL(/\/minhas-analises\?vista=leilao$/);
   }
 });
