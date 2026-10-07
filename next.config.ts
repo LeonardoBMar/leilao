@@ -52,6 +52,16 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },
+  // Rotas antigas (D-42): favoritos e links já enviados continuam funcionando; a query vai junto.
+  async redirects() {
+    const uuid = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+    return [
+      { source: "/descobertos", destination: "/leiloes/veiculos", permanent: false },
+      { source: "/lotes", destination: "/minhas-analises", permanent: false },
+      { source: "/leiloes/novo", destination: "/minhas-analises/leiloes/novo", permanent: false },
+      { source: `/leiloes/:id(${uuid})/:rest*`, destination: "/minhas-analises/leiloes/:id/:rest*", permanent: false },
+    ];
+  },
 };
 
 export default nextConfig;

@@ -26,7 +26,7 @@ type ListingCardProps = {
   eager?: boolean;
 };
 
-/** Anúncio coletado em cartão: "Descobertos" e alertas. Direção A: foto arredondada e conteúdo sem caixa. */
+/** Anúncio coletado em cartão: "Leilões" e alertas. Direção A: foto arredondada e conteúdo sem caixa. */
 export function ListingCard({ item, header, footer, eager = false }: ListingCardProps) {
   const isOpen = item.status === "open";
   const bid = isOpen ? (item.currentBid ?? item.minimumBid) : item.finalBid;

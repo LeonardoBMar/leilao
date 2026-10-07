@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-import { addDays, zonedStartOfDay } from "@/lib/dates";
 import { entityId, optionalText, optionalUrl, requiredText, zonedDateTime } from "@/lib/schemas";
 
 export const AUCTION_ORIGINS = ["detran", "insurer", "financial", "judicial", "other", "unknown"] as const;
@@ -33,51 +32,3 @@ export const auctionInputSchema = z.object({
 export type AuctionInput = z.infer<typeof auctionInputSchema>;
 
 export const auctionIdSchema = entityId();
-
-export const AUCTIONS_PAGE_SIZE = 25;
-
-const optionalParam = z
-  .string()
-  .trim()
-  .transform((value) => value || undefined)
-  .optional()
-  .catch(undefined);
-
-/**
- * Filtros da lista (`/leiloes?busca=…&origem=…`). Nunca lançam: valor inválido vira o padrão.
- * Nomes dos parâmetros em pt-BR, como as rotas.
- */
-export const auctionFiltersSchema = z
-  .object({
-    busca: optionalParam.pipe(z.string().max(100).optional()).catch(undefined),
-    origem: z.enum(AUCTION_ORIGINS).optional().catch(undefined),
-    status: z.enum(AUCTION_STATUSES).optional().catch(undefined),
-    de: optionalParam,
-    ate: optionalParam,
-    ordem: z.enum(["asc", "desc"]).catch("asc"),
-    arquivados: z
-      .literal("1")
-      .optional()
-      .catch(undefined)
-      .transform((value) => value === "1"),
-    pagina: z.coerce.number().int().min(1).max(10_000).catch(1),
-  })
-  .transform(({ busca, origem, status, de, ate, ordem, arquivados, pagina }) => ({
-    search: busca,
-    origin: origem,
-    status,
-    from: de && zonedStartOfDay(de) ? de : undefined,
-    to: ate && zonedStartOfDay(ate) ? ate : undefined,
-    sort: ordem,
-    archived: arquivados,
-    page: pagina,
-  }));
-export type AuctionFilters = z.infer<typeof auctionFiltersSchema>;
-
-/** Intervalo UTC [início de `from`, início do dia seguinte a `to`) no fuso do app. */
-export function periodRange(filters: Pick<AuctionFilters, "from" | "to">): { gte?: Date; lt?: Date } {
-  const gte = filters.from ? zonedStartOfDay(filters.from) : null;
-  const next = filters.to ? addDays(filters.to, 1) : null;
-  const lt = next ? zonedStartOfDay(next) : null;
-  return { ...(gte ? { gte } : {}), ...(lt ? { lt } : {}) };
-}

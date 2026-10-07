@@ -29,7 +29,7 @@ export async function createAuctionAction(_prev: ActionState, formData: FormData
   if (!parsed.success) return validationError(parsed.error, formData);
 
   const auction = await createAuction(parsed.data);
-  redirect(`/leiloes/${auction.id}`);
+  redirect(`/minhas-analises/leiloes/${auction.id}`);
 }
 
 export async function updateAuctionAction(id: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -41,7 +41,7 @@ export async function updateAuctionAction(id: string, _prev: ActionState, formDa
   const result = await updateAuction(parsedId.data, parsed.data);
   if (!result.ok) return failure(UPDATE_ERRORS[result.error], formData);
 
-  redirect(`/leiloes/${parsedId.data}`);
+  redirect(`/minhas-analises/leiloes/${parsedId.data}`);
 }
 
 export async function setAuctionArchivedAction(id: string, archived: boolean): Promise<ActionState> {
@@ -62,5 +62,5 @@ export async function deleteAuctionAction(id: string): Promise<ActionState> {
   const result = await deleteAuction(parsedId.data);
   if (!result.ok) return failure(DELETE_ERRORS[result.error]);
 
-  redirect("/leiloes");
+  redirect("/minhas-analises?vista=leilao");
 }

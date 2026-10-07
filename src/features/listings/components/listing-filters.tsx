@@ -10,8 +10,6 @@ import { CATEGORY_KEYS, CONDITION_KEYS, DEFAULT_CATEGORY, DEFAULT_CONDITION } fr
 
 import { CATEGORY_LABELS, CONDITION_LABELS, DEFAULT_DISTANCE, DISTANCE_OPTIONS } from "../schemas";
 
-const BASE_PATH = "/descobertos";
-
 /** Valores atuais, exatamente como estão na URL. */
 export type ListingFilterValues = {
   busca?: string;
@@ -24,8 +22,11 @@ export type ListingFilterValues = {
   situacao: "abertos" | "encerrados";
 };
 
-/** Distâncias contam a partir da região padrão, que a linha de status da coleta mostra logo acima. */
-export function ListingFilters({ values }: { values: ListingFilterValues }) {
+/**
+ * Distâncias contam a partir da região padrão, que a linha de status da coleta mostra logo acima. `basePath`: a tela
+ * de "Leilões" que recebe os filtros (por leilão, todos os veículos ou um leilão).
+ */
+export function ListingFilters({ values, basePath }: { values: ListingFilterValues; basePath: string }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const activeCount = [
@@ -41,7 +42,7 @@ export function ListingFilters({ values }: { values: ListingFilterValues }) {
 
   function navigate(params: URLSearchParams) {
     const query = params.toString();
-    startTransition(() => router.push((query ? `${BASE_PATH}?${query}` : BASE_PATH) as Route, { scroll: false }));
+    startTransition(() => router.push((query ? `${basePath}?${query}` : basePath) as Route, { scroll: false }));
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -64,7 +65,7 @@ export function ListingFilters({ values }: { values: ListingFilterValues }) {
   return (
     <form
       role="search"
-      aria-label="Filtrar lotes descobertos"
+      aria-label="Filtrar lotes"
       onSubmit={handleSubmit}
       key={JSON.stringify(values)}
       className="grid gap-4 border-b border-border pb-5 md:grid-cols-2 xl:grid-cols-6"

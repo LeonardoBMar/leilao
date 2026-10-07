@@ -27,7 +27,7 @@ let auctionId = "";
 let lotId = "";
 
 test("cadastra um leilão", async ({ page }) => {
-  await page.goto("/leiloes/novo");
+  await page.goto("/minhas-analises/leiloes/novo");
   await fillFields(page, {
     "Nome do leilão": auctionName,
     Organizador: "Leiloeiro E2E",
@@ -37,19 +37,19 @@ test("cadastra um leilão", async ({ page }) => {
   await page.getByRole("button", { name: "Cadastrar leilão" }).click();
 
   await expect(page.getByRole("heading", { name: auctionName })).toBeVisible();
-  auctionId = idFromUrl(page, "/leiloes");
+  auctionId = idFromUrl(page, "/minhas-analises/leiloes");
 });
 
 test("cadastra um lote e bloqueia número repetido no mesmo leilão (CA-02)", async ({ page }) => {
   const lotForm = { "Número do lote": "0152", Marca: "Toyota", Modelo: "Corolla", "Ano-modelo": "2020" };
 
-  await page.goto(`/leiloes/${auctionId}/lotes/novo`);
+  await page.goto(`/minhas-analises/leiloes/${auctionId}/lotes/novo`);
   await fillFields(page, { ...lotForm, "Lance atual": "31.000" });
   await page.getByRole("button", { name: "Cadastrar lote" }).click();
   await expect(page.getByRole("heading", { name: "Toyota Corolla 2020" })).toBeVisible();
   lotId = idFromUrl(page, "/lotes");
 
-  await page.goto(`/leiloes/${auctionId}/lotes/novo`);
+  await page.goto(`/minhas-analises/leiloes/${auctionId}/lotes/novo`);
   await fillFields(page, lotForm);
   await page.getByRole("button", { name: "Cadastrar lote" }).click();
   await expect(page.getByText("Já existe um lote com este número neste leilão.")).toBeVisible();
@@ -252,23 +252,26 @@ test("arquivar lote com histórico: sai das listas e continua acessível (CA-17)
   await expectToast(page, "Lote arquivado.");
   await expect(page.getByText(/Lote arquivado em/)).toBeVisible();
 
-  await page.goto(`/leiloes/${auctionId}`);
+  await page.goto(`/minhas-analises/leiloes/${auctionId}`);
   await expect(page.getByRole("heading", { name: auctionName })).toBeVisible();
   await expect(lotLink).toHaveCount(0);
 
-  await page.goto(`/leiloes/${auctionId}?arquivados=1`);
+  await page.goto(`/minhas-analises/leiloes/${auctionId}?arquivados=1`);
   await lotLink.click();
   await expect(page.getByRole("heading", { name: "Toyota Corolla 2020" })).toBeVisible();
   await expect(page.getByText("Histórico de correções (2)")).toBeVisible();
 });
 
 test("arquiva o leilão de teste (sai das visões ativas)", async ({ page }) => {
-  await page.goto(`/leiloes/${auctionId}`);
+  await page.goto(`/minhas-analises/leiloes/${auctionId}`);
   await page.getByRole("button", { name: "Arquivar" }).click();
   await expectToast(page, "Leilão arquivado.");
 
-  await page.goto(`/leiloes?busca=${encodeURIComponent(auctionName)}`);
-  await expect(page.getByText("Nenhum leilão encontrado")).toBeVisible();
+  // Data em 2030: seria o primeiro leilão de "Por leilão"; arquivado, só aparece em "Somente arquivados".
+  await page.goto("/minhas-analises?vista=leilao");
+  await expect(page.getByRole("link", { name: auctionName })).toHaveCount(0);
+  await page.goto("/minhas-analises?vista=leilao&arquivados=1");
+  await expect(page.getByRole("link", { name: auctionName })).toBeVisible();
 });
 
 test("sair e entrar de novo: dados e vínculos continuam lá (CA-01)", async ({ page, browser, baseURL }) => {

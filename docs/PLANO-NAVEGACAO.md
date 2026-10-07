@@ -36,7 +36,7 @@ Menu: **Dashboard · Leilões · Minhas análises · Monitores · Alertas**, dep
 - Cartão: fonte, nome, data, total de lotes, abertos, quantos batem com os filtros e quantos o usuário analisou.
 - Mesmos filtros de "todos os veículos" (região, categoria, condição, busca…). Só aparece leilão com pelo menos um lote no filtro.
 - Seletor "Abertos | Encerrados". Abertos: o mais próximo primeiro. Encerrados: o mais recente primeiro.
-- Data do leilão: `auctionStartsAt`; sem ela, o primeiro encerramento (ou início) entre os lotes. Nome: o do anúncio coletado mais recentemente.
+- Data do leilão: `auctionStartsAt`; sem ela, o primeiro encerramento entre os lotes (no Pátio, o início é a abertura dos lances, dias antes) e, por último, o primeiro início. Nome: o do anúncio coletado mais recentemente.
 - A linha de saúde da coleta fica aqui e em "todos os veículos".
 
 **Leilão do catálogo (`/leiloes/[fonte]/[leilao]`)**

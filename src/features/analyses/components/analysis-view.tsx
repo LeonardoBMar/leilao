@@ -28,7 +28,7 @@ export async function AnalysisView({ params }: { params: Promise<{ id: string }>
   return (
     <div className="grid gap-7">
       <Breadcrumbs>
-        <BreadcrumbLink href={`/leiloes/${lot.auction.id}`}>{lot.auction.name}</BreadcrumbLink>
+        <BreadcrumbLink href={`/minhas-analises/leiloes/${lot.auction.id}`}>{lot.auction.name}</BreadcrumbLink>
         <BreadcrumbLink href={`/lotes/${lot.id}`}>Lote {lot.lotNumber}</BreadcrumbLink>
         <BreadcrumbPage>Análise v{analysis.version}</BreadcrumbPage>
       </Breadcrumbs>

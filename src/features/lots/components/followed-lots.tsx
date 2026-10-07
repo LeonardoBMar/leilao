@@ -7,7 +7,7 @@ import { listLots } from "../queries";
 import { LimitProgress } from "./limit-progress";
 
 const SHOWN = 8;
-const ALL_FOLLOWED_HREF = "/lotes?acompanhados=1&resultado=sem";
+const ALL_FOLLOWED_HREF = "/minhas-analises?acompanhados=1&resultado=sem";
 
 /**
  * "Lotes acompanhados" do dashboard (SPEC §5, DESIGN.md §15.1 e §19.5): ativos, marcados e ainda sem resultado,
@@ -30,8 +30,8 @@ export async function FollowedLots() {
         title="Nenhum lote acompanhado"
         description="Marque um lote para acompanhar seu lance e limite aqui."
         action={
-          <ButtonLink href="/lotes" variant="secondary">
-            Ver lotes
+          <ButtonLink href="/minhas-analises" variant="secondary">
+            Ver minhas análises
           </ButtonLink>
         }
       />

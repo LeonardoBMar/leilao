@@ -101,7 +101,7 @@ export async function deleteLotAction(id: string): Promise<ActionState> {
   const result = await deleteLot(parsedId.data);
   if (!result.ok) return failure(DELETE_ERRORS[result.error]);
 
-  redirect(`/leiloes/${result.value.auctionId}`);
+  redirect(`/minhas-analises/leiloes/${result.value.auctionId}`);
 }
 
 /** Número repetido é erro do campo, para aparecer junto do "Número do lote" (CA-02). */

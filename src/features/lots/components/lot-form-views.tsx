@@ -25,7 +25,7 @@ export async function NewLotView({ params }: { params: Promise<{ id: string }> }
       <FreshOnNavigation>
         <LotForm
           action={createLotAction.bind(null, auction.id)}
-          cancelHref={`/leiloes/${auction.id}` as Route}
+          cancelHref={`/minhas-analises/leiloes/${auction.id}` as Route}
           submitLabel="Cadastrar lote"
         />
       </FreshOnNavigation>

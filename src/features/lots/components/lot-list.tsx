@@ -35,9 +35,11 @@ type LotsViewProps = {
   auctionId?: string;
 };
 
-/** Lê filtros da URL, mostra a barra e a lista. Renderizar dentro de <Suspense>. */
-export async function LotsView({ searchParams, basePath, auctionId }: LotsViewProps) {
-  const raw = await searchParams;
+/**
+ * Filtros de lotes a partir da URL: `filters` para a consulta, `values` para o formulário e `params` para links e
+ * paginação.
+ */
+export function readLotSearch(raw: Record<string, string | string[] | undefined>) {
   const filters = lotFiltersSchema.parse(
     Object.fromEntries(Object.entries(raw).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value])),
   );
@@ -48,11 +50,17 @@ export async function LotsView({ searchParams, basePath, auctionId }: LotsViewPr
     resultado: filters.result,
     arquivados: filters.archived,
   };
+  return { filters, values, params: toUrlParams(values) };
+}
+
+/** Lê filtros da URL, mostra a barra e a lista. Renderizar dentro de <Suspense>. */
+export async function LotsView({ searchParams, basePath, auctionId }: LotsViewProps) {
+  const { filters, values, params } = readLotSearch(await searchParams);
 
   return (
     <div className="grid gap-6">
       <LotFiltersBar values={values} basePath={basePath} />
-      <LotList filters={filters} basePath={basePath} auctionId={auctionId} params={toUrlParams(values)} />
+      <LotList filters={filters} basePath={basePath} auctionId={auctionId} params={params} />
     </div>
   );
 }
@@ -88,11 +96,11 @@ async function LotList({
         description={
           auctionId
             ? "Adicione os lotes que deseja acompanhar neste leilão."
-            : "Os lotes são cadastrados a partir de um leilão."
+            : "Leve um lote para análise a partir de Leilões ou cadastre um leilão em Minhas análises."
         }
         action={
           auctionId ? (
-            <ButtonLink href={`/leiloes/${auctionId}/lotes/novo` as Route}>
+            <ButtonLink href={`/minhas-analises/leiloes/${auctionId}/lotes/novo` as Route}>
               <Plus aria-hidden="true" />
               Adicionar lote
             </ButtonLink>
@@ -108,9 +116,26 @@ async function LotList({
 
   return (
     <section aria-label="Lotes" className="grid gap-4">
+      <LotRows items={result.items} showAuction={showAuction} />
+
+      <ListPagination
+        basePath={basePath}
+        params={params}
+        page={result.page}
+        pageSize={result.pageSize}
+        total={result.total}
+      />
+    </section>
+  );
+}
+
+/** Lotes em linhas: empilhadas no mobile e tabela a partir de `md`. `showAuction` mostra o leilão de cada lote. */
+export function LotRows({ items, showAuction }: { items: readonly LotListItem[]; showAuction: boolean }) {
+  return (
+    <>
       {/* Mobile: linha empilhada (DESIGN.md §19.5). */}
       <ul className="border-b border-border md:hidden">
-        {result.items.map((lot) => (
+        {items.map((lot) => (
           <li key={lot.id} className="grid gap-3 border-t border-border py-4">
             <div className="min-w-0">
               <Link href={`/lotes/${lot.id}`} className="text-body font-semibold text-foreground hover:underline">
@@ -155,7 +180,7 @@ async function LotList({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {result.items.map((lot) => (
+            {items.map((lot) => (
               <TableRow key={lot.id}>
                 <TableCell className="font-mono text-label font-normal whitespace-nowrap text-foreground-secondary">
                   {lot.lotNumber}
@@ -167,7 +192,10 @@ async function LotList({
                   <p className="mt-0.5 text-caption text-muted">
                     {showAuction ? (
                       <>
-                        <Link href={`/leiloes/${lot.auction.id}`} className="hover:text-foreground hover:underline">
+                        <Link
+                          href={`/minhas-analises/leiloes/${lot.auction.id}`}
+                          className="hover:text-foreground hover:underline"
+                        >
                           {lot.auction.name}
                         </Link>
                         {" · "}
@@ -196,15 +224,7 @@ async function LotList({
           </TableBody>
         </Table>
       </div>
-
-      <ListPagination
-        basePath={basePath}
-        params={params}
-        page={result.page}
-        pageSize={result.pageSize}
-        total={result.total}
-      />
-    </section>
+    </>
   );
 }
 

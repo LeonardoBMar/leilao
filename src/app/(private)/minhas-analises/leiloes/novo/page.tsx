@@ -12,7 +12,7 @@ export default function NewAuctionPage() {
     <div className="grid max-w-4xl gap-6">
       <PageHeader title="Novo leilão" description="Campos com * são obrigatórios." />
       <FreshOnNavigation>
-        <AuctionForm action={createAuctionAction} cancelHref="/leiloes" submitLabel="Cadastrar leilão" />
+        <AuctionForm action={createAuctionAction} cancelHref="/minhas-analises" submitLabel="Cadastrar leilão" />
       </FreshOnNavigation>
     </div>
   );

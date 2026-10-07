@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
-import { auctionFiltersSchema, auctionInputSchema, periodRange } from "./schemas";
+import { auctionInputSchema } from "./schemas";
 
 const validForm = {
   name: "  Leilão Detran SP  ",
@@ -50,55 +50,5 @@ describe("auctionInputSchema", () => {
       "startsAt",
       "state",
     ]);
-  });
-});
-
-describe("auctionFiltersSchema", () => {
-  it("usa padrões quando a URL não tem filtros", () => {
-    expect(auctionFiltersSchema.parse({})).toEqual({
-      search: undefined,
-      origin: undefined,
-      status: undefined,
-      from: undefined,
-      to: undefined,
-      sort: "asc",
-      archived: false,
-      page: 1,
-    });
-  });
-
-  it("nunca lança: valores inválidos viram o padrão", () => {
-    expect(
-      auctionFiltersSchema.parse({
-        origem: "marte",
-        status: "x",
-        de: "ontem",
-        ordem: "aleatoria",
-        arquivados: "sim",
-        pagina: "-3",
-      }),
-    ).toMatchObject({ origin: undefined, status: undefined, from: undefined, sort: "asc", archived: false, page: 1 });
-  });
-
-  it("lê filtros válidos", () => {
-    expect(
-      auctionFiltersSchema.parse({
-        busca: " detran ",
-        origem: "judicial",
-        ordem: "desc",
-        arquivados: "1",
-        pagina: "3",
-      }),
-    ).toMatchObject({ search: "detran", origin: "judicial", sort: "desc", archived: true, page: 3 });
-  });
-});
-
-describe("periodRange", () => {
-  it("cobre os dias inteiros de início e fim no horário de Brasília", () => {
-    expect(periodRange({ from: "2026-10-01", to: "2026-10-31" })).toEqual({
-      gte: new Date("2026-10-01T03:00:00.000Z"),
-      lt: new Date("2026-11-01T03:00:00.000Z"),
-    });
-    expect(periodRange({ from: undefined, to: undefined })).toEqual({});
   });
 });

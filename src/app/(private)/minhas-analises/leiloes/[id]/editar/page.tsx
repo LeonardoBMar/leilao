@@ -6,7 +6,7 @@ import { AuctionEditView } from "@/features/auctions/components/auction-edit-vie
 
 export const metadata: Metadata = { title: "Editar leilão · Leilão Tracker" };
 
-export default function EditAuctionPage({ params }: PageProps<"/leiloes/[id]/editar">) {
+export default function EditAuctionPage({ params }: PageProps<"/minhas-analises/leiloes/[id]/editar">) {
   return (
     <Suspense fallback={<Skeleton className="h-150 max-w-4xl" />}>
       <AuctionEditView params={params} />

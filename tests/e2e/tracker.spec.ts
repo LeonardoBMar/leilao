@@ -8,7 +8,7 @@ import { expect, test } from "@playwright/test";
 test.skip(!process.env.E2E_EMAIL, "Sem usuário de testes (E2E_EMAIL/E2E_PASSWORD).");
 
 /** Encerrados de qualquer distância: há sempre muitos no catálogo, e o teste não depende do dia. */
-const CATALOG = "/descobertos?situacao=encerrados&distancia=todas";
+const CATALOG = "/leiloes/veiculos?situacao=encerrados&distancia=todas";
 
 test("adiciona um anúncio à análise, não duplica e leva ao lote acompanhado", async ({ page }) => {
   await page.goto(CATALOG);

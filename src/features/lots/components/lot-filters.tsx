@@ -20,16 +20,19 @@ export type LotFilterValues = {
 
 type LotFiltersProps = {
   values: LotFilterValues;
-  /** Rota da listagem: `/lotes` ou `/leiloes/<id>`. */
+  /** Rota da listagem: `/minhas-analises` ou `/minhas-analises/leiloes/<id>`. */
   basePath: string;
+  /** Parâmetros da tela que os filtros preservam (ex.: `vista=leilao` em "Minhas análises"). */
+  fixedParams?: Readonly<Record<string, string>>;
 };
 
-export function LotFilters({ values, basePath }: LotFiltersProps) {
+export function LotFilters({ values, basePath, fixedParams = {} }: LotFiltersProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const activeCount = [values.busca, values.acompanhados, values.analise, values.resultado].filter(Boolean).length;
 
   function navigate(params: URLSearchParams) {
+    for (const [key, value] of Object.entries(fixedParams)) params.set(key, value);
     const query = params.toString();
     startTransition(() => router.push((query ? `${basePath}?${query}` : basePath) as Route, { scroll: false }));
   }

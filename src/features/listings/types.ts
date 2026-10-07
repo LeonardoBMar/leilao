@@ -1,10 +1,11 @@
+import type { CatalogAuctionState, CatalogAuctionStats } from "@/domain/listings/catalog-auctions";
 import type { ConditionFlag, DamageLevel, InspectionResult } from "@/domain/listings/condition";
 import type { LimitEstimate, PriceEstimate } from "@/domain/listings/estimates";
 import type { CollectorHealth } from "@/domain/listings/health";
 import type { ListingStatus } from "@/domain/listings/types";
 import type { Cents } from "@/domain/money";
 
-/** Anúncio coletado, como aparece em "Descobertos". */
+/** Anúncio coletado, como aparece em "Leilões". */
 export type ListingListItem = {
   id: string;
   sourceName: string;
@@ -52,6 +53,26 @@ export type ListingPage = {
   pageSize: number;
   /** Mais candidatos que o teto da busca por raio: o total é parcial e a tela avisa. */
   truncated: boolean;
+};
+
+/** Leilão do catálogo (D-42): fonte e id do leilão na fonte. */
+export type CatalogAuctionKey = { sourceId: string; externalId: string };
+
+export type CatalogAuctionItem = CatalogAuctionStats & CatalogAuctionState & { sourceName: string };
+
+export type CatalogAuctionPage = {
+  items: CatalogAuctionItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  /** Mais candidatos que o teto da busca por raio: as contagens são parciais e a tela avisa. */
+  truncated: boolean;
+};
+
+/** Leilão do catálogo na sua página; `matching` não se aplica (a lista de anúncios abaixo tem o total do filtro). */
+export type CatalogAuctionDetail = CatalogAuctionItem & {
+  /** Registro do usuário para este leilão (criado por "Adicionar à análise"), se existir. */
+  userAuctionId: string | null;
 };
 
 export type CollectorStatus = {

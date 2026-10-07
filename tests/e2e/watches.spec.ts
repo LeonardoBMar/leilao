@@ -48,10 +48,10 @@ test("cria, edita, desliga e exclui um monitor", async ({ page }) => {
   await expect(card).toBeVisible();
   await expect(card.getByText(/2011–2013 · até 150 km · até pequena monta/)).toBeVisible();
   await expect(card.getByText("Ligado")).toBeVisible();
-  // Nome inventado não combina com nenhum lote; o link leva a Descobertos com os mesmos critérios.
+  // Nome inventado não combina com nenhum lote; o link leva a "Todos os veículos" com os mesmos critérios.
   await expect(card.getByRole("link", { name: "0 lotes abertos combinam agora" })).toHaveAttribute(
     "href",
-    /\/descobertos\?.*anoDe=2011.*condicao=ate-pequena/,
+    /\/leiloes\/veiculos\?.*anoDe=2011.*condicao=ate-pequena/,
   );
 
   await card.getByRole("link", { name: "Editar" }).click();

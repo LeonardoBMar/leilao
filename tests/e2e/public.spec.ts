@@ -10,12 +10,12 @@ test.describe("acesso sem sessão", () => {
   });
 
   test("rotas privadas levam ao login preservando o destino", async ({ page }) => {
-    for (const path of ["/dashboard", "/leiloes", "/lotes", "/leiloes/novo"]) {
+    for (const path of ["/dashboard", "/leiloes", "/minhas-analises", "/minhas-analises/leiloes/novo"]) {
       await page.goto(path);
       await expect(page).toHaveURL(`/login?next=${encodeURIComponent(path)}`);
     }
     await expect(page.getByText("Sua sessão expirou ou é preciso entrar para continuar.")).toBeVisible();
-    await expect(page.locator('input[name="next"]')).toHaveValue("/leiloes/novo");
+    await expect(page.locator('input[name="next"]')).toHaveValue("/minhas-analises/leiloes/novo");
   });
 
   test("o destino após o login nunca aponta para outro site (open redirect)", async ({ page }) => {

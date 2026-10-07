@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Leilão · Leilão Tracker" };
 
 const idSchema = entityId();
 
-export default function AuctionPage({ params, searchParams }: PageProps<"/leiloes/[id]">) {
+export default function AuctionPage({ params, searchParams }: PageProps<"/minhas-analises/leiloes/[id]">) {
   return (
     <Suspense fallback={<AuctionDetailSkeleton />}>
       <AuctionDetailView
@@ -25,8 +25,14 @@ export default function AuctionPage({ params, searchParams }: PageProps<"/leiloe
 }
 
 /** Lotes do leilão. Id inválido não renderiza nada: o detalhe já responde com 404. */
-async function AuctionLots({ params, searchParams }: PageProps<"/leiloes/[id]">) {
+async function AuctionLots({ params, searchParams }: PageProps<"/minhas-analises/leiloes/[id]">) {
   const parsed = idSchema.safeParse((await params).id);
   if (!parsed.success) return null;
-  return <LotsView searchParams={searchParams} basePath={`/leiloes/${parsed.data}`} auctionId={parsed.data} />;
+  return (
+    <LotsView
+      searchParams={searchParams}
+      basePath={`/minhas-analises/leiloes/${parsed.data}`}
+      auctionId={parsed.data}
+    />
+  );
 }

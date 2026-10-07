@@ -11,6 +11,7 @@ export * from "./dropdown-menu";
 export * from "./empty-state";
 export * from "./field";
 export * from "./input";
+export * from "./link-tabs";
 export * from "./money";
 export * from "./pagination";
 export * from "./radio-group";

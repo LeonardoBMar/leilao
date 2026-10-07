@@ -33,7 +33,7 @@ export function watchTitle(name: string | null, criteria: ListingCriteria): stri
   return name ?? criteria.search ?? describeCriteria(criteria);
 }
 
-/** Link para "Descobertos" com os mesmos critérios ("ver os que combinam agora"). */
+/** Link para "Todos os veículos" com os mesmos critérios ("ver os que combinam agora"). */
 export function discoveredHref(criteria: ListingCriteria): string {
   const params = new URLSearchParams();
   if (criteria.search) params.set("busca", criteria.search);
@@ -43,5 +43,5 @@ export function discoveredHref(criteria: ListingCriteria): string {
   params.set("distancia", criteria.radiusKm === null ? "todas" : String(criteria.radiusKm));
   params.set("categoria", criteria.category);
   params.set("condicao", criteria.condition);
-  return `/descobertos?${params.toString()}`;
+  return `/leiloes/veiculos?${params.toString()}`;
 }

@@ -5,8 +5,8 @@ import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
 
-import { type LotFilters, LOTS_PAGE_SIZE } from "./schemas";
-import type { LotDetail, LotListItem, LotPage } from "./types";
+import { LOT_GROUPS_PAGE_SIZE, type LotFilters, LOTS_PAGE_SIZE } from "./schemas";
+import type { LotDetail, LotGroupPage, LotListItem, LotPage } from "./types";
 
 const listSelect = {
   id: true,
@@ -60,21 +60,19 @@ function toListItem(row: ListRow): LotListItem {
 }
 
 /**
- * Lista paginada. Com `auctionId`, lista os lotes daquele leilão (inclusive de leilão arquivado, para consulta).
- * Sem `auctionId`, é a visão global: ativos = lote e leilão não arquivados (RF-08).
+ * Lotes do usuário que atendem aos filtros. Com `auctionId`, os daquele leilão (inclusive de leilão arquivado, para
+ * consulta). Sem `auctionId`, a visão global: ativos = lote e leilão não arquivados (RF-08).
  */
-export async function listLots(filters: LotFilters, scope: { auctionId?: string } = {}): Promise<LotPage> {
-  const user = await requireUser();
-
-  const archivedScope: Prisma.LotWhereInput = scope.auctionId
-    ? { auctionId: scope.auctionId, archivedAt: filters.archived ? { not: null } : null }
+function lotWhere(ownerId: string, filters: LotFilters, auctionId?: string): Prisma.LotWhereInput {
+  const archivedScope: Prisma.LotWhereInput = auctionId
+    ? { auctionId, archivedAt: filters.archived ? { not: null } : null }
     : filters.archived
       ? { OR: [{ archivedAt: { not: null } }, { auction: { archivedAt: { not: null } } }] }
       : { archivedAt: null, auction: { archivedAt: null } };
 
-  const where: Prisma.LotWhereInput = {
+  return {
     AND: [
-      { ownerId: user.id },
+      { ownerId },
       archivedScope,
       filters.followedOnly ? { isFollowed: true } : {},
       filters.analysis === "com" ? { analyses: { some: { status: "fixed" } } } : {},
@@ -92,6 +90,12 @@ export async function listLots(filters: LotFilters, scope: { auctionId?: string 
         : {},
     ],
   };
+}
+
+/** Lista paginada de lotes (ver `lotWhere`). */
+export async function listLots(filters: LotFilters, scope: { auctionId?: string } = {}): Promise<LotPage> {
+  const user = await requireUser();
+  const where = lotWhere(user.id, filters, scope.auctionId);
 
   const orderBy: Prisma.LotOrderByWithRelationInput[] = scope.auctionId
     ? [{ lotNumber: "asc" }, { id: "asc" }]
@@ -109,6 +113,76 @@ export async function listLots(filters: LotFilters, scope: { auctionId?: string 
   ]);
 
   return { items: rows.map(toListItem), total, page: filters.page, pageSize: LOTS_PAGE_SIZE };
+}
+
+/**
+ * "Minhas análises" por leilão (D-42): os leilões do usuário, do mais recente, cada um com os lotes que atendem aos
+ * filtros. Sem filtro de lote, aparecem também os leilões ainda sem lote. Paginada por leilão.
+ */
+export async function listLotsByAuction(filters: LotFilters): Promise<LotGroupPage> {
+  const user = await requireUser();
+  const lots = lotWhere(user.id, filters);
+  const hasLotFilters = Boolean(filters.search || filters.followedOnly || filters.analysis || filters.result);
+  const where: Prisma.AuctionWhereInput = {
+    AND: [
+      { ownerId: user.id },
+      filters.archived
+        ? { OR: [{ archivedAt: { not: null } }, { lots: { some: { archivedAt: { not: null } } } }] }
+        : { archivedAt: null },
+      hasLotFilters ? { lots: { some: lots } } : {},
+    ],
+  };
+
+  const [rows, total] = await Promise.all([
+    db.auction.findMany({
+      where,
+      orderBy: [{ startsAt: "desc" }, { id: "asc" }],
+      skip: (filters.page - 1) * LOT_GROUPS_PAGE_SIZE,
+      take: LOT_GROUPS_PAGE_SIZE,
+      select: {
+        id: true,
+        name: true,
+        auctioneer: true,
+        startsAt: true,
+        archivedAt: true,
+        sourceId: true,
+        externalId: true,
+        lots: { where: lots, orderBy: [{ lotNumber: "asc" }, { id: "asc" }], select: listSelect },
+      },
+    }),
+    db.auction.count({ where }),
+  ]);
+
+  // Total de lotes no catálogo dos leilões vindos de uma fonte ("214 no catálogo").
+  const keys = rows.flatMap(({ sourceId, externalId }) =>
+    sourceId !== null && externalId !== null ? [{ sourceId, auctionExternalId: externalId }] : [],
+  );
+  const catalog =
+    keys.length === 0
+      ? []
+      : await db.listing.groupBy({
+          by: ["sourceId", "auctionExternalId"],
+          where: { OR: keys },
+          _count: { _all: true },
+        });
+  const catalogTotal = (sourceId: string, externalId: string) =>
+    catalog.find((group) => group.sourceId === sourceId && group.auctionExternalId === externalId)?._count._all ?? 0;
+
+  return {
+    groups: rows.map(({ lots: lotRows, sourceId, externalId, ...auction }) => ({
+      auction: {
+        ...auction,
+        catalog:
+          sourceId !== null && externalId !== null
+            ? { sourceId, externalId, total: catalogTotal(sourceId, externalId) }
+            : null,
+      },
+      lots: lotRows.map(toListItem),
+    })),
+    total,
+    page: filters.page,
+    pageSize: LOT_GROUPS_PAGE_SIZE,
+  };
 }
 
 /** `null` para inexistente ou de outro dono; quem renderiza decide `notFound()`. */

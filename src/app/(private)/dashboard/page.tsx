@@ -30,7 +30,7 @@ export default function DashboardPage() {
           </Suspense>
         }
         actions={
-          <ButtonLink href="/leiloes/novo">
+          <ButtonLink href="/minhas-analises/leiloes/novo">
             <Plus aria-hidden="true" />
             Novo leilão
           </ButtonLink>
@@ -47,7 +47,7 @@ export default function DashboardPage() {
           <Section aria-labelledby="followed-lots" className="gap-2">
             <SectionHeader>
               <SectionTitle id="followed-lots">Lotes acompanhados</SectionTitle>
-              <ButtonLink href="/lotes?acompanhados=1&resultado=sem" variant="link" className="h-auto px-0">
+              <ButtonLink href="/minhas-analises?acompanhados=1&resultado=sem" variant="link" className="h-auto px-0">
                 Ver todos
               </ButtonLink>
             </SectionHeader>
@@ -77,8 +77,8 @@ export default function DashboardPage() {
             <Suspense fallback={<CollectorStatusLineSkeleton />}>
               <CollectorStatusLine />
             </Suspense>
-            <ButtonLink href="/descobertos" variant="secondary" className="w-fit">
-              Ver descobertos
+            <ButtonLink href="/leiloes" variant="secondary" className="w-fit">
+              Ver leilões
             </ButtonLink>
           </section>
         </aside>

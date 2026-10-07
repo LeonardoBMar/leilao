@@ -1,5 +1,10 @@
 import "server-only";
 
+import {
+  catalogAuctionDate,
+  type CatalogAuctionStats,
+  selectCatalogAuctions,
+} from "@/domain/listings/catalog-auctions";
 import type { DamageLevel } from "@/domain/listings/condition";
 import {
   CATEGORY_GROUPS,
@@ -28,8 +33,16 @@ import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
 
-import { type ListingFilters, LISTINGS_PAGE_SIZE } from "./schemas";
-import type { CollectorStatus, ListingEstimate, ListingListItem, ListingPage } from "./types";
+import { CATALOG_AUCTIONS_PAGE_SIZE, type ListingFilters, LISTINGS_PAGE_SIZE } from "./schemas";
+import type {
+  CatalogAuctionDetail,
+  CatalogAuctionKey,
+  CatalogAuctionPage,
+  CollectorStatus,
+  ListingEstimate,
+  ListingListItem,
+  ListingPage,
+} from "./types";
 
 /**
  * Catálogo global (D-25): exige sessão, mas não filtra por dono, porque o anúncio é público e igual para todos.
@@ -253,14 +266,9 @@ function criteriaWhere(criteria: ListingCriteria): Prisma.ListingWhereInput {
 const withinRadius = (radiusKm: number | null) => (item: { distanceKm: number | null }) =>
   radiusKm === null || (item.distanceKm !== null && item.distanceKm <= radiusKm);
 
-export async function listListings(filters: ListingFilters): Promise<ListingPage> {
-  const user = await requireUser();
-  const select = listingCardSelect(user.id);
-  const now = new Date();
-  // Encerrados já têm lance final: sem estimativa, sem carregar a base.
-  const estimates = filters.ended ? Promise.resolve(null) : loadEstimateContext(now);
-  const withEstimates = (context: EstimateContext | null) => (row: ListingCardRow) => toListItem(row, context);
-  const criteria: ListingCriteria = {
+/** Filtros da URL no formato comum de critérios (o mesmo dos monitores). */
+function criteriaOf(filters: ListingFilters): ListingCriteria {
+  return {
     search: filters.search ?? null,
     yearFrom: filters.yearFrom ?? null,
     yearTo: filters.yearTo ?? null,
@@ -269,8 +277,30 @@ export async function listListings(filters: ListingFilters): Promise<ListingPage
     category: filters.category,
     condition: filters.condition,
   };
+}
+
+const auctionWhere = ({ sourceId, externalId }: CatalogAuctionKey): Prisma.ListingWhereInput => ({
+  sourceId,
+  auctionExternalId: externalId,
+});
+
+/** Anúncios com os filtros da URL; com `auction`, só os daquele leilão do catálogo. */
+export async function listListings(
+  filters: ListingFilters,
+  scope: { auction?: CatalogAuctionKey } = {},
+): Promise<ListingPage> {
+  const user = await requireUser();
+  const select = listingCardSelect(user.id);
+  const now = new Date();
+  // Encerrados já têm lance final: sem estimativa, sem carregar a base.
+  const estimates = filters.ended ? Promise.resolve(null) : loadEstimateContext(now);
+  const withEstimates = (context: EstimateContext | null) => (row: ListingCardRow) => toListItem(row, context);
   const where: Prisma.ListingWhereInput = {
-    AND: [filters.ended ? { NOT: openWhere(now) } : openWhere(now), criteriaWhere(criteria)],
+    AND: [
+      scope.auction ? auctionWhere(scope.auction) : {},
+      filters.ended ? { NOT: openWhere(now) } : openWhere(now),
+      criteriaWhere(criteriaOf(filters)),
+    ],
   };
 
   // Abertos: o que encerra primeiro. Encerrados: o mais recente.
@@ -311,6 +341,160 @@ export async function listListings(filters: ListingFilters): Promise<ListingPage
   };
 }
 
+const keyOf = (sourceId: string, externalId: string) => JSON.stringify([sourceId, externalId]);
+
+/** Contagem por leilão (chave `keyOf`); anúncio sem leilão fica de fora. */
+function countByAuction(pairs: readonly { sourceId: string; auctionExternalId: string | null; count?: number }[]) {
+  const counts = new Map<string, CatalogAuctionKey & { count: number }>();
+  for (const { sourceId, auctionExternalId, count = 1 } of pairs) {
+    if (auctionExternalId === null) continue;
+    const key = keyOf(sourceId, auctionExternalId);
+    const entry = counts.get(key) ?? { sourceId, externalId: auctionExternalId, count: 0 };
+    counts.set(key, { ...entry, count: entry.count + count });
+  }
+  return counts;
+}
+
+/**
+ * Leilões do catálogo de uma aba (D-42), com os números de cada um. Os filtros são os dos anúncios: o leilão aparece
+ * se tem lote no filtro. Na aba de abertos, conta só lotes abertos; na de encerrados, todos.
+ */
+export async function listCatalogAuctions(filters: ListingFilters): Promise<CatalogAuctionPage> {
+  const user = await requireUser();
+  const now = new Date();
+  const where: Prisma.ListingWhereInput = {
+    AND: [
+      { auctionExternalId: { not: null } },
+      filters.ended ? {} : openWhere(now),
+      criteriaWhere(criteriaOf(filters)),
+    ],
+  };
+
+  let matching: ReturnType<typeof countByAuction>;
+  let truncated = false;
+  if (filters.distanceKm === null) {
+    const groups = await db.listing.groupBy({ by: ["sourceId", "auctionExternalId"], where, _count: { _all: true } });
+    matching = countByAuction(groups.map((group) => ({ ...group, count: group._count._all })));
+  } else {
+    // Com raio, mesma regra da lista de anúncios: retângulo no banco, distância exata aqui.
+    const rows = await db.listing.findMany({
+      where,
+      take: MAX_CANDIDATES + 1,
+      select: {
+        sourceId: true,
+        auctionExternalId: true,
+        municipality: { select: { latitude: true, longitude: true } },
+      },
+    });
+    truncated = rows.length > MAX_CANDIDATES;
+    matching = countByAuction(
+      rows
+        .slice(0, MAX_CANDIDATES)
+        .map((row) => ({
+          ...row,
+          distanceKm: row.municipality ? distanceKm(DEFAULT_REGION.center, row.municipality) : null,
+        }))
+        .filter(withinRadius(filters.distanceKm)),
+    );
+  }
+
+  const stats = await loadCatalogAuctionStats(user.id, [...matching.values()], now);
+  const selected = selectCatalogAuctions(
+    stats.map((item) => ({ ...item, matching: matching.get(keyOf(item.sourceId, item.externalId))?.count ?? 0 })),
+    filters.ended,
+  );
+  const start = (filters.page - 1) * CATALOG_AUCTIONS_PAGE_SIZE;
+
+  return {
+    items: selected.slice(start, start + CATALOG_AUCTIONS_PAGE_SIZE),
+    total: selected.length,
+    page: filters.page,
+    pageSize: CATALOG_AUCTIONS_PAGE_SIZE,
+    truncated,
+  };
+}
+
+/** Um leilão do catálogo, para o cabeçalho da sua página; `null` se não há anúncio dele. */
+export async function getCatalogAuction(key: CatalogAuctionKey): Promise<CatalogAuctionDetail | null> {
+  const user = await requireUser();
+  const [[stats], userAuction] = await Promise.all([
+    loadCatalogAuctionStats(user.id, [key], new Date()),
+    db.auction.findUnique({
+      where: { ownerId_sourceId_externalId: { ownerId: user.id, ...key } },
+      select: { id: true },
+    }),
+  ]);
+  if (!stats) return null;
+  return { ...stats, date: catalogAuctionDate(stats), isOpen: stats.open > 0, userAuctionId: userAuction?.id ?? null };
+}
+
+type CatalogAuctionStatsRow = CatalogAuctionStats & { sourceName: string };
+
+/** Números de cada leilão do catálogo. `matching` sai zerado: depende dos filtros da tela. */
+async function loadCatalogAuctionStats(
+  ownerId: string,
+  keys: readonly CatalogAuctionKey[],
+  now: Date,
+): Promise<CatalogAuctionStatsRow[]> {
+  if (keys.length === 0) return [];
+  const inKeys: Prisma.ListingWhereInput = { OR: keys.map(auctionWhere) };
+  const [totals, opens, names, lots, sources] = await Promise.all([
+    db.listing.groupBy({
+      by: ["sourceId", "auctionExternalId"],
+      where: inKeys,
+      _count: { _all: true },
+      _min: { auctionStartsAt: true, startsAt: true, endsAt: true },
+    }),
+    db.listing.groupBy({
+      by: ["sourceId", "auctionExternalId"],
+      where: { AND: [inKeys, openWhere(now)] },
+      _count: { _all: true },
+    }),
+    // Nome do anúncio visto mais recentemente: o leilão pode mudar de nome entre coletas.
+    db.listing.findMany({
+      where: inKeys,
+      distinct: ["sourceId", "auctionExternalId"],
+      orderBy: [{ sourceId: "asc" }, { auctionExternalId: "asc" }, { lastSeenAt: "desc" }],
+      select: { sourceId: true, auctionExternalId: true, auctionName: true },
+    }),
+    db.lot.findMany({
+      where: { ownerId, listing: inKeys },
+      select: { listing: { select: { sourceId: true, auctionExternalId: true } } },
+    }),
+    db.source.findMany({ select: { id: true, name: true } }),
+  ]);
+
+  const openByKey = countByAuction(opens.map((group) => ({ ...group, count: group._count._all })));
+  const countOf = (counts: ReturnType<typeof countByAuction>, key: string) => counts.get(key)?.count ?? 0;
+  const analyzedByKey = countByAuction(lots.flatMap(({ listing }) => (listing ? [listing] : [])));
+  const nameByKey = new Map(
+    names.flatMap((row) =>
+      row.auctionExternalId === null ? [] : [[keyOf(row.sourceId, row.auctionExternalId), row.auctionName] as const],
+    ),
+  );
+  const sourceNames = new Map(sources.map((source) => [source.id, source.name]));
+
+  return totals.flatMap((group) => {
+    if (group.auctionExternalId === null) return [];
+    const key = keyOf(group.sourceId, group.auctionExternalId);
+    return [
+      {
+        sourceId: group.sourceId,
+        sourceName: sourceNames.get(group.sourceId) ?? group.sourceId,
+        externalId: group.auctionExternalId,
+        name: nameByKey.get(key) ?? null,
+        auctionStartsAt: group._min.auctionStartsAt,
+        firstStartsAt: group._min.startsAt,
+        firstEndsAt: group._min.endsAt,
+        total: group._count._all,
+        open: countOf(openByKey, key),
+        matching: 0,
+        analyzed: countOf(analyzedByKey, key),
+      },
+    ];
+  });
+}
+
 /** Quantos anúncios abertos atendem aos critérios agora (ex.: "12 lotes combinam com este monitor"). */
 export async function countOpenListings(criteria: ListingCriteria): Promise<{ count: number; truncated: boolean }> {
   await requireUser();
@@ -331,7 +515,7 @@ export async function countOpenListings(criteria: ListingCriteria): Promise<{ co
   return { count, truncated: rows.length > MAX_CANDIDATES };
 }
 
-/** Saúde do coletor para o dashboard e para "Descobertos": última execução de cada fonte e abertos na região. */
+/** Saúde do coletor para o dashboard e para "Leilões": última execução de cada fonte e abertos na região. */
 export async function getCollectorStatus(): Promise<CollectorStatus> {
   await requireUser();
   const now = new Date();

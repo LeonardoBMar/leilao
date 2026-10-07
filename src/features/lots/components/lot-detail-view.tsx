@@ -34,8 +34,8 @@ export async function LotDetailView({ params, analysis, result, photos }: LotDet
   return (
     <div className="grid gap-7">
       <Breadcrumbs>
-        <BreadcrumbLink href="/leiloes">Leilões</BreadcrumbLink>
-        <BreadcrumbLink href={`/leiloes/${lot.auction.id}`}>{lot.auction.name}</BreadcrumbLink>
+        <BreadcrumbLink href="/minhas-analises">Minhas análises</BreadcrumbLink>
+        <BreadcrumbLink href={`/minhas-analises/leiloes/${lot.auction.id}`}>{lot.auction.name}</BreadcrumbLink>
         <BreadcrumbPage>Lote {lot.lotNumber}</BreadcrumbPage>
       </Breadcrumbs>
 

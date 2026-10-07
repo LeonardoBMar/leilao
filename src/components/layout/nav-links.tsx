@@ -1,6 +1,6 @@
 "use client";
 
-import { BellRing, Car, Gavel, LayoutDashboard, type LucideIcon, Radar, ScanSearch } from "lucide-react";
+import { BellRing, Calculator, Gavel, LayoutDashboard, type LucideIcon, ScanSearch } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -8,16 +8,16 @@ import { type ReactNode, Suspense } from "react";
 
 import { cn } from "@/lib/utils";
 
-type NavItem = { href: Route; label: string; icon: LucideIcon };
+/** `sections`: outras rotas que pertencem ao item (a ficha do lote e a análise ficam em "Minhas análises"). */
+type NavItem = { href: Route; label: string; icon: LucideIcon; sections?: readonly string[] };
 
 // Ordem do DESIGN.md §9.
 const NAV_ITEMS: readonly NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/descobertos", label: "Descobertos", icon: Radar },
-  { href: "/alertas", label: "Alertas", icon: BellRing },
-  { href: "/monitores", label: "Monitores", icon: ScanSearch },
   { href: "/leiloes", label: "Leilões", icon: Gavel },
-  { href: "/lotes", label: "Lotes", icon: Car },
+  { href: "/minhas-analises", label: "Minhas análises", icon: Calculator, sections: ["/lotes", "/analise"] },
+  { href: "/monitores", label: "Monitores", icon: ScanSearch },
+  { href: "/alertas", label: "Alertas", icon: BellRing },
 ];
 
 /** Conteúdo ao lado do item, renderizado no servidor (ex.: contador de alertas não lidos, DESIGN.md §9). */
@@ -47,8 +47,10 @@ function ActiveNavList({ onNavigate, badges }: NavLinksProps) {
 function NavList({ pathname, onNavigate, badges }: NavLinksProps & { pathname: string | null }) {
   return (
     <ul className="grid gap-px">
-      {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-        const isActive = pathname !== null && (pathname === href || pathname.startsWith(`${href}/`));
+      {NAV_ITEMS.map(({ href, label, icon: Icon, sections = [] }) => {
+        const isActive =
+          pathname !== null &&
+          [href, ...sections].some((section) => pathname === section || pathname.startsWith(`${section}/`));
         return (
           <li key={href}>
             <Link

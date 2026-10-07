@@ -21,7 +21,7 @@ export async function AuctionEditView({ params }: { params: Promise<{ id: string
         key={auction.updatedAt.getTime()}
         action={updateAuctionAction.bind(null, auction.id)}
         auction={auction}
-        cancelHref={`/leiloes/${auction.id}` as Route}
+        cancelHref={`/minhas-analises/leiloes/${auction.id}` as Route}
         submitLabel="Salvar alterações"
       />
     </div>

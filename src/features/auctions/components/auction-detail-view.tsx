@@ -1,4 +1,4 @@
-import { ExternalLink, Pencil, Plus } from "lucide-react";
+import { ExternalLink, Gavel, Pencil, Plus } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { BreadcrumbLink, BreadcrumbPage, Breadcrumbs } from "@/components/layout/breadcrumbs";
@@ -14,6 +14,7 @@ import {
   SectionTitle,
   Skeleton,
 } from "@/components/ui";
+import { catalogAuctionPath } from "@/features/listings/search";
 import { formatDateTime } from "@/lib/format";
 
 import { ORIGIN_LABELS, STATUS_BADGE_VARIANTS, STATUS_LABELS } from "../labels";
@@ -38,7 +39,7 @@ export async function AuctionDetailView({ params, lots }: AuctionDetailViewProps
   return (
     <div className="grid gap-7">
       <Breadcrumbs>
-        <BreadcrumbLink href="/leiloes">Leilões</BreadcrumbLink>
+        <BreadcrumbLink href="/minhas-analises?vista=leilao">Minhas análises</BreadcrumbLink>
         <BreadcrumbPage>{auction.name}</BreadcrumbPage>
       </Breadcrumbs>
 
@@ -54,7 +55,13 @@ export async function AuctionDetailView({ params, lots }: AuctionDetailViewProps
         }
         actions={
           <>
-            <ButtonLink href={`/leiloes/${auction.id}/editar`} variant="secondary">
+            {auction.catalog ? (
+              <ButtonLink href={catalogAuctionPath(auction.catalog)} variant="secondary">
+                <Gavel aria-hidden="true" />
+                Todos os lotes do leilão
+              </ButtonLink>
+            ) : null}
+            <ButtonLink href={`/minhas-analises/leiloes/${auction.id}/editar`} variant="secondary">
               <Pencil aria-hidden="true" />
               Editar
             </ButtonLink>
@@ -98,7 +105,7 @@ export async function AuctionDetailView({ params, lots }: AuctionDetailViewProps
       <Section aria-labelledby="auction-lots">
         <SectionHeader>
           <SectionTitle id="auction-lots">Lotes</SectionTitle>
-          <ButtonLink href={`/leiloes/${auction.id}/lotes/novo`}>
+          <ButtonLink href={`/minhas-analises/leiloes/${auction.id}/lotes/novo`}>
             <Plus aria-hidden="true" />
             Adicionar lote
           </ButtonLink>

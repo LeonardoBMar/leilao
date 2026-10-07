@@ -429,6 +429,8 @@ model Listing {
   @@index([status, endsAt])
   @@index([municipalityId])
   @@index([brand, model, modelYear])
+  /// Leilões do catálogo (D-42): agrupamento por fonte e leilão.
+  @@index([sourceId, auctionExternalId])
   @@map("listings")
 }
 
@@ -471,7 +473,7 @@ model CollectorRun {
 }
 
 /// Monitor do usuário (docs/PLANO-COLETA.md, etapa 2): critérios de busca no catálogo que geram alertas.
-/// Os critérios são os mesmos de "Descobertos" (src/domain/listings/criteria.ts); categoria e condição guardam a chave.
+/// Os critérios são os mesmos da tela "Leilões" (src/domain/listings/criteria.ts); categoria e condição guardam a chave.
 model Watch {
   id            String   @id @default(uuid(7)) @db.Uuid
   ownerId       String   @map("owner_id") @db.Uuid

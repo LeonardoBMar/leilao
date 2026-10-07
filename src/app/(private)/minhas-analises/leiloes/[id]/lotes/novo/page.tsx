@@ -6,7 +6,7 @@ import { NewLotView } from "@/features/lots/components/lot-form-views";
 
 export const metadata: Metadata = { title: "Novo lote · Leilão Tracker" };
 
-export default function NewLotPage({ params }: PageProps<"/leiloes/[id]/lotes/novo">) {
+export default function NewLotPage({ params }: PageProps<"/minhas-analises/leiloes/[id]/lotes/novo">) {
   return (
     <Suspense fallback={<Skeleton className="h-150 max-w-4xl" />}>
       <NewLotView params={params} />

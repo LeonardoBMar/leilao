@@ -9,7 +9,11 @@ test.skip(!process.env.E2E_EMAIL, "Sem usuário de testes (E2E_EMAIL/E2E_PASSWOR
 const UNKNOWN = "00000000-0000-7000-8000-000000000001";
 
 for (const path of [
+  `/minhas-analises/leiloes/${UNKNOWN}`,
+  // Rota antiga: redireciona para a nova e responde do mesmo jeito (D-42).
   `/leiloes/${UNKNOWN}`,
+  "/leiloes/leilo/leilao-que-nao-existe",
+  "/leiloes/fonte%20invalida/1",
   `/lotes/${UNKNOWN}`,
   `/lotes/${UNKNOWN}/resultado`,
   `/analise/${UNKNOWN}`,

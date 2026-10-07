@@ -18,7 +18,7 @@ export async function UpcomingAuctions() {
         title="Nenhum leilão próximo"
         description="Leilões agendados ou em andamento aparecem aqui, por data."
         action={
-          <ButtonLink href="/leiloes/novo" variant="secondary">
+          <ButtonLink href="/minhas-analises/leiloes/novo" variant="secondary">
             Cadastrar leilão
           </ButtonLink>
         }
@@ -48,7 +48,10 @@ export async function UpcomingAuctions() {
                   <span className="mr-3 text-label font-normal text-muted tabular-nums">
                     {formatTime(auction.startsAt)}
                   </span>
-                  <Link href={`/leiloes/${auction.id}`} className="font-medium text-foreground hover:underline">
+                  <Link
+                    href={`/minhas-analises/leiloes/${auction.id}`}
+                    className="font-medium text-foreground hover:underline"
+                  >
                     {auction.name}
                   </Link>
                   <span className="text-caption text-muted">

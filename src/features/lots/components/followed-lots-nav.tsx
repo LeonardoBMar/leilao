@@ -61,7 +61,7 @@ export async function FollowedLotsNav() {
       </ul>
       {page.total > SHOWN ? (
         <Link
-          href="/lotes?acompanhados=1&resultado=sem"
+          href="/minhas-analises?acompanhados=1&resultado=sem"
           className="px-2.5 text-caption text-muted hover:text-foreground hover:underline"
         >
           Ver os {page.total}

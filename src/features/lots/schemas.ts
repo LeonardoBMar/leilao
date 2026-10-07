@@ -48,6 +48,8 @@ export const lotIdSchema = entityId();
 export const currentBidInputSchema = z.object({ currentBid: optionalPositiveBrlAmount() });
 
 export const LOTS_PAGE_SIZE = 25;
+/** Leilões por página em "Minhas análises" por leilão. */
+export const LOT_GROUPS_PAGE_SIZE = 10;
 
 const presence = z.enum(["com", "sem"]).optional().catch(undefined);
 const flag = z

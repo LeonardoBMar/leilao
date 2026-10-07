@@ -13,6 +13,7 @@ import {
 import { cents } from "@/domain/money";
 
 export const LISTINGS_PAGE_SIZE = 24;
+export const CATALOG_AUCTIONS_PAGE_SIZE = 24;
 
 /** Raios na URL e nos formulários (texto), a partir de `RADIUS_OPTIONS_KM`. */
 export const DISTANCE_OPTIONS = RADIUS_OPTIONS_KM.map(String);
@@ -38,7 +39,7 @@ export const CONDITION_LABELS = {
 
 const year = z.coerce.number().int().min(1900).max(2100).optional().catch(undefined);
 
-/** Filtros de "Descobertos". Nunca lançam: valor inválido vira o padrão. */
+/** Filtros dos anúncios em "Leilões" (por leilão, todos os veículos e um leilão). Nunca lançam: inválido vira padrão. */
 export const listingFiltersSchema = z
   .object({
     busca: z
@@ -70,3 +71,11 @@ export const listingFiltersSchema = z
     page: pagina,
   }));
 export type ListingFilters = z.infer<typeof listingFiltersSchema>;
+
+/** Segmentos de `/leiloes/[source]/[auction]` (D-42). Inválido: a página responde 404. */
+export const catalogAuctionParamsSchema = z
+  .object({
+    source: z.string().regex(/^[a-z0-9-]{1,40}$/),
+    auction: z.string().regex(/^[A-Za-z0-9._-]{1,200}$/),
+  })
+  .transform(({ source, auction }) => ({ sourceId: source, externalId: auction }));

@@ -3,7 +3,7 @@ import type { DamageLevel } from "./condition";
 import type { ListingCategory, ListingStatus } from "./types";
 
 /**
- * Critérios de busca no catálogo: os mesmos para a tela "Descobertos" e para os monitores (etapa 2 de
+ * Critérios de busca no catálogo: os mesmos para a tela "Leilões" e para os monitores (etapa 2 de
  * docs/PLANO-COLETA.md). A tela filtra no banco; o coletor usa `matchesCriteria` para gerar alertas.
  * As chaves ("veiculos", "sem-monta") são identificadores estáveis: vão na URL e no banco.
  */
@@ -87,7 +87,7 @@ export function isOpenAt(listing: Pick<MatchableListing, "status" | "endsAt">, n
   return listing.status === "open" && (listing.endsAt === null || listing.endsAt > now);
 }
 
-/** O anúncio aberto atende a todos os critérios? Mesma regra da busca em "Descobertos". */
+/** O anúncio aberto atende a todos os critérios? Mesma regra da busca em "Leilões". */
 export function matchesCriteria(criteria: ListingCriteria, listing: MatchableListing, now: Date): boolean {
   if (!isOpenAt(listing, now)) return false;
 

@@ -23,6 +23,18 @@ export type LotListItem = {
 
 export type LotPage = { items: LotListItem[]; total: number; page: number; pageSize: number };
 
+/** Leilão do usuário com os lotes que atendem aos filtros ("Minhas análises" por leilão). */
+export type LotAuctionGroup = {
+  auction: LotAuctionRef & {
+    auctioneer: string;
+    /** Leilão do catálogo de onde veio ("Adicionar à análise"), com o total de lotes coletados. */
+    catalog: { sourceId: string; externalId: string; total: number } | null;
+  };
+  lots: LotListItem[];
+};
+
+export type LotGroupPage = { groups: LotAuctionGroup[]; total: number; page: number; pageSize: number };
+
 export type LotDetail = LotListItem & {
   manufactureYear: number | null;
   mileageKm: number | null;

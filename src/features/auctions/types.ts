@@ -12,13 +12,6 @@ export type AuctionListItem = {
   archivedAt: Date | null;
 };
 
-export type AuctionPage = {
-  items: AuctionListItem[];
-  total: number;
-  page: number;
-  pageSize: number;
-};
-
 export type AuctionDetail = AuctionListItem & {
   city: string | null;
   state: string | null;
@@ -28,4 +21,6 @@ export type AuctionDetail = AuctionListItem & {
   /** Lotes vinculados, inclusive arquivados: impede a exclusão definitiva (RF-08). */
   totalLotCount: number;
   updatedAt: Date;
+  /** Leilão do catálogo de onde veio ("Adicionar à análise", D-42): fonte e id do leilão na fonte. */
+  catalog: { sourceId: string; externalId: string } | null;
 };

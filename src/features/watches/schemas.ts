@@ -7,7 +7,7 @@ import { entityId, optionalInt, optionalPositiveBrlAmount, optionalText } from "
 const YEAR_MESSAGE = "Informe um ano entre 1900 e 2100.";
 
 /**
- * Cadastro e edição de monitor (docs/PLANO-COLETA.md, etapa 2). Mesmos critérios de "Descobertos".
+ * Cadastro e edição de monitor (docs/PLANO-COLETA.md, etapa 2). Mesmos critérios de "Leilões".
  * Pelo menos um critério de veículo é exigido: sem ele, todo lote novo da região viraria alerta.
  */
 export const watchInputSchema = z
