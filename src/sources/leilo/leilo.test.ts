@@ -281,4 +281,22 @@ describe("fetchListingPage", () => {
       expect(await fetchListingPage(respond(status), "https://x", parse, new Date())).toMatchObject({ gone });
     }
   });
+
+  it("página de outro anúncio (lote republicado, URL antiga redireciona) é `gone`", async () => {
+    const page = (text: string) => ({
+      get: () => Promise.resolve({ ok: true as const, text }),
+      post: () => Promise.resolve({ ok: true as const, text }),
+    });
+    const listing = parseOk(openPage);
+    const oldUrl = leiloListingUrl("773f1a61-cc13-4125-b2f3-704da6f6e498");
+
+    expect(await fetchListingPage(page(openPage), oldUrl, parseLeiloListingPage, now)).toEqual({
+      ok: false,
+      gone: true,
+      error: `redireciona para outro anúncio (${listing.externalId})`,
+    });
+    expect(await fetchListingPage(page(openPage), listing.url, parseLeiloListingPage, now)).toMatchObject({
+      ok: true,
+    });
+  });
 });

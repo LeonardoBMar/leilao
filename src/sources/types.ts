@@ -30,7 +30,8 @@ export type SourceHttp = {
 export type Discovery = { listings: DiscoveredListing[]; complete: boolean; errors: { url: string; error: string }[] };
 
 /**
- * Leitura de um anúncio. `gone`: a fonte diz que a página não existe mais (HTTP 404 ou equivalente); o coletor decide
+ * Leitura de um anúncio. `gone`: a fonte diz que a página não existe mais (HTTP 404, redireciona para outro anúncio ou
+ * equivalente); o coletor decide
  * se isso é desfecho (anúncio encerrado) ou falha (`goneStatus`).
  */
 export type ListingFetch = { ok: true; value: ListingInput } | { ok: false; gone: boolean; error: string };

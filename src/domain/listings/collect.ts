@@ -10,9 +10,9 @@ export function finalBidOf(listing: Pick<ListingInput, "status" | "currentBid">)
 }
 
 /**
- * A página do anúncio sumiu (HTTP 404). É definitivo quando o anúncio já encerrou ou já saiu do sitemap (a lista de
- * disponíveis da fonte): o Leilo tira do ar lotes encerrados sem venda (ex.: condicional negada) e lotes sem data de
- * fim que deixam de ser oferecidos. Devolve a situação a gravar, sem revisita: aberto vira desconhecido (não se
+ * A página do anúncio sumiu (HTTP 404 ou redireciona para outro anúncio). É definitivo quando o anúncio já encerrou ou
+ * já saiu do sitemap (a lista de disponíveis da fonte): o Leilo tira do ar lotes encerrados sem venda (ex.: condicional
+ * negada), republica com outro id os que voltam a leilão e tira lotes sem data de fim que deixam de ser oferecidos. Devolve a situação a gravar, sem revisita: aberto vira desconhecido (não se
  * adivinha o desfecho), o resto fica como estava. Ainda no sitemap e antes do fim, `null`: pode ser instabilidade,
  * e conta como falha. `sitemapReadAt` nulo (sitemap não carregou) nunca conclui "saiu do sitemap".
  */

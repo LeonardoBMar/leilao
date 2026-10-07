@@ -27,7 +27,11 @@ const MAX_ERROR_SAMPLES = 20;
  * os passos comuns (lotes ligados, alertas) e para fechar os registros.
  */
 const DEFAULT_BUDGET_MS = 12 * 60_000;
-/** Falhas seguidas que param a fonte nesta execução: o site caiu ou bloqueou o coletor, não vale insistir. */
+/**
+ * Falhas seguidas **do site** (rede, tempo, recusa, 5xx) que param a fonte nesta execução: o site caiu ou bloqueou o
+ * coletor, não vale insistir. Anúncio que falha com a página em mãos (outro anúncio, formato novo) não conta e zera a
+ * sequência, porque prova que o site responde.
+ */
 const MAX_CONSECUTIVE_FAILURES = 10;
 /** Execução ainda "running" depois disto foi morta antes de fechar o registro (o job passa de 20 min). */
 const STALE_RUN_MS = 30 * 60_000;
@@ -298,7 +302,7 @@ async function collectListings(input: {
       // Erro inesperado (ex.: dado recusado por um CHECK do banco).
       problem = describeError(error);
     }
-    consecutiveFailures++;
+    consecutiveFailures = fetcher.siteFailing ? consecutiveFailures + 1 : 0;
     fail(url, problem);
     if (visit.reason === "due") await recordCheckFailure(source.id, visit.externalId, now());
   }

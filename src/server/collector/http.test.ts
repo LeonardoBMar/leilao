@@ -77,6 +77,31 @@ describe("createPoliteFetcher", () => {
     expect(fetcher.requests).toBe(1);
   });
 
+  it("`siteFailing` diz se a última resposta foi falha do site (rede, recusa, 5xx), não 404 nem página que veio", async () => {
+    const clock = fakeClock();
+    const { impl } = fakeFetch([
+      new Response("", { status: 403 }),
+      new Response("ok"),
+      new Error("ETIMEDOUT"),
+      new Response("", { status: 404 }),
+    ]);
+    const fetcher = createPoliteFetcher({
+      fetchImpl: impl,
+      sleep: clock.sleep,
+      now: clock.now,
+      minIntervalMs: 0,
+      maxAttempts: 1,
+    });
+
+    expect(fetcher.siteFailing).toBe(false);
+    const states = [];
+    for (let index = 0; index < 4; index++) {
+      await fetcher.get(`https://fonte/${index}`);
+      states.push(fetcher.siteFailing);
+    }
+    expect(states).toEqual([true, false, true, false]);
+  });
+
   it("desiste depois do número máximo de tentativas", async () => {
     const clock = fakeClock();
     const { impl } = fakeFetch([new Response("", { status: 500 }), new Response("", { status: 500 })]);

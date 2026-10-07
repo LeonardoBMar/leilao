@@ -7,6 +7,11 @@ export const COLLECTOR_USER_AGENT = "LeilaoTracker/1.0 (+https://github.com/Leon
 export type PoliteFetcher = SourceHttp & {
   /** Requisições feitas até agora, contando novas tentativas. */
   readonly requests: number;
+  /**
+   * A última resposta foi falha do site (`isSiteFailure`): rede, tempo esgotado, recusa ou erro do servidor. Conta para
+   * a parada por falhas seguidas (D-41); página que veio mas não serve (outro anúncio, formato novo) não conta.
+   */
+  readonly siteFailing: boolean;
 };
 
 type Request = { url: string; form?: Readonly<Record<string, string>> };
@@ -29,6 +34,11 @@ type Options = {
 
 export const DEADLINE_ERROR = "tempo da execução esgotado";
 
+/** Falha que indica site fora do ar ou bloqueando o coletor; 404 e 410 dizem respeito só ao anúncio pedido. */
+export function isSiteFailure(outcome: FetchOutcome): boolean {
+  return !outcome.ok && outcome.status !== 404 && outcome.status !== 410;
+}
+
 const RETRY_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
 const MAX_RETRY_AFTER_MS = 60_000;
 
@@ -49,6 +59,7 @@ export function createPoliteFetcher({
 }: Options = {}): PoliteFetcher {
   let lastRequestAt = Number.NEGATIVE_INFINITY;
   let requests = 0;
+  let siteFailing = false;
 
   async function attempt({ url, form }: Request): Promise<FetchOutcome & { retryAfterMs?: number; retry: boolean }> {
     const wait = lastRequestAt + minIntervalMs - now();
@@ -81,7 +92,10 @@ export function createPoliteFetcher({
   async function send(request: Request): Promise<FetchOutcome> {
     for (let tryNumber = 1; ; tryNumber++) {
       const { retry, retryAfterMs, ...outcome } = await attempt(request);
-      if (outcome.ok || !retry || tryNumber >= maxAttempts) return outcome;
+      if (outcome.ok || !retry || tryNumber >= maxAttempts) {
+        siteFailing = isSiteFailure(outcome);
+        return outcome;
+      }
       await sleep(Math.min(retryAfterMs ?? 2 ** tryNumber * 1_000, MAX_RETRY_AFTER_MS));
     }
   }
@@ -89,6 +103,9 @@ export function createPoliteFetcher({
   return {
     get requests() {
       return requests;
+    },
+    get siteFailing() {
+      return siteFailing;
     },
     get: (url) => send({ url }),
     // Consulta de leitura (ex.: situação de vários lotes de uma vez): mesmas regras de ritmo e de novas tentativas.

@@ -19,7 +19,11 @@ export async function discoverFromSitemaps(
   return discovery;
 }
 
-/** Anúncio que é uma página só: baixa e lê. HTTP 404 ou 410 é "fora do ar" (`gone`). */
+/**
+ * Anúncio que é uma página só: baixa e lê. HTTP 404 ou 410 é "fora do ar" (`gone`). Página de **outro** anúncio também:
+ * o Leilo republica o veículo não vendido num leilão novo, com outro id, e a URL antiga redireciona (301) para ele;
+ * o anúncio pedido não existe mais e o novo entra pela descoberta.
+ */
 export async function fetchListingPage(
   http: SourceHttp,
   url: string,
@@ -30,5 +34,8 @@ export async function fetchListingPage(
   if (!response.ok)
     return { ok: false, gone: response.status === 404 || response.status === 410, error: response.error };
   const parsed = parse(response.text, now);
-  return parsed.ok ? parsed : { ok: false, gone: false, error: parsed.error };
+  if (!parsed.ok) return { ok: false, gone: false, error: parsed.error };
+  if (parsed.value.url !== url)
+    return { ok: false, gone: true, error: `redireciona para outro anúncio (${parsed.value.externalId})` };
+  return parsed;
 }
