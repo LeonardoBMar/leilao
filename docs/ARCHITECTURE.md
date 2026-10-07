@@ -73,8 +73,11 @@ src/
     (private)/
       layout.tsx                  # casca autenticada (nav); sessão lida dentro de <Suspense>
       dashboard/page.tsx
-      leiloes/page.tsx
-      leiloes/[id]/page.tsx
+      leiloes/page.tsx            # catálogo por leilão (D-42)
+      leiloes/veiculos/page.tsx
+      leiloes/[source]/[auction]/page.tsx
+      minhas-analises/page.tsx
+      minhas-analises/leiloes/[id]/page.tsx
       lotes/[id]/page.tsx
       analise/[id]/page.tsx
       error.tsx                   # boundary da área privada
@@ -123,7 +126,7 @@ tests/
 - Arquivos e pastas em `kebab-case`. Componentes em `PascalCase`. Funções e variáveis em `camelCase`. Constantes de módulo em `SCREAMING_SNAKE_CASE`.
 - Identificadores, tipos e comentários de código em **inglês**. Textos da interface, mensagens de erro ao usuário e documentação em **português do Brasil**.
   - Glossário: leilão = `auction`, lote = `lot`, análise = `analysis`, resultado = `result`, lance = `bid`, comissão = `commission`, margem = `margin`, anúncio coletado = `listing`, fonte = `source`, monitor = `watch`, alerta = `alert`.
-- As URLs seguem o português do SPEC (`/leiloes`, `/lotes`, `/analise`), e as pastas de feature usam o inglês.
+- As URLs seguem o português do SPEC (`/leiloes`, `/minhas-analises`, `/lotes/[id]`, `/analise`), e as pastas de feature usam o inglês.
 - Server Actions terminam em `Action` (`createAuctionAction`). O plugin TypeScript do Next só aceita props de função com nome `action` ou terminadas em `Action` em Client Components.
 - Schemas Zod terminam em `Schema` (`auctionInputSchema`), com o tipo inferido correspondente (`AuctionInput`).
 - DTOs descrevem o uso: `AuctionListItem`, `LotDetail`, `AnalysisSnapshot`.
@@ -150,11 +153,11 @@ Regras do projeto:
 Exemplo de página:
 
 ```tsx
-// src/app/(private)/leiloes/page.tsx
-export default function AuctionsPage() {
+// src/app/(private)/minhas-analises/page.tsx
+export default function MyAnalysesPage() {
   return (
     <>
-      <PageHeader title="Leilões" actions={<NewAuctionButton />} />
+      <PageHeader title="Minhas análises" actions={<NewAuctionButton />} />
       <Suspense fallback={<AuctionListSkeleton />}>
         <AuctionList />   {/* async Server Component: chama listAuctions() */}
       </Suspense>
@@ -371,6 +374,7 @@ Mensagens técnicas (stack, SQL) nunca chegam ao usuário. O `error.tsx` mostra 
 | D-39 | **Direção visual A, "refinado e silencioso"** (substitui as definições visuais anteriores do DESIGN.md). Papel quente `#F7F7F4` na casca e conteúdo num painel branco embutido; tinta `#15171C` como `primary` (botão principal, controles marcados) e azul `#2B45C8` como novo token `accent` (link, foco, seleção, contador de alertas); fontes Hanken Grotesk e IBM Plex Mono por `next/font/google`; raio de controle 7 px; badges em pílula. DESIGN.md 2.0 é a fonte de verdade. Feita em duas etapas: tokens, componentes e casca; depois as telas | O usuário escolheu esta direção entre as do canvas de design em 01/10/2026: menos ruído, um número que decide por tela. Sem dependência nova (`next/font` já era usado) | Manter `#2454F8` e Geist; direção mais densa ou mais expressiva do canvas |
 | D-40 | **Terceira fonte: Freitas Leiloeiro** (refina D-37; levantamento em `docs/PLANO-COLETA.md` §2.2). Adaptador em `src/sources/freitas/`: a agenda dá os leilões de pátio e veículos; a lista do leilão (`ListarLotes`, 100 por página) dá cartão, situação, lance e foto; monta, pátio e tipo saem **das consultas filtradas do próprio site** (monta → condição, pátio → local, tipo → categoria). **Memória por execução:** cartões e filtros de cada leilão são lidos uma vez e guardados num `WeakMap` preso ao `SourceHttp` da execução (some com ele; falha não fica guardada), em vez de repetir ~20 consultas por lote. A página do lote (comissão, despesas, observações, endereço de retirada) só é pedida **enquanto o lote está aberto**: depois da venda o site responde 500, e o desfecho vem do cartão, que continua na lista. Lote fora da lista é `gone`. **Teto próprio de visitas** (`maxVisitsPerRun` no contrato do adaptador, 250 na Freitas) abaixo do `--max-visits` geral, para a fonte com mais requisições por anúncio caber nos 20 min do job. BAIXA OFERTA fica sem mapeamento (desconhecida após o fim). **Placa completa, chassi e Renavam** são apagados da descrição antes de gravar (`src/sources/shared/redact.ts`) | Site com HTML no servidor e sem anti-robô; os filtros dão monta, pátio e tipo melhor que o texto livre. A memória por execução mantém o volume perto de 2 pedidos por lote aberto. Redação por decisão do usuário em 01/10/2026 | Página de cada lote encerrado (dá erro); condição só pelo texto; memória entre execuções no banco |
 | D-41 | **Tempo por execução do coletor** (refina D-37). As fontes têm **12 min** por execução (`budgetMs`); o acesso educado recebe esse fim (`deadline`) e, depois dele, não faz requisição nem nova tentativa, e o tempo de cada requisição também para nele. Uma fonte para depois de **10 falhas seguidas do site** nas visitas (rede, tempo esgotado, recusa ou 5xx; 404/410 não contam). Anúncio que falha com a página em mãos (outro anúncio, formato novo) não conta e zera a sequência, porque prova que o site responde: em 07/10/2026 dez lotes republicados pela Leilo (URL antiga redireciona para o lote novo) pararam a fonte sem o site estar fora do ar. Redirecionamento para outro anúncio é página fora do ar (`gone`), como o 404. Em ambos os casos, um único registro diz quantos anúncios ficaram para a próxima execução, e os passos comuns (lotes ligados, alertas) rodam. No início, execuções ainda "running" há mais de 30 min são fechadas como falha ("interrompida antes do fim") | Em 02/10/2026 a Freitas passou a recusar e depois a deixar pendurados os pedidos vindos do GitHub Actions; com 20 s × 3 tentativas por pedido, a fonte segurou a coleta até o job de 20 min ser morto, e nenhuma fonte fechou o registro nem gerou alertas | Tempo por fonte em vez de por execução; fechar o registro de cada fonte antes dos passos comuns |
+| D-42 | **Leilões do catálogo e Minhas análises** (plano em `docs/PLANO-NAVEGACAO.md`). `/leiloes` passa a ser o catálogo **agrupado por leilão** (e `/leiloes/veiculos`, os anúncios soltos, antigo `/descobertos`); o leilão do catálogo é **derivado dos anúncios**, sem tabela, agrupando `listings` por `(source_id, auction_external_id)` com índice nesse par, e a regra de data, nome e situação fica em `src/domain/listings/catalog-auctions.ts`. Os lotes do usuário e o registro do leilão vão para `/minhas-analises` (padrão: todos os lotes; opção por leilão) e `/minhas-analises/leiloes/[id]`. URLs antigas redirecionam em `next.config.ts` | A tela "Leilões" mostrava só os lotes analisados e um leilão de 300 lotes parecia ter 3. Todo anúncio já traz o leilão (07/10/2026: 41 leilões em 3 fontes), e o volume (~3,6 mil anúncios) cabe num agrupamento por consulta. `[id]` e `[source]/[auction]` não convivem no mesmo nível de rota | Só renomear as telas; mostrar "3 de 214" na tela antiga; tabela `catalog_auctions` mantida pelo coletor (fica para quando o volume pedir) |
 
 ## 16. Pendências da fundação
 

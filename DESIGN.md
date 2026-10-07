@@ -574,15 +574,14 @@ Ordem inicial:
 
 1. Marca: quadrado de 28 px em tinta com o martelo, “Leilão Tracker” e “Uso pessoal” (`src/components/layout/brand.tsx`).
 2. Dashboard.
-3. Descobertos (lotes coletados automaticamente, docs/PLANO-COLETA.md): porta de entrada do fluxo descobrir → analisar.
-4. Alertas (lotes novos que combinaram com um monitor), com contador de não lidos.
+3. Leilões (o catálogo coletado, por leilão ou todos os veículos; docs/PLANO-COLETA.md e docs/PLANO-NAVEGACAO.md): porta de entrada do fluxo descobrir → analisar.
+4. Minhas análises (os lotes do usuário, todos ou por leilão).
 5. Monitores (buscas salvas que geram alertas).
-6. Leilões.
-7. Lotes.
-8. Grupo **Acompanhando**: até 5 lotes acompanhados sem resultado, com um ponto pela situação do lance (`success` abaixo, `warning` no limite, `error` acima, `muted-subtle` sem comparação; o texto da situação vai para leitores de tela) e o número do lote em mono. Some quando não há nenhum.
-9. Espaço flexível.
-10. Cartão **Próximo leilão** (véu de 3% de tinta, `radius-lg`): data e hora, nome e quantidade de lotes; leva ao leilão. Some sem leilão próximo.
-11. Conta: avatar neutro, e-mail e botão só com ícone "Sair".
+6. Alertas (lotes novos que combinaram com um monitor), com contador de não lidos.
+7. Grupo **Acompanhando**: até 5 lotes acompanhados sem resultado, com um ponto pela situação do lance (`success` abaixo, `warning` no limite, `error` acima, `muted-subtle` sem comparação; o texto da situação vai para leitores de tela) e o número do lote em mono. Some quando não há nenhum.
+8. Espaço flexível.
+9. Cartão **Próximo leilão** (véu de 3% de tinta, `radius-lg`): data e hora, nome e quantidade de lotes; leva ao leilão. Some sem leilão próximo.
+10. Conta: avatar neutro, e-mail e botão só com ícone "Sair".
 
 - A sidebar fica sobre o papel (`background`), sem borda; um divisor `border-strong` separa a conta.
 - Item: altura mínima de 40 px, `radius-md`, 1 px entre itens, ícone 16 px em `muted-subtle`, texto `body` peso 500 em `foreground-secondary`.
@@ -598,7 +597,7 @@ Ordem inicial:
 
 ### Breadcrumbs
 
-- Usar em detalhes com hierarquia: `Leilões / Leilão Detran / Lote 152`.
+- Usar em detalhes com hierarquia: `Minhas análises / Leilão Detran / Lote 152` ou `Leilões / Leilão de Seguradoras`.
 - O item atual não é link e usa `foreground`.
 - Em mobile, pode reduzir para um link de retorno com o pai imediato, mantendo o título da página visível.
 
@@ -731,7 +730,7 @@ Easing padrão: `cubic-bezier(0.2, 0, 0, 1)`. Saída pode usar `cubic-bezier(0.4
 2. Alertas não lidos, quando houver.
 3. Duas colunas no desktop amplo (1,7 : 1):
    - à esquerda, “Lotes acompanhados” em linhas (número do lote em mono, veículo, lance atual "de" limite e a barra de posição com a diferença em texto) e “Próximos leilões” agrupados por dia (dia grande, mês e dia da semana à esquerda; hora, nome e lotes à direita);
-   - à direita, “Registros pendentes” no painel rebaixado, “Suas decisões antes do resultado” (o indicador, com o denominador) e a linha da coleta com “Ver descobertos”.
+   - à direita, “Registros pendentes” no painel rebaixado, “Suas decisões antes do resultado” (o indicador, com o denominador) e a linha da coleta com “Ver leilões”.
 4. EmptyState `inline` em cada seção quando necessário.
 
 Não destacar “economia potencial” ou “lucro” no MVP, pois não são resultados garantidos.
@@ -756,7 +755,14 @@ Filtros ativos permanecem visíveis ou resumidos. O estado vazio por filtro ofer
 
 No lote (direção A): logo abaixo do cabeçalho, o painel rebaixado "Lance e limite" com o número que decide (folga até o limite em `display`, `success`; ou "acima do seu limite em" em `error`), lance atual e meu limite em `heading-2`, a barra do lance até o limite e o formulário do novo lance. Depois, duas colunas (1,75 : 1): análise (tabela de versões) e resultado à esquerda; veículo (`dl` em duas colunas), fotos, "Acompanhar lote" e observações à direita, separados por linhas finas.
 
-No leilão: dados do evento numa faixa rebaixada (data, local, edital, plataforma) e a lista de lotes em largura total.
+No leilão do usuário: dados do evento numa faixa rebaixada (data, local, edital, plataforma) e a lista de lotes em largura total; se o leilão veio do catálogo, a faixa traz o link para todos os lotes dele.
+
+### 15.3.1 Leilões do catálogo
+
+- Abas de texto no topo: "Por leilão" e "Todos os veículos" (links, com `aria-current`), seguidas dos filtros dos anúncios.
+- Cartão de leilão: fonte e data em `caption`, nome em `heading-3`, e uma linha de números em `tabular-nums` ("214 lotes · 147 abertos · 37 no filtro · 3 analisados"). O cartão inteiro leva ao leilão.
+- Leilão do catálogo: faixa rebaixada com fonte, data e números, e a grade de cartões de anúncio em largura total.
+- Minhas análises: abas "Todos os lotes" e "Por leilão"; no agrupado, cada grupo tem cabeçalho (nome, data, lotes do usuário e "214 no catálogo" quando houver) e as linhas da lista de lotes.
 
 ### 15.4 Análise financeira
 

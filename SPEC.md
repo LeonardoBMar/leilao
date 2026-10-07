@@ -117,22 +117,32 @@ Uma contagem simples poderá mostrar **“X de Y resultados comparáveis ficaram
 
 Não haverá card de lucro realizado ou economia garantida baseado em simulações.
 
-### `/leiloes` — Lista de leilões
+A navegação separa o **leilão do catálogo** (o evento, com todos os lotes coletados) do **registro do usuário** (o leilão com os lotes que ele analisou). Plano e motivo em `docs/PLANO-NAVEGACAO.md` (D-42).
 
-- Busca por nome ou organizador.
-- Filtros por origem, status e período.
-- Ordenação por data.
-- Nome, data, organizador, origem, status e quantidade de lotes cadastrados.
-- Botão para cadastrar leilão em formulário ou modal.
-- Visualização opcional de registros arquivados.
+### `/leiloes` — Leilões do catálogo
 
-### `/leiloes/[id]` — Detalhe do leilão
+- Leilões coletados automaticamente, um cartão por leilão: fonte, nome, data, total de lotes, abertos, lotes no filtro e lotes já analisados pelo usuário.
+- Filtros dos anúncios (região, categoria, condição, busca); só aparece leilão com lote no filtro.
+- Seletor abertos/encerrados, ordenado pela data.
+- Alternância para **Todos os veículos** (`/leiloes/veiculos`): os anúncios sem agrupar.
+
+### `/leiloes/[fonte]/[leilao]` — Leilão do catálogo
+
+- Os anúncios do leilão, com filtros, indicando os que o usuário já analisou.
+- Acesso ao registro do usuário desse leilão, quando existir.
+
+### `/minhas-analises` — Minhas análises
+
+- Os lotes do usuário. Padrão: **todos os lotes**, paginados; opção **por leilão**, com os mesmos filtros.
+- Busca por número, marca ou modelo; filtros por acompanhamento, presença de análise e resultado; visualização opcional de arquivados.
+- Botão para cadastrar leilão manualmente.
+
+### `/minhas-analises/leiloes/[id]` — Leilão do usuário
 
 - Dados do evento e links para edital e plataforma.
-- Lista paginada de seus lotes.
-- Busca por número, marca ou modelo.
-- Filtros por acompanhamento, presença de análise e resultado.
-- Ações para editar o leilão, adicionar lote e abrir uma análise.
+- Lista paginada de seus lotes, com busca e os mesmos filtros.
+- Ações para editar o leilão, adicionar lote, arquivar e abrir uma análise.
+- Quando o leilão veio do catálogo, acesso a todos os lotes dele.
 
 ### `/lotes/[id]` — Ficha do lote
 
