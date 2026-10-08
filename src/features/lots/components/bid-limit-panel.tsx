@@ -5,9 +5,10 @@ import { formatBRL, formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 import { updateCurrentBidAction } from "../actions";
+import { toFixedLimit } from "../limit";
 import type { LotDetail } from "../types";
 import { CurrentBidForm } from "./current-bid-form";
-import { LimitBadge, toFixedLimit } from "./limit-badge";
+import { LimitBadge } from "./limit-badge";
 
 /**
  * Lance e limite da ficha do lote (DESIGN.md §15.3, direção A): o número que decide é a folga até o limite; lance

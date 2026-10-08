@@ -4,8 +4,8 @@ import { compareToFixedLimit, type LimitComparison } from "@/domain/finance/calc
 import { LIMIT_COMPARISON_LABELS } from "@/lib/limit-comparison";
 import { cn } from "@/lib/utils";
 
+import { toFixedLimit } from "../limit";
 import { listLots } from "../queries";
-import { toFixedLimit } from "./limit-badge";
 
 const SHOWN = 5;
 
@@ -28,6 +28,9 @@ export async function FollowedLotsNav() {
     analysis: undefined,
     result: "sem",
     archived: false,
+    position: undefined,
+    timing: undefined,
+    sort: "leilao",
     page: 1,
   });
   if (page.total === 0) return null;

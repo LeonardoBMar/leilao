@@ -16,14 +16,16 @@ import {
 import { catalogAuctionPath, type SearchParams, withQuery } from "@/features/listings/search";
 import { formatDateTime } from "@/lib/format";
 
+import { activeLotFilters, clearedLotFilters } from "../filter-labels";
 import { listLotsByAuction } from "../queries";
-import type { LotFilters } from "../schemas";
-import type { LotAuctionGroup } from "../types";
+import { type LotFilters, lotParams } from "../schemas";
+import type { LotAuctionGroup, LotGroupPage } from "../types";
 import { LotFilters as LotFiltersBar } from "./lot-filters";
 import { LotRows, LotsView, readLotSearch } from "./lot-list";
 
 const BASE_PATH = "/minhas-analises";
 const BY_AUCTION = { vista: "leilao" } as const;
+const AUCTION_UNIT = { one: "leilão", many: "leilões" };
 
 /**
  * "Minhas análises" (D-42): os lotes do usuário, todos (padrão) ou agrupados por leilão (`?vista=leilao`), com os
@@ -32,7 +34,7 @@ const BY_AUCTION = { vista: "leilao" } as const;
 export async function MyAnalysesView({ searchParams }: { searchParams: SearchParams }) {
   const raw = await searchParams;
   const byAuction = (Array.isArray(raw.vista) ? raw.vista[0] : raw.vista) === BY_AUCTION.vista;
-  const { filters, values, params } = readLotSearch(raw);
+  const { filters, params } = readLotSearch(raw);
 
   return (
     <div className="grid gap-6">
@@ -44,10 +46,7 @@ export async function MyAnalysesView({ searchParams }: { searchParams: SearchPar
         ]}
       />
       {byAuction ? (
-        <div className="grid gap-6">
-          <LotFiltersBar values={values} basePath={BASE_PATH} fixedParams={BY_AUCTION} />
-          <LotGroups filters={filters} params={{ ...params, ...BY_AUCTION }} />
-        </div>
+        <LotGroups filters={filters} params={params} />
       ) : (
         <LotsView searchParams={searchParams} basePath={BASE_PATH} />
       )}
@@ -55,19 +54,54 @@ export async function MyAnalysesView({ searchParams }: { searchParams: SearchPar
   );
 }
 
-async function LotGroups({ filters, params }: { filters: LotFilters; params: Record<string, string | undefined> }) {
+async function LotGroups({ filters, params }: { filters: LotFilters; params: Record<string, string> }) {
   const page = await listLotsByAuction(filters);
+  return (
+    <div className="grid gap-6">
+      <LotFiltersBar
+        params={params}
+        basePath={BASE_PATH}
+        fixedParams={BY_AUCTION}
+        total={page.total}
+        unit={AUCTION_UNIT}
+        sortable={false}
+      />
+      <LotGroupList page={page} filters={filters} params={{ ...params, ...BY_AUCTION }} />
+    </div>
+  );
+}
 
+function LotGroupList({
+  page,
+  filters,
+  params,
+}: {
+  page: LotGroupPage;
+  filters: LotFilters;
+  params: Record<string, string>;
+}) {
   if (page.total === 0) {
-    const hasFilters = Boolean(filters.search || filters.followedOnly || filters.analysis || filters.result);
-    if (filters.archived) {
+    const hasFilters = activeLotFilters(filters).some((chip) => chip.id !== "arquivados");
+    if (filters.archived && !hasFilters) {
       return (
         <EmptyState icon={Archive} title="Nenhum leilão arquivado" description="Leilões arquivados aparecem aqui." />
       );
     }
     if (hasFilters) {
       return (
-        <EmptyState icon={SearchX} title="Nenhum lote encontrado" description="Ajuste a busca ou limpe os filtros." />
+        <EmptyState
+          icon={SearchX}
+          title="Nenhum lote encontrado"
+          description="Nenhum lote atende a esses filtros."
+          action={
+            <ButtonLink
+              href={withQuery(BASE_PATH, { ...lotParams(clearedLotFilters(filters)), ...BY_AUCTION })}
+              variant="secondary"
+            >
+              Limpar filtros
+            </ButtonLink>
+          }
+        />
       );
     }
     return (

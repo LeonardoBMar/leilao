@@ -20,6 +20,9 @@ export async function FollowedLots() {
     analysis: undefined,
     result: "sem",
     archived: false,
+    position: undefined,
+    timing: undefined,
+    sort: "leilao",
     page: 1,
   });
 

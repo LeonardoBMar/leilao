@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
-import { currentBidInputSchema, lotFiltersSchema, lotInputSchema } from "./schemas";
+import { currentBidInputSchema, lotFiltersSchema, lotInputSchema, lotParams, parseLotParams } from "./schemas";
 
 const validForm = {
   lotNumber: "  0152 ",
@@ -86,6 +86,9 @@ describe("lotFiltersSchema", () => {
       analysis: undefined,
       result: undefined,
       archived: false,
+      position: undefined,
+      timing: undefined,
+      sort: "leilao",
       page: 1,
     });
   });
@@ -94,5 +97,13 @@ describe("lotFiltersSchema", () => {
     expect(
       lotFiltersSchema.parse({ busca: "corolla", acompanhados: "1", analise: "com", resultado: "sem" }),
     ).toMatchObject({ search: "corolla", followedOnly: true, analysis: "com", result: "sem" });
+  });
+
+  it("lance × limite, leilão e ordem; a URL canônica não leva padrões nem página", () => {
+    const raw = { busca: "fox", posicao: "acima", leilao: "proximos", ordem: "folga", arquivados: "1" };
+    const filters = parseLotParams({ ...raw, pagina: "2", ordem: ["folga", "leilao"] });
+    expect(filters).toMatchObject({ position: "acima", timing: "proximos", sort: "folga", page: 2 });
+    expect(lotParams(filters)).toEqual(raw);
+    expect(lotParams(parseLotParams({ ordem: "leilao" }))).toEqual({});
   });
 });

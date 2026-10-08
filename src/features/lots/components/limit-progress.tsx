@@ -3,8 +3,8 @@ import { type Cents, cents } from "@/domain/money";
 import { formatBRL } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
+import { toFixedLimit } from "../limit";
 import type { LotLimit } from "../types";
-import { toFixedLimit } from "./limit-badge";
 
 /**
  * Lance atual frente ao limite em uma linha de lista (DESIGN.md §15.1): barra até o limite e a diferença em texto.

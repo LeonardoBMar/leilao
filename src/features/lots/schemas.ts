@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import type { LimitComparison } from "@/domain/finance/calculator";
 import {
   checkbox,
   entityId,
@@ -58,6 +59,33 @@ const flag = z
   .catch(undefined)
   .transform((value) => value === "1");
 
+/** Lance atual frente ao limite fixado (`compareToFixedLimit`), como vai na URL. */
+export const LOT_POSITION_KEYS = ["abaixo", "no-limite", "acima", "sem-viavel", "sem-comparacao"] as const;
+export type LotPositionKey = (typeof LOT_POSITION_KEYS)[number];
+export const LOT_POSITION_COMPARISONS = {
+  abaixo: "below_limit",
+  "no-limite": "at_limit",
+  acima: "above_limit",
+  "sem-viavel": "no_viable_bid",
+  "sem-comparacao": "unavailable",
+} as const satisfies Record<LotPositionKey, LimitComparison>;
+
+export const LOT_SORT_KEYS = ["leilao", "folga", "atualizados"] as const;
+export type LotSortKey = (typeof LOT_SORT_KEYS)[number];
+
+export type LotFilters = {
+  search: string | undefined;
+  followedOnly: boolean;
+  analysis: "com" | "sem" | undefined;
+  result: "com" | "sem" | undefined;
+  archived: boolean;
+  position: LotPositionKey | undefined;
+  /** Leilão ainda por acontecer (início no futuro) ou já realizado. */
+  timing: "proximos" | "realizados" | undefined;
+  sort: LotSortKey;
+  page: number;
+};
+
 /** Filtros da lista de lotes. Nunca lançam: valor inválido vira o padrão. */
 export const lotFiltersSchema = z
   .object({
@@ -72,14 +100,43 @@ export const lotFiltersSchema = z
     analise: presence,
     resultado: presence,
     arquivados: flag,
+    posicao: z.enum(LOT_POSITION_KEYS).optional().catch(undefined),
+    leilao: z.enum(["proximos", "realizados"]).optional().catch(undefined),
+    ordem: z.enum(LOT_SORT_KEYS).catch("leilao"),
     pagina: z.coerce.number().int().min(1).max(10_000).catch(1),
   })
-  .transform(({ busca, acompanhados, analise, resultado, arquivados, pagina }) => ({
-    search: busca,
-    followedOnly: acompanhados,
-    analysis: analise,
-    result: resultado,
-    archived: arquivados,
-    page: pagina,
+  .transform((input): LotFilters => ({
+    search: input.busca,
+    followedOnly: input.acompanhados,
+    analysis: input.analise,
+    result: input.resultado,
+    archived: input.arquivados,
+    position: input.posicao,
+    timing: input.leilao,
+    sort: input.ordem,
+    page: input.pagina,
   }));
-export type LotFilters = z.infer<typeof lotFiltersSchema>;
+
+/** URL crua → filtros. Parâmetro repetido: vale o primeiro. */
+export function parseLotParams(raw: Readonly<Record<string, string | string[] | undefined>>): LotFilters {
+  return lotFiltersSchema.parse(
+    Object.fromEntries(Object.entries(raw).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value])),
+  );
+}
+
+/** Filtros → URL, sem padrões nem página (inverso de `parseLotParams`). */
+export function lotParams(filters: LotFilters): Record<string, string> {
+  const params: Record<string, string | undefined> = {
+    busca: filters.search,
+    acompanhados: filters.followedOnly ? "1" : undefined,
+    analise: filters.analysis,
+    resultado: filters.result,
+    arquivados: filters.archived ? "1" : undefined,
+    posicao: filters.position,
+    leilao: filters.timing,
+    ordem: filters.sort === "leilao" ? undefined : filters.sort,
+  };
+  return Object.fromEntries(
+    Object.entries(params).flatMap(([key, value]) => (value === undefined ? [] : [[key, value]])),
+  );
+}

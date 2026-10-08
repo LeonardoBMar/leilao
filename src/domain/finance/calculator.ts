@@ -191,6 +191,15 @@ export function compareToFixedLimit(limit: FixedLimit | null, bid: Cents | null)
   return bid === limit.maxBid ? "at_limit" : "above_limit";
 }
 
+/**
+ * Folga até o limite fixado: limite − lance (negativa acima do limite). Sem limite viável ou sem lance: `null`.
+ * Ordena "Minhas análises" por "maior folga".
+ */
+export function roomToFixedLimit(limit: FixedLimit | null, bid: Cents | null): Cents | null {
+  if (limit === null || !limit.isViable || bid === null) return null;
+  return differenceToLimit(limit.maxBid, bid);
+}
+
 function fitsBudget(inputs: CompleteInputs, bid: Cents): boolean {
   return simulateBid(inputs, bid).totalCost + inputs.desiredMargin <= inputs.marketValue;
 }

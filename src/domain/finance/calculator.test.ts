@@ -12,6 +12,7 @@ import {
   differenceToLimit,
   type MaxBidOutcome,
   missingFields,
+  roomToFixedLimit,
   simulateBid,
 } from "./calculator";
 
@@ -262,5 +263,19 @@ describe("reserva e margem em % do valor de venda (D-38)", () => {
   it("pendente só quando nem R$ nem % foram informados", () => {
     const inputs = { ...fixedExample, riskReserve: null, desiredMargin: null, desiredMarginRateBps: bps(1_500) };
     expect(missingFields(inputs)).toEqual(["riskReserve"]);
+  });
+});
+
+describe("roomToFixedLimit", () => {
+  it("limite menos lance, negativa acima do limite", () => {
+    const limit = { isViable: true as const, maxBid: cents(1_000_000) };
+    expect(roomToFixedLimit(limit, cents(800_000))).toBe(200_000);
+    expect(roomToFixedLimit(limit, cents(1_100_000))).toBe(-100_000);
+  });
+
+  it("sem limite viável ou sem lance: nula", () => {
+    expect(roomToFixedLimit(null, cents(1))).toBeNull();
+    expect(roomToFixedLimit({ isViable: false }, cents(1))).toBeNull();
+    expect(roomToFixedLimit({ isViable: true, maxBid: cents(1) }, null)).toBeNull();
   });
 });

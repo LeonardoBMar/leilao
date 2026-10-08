@@ -13,6 +13,9 @@ type SearchBoxProps = {
   value: string | null;
   onSearch: (value: string | null) => void;
   suggestions: readonly SearchSuggestion[];
+  /** Nome do campo (leitores de tela) e exemplo dentro dele. */
+  label?: string;
+  placeholder?: string;
   className?: string;
 };
 
@@ -20,7 +23,14 @@ type SearchBoxProps = {
  * Busca por marca, modelo ou versão (DESIGN.md §5.15). Aplica 400 ms depois da última tecla ou com Enter. Sugere
  * marca e modelo com a contagem no filtro atual (padrão combobox: setas escolhem, Enter aplica, Escape fecha).
  */
-export function SearchBox({ value, onSearch, suggestions, className }: SearchBoxProps) {
+export function SearchBox({
+  value,
+  onSearch,
+  suggestions,
+  label = "Buscar por marca, modelo ou versão",
+  placeholder = "Buscar marca, modelo ou versão",
+  className,
+}: SearchBoxProps) {
   const inputId = useId();
   const listId = useId();
   const [text, setText] = useState(value ?? "");
@@ -96,7 +106,7 @@ export function SearchBox({ value, onSearch, suggestions, className }: SearchBox
   return (
     <div className={cn("relative grid min-w-0 gap-2", className)}>
       <label htmlFor={inputId} className="sr-only">
-        Buscar por marca, modelo ou versão
+        {label}
       </label>
       <div className="relative">
         <Search
@@ -114,7 +124,7 @@ export function SearchBox({ value, onSearch, suggestions, className }: SearchBox
           autoComplete="off"
           spellCheck={false}
           enterKeyHint="search"
-          placeholder="Buscar marca, modelo ou versão"
+          placeholder={placeholder}
           value={text}
           onChange={(event) => change(event.target.value)}
           onKeyDown={handleKeyDown}

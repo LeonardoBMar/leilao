@@ -16,14 +16,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui";
+import { withQuery } from "@/features/listings/search";
 import { formatDate } from "@/lib/format";
 
+import { activeLotFilters, clearedLotFilters } from "../filter-labels";
 import { listLots } from "../queries";
-import { type LotFilters, lotFiltersSchema } from "../schemas";
-import type { LotListItem } from "../types";
+import { type LotFilters, lotParams, parseLotParams } from "../schemas";
+import type { LotListItem, LotPage } from "../types";
 import { LimitBadge } from "./limit-badge";
 import { LimitProgress } from "./limit-progress";
-import { LotFilters as LotFiltersBar, type LotFilterValues } from "./lot-filters";
+import { LotFilters as LotFiltersBar } from "./lot-filters";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -35,58 +37,65 @@ type LotsViewProps = {
   auctionId?: string;
 };
 
-/**
- * Filtros de lotes a partir da URL: `filters` para a consulta, `values` para o formulário e `params` para links e
- * paginação.
- */
-export function readLotSearch(raw: Record<string, string | string[] | undefined>) {
-  const filters = lotFiltersSchema.parse(
-    Object.fromEntries(Object.entries(raw).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value])),
-  );
-  const values: LotFilterValues = {
-    busca: filters.search,
-    acompanhados: filters.followedOnly,
-    analise: filters.analysis,
-    resultado: filters.result,
-    arquivados: filters.archived,
-  };
-  return { filters, values, params: toUrlParams(values) };
+/** Filtros de lotes a partir da URL: `filters` para a consulta e `params` (forma canônica) para links e paginação. */
+export function readLotSearch(raw: Readonly<Record<string, string | string[] | undefined>>) {
+  const filters = parseLotParams(raw);
+  return { filters, params: lotParams(filters) };
 }
 
-/** Lê filtros da URL, mostra a barra e a lista. Renderizar dentro de <Suspense>. */
+const LOT_UNIT = { one: "lote", many: "lotes" };
+
+/** Lê filtros da URL, mostra a barra (com o total) e a lista. Renderizar dentro de <Suspense>. */
 export async function LotsView({ searchParams, basePath, auctionId }: LotsViewProps) {
-  const { filters, values, params } = readLotSearch(await searchParams);
+  const { filters, params } = readLotSearch(await searchParams);
+  const result = await listLots(filters, { auctionId });
 
   return (
     <div className="grid gap-6">
-      <LotFiltersBar values={values} basePath={basePath} />
-      <LotList filters={filters} basePath={basePath} auctionId={auctionId} params={params} />
+      <LotFiltersBar
+        params={params}
+        basePath={basePath}
+        total={result.total}
+        unit={LOT_UNIT}
+        inAuction={auctionId !== undefined}
+      />
+      <LotList result={result} filters={filters} basePath={basePath} auctionId={auctionId} params={params} />
     </div>
   );
 }
 
-async function LotList({
+function LotList({
+  result,
   filters,
   basePath,
   auctionId,
   params,
 }: {
+  result: LotPage;
   filters: LotFilters;
   basePath: string;
   auctionId?: string;
-  params: Record<string, string | undefined>;
+  params: Record<string, string>;
 }) {
-  const result = await listLots(filters, { auctionId });
   const showAuction = !auctionId;
 
   if (result.total === 0) {
-    const hasFilters = Boolean(filters.search || filters.followedOnly || filters.analysis || filters.result);
-    if (filters.archived) {
+    const hasFilters = activeLotFilters(filters).some((chip) => chip.id !== "arquivados");
+    if (filters.archived && !hasFilters) {
       return <EmptyState icon={Archive} title="Nenhum lote arquivado" description="Lotes arquivados aparecem aqui." />;
     }
     if (hasFilters) {
       return (
-        <EmptyState icon={SearchX} title="Nenhum lote encontrado" description="Ajuste a busca ou limpe os filtros." />
+        <EmptyState
+          icon={SearchX}
+          title="Nenhum lote encontrado"
+          description="Nenhum lote atende a esses filtros."
+          action={
+            <ButtonLink href={withQuery(basePath, lotParams(clearedLotFilters(filters)))} variant="secondary">
+              Limpar filtros
+            </ButtonLink>
+          }
+        />
       );
     }
     return (
@@ -250,14 +259,4 @@ export function LotsViewSkeleton() {
       <Skeleton className="h-80" />
     </div>
   );
-}
-
-function toUrlParams(values: LotFilterValues): Record<string, string | undefined> {
-  return {
-    busca: values.busca,
-    acompanhados: values.acompanhados ? "1" : undefined,
-    analise: values.analise,
-    resultado: values.resultado,
-    arquivados: values.arquivados ? "1" : undefined,
-  };
 }
