@@ -52,7 +52,9 @@ export async function FollowedLotsNav() {
                 <span aria-hidden="true" className="flex w-4 shrink-0 justify-center">
                   <span className={cn("size-1.75 rounded-full", DOT[comparison])} />
                 </span>
-                <span className="min-w-0 flex-1 truncate">
+                {/* `relative` prende o `sr-only` (absoluto) ao nome cortado: sem ele, o texto oculto fica no fim do nome
+                    inteiro, fora do corte, e cria rolagem horizontal no menu. */}
+                <span className="relative min-w-0 flex-1 truncate">
                   {lot.model} {lot.modelYear}
                   <span className="sr-only">: {LIMIT_COMPARISON_LABELS[comparison]}</span>
                 </span>

@@ -49,7 +49,7 @@ export function MobileNav({ account, badges, followed, nextAuction }: MobileNavP
         <div onClick={closeOnLink} className="contents">
           {followed}
         </div>
-        <div onClick={closeOnLink} className="mt-auto grid gap-2.5">
+        <div onClick={closeOnLink} className="mt-auto grid grid-cols-1 gap-2.5">
           {nextAuction}
           <div className="border-t border-border-strong pt-2.5">{account}</div>
         </div>
