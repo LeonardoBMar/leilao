@@ -99,21 +99,31 @@ Também será possível cadastrar um lote já encerrado. Nesse caso, a aplicaç�
 
 ### `/dashboard` — Visão geral
 
-Cards:
+A home responde, nesta ordem: o que vale analisar agora, se os lotes acompanhados ainda cabem no limite, o que está pendente e se as decisões têm acertado. Plano e medição em `docs/PLANO-DASHBOARD.md` (D-44).
 
-- **Leilões cadastrados:** quantidade de leilões não arquivados.
-- **Lotes cadastrados:** quantidade de lotes não arquivados.
-- **Lotes acompanhados:** lotes ativos marcados para acompanhamento e ainda sem resultado registrado.
-- **Lotes analisados:** lotes com pelo menos uma análise fixada; cada lote conta uma vez.
+Cabeçalho, numa linha de contagens que levam à ação:
+
+- **Para analisar:** quantos anúncios estão no bloco "Para analisar agora".
+- **Próximo leilão na região:** data e lotes no filtro padrão.
+- **Acompanhados:** lotes ativos marcados e ainda sem resultado, e quantos têm preço provável acima do limite fixado.
+- **Pendências:** rascunhos e resultados a registrar ou confirmar.
+
+A ação principal é **Ver leilões**; **Novo leilão** é secundária.
 
 Conteúdo principal:
 
-- Próximos leilões, ordenados por data, excluindo cancelados e encerrados.
-- Lotes acompanhados com veículo, leilão, lance atual, limite fixado e data da última atualização do lance.
-- Comparação textual: abaixo do limite, no limite, acima do limite ou sem dados suficientes.
-- Atalhos para cadastrar leilão, abrir lote e concluir registros pendentes.
+- **Para analisar agora:** até 6 anúncios abertos no filtro padrão do catálogo (até 150 km da região; carros, motos e utilitários) ou em algum monitor ligado, ainda não adicionados à análise, cujo preço provável cabe no limite.
+  - **Cabe com folga:** P75 do provável ≤ limite.
+  - **No limite:** mediana ≤ limite < P75.
+  - **Ordem:** provável por vendas comparáveis antes do provável pela proporção, folga antes de "no limite" e, depois, encerra primeiro.
+  - **Limite:** o estimado pelas análises do usuário, quando há 3 parecidas; senão, o das premissas padrão do anúncio (§7, D-38), rotulado como tal.
+- **Lotes acompanhados:** ordenados pelo fim do anúncio, com veículo, leilão, lance atual, limite fixado, situação do lance (abaixo, no limite, acima ou sem dados suficientes) e preço provável frente ao limite.
+- **Próximos leilões na região:** leilões do catálogo nos próximos 7 dias com lote no filtro padrão ou em algum monitor, com data, fonte, lotes no filtro e quantos cabem no limite. Os leilões cadastrados pelo usuário ficam em "Minhas análises".
+- **Lateral:** registros pendentes, o indicador de decisões e a situação da coleta.
 
-Uma contagem simples poderá mostrar **“X de Y resultados comparáveis ficaram dentro do limite”**. As regras de elegibilidade estão na seção 10.
+O indicador **“X de Y resultados comparáveis ficaram dentro do limite”** continua visível. As regras de elegibilidade estão na seção 10.
+
+O bloco "Para analisar agora" compara o **preço provável** com o limite, nunca o lance atual com o histórico: dois dias antes do fim, o lance ainda está, na mediana, em 90% do final. Estimativas não fixam análise, mostram a base (`n`, método) e não viram score, lucro ou economia.
 
 Não haverá card de lucro realizado ou economia garantida baseado em simulações.
 

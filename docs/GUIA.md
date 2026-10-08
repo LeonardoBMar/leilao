@@ -83,11 +83,16 @@ O resultado mostra a diferença entre o preço final e seu limite (ex.: *R$ 2.30
 
 ## 7. Dashboard
 
-- **Contagens:** leilões, lotes, acompanhados e analisados (arquivados não contam).
-- **Lotes acompanhados:** lance atual × seu limite.
-- **Próximos leilões:** agendados e em andamento, por data.
+O dashboard começa pelo que vale analisar agora e termina nas suas decisões.
+
+- **Linha de contagens:** quantos lotes estão para analisar, o próximo leilão na região, seus acompanhados (e quantos têm o provável acima do limite) e as pendências. Cada trecho leva ao bloco.
+- **Para analisar agora:** até 6 lotes abertos do filtro padrão de Leilões (até 150 km; carros, motos e utilitários) ou de um monitor ligado, que você ainda não adicionou à análise e cujo **provável lance final cabe no limite**. "Cabe com folga" quer dizer que até o valor alto da faixa cabe; "no limite", que só a mediana cabe. Primeiro vêm os lotes com vendas parecidas de verdade, depois os estimados pela proporção da categoria. O limite é o estimado pelas suas análises quando há 3 parecidas; senão, o das premissas padrão (seção 4), que é pessimista de propósito.
+- **Lotes acompanhados:** pelo fim do leilão, com lance atual × seu limite e o provável lance final ao lado. "Provável acima do seu limite" é o sinal de que o lote deve escapar.
+- **Próximos leilões na região:** leilões dos sites nos próximos 7 dias com lotes no filtro padrão ou nos seus monitores, quantos são e quantos cabem no limite.
 - **Pendências:** rascunhos de análise abertos e lotes acompanhados cujo leilão já começou e ainda não têm resultado.
 - **Indicador:** *X de Y resultados comparáveis ficaram dentro do limite*.
+
+Por que o dashboard não compara o lance atual com o histórico: o lance sobe até o fim (dois dias antes, ainda está em cerca de 90% do final), então quase todo lote parece barato antes de encerrar.
 
 **O que entra no indicador:** lotes arrematados, com preço final conhecido e análise fixada **antes** do resultado. Ficam de fora:
 
@@ -112,7 +117,7 @@ O app coleta sozinho, de 2 em 2 horas, os lotes dos sites de leilão (hoje o Lei
 - **Desligar** um monitor para de gerar alertas sem apagar os antigos; **Excluir** apaga o monitor e os alertas dele.
 - **Adicionar à análise:** no cartão do lote (em Leilões ou num alerta), cria de uma vez o leilão, o lote (já acompanhado) e um rascunho de análise, e abre o rascunho. O rascunho vem com as premissas padrão (seção 4), usando a FIPE, a condição declarada e as taxas que o site informa, com a origem anotada em *Notas*; confira tudo antes de fixar. Clicar de novo não duplica: o cartão passa a mostrar **Ver no Tracker**. Lotes do mesmo leilão do site ficam no mesmo leilão do Tracker. O botão só aparece quando o site informa marca, modelo, ano e o leilão. Se o leilão estava arquivado no Tracker, ele volta à lista.
 - **Resultado automático:** quando o lote adicionado assim encerra no site, o coletor registra o resultado sozinho (arrematado com o preço final, não vendido ou retirado), com o link e a hora do fim, marcado **Registrado pelo coletor** e ligado à sua análise fixada. Sua participação fica como "acompanhei": se você arrematou, corrija o resultado (vira uma nova revisão). Venda **condicional** ou desfecho desconhecido aparecem como **Resultado a confirmar** na ficha e no Dashboard, com o formulário já preenchido; se o site confirmar depois, o resultado entra sozinho. Adicionar um lote que já encerrou cria a análise como "feita conhecendo o resultado".
-- **Estimativas:** nos lotes abertos (Leilões e alertas), o cartão mostra o **provável** lance final e o seu **limite estimado**, sempre com o número de casos. O provável vem de vendas parecidas já encerradas no catálogo (mesma marca e modelo, ano ±1, mesma condição, km próxima; de qualquer região). Sem 5 vendas parecidas, usa quanto veículos da mesma categoria e condição costumam sair em relação ao valor de mercado informado pelo site. Sem nenhuma base, diz "Sem base suficiente". O limite estimado aplica a calculadora às premissas das suas análises fixadas de veículos parecidos, com o valor de venda pela FIPE do próprio anúncio (menos o desconto pela condição) e reserva e margem em % desse valor, e aparece a partir de 3 delas. São referências: a decisão continua sendo a sua análise fixada.
+- **Estimativas:** nos lotes abertos (Leilões e alertas), o cartão mostra o **provável** lance final e o seu **limite estimado**, sempre com o número de casos. O provável vem de vendas parecidas já encerradas no catálogo (mesma marca e modelo, ano ±1, mesma condição, km próxima; de qualquer região). Sem 5 vendas parecidas, usa quanto veículos da mesma categoria e condição costumam sair em relação ao valor de mercado informado pelo site. Sem nenhuma base, diz "Sem base suficiente". O limite estimado aplica a calculadora às premissas das suas análises fixadas de veículos parecidos, com o valor de venda pela FIPE do próprio anúncio (menos o desconto pela condição) e reserva e margem em % desse valor, a partir de 3 delas. Sem 3 análises parecidas, o cartão usa as **premissas padrão** (seção 4) com os dados do anúncio e diz isso. A linha **Cabe com folga**, **No limite** ou **Provável acima** compara o provável com esse limite. São referências: a decisão continua sendo a sua análise fixada.
 - **Lance automático:** num lote adicionado assim, o coletor atualiza o **lance atual** a cada coleta, enquanto o lote não estiver arquivado (a ficha mostra "Acompanhado no Leilo, lido em …", com o nome do site de origem). Você ainda pode digitar um lance; ele vale até a próxima leitura do site com lance diferente.
 
 ## 10. Backup

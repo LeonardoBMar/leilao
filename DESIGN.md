@@ -728,14 +728,18 @@ Easing padrão: `cubic-bezier(0.2, 0, 0, 1)`. Saída pode usar `cubic-bezier(0.4
 
 ### 15.1 Dashboard
 
-1. PageHeader com título “Dashboard”, as contagens numa linha ("1 leilão · 3 lotes · 2 acompanhados · 1 com análise fixada") e a ação “Novo leilão”.
+1. PageHeader com título “Dashboard”, as contagens que levam à ação numa linha ("6 para analisar · próximo leilão na região: ter 13/10, 23 lotes · 16 acompanhados, 3 com provável acima do limite · 1 pendência"), cada trecho com link para o bloco, e a ação principal “Ver leilões”, com “Novo leilão” como secundária.
 2. Alertas não lidos, quando houver.
 3. Duas colunas no desktop amplo (1,7 : 1):
-   - à esquerda, “Lotes acompanhados” em linhas (número do lote em mono, veículo, lance atual "de" limite e a barra de posição com a diferença em texto) e “Próximos leilões” agrupados por dia (dia grande, mês e dia da semana à esquerda; hora, nome e lotes à direita);
-   - à direita, “Registros pendentes” no painel rebaixado, “Suas decisões antes do resultado” (o indicador, com o denominador) e a linha da coleta com “Ver leilões”.
-4. EmptyState `inline` em cada seção quando necessário.
+   - à esquerda, nesta ordem:
+     - “Para analisar agora”: até 6 `ListingCard` em grade (1, 2 e 3 colunas), com a linha da situação ("Cabe com folga", `success`; "No limite", `warning`) nas estimativas, e o rodapé “e mais N · Ver no catálogo”;
+     - “Lotes acompanhados” em linhas: número do lote em mono, veículo, lance atual "de" limite, a barra de posição com a diferença em texto e, abaixo, o provável com a situação frente ao limite ("provável acima do seu limite" em `error`);
+     - “Próximos leilões na região”: agrupados por dia (dia grande, mês e dia da semana à esquerda; hora, nome, fonte, lotes no filtro e quantos cabem à direita), cada um com link para o leilão do catálogo;
+   - à direita, “Registros pendentes” no painel rebaixado, “Suas decisões antes do resultado” (o indicador, com o denominador) e a linha da coleta.
+4. EmptyState `inline` em cada seção quando necessário. Sem lote que cabe: “Nenhum lote da região cabe no limite agora”, com “Ver leilões”.
+5. No celular, uma coluna na mesma ordem, com “Para analisar agora” logo depois dos alertas.
 
-Não destacar “economia potencial” ou “lucro” no MVP, pois não são resultados garantidos.
+Situação e limite são estimativas: sempre com o método e o `n`. Não destacar “economia potencial”, “lucro” ou score, pois não são resultados garantidos.
 
 ### 15.2 Listagem
 
