@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import { bps, cents } from "../money";
-import { DEFAULT_COSTS, defaultAssumptions, type DefaultsInput, estimateFromFipe, towCost } from "./defaults";
+import {
+  DEFAULT_COSTS,
+  defaultAssumptions,
+  defaultMaxBid,
+  type DefaultsInput,
+  estimateFromFipe,
+  towCost,
+} from "./defaults";
 
 const reais = (value: number) => cents(Math.round(value * 100));
 
@@ -97,5 +104,17 @@ describe("defaultAssumptions", () => {
       tiresCost: reais(900),
       serviceCost: reais(600),
     });
+  });
+});
+
+describe("defaultMaxBid", () => {
+  it("calculadora com as premissas padrão: a mesma conta do rascunho (D-44)", () => {
+    // Venda 69.600 − F 10.900 − R 3.480 − M 10.440 = 44.780 = L × 1,05 → L = 42.647,62
+    expect(defaultMaxBid(car())).toMatchObject({ kind: "viable", maxBid: reais(42_647.62) });
+  });
+
+  it("sem FIPE ou sucata: incompleto (sem valor de venda nem reparos)", () => {
+    expect(defaultMaxBid(car({ fipe: null })).kind).toBe("incomplete");
+    expect(defaultMaxBid(car({ damageLevel: "salvage" })).kind).toBe("incomplete");
   });
 });

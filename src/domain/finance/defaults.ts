@@ -1,5 +1,6 @@
 import type { DamageLevel } from "../listings/condition";
 import { applyRate, type Bps, bps, type Cents, cents } from "../money";
+import { type AnalysisInputs, calculateMaxBid, type MaxBidOutcome } from "./calculator";
 
 /**
  * Premissas padrão da análise (D-38): pessimistas, para o rascunho nascer preenchido e o usuário só revisar.
@@ -151,6 +152,35 @@ export function defaultAssumptions(input: DefaultsInput): DefaultAssumptions {
       commission: input.commissionRate === null ? "default" : "listing",
     },
   };
+}
+
+/** Premissas padrão → entradas da calculadora: comissão em %, reserva e margem em % do valor de venda. */
+export function defaultInputs(input: DefaultsInput): AnalysisInputs {
+  const defaults = defaultAssumptions(input);
+  return {
+    marketValue: defaults.marketValue,
+    repairCost: defaults.repairCost,
+    documentationCost: defaults.documentationCost,
+    transportCost: defaults.transportCost,
+    tiresCost: defaults.tiresCost,
+    serviceCost: defaults.serviceCost,
+    otherFees: defaults.otherFees,
+    commissionMode: "percentage",
+    commissionFixed: null,
+    commissionRateBps: defaults.commissionRateBps,
+    riskReserve: null,
+    riskReserveRateBps: defaults.riskReserveRateBps,
+    desiredMargin: null,
+    desiredMarginRateBps: defaults.desiredMarginRateBps,
+  };
+}
+
+/**
+ * Limite pelas premissas padrão (D-44): a mesma conta do rascunho que nasce com elas. Sem FIPE ou sucata, o valor de
+ * venda e os reparos ficam vazios e o resultado é "incompleto".
+ */
+export function defaultMaxBid(input: DefaultsInput): MaxBidOutcome {
+  return calculateMaxBid(defaultInputs(input));
 }
 
 function roundUp(value: number, step: number): Cents {

@@ -5,7 +5,7 @@ import {
   completeInputs,
   missingFields,
 } from "../finance/calculator";
-import { estimateFromFipe } from "../finance/defaults";
+import { defaultMaxBid, type DefaultsInput, estimateFromFipe } from "../finance/defaults";
 import { bps, type Cents, cents } from "../money";
 import type { DamageLevel } from "./condition";
 import { normalizePlaceName } from "./place";
@@ -17,7 +17,8 @@ import { normalizePlaceName } from "./place";
  *   é online). Sem comparáveis suficientes, a proporção lance final ÷ valor de mercado das vendas da mesma categoria
  *   e condição, aplicada ao valor de mercado informado pela fonte. Sempre com o número de casos.
  * - **Limite estimado:** a calculadora da análise (SPEC §7) com as premissas das análises fixadas do usuário para
- *   veículos parecidos. Nunca vira análise fixada.
+ *   veículos parecidos; sem 3 delas, com as premissas padrão do próprio anúncio (D-38, D-44). Nunca vira análise fixada.
+ * - **Situação:** o preço provável frente ao limite (D-44). Compara o provável, nunca o lance atual, que ainda sobe.
  */
 
 export const MIN_COMPARABLES = 5;
@@ -163,6 +164,8 @@ export type LimitEstimate =
       /** De onde veio o valor de mercado: a FIPE do anúncio ou, sem ela, a mediana das análises. */
       marketValueFrom: "listing" | "analyses";
     }
+  /** Sem análises parecidas suficientes: premissas padrão (D-38) com os dados do anúncio. `analyses` = as que havia. */
+  | { kind: "defaults"; maxBid: Cents | null; analyses: number; needed: number }
   | { kind: "insufficient"; analyses: number; needed: number };
 
 /**
@@ -170,8 +173,14 @@ export type LimitEstimate =
  * e ano ±1, na calculadora atual. O valor de venda sai da FIPE do próprio anúncio (do veículo exato) menos o desconto
  * pela condição (D-38); sem ela, a mediana das análises. Reserva e margem entram em % do valor de venda (mediana do %
  * de cada análise). A comissão segue a modalidade mais usada nessas análises.
+ *
+ * Sem 3 análises parecidas, usa as premissas padrão do anúncio (`defaults`, D-44); sem FIPE ou sucata, não há limite.
  */
-export function estimateLimit(target: EstimateTarget, analyses: readonly AnalysisSample[]): LimitEstimate {
+export function estimateLimit(
+  target: EstimateTarget,
+  analyses: readonly AnalysisSample[],
+  defaults: DefaultsInput | null,
+): LimitEstimate {
   const key = vehicleKey(target.brand, target.model);
   const similar = analyses.filter(
     (analysis) =>
@@ -183,7 +192,16 @@ export function estimateLimit(target: EstimateTarget, analyses: readonly Analysi
       Math.abs(target.modelYear - analysis.modelYear) <= YEAR_TOLERANCE,
   );
   if (similar.length < MIN_COMPARABLE_ANALYSES) {
-    return { kind: "insufficient", analyses: similar.length, needed: MIN_COMPARABLE_ANALYSES };
+    const fallback = defaults === null ? null : defaultMaxBid(defaults);
+    if (fallback === null || fallback.kind === "incomplete") {
+      return { kind: "insufficient", analyses: similar.length, needed: MIN_COMPARABLE_ANALYSES };
+    }
+    return {
+      kind: "defaults",
+      maxBid: fallback.kind === "viable" ? fallback.maxBid : null,
+      analyses: similar.length,
+      needed: MIN_COMPARABLE_ANALYSES,
+    };
   }
 
   const inputs = similar.map((analysis) => analysis.inputs);
@@ -235,6 +253,42 @@ export function estimateLimit(target: EstimateTarget, analyses: readonly Analysi
     maxBid: outcome.kind === "viable" ? outcome.maxBid : null,
     marketValueFrom: listingValue === null ? "analyses" : "listing",
   };
+}
+
+/** Limite do cartão em reais, se há um viável (pelas análises ou pelas premissas padrão). */
+export function limitMaxBid(limit: LimitEstimate): Cents | null {
+  return limit.kind === "insufficient" ? null : limit.maxBid;
+}
+
+/**
+ * Preço provável frente ao limite (D-44): **folga** quando até o P75 cabe; **no limite** quando só a mediana cabe;
+ * **acima** quando nem a mediana cabe. Sem provável ou sem limite viável, não há comparação (`null`).
+ */
+export type LimitFit = "comfortable" | "tight" | "above";
+
+export function limitFit(price: PriceEstimate, maxBid: Cents | null): LimitFit | null {
+  if (price.kind === "insufficient" || maxBid === null) return null;
+  if (price.high <= maxBid) return "comfortable";
+  if (price.median <= maxBid) return "tight";
+  return "above";
+}
+
+/** O que a ordem de "Para analisar agora" precisa de cada anúncio. */
+export type AnalysisCandidate = { price: PriceEstimate; fit: LimitFit | null; endsAt: Date | null };
+
+const FIT_RANK: Record<LimitFit, number> = { comfortable: 0, tight: 1, above: 2 };
+
+/**
+ * Ordem de "Para analisar agora" (D-44): provável por vendas comparáveis antes do provável pela proporção (só os
+ * comparáveis olham para o veículo), folga antes de "no limite" e, por fim, encerra primeiro (sem fim, por último).
+ */
+export function byAnalysisPriority(a: AnalysisCandidate, b: AnalysisCandidate): number {
+  const method = (item: AnalysisCandidate) => (item.price.kind === "comparables" ? 0 : 1);
+  const fit = (item: AnalysisCandidate) => (item.fit === null ? 3 : FIT_RANK[item.fit]);
+  const end = (item: AnalysisCandidate) => item.endsAt?.getTime() ?? Number.POSITIVE_INFINITY;
+  // Sem subtrair os fins: dois sem data dariam Infinity − Infinity = NaN.
+  const byEnd = end(a) === end(b) ? 0 : end(a) < end(b) ? -1 : 1;
+  return method(a) - method(b) || fit(a) - fit(b) || byEnd;
 }
 
 /** Percentil com interpolação linear (mesma definição do `percentile_cont` do Postgres). Lista ordenada, não vazia. */
