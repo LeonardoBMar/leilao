@@ -188,6 +188,19 @@ O parâmetro `id` representa uma análise, que sempre pertence a um lote. Uma no
 - Histórico das análises fixadas, com data e indicação da utilizada no resultado.
 - Versões fixadas em modo de leitura; revisões geram um novo rascunho.
 
+### `/pesquisa` — Pesquisa
+
+Gráficos de preço sobre as vendas do catálogo: o que aconteceu, com amostra e período, sem recomendação de compra. Plano, medição e regras em `docs/PLANO-PESQUISA.md` (D-45).
+
+- **Medida:** % do valor de mercado pago (lance final ÷ FIPE informada pela fonte), a mesma do filtro de Leilões. A Freitas não informa valor de mercado: as vendas dela aparecem só em R$.
+- **Filtros na URL:** modelo (busca com sugestões e contagem), condição declarada (sempre uma; padrão "sem monta declarada"), categoria (carros, motos, utilitários ou sucatas; padrão carros) e estado, escolhido no mapa. Sem filtro de período até a base ter 3 meses.
+- **Quanto se paga por condição:** histograma por condição, com mediana e faixa P25–P75.
+- **Por estado:** mapa de quadrados, um por estado, com mediana, `n` e cor pela mediana. O detalhe do estado mostra a distribuição frente à do Brasil e as fontes que o compõem. Com um modelo escolhido, o mapa mostra só esse modelo e pode trocar a medida para lance final em R$.
+- **Modelos que mais saem abaixo do valor de mercado:** ranking dos modelos com pelo menos 5 vendas na condição e categoria do filtro. Cada linha aplica o modelo.
+- **Vendas do modelo:** lance final por ano-modelo e a tabela das vendas, com link para o anúncio.
+- **Como o lance sobe:** lance observado ÷ lance final de 48 h a 1 h antes do fim, com a faixa P25–P75.
+- **Regras de leitura:** a condição nunca é misturada; grupo com menos de 5 vendas não tem mediana nem cor, e as vendas aparecem uma a uma; todo gráfico mostra `n` e desde quando há vendas; "sem monta declarada" quer dizer que a fonte não informou; a UF é a do pátio.
+
 ## 6. Requisitos funcionais
 
 ### RF-01 — Cadastro de leilão
@@ -686,7 +699,7 @@ O MVP estará concluído quando o usuário conseguir executar o fluxo inteiro co
 Iniciar após o uso real confirmar os campos e o fluxo, idealmente com 50 a 100 lotes analisados.
 
 - Filtros detalhados por versão, origem, região, documentação e tipo de dano.
-- Média, mediana e distribuição de preços finais por grupos comparáveis.
+- Média, mediana e distribuição de preços finais por grupos comparáveis. Antecipado em parte pela Pesquisa (`/pesquisa`, D-45), sobre as vendas do catálogo.
 - Comparação histórica entre FIPE, valor de mercado e arrematação.
 - Custos reais de recuperação, data/preço de venda e resultado efetivamente realizado.
 - Precisão das estimativas por categoria, considerando apenas pares com estimativa e custo real conhecidos.

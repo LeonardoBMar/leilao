@@ -1,6 +1,6 @@
 # Leilão Tracker — Design System
 
-> Versão: 2.1 • Data: 01/10/2026 • Status: fonte de verdade visual. Direção A, "refinado e silencioso".
+> Versão: 2.2 • Data: 08/10/2026 • Status: fonte de verdade visual. Direção A, "refinado e silencioso".
 >
 > Este documento complementa o [`SPEC.md`](./SPEC.md). O `SPEC.md` define produto, domínio e comportamento; este arquivo define apresentação, composição e interação.
 
@@ -136,6 +136,26 @@ Regras:
 - Status de domínio como “Agendado”, “Encerrado” ou “Rascunho” não deve herdar automaticamente sucesso ou erro. Use aparência neutra, salvo quando o estado exigir ação.
 - `success` significa que uma condição foi atendida; não significa compra segura, lucro garantido ou recomendação.
 - Não usar vermelho em ações de arquivar. Vermelho é reservado para erro e destruição irreversível.
+
+#### Dados (gráficos)
+
+Escala sequencial de um tom (petróleo), para magnitude em mapa, histograma e barras de faixa (D-45). Validada com o verificador de paletas (ordinal: um tom, luminosidade crescente, passos distinguíveis, passo claro ≥ 2:1 contra `surface`). Gráficos ficam sobre `surface`, nunca sobre `background`, onde o passo claro não chega a 2:1.
+
+| Token | Valor | Texto sobre o passo | Contraste do texto |
+| --- | --- | --- | --- |
+| `data-1` | `#84BCD1` | `foreground` | 8,6:1 |
+| `data-2` | `#4F9CBA` | `foreground` | 5,8:1 |
+| `data-3` | `#2A7696` | branco | 5,1:1 |
+| `data-4` | `#195C7A` | branco | 7,4:1 |
+| `data-5` | `#0D3F58` | branco | 11,2:1 |
+
+Regras:
+
+- **Um tom só, do claro ao escuro.** Mais escuro = valor maior. Sem verde e vermelho: na Pesquisa, mais barato não é "bom" (§3.1, estados semânticos).
+- **Sem base não tem cor.** Grupo com 1 a 4 casos usa `surface-subtle` com o número em `muted`; sem caso nenhum, só o contorno `border-strong`.
+- **O valor está escrito.** Cor reforça; o número aparece no quadrado, na barra ou na tabela equivalente.
+- **Marcas de referência em tinta.** Mediana em `foreground`, faixa P25–P75 em `data-1`, eixos e grade em `border` e rótulos em `muted`. Texto nunca usa a cor da série.
+- **Seleção usa `accent`.** O estado escolhido no mapa recebe anel de 2 px em `accent`, como o foco.
 
 #### Valores financeiros
 
@@ -580,6 +600,7 @@ Ordem inicial:
 4. Minhas análises (os lotes do usuário, todos ou por leilão).
 5. Monitores (buscas salvas que geram alertas).
 6. Alertas (lotes novos que combinaram com um monitor), com contador de não lidos.
+7. Pesquisa (gráficos de preço sobre as vendas do catálogo; docs/PLANO-PESQUISA.md).
 7. Grupo **Acompanhando**: até 5 lotes acompanhados sem resultado, com um ponto pela situação do lance (`success` abaixo, `warning` no limite, `error` acima, `muted-subtle` sem comparação; o texto da situação vai para leitores de tela) e o número do lote em mono. Some quando não há nenhum.
 8. Espaço flexível.
 9. Cartão **Próximo leilão** (véu de 3% de tinta, `radius-lg`): data e hora, nome e quantidade de lotes; leva ao leilão. Some sem leilão próximo.
@@ -795,6 +816,19 @@ No leilão do usuário: dados do evento numa faixa rebaixada (data, local, edita
 
 - Título humano, explicação curta, ação de tentar novamente e retorno seguro.
 - Não exibir stack trace, código interno ou detalhes de infraestrutura.
+
+### 15.8 Pesquisa
+
+1. PageHeader com título “Pesquisa” e a linha “Preços de arremate do catálogo: N vendas desde dd/mm/aaaa”.
+2. Barra de filtros no padrão de Leilões (§5.15): modelo, condição, categoria e o chip do estado escolhido. Condição sem venda fica desabilitada, com a contagem zero.
+3. Blocos em largura total, nesta ordem, cada um com título em `heading-3`, uma linha de apoio em `muted` (`n` e o que a medida é) e “Ver dados em tabela” ao fim:
+   - “Quanto se paga por condição”: uma faixa por condição, com histograma de 2 em 2 pontos percentuais em `data-3`, faixa P25–P75 em `data-1` e mediana em tinta com o valor escrito; a condição do filtro em peso 600;
+   - “Por estado”: mapa de quadrados (7 × 8, quadrados de 44 px no celular), sigla em `caption` e mediana em `body` peso 600 em `tabular-nums`, legenda com os 5 passos e o rótulo da medida; o detalhe do estado abre abaixo do mapa, com a distribuição frente à do Brasil e as fontes;
+   - “Modelos que mais saem abaixo do valor de mercado” (sem modelo) ou “Vendas do <modelo>” (com modelo): barras de faixa P25–P75 com a mediana, ou dispersão por ano-modelo seguida da tabela das vendas;
+   - “Como o lance sobe”: linha da mediana com a faixa P25–P75, de 48 h a 1 h.
+4. EmptyState `inline` por bloco: “Nenhuma venda com esses filtros desde dd/mm/aaaa”, com a sugestão de trocar condição, categoria ou modelo.
+
+Os gráficos são descritivos: sempre com `n` e o início da base, sem “oportunidade”, score ou cor de estado (`success`/`error`). Cada gráfico tem `role="img"` com resumo em texto.
 
 ---
 
@@ -1069,6 +1103,11 @@ O dialog explica a consequência. O botão de fixar continua Primary, pois a aç
 ---
 
 ## Manutenção deste documento
+
+### Revisão 2.2 — 08/10/2026
+
+- Tokens de dados `data-1` a `data-5` (§3.1, escala sequencial de um tom) para os gráficos da Pesquisa (D-45).
+- Item Pesquisa na navegação (§9) e padrão da tela (§15.8).
 
 ### Revisão 1.2 — 20/09/2026
 

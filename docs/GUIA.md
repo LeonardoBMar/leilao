@@ -120,7 +120,20 @@ O app coleta sozinho, de 2 em 2 horas, os lotes dos sites de leilão (hoje o Lei
 - **Estimativas:** nos lotes abertos (Leilões e alertas), o cartão mostra o **provável** lance final e o seu **limite estimado**, sempre com o número de casos. O provável vem de vendas parecidas já encerradas no catálogo (mesma marca e modelo, ano ±1, mesma condição, km próxima; de qualquer região). Sem 5 vendas parecidas, usa quanto veículos da mesma categoria e condição costumam sair em relação ao valor de mercado informado pelo site. Sem nenhuma base, diz "Sem base suficiente". O limite estimado aplica a calculadora às premissas das suas análises fixadas de veículos parecidos, com o valor de venda pela FIPE do próprio anúncio (menos o desconto pela condição) e reserva e margem em % desse valor, a partir de 3 delas. Sem 3 análises parecidas, o cartão usa as **premissas padrão** (seção 4) com os dados do anúncio e diz isso. A linha **Cabe com folga**, **No limite** ou **Provável acima** compara o provável com esse limite. São referências: a decisão continua sendo a sua análise fixada.
 - **Lance automático:** num lote adicionado assim, o coletor atualiza o **lance atual** a cada coleta, enquanto o lote não estiver arquivado (a ficha mostra "Acompanhado no Leilo, lido em …", com o nome do site de origem). Você ainda pode digitar um lance; ele vale até a próxima leitura do site com lance diferente.
 
-## 10. Backup
+## 10. Pesquisa
+
+**Pesquisa** mostra em gráficos quanto se pagou nas vendas que o app coletou. É uma fotografia do que aconteceu: não diz o que comprar.
+
+- **A medida é o % do valor de mercado:** lance final ÷ FIPE informada pelo site. "45%" quer dizer que o lote saiu a 45% da FIPE, ou 55% abaixo dela. É a mesma medida do filtro "% do mercado" de Leilões, então dá para levar um número da Pesquisa direto para um filtro ou monitor.
+- **Escolha a condição antes de comparar.** A condição pesa mais que qualquer outra coisa, por isso os gráficos nunca misturam condições. "Sem monta declarada" quer dizer que o site **não informou** a condição, e não que o veículo está inteiro: o Pátio São Carlos quase nunca informa.
+- **Quanto se paga por condição:** a distribuição de cada condição, com a mediana e a faixa do meio (metade das vendas cai nela).
+- **Por estado:** cada quadrado é um estado, com a mediana e o número de vendas. Estado com menos de 5 vendas fica sem cor e mostra as vendas uma a uma ao clicar. O estado é o do pátio. Fora de SP, cada estado vem de um site só, então a diferença entre estados é também diferença entre sites e vendedores.
+- **Modelo:** escolha um modelo para ver o mapa só dele, as vendas por ano e a lista com link para cada anúncio. Sem modelo, o ranking mostra os modelos que mais saem abaixo do valor de mercado.
+- **Como o lance sobe:** quanto do lance final já estava dado 48 h, 24 h ou 1 h antes do fim. Ajuda a não achar barato um lote que ainda vai subir.
+
+A base começa em 28/09/2026, quando a coleta começou, e cresce a cada coleta. Por isso ainda não há filtro de período.
+
+## 11. Backup
 
 Os dados vivem no Supabase. Faça backup **toda semana e antes de cada migration**:
 
