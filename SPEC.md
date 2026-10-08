@@ -122,9 +122,20 @@ A navegação separa o **leilão do catálogo** (o evento, com todos os lotes co
 ### `/leiloes` — Leilões do catálogo
 
 - Leilões coletados automaticamente, um cartão por leilão: fonte, nome, data, total de lotes, abertos, lotes no filtro e lotes já analisados pelo usuário.
-- Filtros dos anúncios (região, categoria, condição, busca); só aparece leilão com lote no filtro.
+- Filtros dos anúncios (ver **Filtros de Leilões** abaixo); só aparece leilão com lote no filtro.
 - Seletor abertos/encerrados, ordenado pela data.
-- Alternância para **Todos os veículos** (`/leiloes/veiculos`): os anúncios sem agrupar.
+- Alternância para **Todos os veículos** (`/leiloes/veiculos`): os anúncios sem agrupar, com ordem (encerra antes, menor lance, menor % do mercado, mais perto, mais novos).
+
+#### Filtros de Leilões
+
+Plano e decisões em `docs/PLANO-FILTROS.md` (D-43).
+
+- Cada escolha aplica na hora e vai para a URL; o total de lotes aparece ao lado e cada filtro ativo vira um chip removível, com "Limpar tudo".
+- Busca por marca, modelo ou versão, com sugestões de marca e modelo e a contagem de cada uma.
+- Preço (faixa do lance atual ou, sem lance, do mínimo) e teto em % do valor de mercado; ano do modelo (grade de anos e atalhos "Até 5/10 anos"); distância de São Carlos/SP.
+- Mais filtros: categoria, combustível, quilometragem, condição declarada (escala e itens a esconder: circulação vedada, chassi remarcado, airbag acionado, laudo reprovado), só com chave, origem (financeira, seguradora, frota, órgão público), site do leilão, encerra em, lances, novos e já analisados. Categorias, sites, origens e combustíveis mostram quantos lotes cada opção traria.
+- Atalhos de um toque (ex.: "Até 60% do mercado", "Sem monta", "Encerra em 48 h").
+- "Salvar como monitor" abre o novo monitor com os mesmos critérios.
 
 ### `/leiloes/[fonte]/[leilao]` — Leilão do catálogo
 
@@ -134,7 +145,8 @@ A navegação separa o **leilão do catálogo** (o evento, com todos os lotes co
 ### `/minhas-analises` — Minhas análises
 
 - Os lotes do usuário. Padrão: **todos os lotes**, paginados; opção **por leilão**, com os mesmos filtros.
-- Busca por número, marca ou modelo; filtros por acompanhamento, presença de análise e resultado; visualização opcional de arquivados.
+- Busca por número, marca ou modelo; filtros por lance × limite (abaixo, no limite, acima, sem lance viável, sem comparação), leilão próximo ou realizado, acompanhamento, presença de análise e resultado; visualização opcional de arquivados. Aplicam na hora, com chips e total.
+- Ordem: data do leilão, maior folga até o limite ou atualizados recentemente.
 - Botão para cadastrar leilão manualmente.
 
 ### `/minhas-analises/leiloes/[id]` — Leilão do usuário

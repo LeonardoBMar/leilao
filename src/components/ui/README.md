@@ -16,10 +16,11 @@ Esta pasta contém as primitivas reutilizáveis do Leilão Tracker. Os contratos
 | Grupo | Componentes | Uso |
 | --- | --- | --- |
 | Ação | `Button`, `ButtonLink` | Ações primary, secondary, outline, ghost, destructive e link. Suporta loading. |
-| Formulário | `Input`, `Textarea`, `SelectField`, `Checkbox`, `RadioGroup`, `Switch` | Entrada acessível com label, descrição e erro. |
+| Formulário | `Input`, `Textarea`, `SelectField`, `Checkbox`, `RadioGroup`, `Switch`, `SegmentedControl`, `Slider` | Entrada acessível com label, descrição e erro. `SegmentedControl`: escolha única curta, todas visíveis. `Slider`: faixa com dois polegares (`thumbLabels`, `thumbValueTexts`). |
+| Filtro | `ToggleChip`, `RemovableChip` | Chip de escolha múltipla (`aria-pressed`) e chip de filtro ativo com “×”. |
 | Estrutura | `Section`, `SectionHeader`, `SectionTitle`, `DataList`, `DataRow`, `Card`, `Table`, `Tabs`, `LinkTabs`, `Pagination` | Seções com linhas finas (padrão da direção A), painéis em destaque e navegação local (`LinkTabs`: visões irmãs pela URL). |
 | Estado | `Badge`, `Alert`, `Skeleton`, `Spinner`, `EmptyState` | Estado semântico, carregamento e ausência de dados (`EmptyState variant="inline"` dentro de seções). |
-| Overlay | `Dialog`, `DropdownMenu`, `Tooltip` | Interações acessíveis providas por Radix. |
+| Overlay | `Dialog`, `DrawerContent`, `DrawerBody`, `DrawerFooter`, `Popover`, `DropdownMenu`, `Tooltip` | Interações acessíveis providas por Radix. Drawer é um `Dialog` com `DrawerContent side="right" \| "bottom"`. |
 | Feedback | `Toaster`, `toast` | Confirmações e falhas globais breves. |
 
 ## Exemplos

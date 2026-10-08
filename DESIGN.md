@@ -405,7 +405,7 @@ Cards não devem conter cards idênticos aninhados. Para subdivisões internas, 
 ### 5.8 Dialog e Drawer
 
 - Dialog para confirmação, edição curta ou decisão bloqueante.
-- Drawer lateral para filtros complexos no desktop; drawer inferior ou lateral no mobile conforme altura do conteúdo.
+- Drawer lateral para filtros complexos no desktop; drawer inferior ou lateral no mobile conforme altura do conteúdo. `DrawerContent side="right" | "bottom"`, com `DrawerBody` rolável e `DrawerFooter` fixo.
 - Formulários longos e análises financeiras devem ter página própria.
 - Larguras de dialog: 480 px para confirmação; 640 px para formulário curto; máximo de 800 px para conteúdo especial.
 - Título usa `heading-2` (24/30). Ações ficam no rodapé, secundária seguida de Primary no DOM e visualmente. A partir de `md`, Primary fica à direita; abaixo de `md`, ações empilhadas em largura total, Primary por último. Não inverter a ordem visual em relação ao foco.
@@ -474,11 +474,13 @@ Exemplo: “Nenhum lote acompanhado” + “Marque um lote para acompanhar sua s
 
 ### 5.15 Search e FilterBar
 
-- Busca com ícone, label acessível e placeholder específico, como “Buscar por lote, marca ou modelo”.
-- Filtros persistem na URL quando alteram uma listagem de página.
-- Mostrar quantidade de filtros ativos e ação “Limpar filtros”.
-- Desktop: barra horizontal com quebra controlada ou drawer para opções avançadas.
-- Mobile: busca visível e botão “Filtros” abrindo drawer.
+- Busca com ícone, label acessível e placeholder específico, como “Buscar por lote, marca ou modelo”. Aplica 400 ms depois da última tecla ou com Enter; sugestões em combobox (setas, Enter, Escape) com a contagem.
+- Filtros aplicam na hora (sem botão “Filtrar”) e persistem na URL; a tela mostra “Atualizando…” no lugar do total enquanto carrega.
+- Linha de chips dos filtros ativos (`RemovableChip`, “×” com `aria-label` “Remover filtro …”) e “Limpar tudo” a partir de dois. Atalhos de um toque em chip tracejado com “+”.
+- Total do resultado em `label` `tabular-nums`, num `role="status"`; ordem num Select com rótulo “Ordenar”.
+- Desktop: busca, depois os filtros mais usados em `Popover` (o gatilho mostra o valor escolhido, com borda `accent` quando ativo) e “Mais filtros (n)” abrindo o drawer lateral.
+- Mobile: busca visível e botão “Filtros (n)” abrindo o drawer inferior com todos os filtros; o rodapé tem “Limpar tudo” e “Ver N lotes”.
+- Controles: `SegmentedControl` para escolha única curta (Abertos | Encerrados, escala de condição); `ToggleChip` (`aria-pressed`, check) para várias escolhas com contagem; faixa de preço em `Slider` com dois campos em reais; grade de anos em botões `aria-pressed` (toque no início e no fim da faixa).
 
 ### 5.16 FileUpload / PhotoGallery
 
