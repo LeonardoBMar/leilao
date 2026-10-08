@@ -7,12 +7,18 @@ import {
 } from "@/domain/listings/catalog-auctions";
 import type { DamageLevel } from "@/domain/listings/condition";
 import {
-  CATEGORY_GROUPS,
-  type CategoryKey,
+  CATEGORY_OF_KEY,
   CONDITION_RULES,
   type ConditionKey,
-  DEFAULT_CATEGORY,
+  DEFAULT_CATEGORIES,
+  type FuelKey,
+  fuelOf,
+  HIDE_FLAGS,
+  type HideKey,
   type ListingCriteria,
+  NAMED_CATEGORIES,
+  type OriginKey,
+  originOf,
   searchTokens,
 } from "@/domain/listings/criteria";
 import {
@@ -23,6 +29,7 @@ import {
   estimatePrice,
   SALES_WINDOW_MS,
 } from "@/domain/listings/estimates";
+import { computeFacets } from "@/domain/listings/facets";
 import { boundingBox, distanceKm } from "@/domain/listings/geo";
 import { collectorHealth, overallHealth } from "@/domain/listings/health";
 import { DEFAULT_REGION } from "@/domain/listings/region";
@@ -33,13 +40,21 @@ import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
 
-import { CATALOG_AUCTIONS_PAGE_SIZE, type ListingFilters, LISTINGS_PAGE_SIZE } from "./schemas";
+import {
+  CATALOG_AUCTIONS_PAGE_SIZE,
+  ENDS_WITHIN_HOURS,
+  type ListingFilters,
+  LISTINGS_PAGE_SIZE,
+  NEW_WINDOW_MS,
+  type SortKey,
+} from "./schemas";
 import type {
   CatalogAuctionDetail,
   CatalogAuctionKey,
   CatalogAuctionPage,
   CollectorStatus,
   ListingEstimate,
+  ListingFacetsView,
   ListingListItem,
   ListingPage,
 } from "./types";
@@ -205,9 +220,16 @@ function withinBox(radiusKm: number | null): Prisma.ListingWhereInput {
   };
 }
 
-function categoryWhere(key: CategoryKey): Prisma.ListingWhereInput {
-  const categories = CATEGORY_GROUPS[key];
-  return categories === null ? {} : { category: { in: [...categories] } };
+/** Chaves de categoria → categorias do vocabulário comum; "outros" é o resto, inclusive o anúncio sem categoria. */
+function categoriesWhere(keys: ListingCriteria["categories"]): Prisma.ListingWhereInput {
+  if (keys === null) return {};
+  const named = keys.flatMap((key) => (key === "outros" ? [] : [CATEGORY_OF_KEY[key]]));
+  return {
+    OR: [
+      { category: { in: named } },
+      ...(keys.includes("outros") ? [{ category: { notIn: [...NAMED_CATEGORIES] } }, { category: null }] : []),
+    ],
+  };
 }
 
 function conditionWhere(key: ConditionKey): Prisma.ListingWhereInput {
@@ -219,6 +241,17 @@ function conditionWhere(key: ConditionKey): Prisma.ListingWhereInput {
       ...(rule.unclassified ? [{ damageLevel: null }] : []),
       ...(levels.length > 0 ? [{ damageLevel: { in: [...levels] } }] : []),
     ],
+  };
+}
+
+/** Esconde marcas da condição e laudo reprovado (laudo ausente passa: `<>` sozinho descartaria o nulo). */
+function hideWhere(keys: readonly HideKey[]): Prisma.ListingWhereInput {
+  return {
+    AND: keys.map((key): Prisma.ListingWhereInput =>
+      key === "laudo-reprovado"
+        ? { OR: [{ inspectionResult: null }, { inspectionResult: { not: "rejected" } }] }
+        : { NOT: { conditionFlags: { has: HIDE_FLAGS[key] } } },
+    ),
   };
 }
 
@@ -236,29 +269,91 @@ function searchWhere(search: string | null): Prisma.ListingWhereInput {
   };
 }
 
+/**
+ * Grafias de origem e combustível presentes no catálogo (poucas dezenas). A classificação é do domínio
+ * (`originOf`, `fuelOf`); no banco o filtro vira `in` sobre as grafias que caem em cada chave.
+ */
+type TextValues = { recoveryTypes: string[]; fuels: string[] };
+
+async function loadTextValues(criteria: ListingCriteria): Promise<TextValues> {
+  const [recoveryTypes, fuels] = await Promise.all([
+    criteria.origins.length === 0
+      ? []
+      : db.listing.findMany({ distinct: ["recoveryType"], select: { recoveryType: true } }),
+    criteria.fuels.length === 0 ? [] : db.listing.findMany({ distinct: ["fuel"], select: { fuel: true } }),
+  ]);
+  return {
+    recoveryTypes: recoveryTypes.flatMap(({ recoveryType }) => (recoveryType === null ? [] : [recoveryType])),
+    fuels: fuels.flatMap(({ fuel }) => (fuel === null ? [] : [fuel])),
+  };
+}
+
+function originWhere(origins: readonly OriginKey[], values: TextValues): Prisma.ListingWhereInput {
+  if (origins.length === 0) return {};
+  const matching = values.recoveryTypes.filter((value) => origins.includes(originOf(value)));
+  return {
+    OR: [{ recoveryType: { in: matching } }, ...(origins.includes("outros") ? [{ recoveryType: null }] : [])],
+  };
+}
+
+function fuelWhere(fuels: readonly FuelKey[], values: TextValues): Prisma.ListingWhereInput {
+  if (fuels.length === 0) return {};
+  return {
+    fuel: {
+      in: values.fuels.filter((value) => {
+        const fuel = fuelOf(value);
+        return fuel !== null && fuels.includes(fuel);
+      }),
+    },
+  };
+}
+
 /** Aberto de fato: situação aberta e fim ainda no futuro (ou desconhecido). Mesma regra de `isOpenAt`. */
 function openWhere(now: Date): Prisma.ListingWhereInput {
   return { status: "open", OR: [{ endsAt: null }, { endsAt: { gt: now } }] };
 }
 
-/** Critérios no banco, exceto a distância exata (o retângulo só pré-filtra; `withinRadius` completa). */
-function criteriaWhere(criteria: ListingCriteria): Prisma.ListingWhereInput {
+/**
+ * Critérios no banco, exceto a distância exata (o retângulo só pré-filtra; `withinRadius` completa). Mesma regra de
+ * `matchesCriteria`; preço e % do mercado usam as colunas geradas (`price_cents`, `market_ratio_bps`).
+ */
+function criteriaWhere(criteria: ListingCriteria, values: TextValues): Prisma.ListingWhereInput {
   return {
     AND: [
       withinBox(criteria.radiusKm),
-      categoryWhere(criteria.category),
+      categoriesWhere(criteria.categories),
       conditionWhere(criteria.condition),
+      hideWhere(criteria.hide),
       searchWhere(criteria.search),
       criteria.yearFrom === null ? {} : { modelYear: { gte: criteria.yearFrom } },
       criteria.yearTo === null ? {} : { modelYear: { lte: criteria.yearTo } },
-      criteria.maxPrice === null
+      criteria.minPrice === null ? {} : { priceCents: { gte: criteria.minPrice } },
+      criteria.maxPrice === null ? {} : { priceCents: { lte: criteria.maxPrice } },
+      criteria.maxMarketPct === null ? {} : { marketRatioBps: { lte: criteria.maxMarketPct * 100 } },
+      criteria.maxMileageKm === null ? {} : { mileageKm: { lte: criteria.maxMileageKm } },
+      criteria.sources.length === 0 ? {} : { sourceId: { in: [...criteria.sources] } },
+      originWhere(criteria.origins, values),
+      fuelWhere(criteria.fuels, values),
+      criteria.keyOnly ? { hasKey: true } : {},
+    ],
+  };
+}
+
+/** Filtros só da tela (não valem para monitores): prazo, lances, novos e já analisados. */
+function screenWhere(filters: ListingFilters, ownerId: string, now: Date): Prisma.ListingWhereInput {
+  return {
+    AND: [
+      filters.endsWithin === null
         ? {}
-        : {
-            OR: [
-              { currentBidCents: { lte: criteria.maxPrice } },
-              { currentBidCents: null, minimumBidCents: { lte: criteria.maxPrice } },
-            ],
-          },
+        : { endsAt: { lte: new Date(now.getTime() + ENDS_WITHIN_HOURS[filters.endsWithin] * 60 * 60 * 1000) } },
+      // Sem lance atual = sem lance (o inicial fica em `minimumBid`), em todas as fontes.
+      filters.bids === null ? {} : { currentBidCents: filters.bids === "com" ? { not: null } : null },
+      filters.newOnly ? { firstSeenAt: { gte: new Date(now.getTime() - NEW_WINDOW_MS) } } : {},
+      filters.analyzed === null
+        ? {}
+        : filters.analyzed === "so"
+          ? { lots: { some: { ownerId } } }
+          : { lots: { none: { ownerId } } },
     ],
   };
 }
@@ -266,23 +361,45 @@ function criteriaWhere(criteria: ListingCriteria): Prisma.ListingWhereInput {
 const withinRadius = (radiusKm: number | null) => (item: { distanceKm: number | null }) =>
   radiusKm === null || (item.distanceKm !== null && item.distanceKm <= radiusKm);
 
-/** Filtros da URL no formato comum de critérios (o mesmo dos monitores). */
-function criteriaOf(filters: ListingFilters): ListingCriteria {
-  return {
-    search: filters.search ?? null,
-    yearFrom: filters.yearFrom ?? null,
-    yearTo: filters.yearTo ?? null,
-    maxPrice: filters.maxPrice ?? null,
-    radiusKm: filters.distanceKm,
-    category: filters.category,
-    condition: filters.condition,
-  };
-}
-
 const auctionWhere = ({ sourceId, externalId }: CatalogAuctionKey): Prisma.ListingWhereInput => ({
   sourceId,
   auctionExternalId: externalId,
 });
+
+/** Tudo o que a tela filtra no banco: situação, critérios e filtros da tela; com `auction`, só aquele leilão. */
+async function listingsWhere(
+  filters: ListingFilters,
+  ownerId: string,
+  now: Date,
+  auction?: CatalogAuctionKey,
+): Promise<Prisma.ListingWhereInput> {
+  const values = await loadTextValues(filters.criteria);
+  return {
+    AND: [
+      auction ? auctionWhere(auction) : {},
+      filters.ended ? { NOT: openWhere(now) } : openWhere(now),
+      criteriaWhere(filters.criteria, values),
+      screenWhere(filters, ownerId, now),
+    ],
+  };
+}
+
+/** Ordem no banco; "mais perto" ordena pela distância calculada (caminho de candidatos). */
+function listingsOrderBy(filters: ListingFilters): Prisma.ListingOrderByWithRelationInput[] {
+  const byEnd: Prisma.ListingOrderByWithRelationInput = { endsAt: filters.ended ? "desc" : "asc" };
+  const bySort: Record<SortKey, Prisma.ListingOrderByWithRelationInput> = {
+    encerra: byEnd,
+    "menor-lance": { priceCents: { sort: "asc", nulls: "last" } },
+    mercado: { marketRatioBps: { sort: "asc", nulls: "last" } },
+    novos: { firstSeenAt: "desc" },
+    perto: byEnd,
+  };
+  const first = bySort[filters.sort];
+  return first === byEnd ? [byEnd, { id: "asc" }] : [first, byEnd, { id: "asc" }];
+}
+
+const byDistance = (a: { distanceKm: number | null }, b: { distanceKm: number | null }) =>
+  (a.distanceKm ?? Number.POSITIVE_INFINITY) - (b.distanceKm ?? Number.POSITIVE_INFINITY);
 
 /** Anúncios com os filtros da URL; com `auction`, só os daquele leilão do catálogo. */
 export async function listListings(
@@ -295,21 +412,13 @@ export async function listListings(
   // Encerrados já têm lance final: sem estimativa, sem carregar a base.
   const estimates = filters.ended ? Promise.resolve(null) : loadEstimateContext(now);
   const withEstimates = (context: EstimateContext | null) => (row: ListingCardRow) => toListItem(row, context);
-  const where: Prisma.ListingWhereInput = {
-    AND: [
-      scope.auction ? auctionWhere(scope.auction) : {},
-      filters.ended ? { NOT: openWhere(now) } : openWhere(now),
-      criteriaWhere(criteriaOf(filters)),
-    ],
-  };
-
-  // Abertos: o que encerra primeiro. Encerrados: o mais recente.
-  const orderBy: Prisma.ListingOrderByWithRelationInput[] = [{ endsAt: filters.ended ? "desc" : "asc" }, { id: "asc" }];
+  const where = await listingsWhere(filters, user.id, now, scope.auction);
+  const orderBy = listingsOrderBy(filters);
   const start = (filters.page - 1) * LISTINGS_PAGE_SIZE;
-  const radius = filters.distanceKm;
+  const radius = filters.criteria.radiusKm;
 
-  // Sem raio, tudo é filtrável no banco: pagina lá.
-  if (radius === null) {
+  // Sem raio e sem ordem por distância, tudo é filtrável e ordenável no banco: pagina lá.
+  if (radius === null && filters.sort !== "perto") {
     const [rows, total, context] = await Promise.all([
       db.listing.findMany({ where, orderBy, skip: start, take: LISTINGS_PAGE_SIZE, select }),
       db.listing.count({ where }),
@@ -331,6 +440,8 @@ export async function listListings(
   ]);
   const truncated = rows.length > MAX_CANDIDATES;
   const items = rows.slice(0, MAX_CANDIDATES).map(withEstimates(context)).filter(withinRadius(radius));
+  // Ordenação estável: empates na distância mantêm a ordem do banco.
+  if (filters.sort === "perto") items.sort(byDistance);
 
   return {
     items: items.slice(start, start + LISTINGS_PAGE_SIZE),
@@ -338,6 +449,55 @@ export async function listListings(
     page: filters.page,
     pageSize: LISTINGS_PAGE_SIZE,
     truncated,
+  };
+}
+
+/** Teto de anúncios lidos para facetas e sugestões; acima dele as contagens ficam parciais. */
+const MAX_FACET_ROWS = 10_000;
+
+/**
+ * Contagens dos chips (categoria, fonte, origem, combustível) e sugestões da busca (docs/PLANO-FILTROS.md §4):
+ * os anúncios no filtro sem os critérios de faceta, contados em `computeFacets`.
+ */
+export async function getListingFacets(
+  filters: ListingFilters,
+  scope: { auction?: CatalogAuctionKey } = {},
+): Promise<ListingFacetsView> {
+  const user = await requireUser();
+  const now = new Date();
+  const withoutFacets: ListingFilters = {
+    ...filters,
+    criteria: { ...filters.criteria, search: null, categories: null, sources: [], origins: [], fuels: [] },
+  };
+  const [rows, sources] = await Promise.all([
+    db.listing.findMany({
+      where: await listingsWhere(withoutFacets, user.id, now, scope.auction),
+      take: MAX_FACET_ROWS,
+      select: {
+        sourceId: true,
+        title: true,
+        brand: true,
+        model: true,
+        fipeName: true,
+        category: true,
+        recoveryType: true,
+        fuel: true,
+        municipality: { select: { latitude: true, longitude: true } },
+      },
+    }),
+    db.source.findMany({ where: { active: true }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+  ]);
+  const inRadius = rows
+    .map(({ municipality, ...row }) => ({
+      ...row,
+      distanceKm: municipality ? distanceKm(DEFAULT_REGION.center, municipality) : null,
+    }))
+    .filter(withinRadius(filters.criteria.radiusKm));
+  const facets = computeFacets(inRadius, filters.criteria);
+
+  return {
+    ...facets,
+    sources: sources.map((source) => ({ ...source, count: facets.sources[source.id] ?? 0 })),
   };
 }
 
@@ -362,17 +522,19 @@ function countByAuction(pairs: readonly { sourceId: string; auctionExternalId: s
 export async function listCatalogAuctions(filters: ListingFilters): Promise<CatalogAuctionPage> {
   const user = await requireUser();
   const now = new Date();
+  // Na aba de encerrados, o leilão entra com qualquer lote no filtro: a situação é do leilão (`selectCatalogAuctions`).
   const where: Prisma.ListingWhereInput = {
     AND: [
       { auctionExternalId: { not: null } },
       filters.ended ? {} : openWhere(now),
-      criteriaWhere(criteriaOf(filters)),
+      criteriaWhere(filters.criteria, await loadTextValues(filters.criteria)),
+      screenWhere(filters, user.id, now),
     ],
   };
 
   let matching: ReturnType<typeof countByAuction>;
   let truncated = false;
-  if (filters.distanceKm === null) {
+  if (filters.criteria.radiusKm === null) {
     const groups = await db.listing.groupBy({ by: ["sourceId", "auctionExternalId"], where, _count: { _all: true } });
     matching = countByAuction(groups.map((group) => ({ ...group, count: group._count._all })));
   } else {
@@ -394,7 +556,7 @@ export async function listCatalogAuctions(filters: ListingFilters): Promise<Cata
           ...row,
           distanceKm: row.municipality ? distanceKm(DEFAULT_REGION.center, row.municipality) : null,
         }))
-        .filter(withinRadius(filters.distanceKm)),
+        .filter(withinRadius(filters.criteria.radiusKm)),
     );
   }
 
@@ -495,10 +657,18 @@ async function loadCatalogAuctionStats(
   });
 }
 
+/** Fontes ativas, para escolher nos filtros e nos monitores. */
+export async function listActiveSources(): Promise<{ id: string; name: string }[]> {
+  await requireUser();
+  return db.source.findMany({ where: { active: true }, orderBy: { name: "asc" }, select: { id: true, name: true } });
+}
+
 /** Quantos anúncios abertos atendem aos critérios agora (ex.: "12 lotes combinam com este monitor"). */
 export async function countOpenListings(criteria: ListingCriteria): Promise<{ count: number; truncated: boolean }> {
   await requireUser();
-  const where: Prisma.ListingWhereInput = { AND: [openWhere(new Date()), criteriaWhere(criteria)] };
+  const where: Prisma.ListingWhereInput = {
+    AND: [openWhere(new Date()), criteriaWhere(criteria, await loadTextValues(criteria))],
+  };
   if (criteria.radiusKm === null) return { count: await db.listing.count({ where }), truncated: false };
 
   const rows = await db.listing.findMany({
@@ -534,7 +704,7 @@ export async function getCollectorStatus(): Promise<CollectorStatus> {
       },
     }),
     db.listing.findMany({
-      where: { AND: [openWhere(now), withinBox(DEFAULT_REGION.radiusKm), categoryWhere(DEFAULT_CATEGORY)] },
+      where: { AND: [openWhere(now), withinBox(DEFAULT_REGION.radiusKm), categoriesWhere(DEFAULT_CATEGORIES)] },
       select: { municipality: { select: { latitude: true, longitude: true } } },
       take: MAX_CANDIDATES,
     }),

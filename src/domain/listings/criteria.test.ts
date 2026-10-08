@@ -1,7 +1,19 @@
 import { describe, expect, it } from "vitest";
 
 import { cents } from "../money";
-import { isOpenAt, type ListingCriteria, type MatchableListing, matchesCriteria, searchTokens } from "./criteria";
+import {
+  categoryKeyOf,
+  criteriaFromStored,
+  criteriaToStored,
+  fuelOf,
+  isOpenAt,
+  type ListingCriteria,
+  marketRatioBps,
+  type MatchableListing,
+  matchesCriteria,
+  originOf,
+  searchTokens,
+} from "./criteria";
 
 const now = new Date("2026-09-27T12:00:00Z");
 
@@ -9,24 +21,40 @@ const anyCriteria: ListingCriteria = {
   search: null,
   yearFrom: null,
   yearTo: null,
+  minPrice: null,
   maxPrice: null,
+  maxMarketPct: null,
+  maxMileageKm: null,
   radiusKm: null,
-  category: "todas",
+  categories: null,
   condition: "qualquer",
+  hide: [],
+  sources: [],
+  origins: [],
+  fuels: [],
+  keyOnly: false,
 };
 
 const fox: MatchableListing = {
+  sourceId: "leilo",
   title: "VW/FOX 1.0 (4P)",
   brand: "VW",
   model: "FOX 1.0 (4P)",
   fipeName: "Fox City 1.0 Mi Total Flex 8V 5p",
   modelYear: 2012,
+  mileageKm: 90_000,
   category: "Carros",
+  fuel: "Flex",
+  recoveryType: "Recuperado de Financiamento",
+  hasKey: true,
   damageLevel: null,
+  conditionFlags: [],
+  inspection: null,
   status: "open",
   endsAt: new Date("2026-09-30T13:00:00Z"),
   currentBid: null,
   minimumBid: cents(1_800_000),
+  marketValue: cents(3_000_000),
   distanceKm: 40,
 };
 
@@ -86,11 +114,55 @@ describe("matchesCriteria", () => {
     expect(matches({ radiusKm: null }, { distanceKm: null })).toBe(true);
   });
 
-  it("categoria pelo grupo", () => {
-    expect(matches({ category: "veiculos" })).toBe(true);
-    expect(matches({ category: "motos" })).toBe(false);
-    expect(matches({ category: "veiculos" }, { category: "Imoveis" })).toBe(false);
-    expect(matches({ category: "veiculos" }, { category: null })).toBe(false);
+  it("faixa de preço: mínimo e máximo inclusivos", () => {
+    expect(matches({ minPrice: cents(1_800_000) })).toBe(true);
+    expect(matches({ minPrice: cents(1_800_001) })).toBe(false);
+    expect(matches({ minPrice: cents(100) }, { currentBid: null, minimumBid: null })).toBe(false);
+  });
+
+  it("% do mercado: preço até X% do valor de mercado; sem valor de mercado não passa", () => {
+    expect(matches({ maxMarketPct: 60 })).toBe(true);
+    expect(matches({ maxMarketPct: 50 })).toBe(false);
+    expect(matches({ maxMarketPct: 80 }, { marketValue: null })).toBe(false);
+  });
+
+  it("quilometragem máxima; km desconhecida não passa", () => {
+    expect(matches({ maxMileageKm: 100_000 })).toBe(true);
+    expect(matches({ maxMileageKm: 50_000 })).toBe(false);
+    expect(matches({ maxMileageKm: 100_000 }, { mileageKm: null })).toBe(false);
+  });
+
+  it("categorias múltiplas; 'outros' cobre as demais e a categoria vazia", () => {
+    expect(matches({ categories: ["carros", "motos"] })).toBe(true);
+    expect(matches({ categories: ["motos"] })).toBe(false);
+    expect(matches({ categories: ["outros"] }, { category: "Imoveis" })).toBe(true);
+    expect(matches({ categories: ["outros"] }, { category: null })).toBe(true);
+    expect(matches({ categories: [] })).toBe(false);
+  });
+
+  it("fonte, origem e combustível: vazio aceita todos", () => {
+    expect(matches({ sources: ["leilo"] })).toBe(true);
+    expect(matches({ sources: ["freitas"] })).toBe(false);
+    expect(matches({ origins: ["financiamento"] })).toBe(true);
+    expect(matches({ origins: ["seguradora", "frota"] })).toBe(false);
+    expect(matches({ fuels: ["flex", "diesel"] })).toBe(true);
+    expect(matches({ fuels: ["gasolina"] })).toBe(false);
+    expect(matches({ fuels: ["flex"] }, { fuel: null })).toBe(false);
+  });
+
+  it("só com chave: chave desconhecida não passa", () => {
+    expect(matches({ keyOnly: true })).toBe(true);
+    expect(matches({ keyOnly: true }, { hasKey: null })).toBe(false);
+    expect(matches({ keyOnly: true }, { hasKey: false })).toBe(false);
+  });
+
+  it("esconde alertas da condição e laudo reprovado", () => {
+    expect(matches({ hide: ["impedido", "laudo-reprovado"] })).toBe(true);
+    expect(matches({ hide: ["impedido"] }, { conditionFlags: ["circulation_banned"] })).toBe(false);
+    expect(matches({ hide: ["remarcado"] }, { conditionFlags: ["circulation_banned"] })).toBe(true);
+    expect(matches({ hide: ["airbag"] }, { conditionFlags: ["airbag_deployed"] })).toBe(false);
+    expect(matches({ hide: ["laudo-reprovado"] }, { inspection: "rejected" })).toBe(false);
+    expect(matches({ hide: ["laudo-reprovado"] }, { inspection: "approved_with_notes" })).toBe(true);
   });
 
   it("condição: sem classificação conta como 'não informada'", () => {
@@ -102,5 +174,80 @@ describe("matchesCriteria", () => {
     expect(matches({ condition: "com-monta" })).toBe(false);
     expect(matches({ condition: "com-monta" }, { damageLevel: "large" })).toBe(true);
     expect(matches({ condition: "com-monta" }, { damageLevel: "salvage" })).toBe(false);
+  });
+});
+
+describe("categoryKeyOf", () => {
+  it("categorias com chave própria e o resto em 'outros'", () => {
+    expect(categoryKeyOf("Utilitarios")).toBe("utilitarios");
+    expect(categoryKeyOf("Equipamentos")).toBe("outros");
+    expect(categoryKeyOf(null)).toBe("outros");
+  });
+});
+
+describe("originOf", () => {
+  it("normaliza as grafias das fontes", () => {
+    expect(originOf("Recuperado de Financiamento")).toBe("financiamento");
+    expect(originOf("FINANCEIRA")).toBe("financiamento");
+    expect(originOf("FINACIAMENTO")).toBe("financiamento");
+    expect(originOf("SEGURADORA")).toBe("seguradora");
+    expect(originOf("SINISTRO/PEQUENA MONTA")).toBe("seguradora");
+    expect(originOf("Frota")).toBe("frota");
+    expect(originOf("LEILOSHOP")).toBe("outros");
+    expect(originOf("-")).toBe("outros");
+    expect(originOf(null)).toBe("outros");
+  });
+});
+
+describe("fuelOf", () => {
+  it("normaliza as grafias das fontes e não adivinha", () => {
+    expect(fuelOf("Flex")).toBe("flex");
+    expect(fuelOf("GASOL/ALC")).toBe("flex");
+    expect(fuelOf("FLEXIVEL ALCOOL/GASOLINA")).toBe("flex");
+    expect(fuelOf("Álcool / Etanol")).toBe("flex");
+    expect(fuelOf("Gasolina / Álcool / GNV")).toBe("flex");
+    expect(fuelOf("GASOLINA")).toBe("gasolina");
+    expect(fuelOf("Gas")).toBe("gasolina");
+    expect(fuelOf("DIESEL")).toBe("diesel");
+    expect(fuelOf("Gasolina / Elétrico")).toBe("eletrico");
+    expect(fuelOf("HIBRIDO")).toBe("eletrico");
+    expect(fuelOf("ELETR/FONTE EXT")).toBe("eletrico");
+    expect(fuelOf("SUCATA S/ DIREITO A DOCUMENTO")).toBeNull();
+    expect(fuelOf(null)).toBeNull();
+  });
+});
+
+describe("marketRatioBps", () => {
+  it("preço sobre valor de mercado, arredondado; sem dado ou mercado zero: nulo", () => {
+    expect(marketRatioBps(cents(1_800_000), cents(3_000_000))).toBe(6_000);
+    expect(marketRatioBps(cents(1), cents(3))).toBe(3_333);
+    expect(marketRatioBps(null, cents(3_000_000))).toBeNull();
+    expect(marketRatioBps(cents(100), cents(0))).toBeNull();
+  });
+});
+
+describe("criteriaFromStored / criteriaToStored", () => {
+  it("ida e volta preservam os critérios; lista vazia de categorias é 'todas'", () => {
+    const criteria: ListingCriteria = {
+      ...anyCriteria,
+      minPrice: cents(500_000),
+      categories: ["carros", "outros"],
+      hide: ["airbag"],
+      origins: ["financiamento"],
+      fuels: ["flex"],
+      keyOnly: true,
+    };
+    expect(criteriaFromStored(criteriaToStored(criteria))).toEqual(criteria);
+    expect(criteriaFromStored(criteriaToStored(anyCriteria)).categories).toBeNull();
+  });
+
+  it("chave desconhecida gravada é descartada", () => {
+    const stored = {
+      ...criteriaToStored(anyCriteria),
+      categories: ["carros", "barcos"],
+      condition: "x",
+      fuels: ["gnv"],
+    };
+    expect(criteriaFromStored(stored)).toMatchObject({ categories: ["carros"], condition: "qualquer", fuels: [] });
   });
 });

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { cents } from "../money";
 import { ALERT_LOOKBACK_MS, type AlertCandidate, type AlertWatch, alertWindowStart, planAlerts } from "./alerts";
+import { DEFAULT_CRITERIA } from "./criteria";
 
 const now = new Date("2026-09-27T12:00:00Z");
 const hoursAgo = (hours: number) => new Date(now.getTime() - hours * 60 * 60 * 1000);
@@ -10,32 +11,32 @@ const watch = (overrides: Partial<AlertWatch> = {}): AlertWatch => ({
   id: "w1",
   ownerId: "u1",
   alertsFrom: hoursAgo(10),
-  criteria: {
-    search: "fox",
-    yearFrom: null,
-    yearTo: null,
-    maxPrice: null,
-    radiusKm: 150,
-    category: "veiculos",
-    condition: "qualquer",
-  },
+  criteria: { ...DEFAULT_CRITERIA, search: "fox" },
   ...overrides,
 });
 
 const listing = (overrides: Partial<AlertCandidate> = {}): AlertCandidate => ({
   id: "l1",
+  sourceId: "leilo",
   firstSeenAt: hoursAgo(1),
   title: "VW/FOX 1.0",
   brand: "VW",
   model: "FOX 1.0",
   fipeName: null,
   modelYear: 2012,
+  mileageKm: null,
   category: "Carros",
+  fuel: null,
+  recoveryType: null,
+  hasKey: null,
   damageLevel: null,
+  conditionFlags: [],
+  inspection: null,
   status: "open",
   endsAt: new Date("2026-09-30T13:00:00Z"),
   currentBid: null,
   minimumBid: cents(1_500_000),
+  marketValue: null,
   distanceKm: 40,
   ...overrides,
 });

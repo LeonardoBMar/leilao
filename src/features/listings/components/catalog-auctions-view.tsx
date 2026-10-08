@@ -2,72 +2,78 @@ import { Gavel } from "lucide-react";
 import Link from "next/link";
 
 import { ListPagination } from "@/components/layout/list-pagination";
-import { Alert, AlertDescription, EmptyState, Skeleton } from "@/components/ui";
+import { Alert, AlertDescription, ButtonLink, EmptyState, Skeleton } from "@/components/ui";
+import { DEFAULT_REGION } from "@/domain/listings/region";
 import { formatDateTime } from "@/lib/format";
 
-import { listCatalogAuctions } from "../queries";
-import type { ListingFilters as Filters } from "../schemas";
+import { activeFilters, clearedFilters } from "../filter-labels";
+import { getListingFacets, listCatalogAuctions } from "../queries";
+import { listingParams } from "../schemas";
 import { CATALOG_AUCTIONS_PATH, catalogAuctionPath, readListingSearch, type SearchParams, withQuery } from "../search";
 import type { CatalogAuctionItem } from "../types";
 import { CatalogTabs } from "./catalog-tabs";
-import { ListingFilters } from "./listing-filters";
+import { ListingFilterBar } from "./filters/listing-filter-bar";
 
 /** "Leilões" por leilão (D-42): um cartão por leilão do catálogo com lote no filtro. Renderizar em <Suspense>. */
 export async function CatalogAuctionsView({ searchParams }: { searchParams: SearchParams }) {
-  const { filters, values, params } = readListingSearch(await searchParams);
+  const { filters, params } = readListingSearch(await searchParams);
+  const [page, facets] = await Promise.all([listCatalogAuctions(filters), getListingFacets(filters)]);
+  const hasFilters = activeFilters(filters, {}).length > 0;
 
   return (
     <div className="grid gap-6">
       <CatalogTabs active="auctions" params={params} />
-      <ListingFilters values={values} basePath={CATALOG_AUCTIONS_PATH} />
-      <CatalogAuctionList filters={filters} params={params} />
-    </div>
-  );
-}
-
-async function CatalogAuctionList({
-  filters,
-  params,
-}: {
-  filters: Filters;
-  params: Record<string, string | undefined>;
-}) {
-  const page = await listCatalogAuctions(filters);
-
-  if (page.total === 0) {
-    return (
-      <EmptyState
-        icon={Gavel}
-        title={filters.ended ? "Nenhum leilão encerrado encontrado" : "Nenhum leilão aberto encontrado"}
-        description="O coletor busca lotes novos a cada 2 horas. Ajuste a distância ou limpe os filtros."
-      />
-    );
-  }
-
-  return (
-    <section aria-label="Leilões" className="grid gap-4">
-      {page.truncated ? (
-        <Alert variant="info">
-          <AlertDescription>
-            Muitos lotes para esta busca: os números dos leilões são parciais. Refine a busca, o ano ou o preço.
-          </AlertDescription>
-        </Alert>
-      ) : null}
-      <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {page.items.map((item) => (
-          <li key={`${item.sourceId}/${item.externalId}`} className="flex">
-            <CatalogAuctionCard item={item} params={params} />
-          </li>
-        ))}
-      </ul>
-      <ListPagination
-        basePath={CATALOG_AUCTIONS_PATH}
+      <ListingFilterBar
         params={params}
-        page={page.page}
-        pageSize={page.pageSize}
+        basePath={CATALOG_AUCTIONS_PATH}
+        scope="auctions"
         total={page.total}
+        facets={facets}
+        regionLabel={DEFAULT_REGION.label}
+        currentYear={new Date().getUTCFullYear()}
       />
-    </section>
+      {page.total === 0 ? (
+        <EmptyState
+          icon={Gavel}
+          title={filters.ended ? "Nenhum leilão encerrado encontrado" : "Nenhum leilão aberto encontrado"}
+          description="O coletor busca lotes novos a cada 2 horas. Tire um filtro ou aumente a distância."
+          action={
+            hasFilters ? (
+              <ButtonLink
+                href={withQuery(CATALOG_AUCTIONS_PATH, listingParams(clearedFilters(filters)))}
+                variant="secondary"
+              >
+                Limpar filtros
+              </ButtonLink>
+            ) : null
+          }
+        />
+      ) : (
+        <section aria-label="Leilões" className="grid gap-4">
+          {page.truncated ? (
+            <Alert variant="info">
+              <AlertDescription>
+                Muitos lotes para esta busca: os números dos leilões são parciais. Refine a busca, o ano ou o preço.
+              </AlertDescription>
+            </Alert>
+          ) : null}
+          <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {page.items.map((item) => (
+              <li key={`${item.sourceId}/${item.externalId}`} className="flex">
+                <CatalogAuctionCard item={item} params={params} />
+              </li>
+            ))}
+          </ul>
+          <ListPagination
+            basePath={CATALOG_AUCTIONS_PATH}
+            params={params}
+            page={page.page}
+            pageSize={page.pageSize}
+            total={page.total}
+          />
+        </section>
+      )}
+    </div>
   );
 }
 
@@ -123,7 +129,7 @@ export function CatalogAuctionsViewSkeleton() {
   return (
     <div className="grid gap-6" aria-hidden="true">
       <Skeleton className="h-10" />
-      <Skeleton className="h-40" />
+      <Skeleton className="h-28" />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <Skeleton className="h-32" />
         <Skeleton className="h-32" />

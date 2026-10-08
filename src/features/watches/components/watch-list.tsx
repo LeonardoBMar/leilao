@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Badge, ButtonLink, EmptyState, Skeleton } from "@/components/ui";
 
 import { listWatches } from "../queries";
-import { describeCriteria, discoveredHref, watchTitle } from "../summary";
+import { discoveredHref, watchTitle } from "../summary";
 import type { WatchListItem } from "../types";
 import { WatchActions } from "./watch-actions";
 
@@ -51,10 +51,10 @@ function WatchCard({ watch }: { watch: WatchListItem }) {
           <h2 className={watch.active ? "text-heading-3 text-foreground" : "text-heading-3 text-muted"}>{title}</h2>
           <Badge variant={watch.active ? "success" : "default"}>{watch.active ? "Ligado" : "Desligado"}</Badge>
         </div>
-        <p className="text-label font-normal text-muted">{describeCriteria(watch.criteria)}</p>
+        <p className="text-label font-normal text-muted">{watch.description}</p>
         <ul className="flex flex-wrap gap-x-4 gap-y-1 text-label font-normal text-foreground-secondary">
           <li>
-            <Link href={discoveredHref(watch.criteria) as Route} className="text-accent hover:underline">
+            <Link href={discoveredHref(watch.criteria)} className="text-accent hover:underline">
               {watch.openMatches === 1 ? "1 lote aberto combina agora" : `${matches} lotes abertos combinam agora`}
             </Link>
           </li>

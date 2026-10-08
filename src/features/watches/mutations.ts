@@ -1,5 +1,6 @@
 import "server-only";
 
+import { criteriaToStored } from "@/domain/listings/criteria";
 import { err, ok, type Result } from "@/lib/result";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
@@ -8,18 +9,9 @@ import type { WatchInput } from "./schemas";
 
 export type WatchError = "not_found";
 
-/** Opcionais ausentes viram `null` explicitamente (no update, `undefined` manteria o valor antigo). */
+/** Critérios no formato gravado; `category` (substituída por `categories`, D-43) fica nula até sair do schema. */
 function toWatchData(input: WatchInput) {
-  return {
-    name: input.name ?? null,
-    search: input.search ?? null,
-    yearFrom: input.yearFrom ?? null,
-    yearTo: input.yearTo ?? null,
-    maxPriceCents: input.maxPrice ?? null,
-    radiusKm: input.radiusKm,
-    category: input.category,
-    condition: input.condition,
-  };
+  return { name: input.name, ...criteriaToStored(input.criteria), category: null };
 }
 
 /** Criado agora: só anúncios vistos daqui em diante geram alerta (`alertsFrom`, padrão do banco). */

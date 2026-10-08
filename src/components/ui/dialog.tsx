@@ -48,6 +48,65 @@ function DialogContent({ className, children, ...props }: DialogPrimitive.Dialog
   );
 }
 
+type DrawerContentProps = DialogPrimitive.DialogContentProps & {
+  /** `right`: painel lateral (desktop). `bottom`: gaveta inferior (celular), até 85% da altura. */
+  side?: "right" | "bottom";
+};
+
+/**
+ * Gaveta (DESIGN.md §5.8): o mesmo Dialog do Radix (foco preso, Escape, volta do foco), presa a uma borda. O corpo
+ * rola e o rodapé (`DrawerFooter`) fica fixo. Use `DialogHeader`/`DialogTitle` dentro.
+ */
+function DrawerContent({ className, children, side = "right", ...props }: DrawerContentProps) {
+  return (
+    <DialogPortal>
+      <DialogOverlay />
+      <DialogPrimitive.Content
+        className={cn(
+          "fixed z-50 flex flex-col bg-surface-elevated shadow-lg transition-transform duration-240 outline-none",
+          side === "right" &&
+            "inset-y-0 right-0 w-full max-w-110 translate-x-full border-l border-border data-[state=open]:translate-x-0",
+          side === "bottom" &&
+            "inset-x-0 bottom-0 max-h-[85dvh] translate-y-full rounded-t-xl border-t border-border data-[state=open]:translate-y-0",
+          className,
+        )}
+        {...props}
+      >
+        {children}
+        <DialogPrimitive.Close
+          aria-label="Fechar"
+          className="absolute top-4 right-4 flex size-10 items-center justify-center rounded-md text-muted transition-colors duration-120 outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+        >
+          <X aria-hidden="true" className="size-5" />
+        </DialogPrimitive.Close>
+      </DialogPrimitive.Content>
+    </DialogPortal>
+  );
+}
+
+/** Corpo rolável da gaveta. */
+function DrawerBody({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      className={cn("grid min-h-0 flex-1 content-start gap-7 overflow-y-auto px-5 py-5 md:px-6", className)}
+      {...props}
+    />
+  );
+}
+
+/** Rodapé fixo da gaveta: secundária e principal, como no Dialog. */
+function DrawerFooter({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      className={cn(
+        "flex gap-3 border-t border-border px-5 py-4 md:justify-end md:px-6 [&>*]:flex-1 md:[&>*]:flex-none",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
 function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return <div className={cn("grid gap-2 pr-10", className)} {...props} />;
 }
@@ -79,4 +138,7 @@ export {
   DialogPortal,
   DialogTitle,
   DialogTrigger,
+  DrawerBody,
+  DrawerContent,
+  DrawerFooter,
 };

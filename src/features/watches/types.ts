@@ -11,6 +11,8 @@ export type WatchItem = {
 };
 
 export type WatchListItem = WatchItem & {
+  /** Critérios em uma linha, com o nome das fontes. */
+  description: string;
   /** Anúncios abertos que atendem aos critérios agora (não geram alerta; ver `alertsFrom`). */
   openMatches: number;
   /** Mais candidatos que o teto da busca por raio: o número é parcial. */

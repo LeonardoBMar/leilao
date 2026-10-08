@@ -1,6 +1,7 @@
 import type { CatalogAuctionState, CatalogAuctionStats } from "@/domain/listings/catalog-auctions";
 import type { ConditionFlag, DamageLevel, InspectionResult } from "@/domain/listings/condition";
 import type { LimitEstimate, PriceEstimate } from "@/domain/listings/estimates";
+import type { ListingFacets } from "@/domain/listings/facets";
 import type { CollectorHealth } from "@/domain/listings/health";
 import type { ListingStatus } from "@/domain/listings/types";
 import type { Cents } from "@/domain/money";
@@ -53,6 +54,11 @@ export type ListingPage = {
   pageSize: number;
   /** Mais candidatos que o teto da busca por raio: o total é parcial e a tela avisa. */
   truncated: boolean;
+};
+
+/** Contagens dos chips e sugestões da busca; fontes ativas com nome, inclusive as sem anúncio no filtro. */
+export type ListingFacetsView = Omit<ListingFacets, "sources"> & {
+  sources: { id: string; name: string; count: number }[];
 };
 
 /** Leilão do catálogo (D-42): fonte e id do leilão na fonte. */

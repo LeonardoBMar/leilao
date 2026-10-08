@@ -399,6 +399,10 @@ model Listing {
   finalBidCents      Int?              @map("final_bid_cents")
   /// Valor de mercado informado pela fonte: referência rotulada, nunca estimativa do sistema (D-30).
   marketValueCents   Int?              @map("market_value_cents")
+  /// Coluna gerada pelo banco (D-43): lance atual ou, sem lance, o inicial (`priceOf`). Nunca gravar.
+  priceCents         Int?              @default(dbgenerated("COALESCE(current_bid_cents, minimum_bid_cents)")) @map("price_cents")
+  /// Coluna gerada pelo banco (D-43): preço ÷ valor de mercado em basis points (`marketRatioBps`). Nunca gravar.
+  marketRatioBps     Int?              @default(dbgenerated("\nCASE\n    WHEN ((market_value_cents > 0) AND (COALESCE(current_bid_cents, minimum_bid_cents) IS NOT NULL)) THEN (round((((COALESCE(current_bid_cents, minimum_bid_cents))::numeric * 10000.0) / (market_value_cents)::numeric)))::integer\n    ELSE NULL::integer\nEND")) @map("market_ratio_bps")
   commissionBps      Int?              @map("commission_bps")
   dispatcherFeeCents Int?              @map("dispatcher_fee_cents")
   removalFeeCents    Int?              @map("removal_fee_cents")
@@ -481,11 +485,24 @@ model Watch {
   search        String?
   yearFrom      Int?     @map("year_from") @db.SmallInt
   yearTo        Int?     @map("year_to") @db.SmallInt
+  minPriceCents Int?     @map("min_price_cents")
   maxPriceCents Int?     @map("max_price_cents")
+  /// Preço até X% do valor de mercado (D-43).
+  maxMarketPct  Int?     @map("max_market_pct") @db.SmallInt
+  maxMileageKm  Int?     @map("max_mileage_km")
   /// Nulo: qualquer distância.
   radiusKm      Int?     @map("radius_km") @db.SmallInt
-  category      String   @db.VarChar(20)
+  /// Substituída por `categories` (D-43). Sem uso; sai num release seguinte (expandir → migrar → contrair).
+  category      String?  @db.VarChar(20)
+  /// Chaves de `CATEGORY_KEYS`. Vazio = todas as categorias.
+  categories    String[] @default([])
   condition     String   @db.VarChar(20)
+  /// Chaves de `HIDE_KEYS`, `ORIGIN_KEYS` e `FUEL_KEYS`; fontes por id. Vazio = sem restrição.
+  hide          String[] @default([])
+  sources       String[] @default([])
+  origins       String[] @default([])
+  fuels         String[] @default([])
+  keyOnly       Boolean  @default(false) @map("key_only")
   active        Boolean  @default(true)
   /// Só anúncios vistos pela primeira vez a partir daqui geram alerta. Volta para "agora" ao criar, ao mudar os
   /// critérios e ao religar: o que já existia não vira alerta (aparece em "combinam agora").

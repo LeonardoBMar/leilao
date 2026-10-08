@@ -1,17 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
-import { Alert, AlertDescription, Button, CurrencyInput, Input, SelectField } from "@/components/ui";
+import { Alert, AlertDescription, Button, FieldError, Input } from "@/components/ui";
+import { DEFAULT_CRITERIA, type ListingCriteria } from "@/domain/listings/criteria";
 import {
-  CATEGORY_KEYS,
-  CONDITION_KEYS,
-  DEFAULT_CATEGORY,
-  DEFAULT_CONDITION,
-  DEFAULT_RADIUS_KM,
-} from "@/domain/listings/criteria";
-import { CATEGORY_LABELS, CONDITION_LABELS, DISTANCE_OPTIONS } from "@/features/listings/schemas";
+  CategoryField,
+  ConditionFields,
+  DistanceField,
+  FuelField,
+  KeyField,
+  MileageField,
+  OriginField,
+  PriceFields,
+  SourceField,
+  YearFields,
+} from "@/features/listings/components/filters/criteria-controls";
 import { type ActionState, fieldError, fieldValue, idleState } from "@/lib/action-state";
 
 import type { WatchItem } from "../types";
@@ -19,118 +24,109 @@ import type { WatchItem } from "../types";
 type WatchFormProps = {
   action: (prev: ActionState, formData: FormData) => Promise<ActionState>;
   watch?: WatchItem;
+  /** Critérios iniciais de um monitor novo (ex.: "Salvar como monitor" a partir dos filtros de Leilões). */
+  initialCriteria?: ListingCriteria;
+  sources: readonly { id: string; name: string }[];
   regionLabel: string;
+  currentYear: number;
   submitLabel: string;
 };
 
-function centsToInput(value: number | null | undefined): string | undefined {
-  return value == null ? undefined : (value / 100).toFixed(2).replace(".", ",");
-}
+const reaisField = (value: number | null) => (value === null ? "" : (value / 100).toFixed(2).replace(".", ","));
+const csv = (items: readonly string[] | null) => (items ?? []).join(",");
 
-export function WatchForm({ action, watch, regionLabel, submitLabel }: WatchFormProps) {
+/**
+ * Formulário do monitor (critérios de docs/PLANO-FILTROS.md): os mesmos controles da barra de filtros de Leilões,
+ * guardados no estado e enviados em campos escondidos. Busca e nome são campos comuns.
+ */
+export function WatchForm({
+  action,
+  watch,
+  initialCriteria,
+  sources,
+  regionLabel,
+  currentYear,
+  submitLabel,
+}: WatchFormProps) {
   const [state, formAction, pending] = useActionState(action, idleState);
-  // Após erro, o valor digitado prevalece sobre o salvo.
-  const value = (field: string, saved?: string | number | null) =>
-    fieldValue(state, field) ?? (saved == null ? undefined : String(saved));
-  const criteria = watch?.criteria;
-  const distance = value(
-    "distance",
-    criteria ? (criteria.radiusKm === null ? "todas" : criteria.radiusKm) : DEFAULT_RADIUS_KM,
-  );
-  const category = value("category", criteria?.category ?? DEFAULT_CATEGORY);
-  const condition = value("condition", criteria?.condition ?? DEFAULT_CONDITION);
+  const [criteria, setCriteria] = useState<ListingCriteria>(watch?.criteria ?? initialCriteria ?? DEFAULT_CRITERIA);
+  const control = { criteria, onChange: (patch: Partial<ListingCriteria>) => setCriteria({ ...criteria, ...patch }) };
+  // Após erro, o texto digitado prevalece sobre o salvo.
+  const text = (field: string, saved?: string | null) => fieldValue(state, field) ?? saved ?? undefined;
+  const yearError = fieldError(state, "yearFrom") ?? fieldError(state, "yearTo");
+  const priceError = fieldError(state, "minPrice") ?? fieldError(state, "maxPrice");
 
   return (
-    <form action={formAction} className="grid gap-8" noValidate>
+    <form action={formAction} className="grid gap-10" noValidate>
       {state.status === "error" && !state.fieldErrors ? (
         <Alert variant="error">
           <AlertDescription>{state.message}</AlertDescription>
         </Alert>
       ) : null}
 
-      <fieldset className="grid gap-4 md:grid-cols-2 md:gap-6">
-        <legend className="mb-4 text-heading-3 text-foreground">Veículo</legend>
+      <input type="hidden" name="yearFrom" value={criteria.yearFrom ?? ""} />
+      <input type="hidden" name="yearTo" value={criteria.yearTo ?? ""} />
+      <input type="hidden" name="minPrice" value={reaisField(criteria.minPrice)} />
+      <input type="hidden" name="maxPrice" value={reaisField(criteria.maxPrice)} />
+      <input type="hidden" name="maxMarketPct" value={criteria.maxMarketPct ?? ""} />
+      <input type="hidden" name="maxMileageKm" value={criteria.maxMileageKm ?? ""} />
+      <input type="hidden" name="distance" value={criteria.radiusKm ?? "todas"} />
+      <input type="hidden" name="categories" value={csv(criteria.categories)} />
+      <input type="hidden" name="condition" value={criteria.condition} />
+      <input type="hidden" name="hide" value={csv(criteria.hide)} />
+      <input type="hidden" name="sources" value={csv(criteria.sources)} />
+      <input type="hidden" name="origins" value={csv(criteria.origins)} />
+      <input type="hidden" name="fuels" value={csv(criteria.fuels)} />
+      {criteria.keyOnly ? <input type="hidden" name="keyOnly" value="1" /> : null}
+
+      <FormSection title="Veículo">
         <Input
           name="search"
           label="Marca, modelo ou versão"
           placeholder="Ex.: VW Fox"
           helperText="Todas as palavras precisam aparecer, em qualquer ordem."
           maxLength={100}
-          containerClassName="md:col-span-2"
-          defaultValue={value("search", criteria?.search)}
+          defaultValue={text("search", watch?.criteria.search ?? initialCriteria?.search)}
           error={fieldError(state, "search")}
         />
-        <Input
-          name="yearFrom"
-          type="number"
-          inputMode="numeric"
-          label="Ano de"
-          min={1900}
-          max={2100}
-          defaultValue={value("yearFrom", criteria?.yearFrom)}
-          error={fieldError(state, "yearFrom")}
-        />
-        <Input
-          name="yearTo"
-          type="number"
-          inputMode="numeric"
-          label="Ano até"
-          min={1900}
-          max={2100}
-          defaultValue={value("yearTo", criteria?.yearTo)}
-          error={fieldError(state, "yearTo")}
-        />
-        <CurrencyInput
-          name="maxPrice"
-          label="Lance até"
-          helperText="Lance atual ou, sem lance, o inicial."
-          defaultValue={value("maxPrice", centsToInput(criteria?.maxPrice))}
-          error={fieldError(state, "maxPrice")}
-        />
-        {/* key remonta o Select quando o valor restaurado muda (o reset do formulário não o alcança). */}
-        <SelectField
-          key={`condition-${condition ?? ""}`}
-          name="condition"
-          label="Condição"
-          helperText="Como o leiloeiro declara (monta, sucata)."
-          options={CONDITION_KEYS.map((key) => ({ value: key, label: CONDITION_LABELS[key] }))}
-          defaultValue={condition}
-          error={fieldError(state, "condition")}
-        />
-      </fieldset>
+        <div className="grid gap-2">
+          <YearFields {...control} currentYear={currentYear} />
+          {yearError ? <FieldError>{yearError}</FieldError> : null}
+        </div>
+        <CategoryField {...control} />
+        <FuelField {...control} />
+        <MileageField {...control} />
+        <KeyField {...control} />
+      </FormSection>
 
-      <fieldset className="grid gap-4 md:grid-cols-2 md:gap-6">
-        <legend className="mb-4 text-heading-3 text-foreground">Onde e o quê</legend>
-        <SelectField
-          key={`distance-${distance ?? ""}`}
-          name="distance"
-          label={`Distância de ${regionLabel}`}
-          options={[
-            ...DISTANCE_OPTIONS.map((km) => ({ value: km, label: `Até ${km} km` })),
-            { value: "todas", label: "Qualquer distância" },
-          ]}
-          defaultValue={distance}
-          error={fieldError(state, "distance")}
-        />
-        <SelectField
-          key={`category-${category ?? ""}`}
-          name="category"
-          label="Categoria"
-          options={CATEGORY_KEYS.map((key) => ({ value: key, label: CATEGORY_LABELS[key] }))}
-          defaultValue={category}
-          error={fieldError(state, "category")}
-        />
+      <FormSection title="Preço">
+        <div className="grid gap-2">
+          <PriceFields {...control} />
+          {priceError ? <FieldError>{priceError}</FieldError> : null}
+        </div>
+      </FormSection>
+
+      <FormSection title="Condição">
+        <ConditionFields {...control} />
+      </FormSection>
+
+      <FormSection title="Onde e de quem">
+        <DistanceField {...control} regionLabel={regionLabel} />
+        <SourceField {...control} sources={sources} />
+        <OriginField {...control} />
+      </FormSection>
+
+      <FormSection title="Nome">
         <Input
           name="name"
           label="Nome do monitor"
           placeholder="Opcional. Ex.: Fox para revenda"
           helperText="Sem nome, o monitor aparece pela busca."
           maxLength={80}
-          containerClassName="md:col-span-2"
-          defaultValue={value("name", watch?.name)}
+          defaultValue={text("name", watch?.name)}
           error={fieldError(state, "name")}
         />
-      </fieldset>
+      </FormSection>
 
       <p className="text-caption text-muted">
         Só lotes que aparecerem daqui em diante geram alerta. Os que já estão abertos aparecem na lista de monitores
@@ -146,5 +142,14 @@ export function WatchForm({ action, watch, regionLabel, submitLabel }: WatchForm
         </Button>
       </div>
     </form>
+  );
+}
+
+function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="grid max-w-2xl gap-6">
+      <h2 className="text-heading-3 text-foreground">{title}</h2>
+      {children}
+    </section>
   );
 }

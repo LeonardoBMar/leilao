@@ -47,7 +47,11 @@ export async function CollectorStatusLine() {
             : badge.label}
         </Badge>
       ) : null}
-      {health === "ok" && failedListings > 0 ? <Badge variant="warning">{failedListings} lotes com falha</Badge> : null}
+      {health === "ok" && failedListings > 0 ? (
+        <Badge variant="warning">
+          {failedListings === 1 ? "1 lote com falha" : `${failedListings} lotes com falha`}
+        </Badge>
+      ) : null}
     </div>
   );
 }

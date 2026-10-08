@@ -73,9 +73,19 @@ function validate({ tables, catalog, watches }) {
   return problems;
 }
 
+/** Colunas geradas pelo banco (ex.: `listings.price_cents`, D-43) não aceitam valor no insert: o banco recalcula. */
+async function generatedColumns(client, table) {
+  const { rows } = await client.query(
+    "select column_name from information_schema.columns where table_schema = 'public' and table_name = $1 and is_generated = 'ALWAYS'",
+    [table],
+  );
+  return new Set(rows.map((row) => row.column_name));
+}
+
 async function insertRows(client, table, rows) {
+  const generated = await generatedColumns(client, table);
   for (const row of rows) {
-    const columns = Object.keys(row);
+    const columns = Object.keys(row).filter((column) => !generated.has(column));
     const placeholders = columns.map((_, index) => `$${index + 1}`).join(", ");
     await client.query(
       `insert into "${table}" (${columns.map((column) => `"${column}"`).join(", ")}) values (${placeholders})`,

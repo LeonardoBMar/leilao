@@ -1,9 +1,6 @@
 import type { Route } from "next";
 
-import { DEFAULT_CATEGORY, DEFAULT_CONDITION } from "@/domain/listings/criteria";
-
-import type { ListingFilterValues } from "./components/listing-filters";
-import { DEFAULT_DISTANCE, type ListingFilters, listingFiltersSchema } from "./schemas";
+import { type ListingFilters, listingParams, parseListingParams } from "./schemas";
 import type { CatalogAuctionKey } from "./types";
 
 export type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -17,7 +14,7 @@ export function catalogAuctionPath({ sourceId, externalId }: CatalogAuctionKey):
 }
 
 /** Caminho com os filtros atuais (sem página). */
-export function withQuery(path: string, params: Record<string, string | undefined>): Route {
+export function withQuery(path: string, params: Readonly<Record<string, string | undefined>>): Route {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) if (value) search.set(key, value);
   const query = search.toString();
@@ -25,37 +22,13 @@ export function withQuery(path: string, params: Record<string, string | undefine
 }
 
 /**
- * Filtros dos anúncios a partir da URL: `filters` para a consulta, `values` para o formulário e `params` para links
- * e paginação (padrões fora da URL).
+ * Filtros dos anúncios a partir da URL: `filters` para a consulta e `params` (forma canônica, sem padrões nem página)
+ * para a barra de filtros, links e paginação.
  */
 export function readListingSearch(raw: Record<string, string | string[] | undefined>): {
   filters: ListingFilters;
-  values: ListingFilterValues;
-  params: Record<string, string | undefined>;
+  params: Record<string, string>;
 } {
-  const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
-  const filters = listingFiltersSchema.parse(
-    Object.fromEntries(Object.entries(raw).map(([key, value]) => [key, first(value)])),
-  );
-  const values: ListingFilterValues = {
-    busca: filters.search,
-    anoDe: filters.yearFrom?.toString(),
-    anoAte: filters.yearTo?.toString(),
-    precoAte: filters.maxPrice === undefined ? undefined : String(filters.maxPrice / 100),
-    distancia: filters.distanceKm === null ? "todas" : String(filters.distanceKm),
-    categoria: filters.category,
-    condicao: filters.condition,
-    situacao: filters.ended ? "encerrados" : "abertos",
-  };
-  const params: Record<string, string | undefined> = {
-    busca: values.busca,
-    anoDe: values.anoDe,
-    anoAte: values.anoAte,
-    precoAte: values.precoAte,
-    distancia: values.distancia === DEFAULT_DISTANCE ? undefined : values.distancia,
-    categoria: values.categoria === DEFAULT_CATEGORY ? undefined : values.categoria,
-    condicao: values.condicao === DEFAULT_CONDITION ? undefined : values.condicao,
-    situacao: values.situacao === "abertos" ? undefined : values.situacao,
-  };
-  return { filters, values, params };
+  const filters = parseListingParams(raw);
+  return { filters, params: listingParams(filters) };
 }
