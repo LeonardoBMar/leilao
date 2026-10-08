@@ -1,3 +1,4 @@
+import type { LimitFit, PriceEstimate } from "@/domain/listings/estimates";
 import type { Cents } from "@/domain/money";
 
 /** Limite da análise fixada mais recente do lote. */
@@ -22,6 +23,21 @@ export type LotListItem = {
 };
 
 export type LotPage = { items: LotListItem[]; total: number; page: number; pageSize: number };
+
+/** Lote acompanhado no dashboard (D-44): fim do anúncio ligado e o provável frente ao limite fixado. */
+export type FollowedLotItem = LotListItem & {
+  /** Fim do anúncio ligado; nulo em lote manual ou anúncio sem data. */
+  endsAt: Date | null;
+  /** Só com anúncio aberto ligado (D-36); `insufficient` diz quantos comparáveis faltam. */
+  price: PriceEstimate | null;
+  fit: LimitFit | null;
+};
+
+export type FollowedLotsOverview = {
+  items: FollowedLotItem[];
+  /** Com o provável acima do limite fixado. */
+  aboveLimit: number;
+};
 
 /** Leilão do usuário com os lotes que atendem aos filtros ("Minhas análises" por leilão). */
 export type LotAuctionGroup = {

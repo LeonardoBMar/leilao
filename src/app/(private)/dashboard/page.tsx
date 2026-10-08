@@ -1,11 +1,10 @@
-import { Plus } from "lucide-react";
+import { Gavel, Plus } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { ButtonLink, Section, SectionHeader, SectionTitle } from "@/components/ui";
 import { RecentAlerts } from "@/features/alerts/components/recent-alerts";
-import { UpcomingAuctions, UpcomingAuctionsSkeleton } from "@/features/auctions/components/upcoming-auctions";
 import {
   DashboardCounts,
   DashboardCountsSkeleton,
@@ -13,12 +12,18 @@ import {
   DecisionIndicatorSkeleton,
 } from "@/features/dashboard/components/dashboard-summary";
 import { PendingItems } from "@/features/dashboard/components/pending-items";
+import { RegionAuctions, RegionAuctionsSkeleton } from "@/features/dashboard/components/region-auctions";
+import { ToAnalyze, ToAnalyzeSkeleton } from "@/features/dashboard/components/to-analyze";
 import { CollectorStatusLine, CollectorStatusLineSkeleton } from "@/features/listings/components/collector-status";
 import { FollowedLots, FollowedLotsSkeleton } from "@/features/lots/components/followed-lots";
 
 export const metadata: Metadata = { title: "Dashboard · Leilão Tracker" };
 
-/** Visão geral (SPEC §5, DESIGN.md §15.1). Cada seção carrega de forma independente. */
+/**
+ * Visão geral orientada à próxima decisão (SPEC §5, DESIGN.md §15.1, D-44): o que analisar agora, os acompanhados
+ * frente ao limite, os próximos leilões da região e, na lateral, pendências e o indicador. Cada seção carrega de forma
+ * independente; as que leem o catálogo compartilham a mesma consulta por requisição.
+ */
 export default function DashboardPage() {
   return (
     <div className="grid gap-9">
@@ -30,10 +35,16 @@ export default function DashboardPage() {
           </Suspense>
         }
         actions={
-          <ButtonLink href="/minhas-analises/leiloes/novo">
-            <Plus aria-hidden="true" />
-            Novo leilão
-          </ButtonLink>
+          <>
+            <ButtonLink href="/minhas-analises/leiloes/novo" variant="secondary">
+              <Plus aria-hidden="true" />
+              Novo leilão
+            </ButtonLink>
+            <ButtonLink href="/leiloes">
+              <Gavel aria-hidden="true" />
+              Ver leilões
+            </ButtonLink>
+          </>
         }
       />
 
@@ -44,6 +55,13 @@ export default function DashboardPage() {
 
       <div className="grid gap-10 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] xl:gap-14">
         <div className="grid content-start gap-10">
+          <Section aria-labelledby="to-analyze" className="gap-2">
+            <SectionTitle id="to-analyze">Para analisar agora</SectionTitle>
+            <Suspense fallback={<ToAnalyzeSkeleton />}>
+              <ToAnalyze />
+            </Suspense>
+          </Section>
+
           <Section aria-labelledby="followed-lots" className="gap-2">
             <SectionHeader>
               <SectionTitle id="followed-lots">Lotes acompanhados</SectionTitle>
@@ -56,10 +74,10 @@ export default function DashboardPage() {
             </Suspense>
           </Section>
 
-          <Section aria-labelledby="upcoming-auctions" className="gap-2">
-            <SectionTitle id="upcoming-auctions">Próximos leilões</SectionTitle>
-            <Suspense fallback={<UpcomingAuctionsSkeleton />}>
-              <UpcomingAuctions />
+          <Section aria-labelledby="region-auctions" className="gap-2">
+            <SectionTitle id="region-auctions">Próximos leilões na região</SectionTitle>
+            <Suspense fallback={<RegionAuctionsSkeleton />}>
+              <RegionAuctions />
             </Suspense>
           </Section>
         </div>
@@ -73,13 +91,10 @@ export default function DashboardPage() {
             <DecisionIndicator />
           </Suspense>
 
-          <section aria-label="Coleta automática" className="grid gap-3 border-t border-border pt-5">
+          <section aria-label="Coleta automática" className="border-t border-border pt-5">
             <Suspense fallback={<CollectorStatusLineSkeleton />}>
               <CollectorStatusLine />
             </Suspense>
-            <ButtonLink href="/leiloes" variant="secondary" className="w-fit">
-              Ver leilões
-            </ButtonLink>
           </section>
         </aside>
       </div>

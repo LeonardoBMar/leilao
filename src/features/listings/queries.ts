@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cache } from "react";
+
 import {
   catalogAuctionDate,
   type CatalogAuctionStats,
@@ -10,12 +12,16 @@ import {
   CATEGORY_OF_KEY,
   CONDITION_RULES,
   type ConditionKey,
+  criteriaFromStored,
   DEFAULT_CATEGORIES,
+  DEFAULT_CRITERIA,
   type FuelKey,
   fuelOf,
   HIDE_FLAGS,
   type HideKey,
   type ListingCriteria,
+  type MatchableListing,
+  matchesCriteria,
   NAMED_CATEGORIES,
   type OriginKey,
   originOf,
@@ -24,9 +30,12 @@ import {
 import {
   type AnalysisSample,
   buildEstimateIndex,
+  byAnalysisPriority,
   type EstimateIndex,
   estimateLimit,
   estimatePrice,
+  limitFit,
+  limitMaxBid,
   SALES_WINDOW_MS,
 } from "@/domain/listings/estimates";
 import { computeFacets } from "@/domain/listings/facets";
@@ -35,9 +44,11 @@ import { collectorHealth, overallHealth } from "@/domain/listings/health";
 import { DEFAULT_REGION } from "@/domain/listings/region";
 import { trackerMissing } from "@/domain/listings/tracker";
 import { cents } from "@/domain/money";
+import { defaultsInputFromListing } from "@/features/analyses/draft-defaults";
 import { analysisColumns, toInputs } from "@/features/analyses/queries";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
+import { storedCriteriaSelect } from "@/server/collector/alerts";
 import { db } from "@/server/db";
 
 import {
@@ -57,6 +68,7 @@ import type {
   ListingFacetsView,
   ListingListItem,
   ListingPage,
+  RegionOverview,
 } from "./types";
 
 /**
@@ -99,6 +111,13 @@ export const listingCardSelect = (ownerId: string) =>
     marketValueCents: true,
     category: true,
     photoUrls: true,
+    // Taxas do anúncio: entram no limite pelas premissas padrão (D-44), como no rascunho.
+    commissionBps: true,
+    dispatcherFeeCents: true,
+    removalFeeCents: true,
+    storageFeeCents: true,
+    inspectionFeeCents: true,
+    otherFeesCents: true,
     source: { select: { name: true } },
     municipality: { select: { latitude: true, longitude: true } },
     lots: { where: { ownerId }, select: { id: true }, take: 1 },
@@ -160,6 +179,15 @@ export async function loadEstimateContext(now: Date): Promise<EstimateContext> {
   };
 }
 
+/**
+ * A mesma base, uma vez por requisição (memo do `React.cache`, como `getCurrentUser`; D-44): cabeçalho e blocos do
+ * dashboard leem as estimativas sem recarregar as vendas. Não guarda nada entre requisições (D-04).
+ */
+export const getEstimateContext = cache(async (): Promise<EstimateContext> => {
+  await requireUser();
+  return loadEstimateContext(new Date());
+});
+
 /** Só anúncio aberto: encerrado já tem o lance final. */
 function estimateFor(row: ListingCardRow, context: EstimateContext | null): ListingEstimate | null {
   if (!context || row.status !== "open" || (row.endsAt !== null && row.endsAt <= context.now)) return null;
@@ -172,7 +200,9 @@ function estimateFor(row: ListingCardRow, context: EstimateContext | null): List
     damageLevel: row.damageLevel,
     marketValue: toCents(row.marketValueCents),
   };
-  return { price: estimatePrice(target, context.index), limit: estimateLimit(target, context.analyses) };
+  const price = estimatePrice(target, context.index);
+  const limit = estimateLimit(target, context.analyses, defaultsInputFromListing(row));
+  return { price, limit, fit: limitFit(price, limitMaxBid(limit)) };
 }
 
 export function toListItem(row: ListingCardRow, estimates: EstimateContext | null = null): ListingListItem {
@@ -588,6 +618,106 @@ export async function getCatalogAuction(key: CatalogAuctionKey): Promise<Catalog
   ]);
   if (!stats) return null;
   return { ...stats, date: catalogAuctionDate(stats), isOpen: stats.open > 0, userAuctionId: userAuction?.id ?? null };
+}
+
+/** Cartões em "Para analisar agora" e leilões em "Próximos leilões na região" (D-44). */
+const TO_ANALYZE_SHOWN = 6;
+const REGION_AUCTIONS_SHOWN = 5;
+const REGION_AUCTIONS_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
+const fits = (item: ListingListItem) => item.estimate?.fit === "comfortable" || item.estimate?.fit === "tight";
+
+/**
+ * O catálogo visto da home (D-44): anúncios abertos no filtro padrão (`DEFAULT_CRITERIA`) ou em algum monitor ligado
+ * do usuário. Daí saem "Para analisar agora" (ainda sem lote do usuário, com o provável cabendo no limite, na ordem de
+ * `byAnalysisPriority`) e os leilões dos próximos 7 dias, com lotes no filtro e quantos cabem. Memo por requisição:
+ * o cabeçalho e os dois blocos do dashboard leem o mesmo resultado.
+ */
+export const getRegionOverview = cache(async (): Promise<RegionOverview> => {
+  const user = await requireUser();
+  const now = new Date();
+  const [watches, context] = await Promise.all([
+    db.watch.findMany({ where: { ownerId: user.id, active: true }, select: storedCriteriaSelect }),
+    getEstimateContext(),
+  ]);
+  const criteriaList = [DEFAULT_CRITERIA, ...watches.map(criteriaFromStored)];
+  const wheres = await Promise.all(
+    criteriaList.map(async (criteria) => criteriaWhere(criteria, await loadTextValues(criteria))),
+  );
+
+  const rows = await db.listing.findMany({
+    // O banco pré-filtra (retângulo de cada critério); `matchesCriteria` aplica a regra exata, inclusive a distância.
+    where: { AND: [openWhere(now), { auctionExternalId: { not: null } }, { OR: wheres }] },
+    orderBy: [{ endsAt: "asc" }, { id: "asc" }],
+    take: MAX_CANDIDATES + 1,
+    select: { ...listingCardSelect(user.id), sourceId: true, fipeName: true, hasKey: true },
+  });
+  const truncated = rows.length > MAX_CANDIDATES;
+  const matching = rows
+    .slice(0, MAX_CANDIDATES)
+    .map((row) => ({ row, item: toListItem(row, context) }))
+    .filter(({ row, item }) => {
+      const listing = toMatchable(row, item.distanceKm);
+      return criteriaList.some((criteria) => matchesCriteria(criteria, listing, now));
+    });
+
+  const toAnalyze = matching
+    .flatMap(({ item }) =>
+      item.trackedLotId === null && item.estimate && fits(item)
+        ? [{ item, candidate: { ...item.estimate, endsAt: item.endsAt } }]
+        : [],
+    )
+    .sort((a, b) => byAnalysisPriority(a.candidate, b.candidate))
+    .map(({ item }) => item);
+
+  // Leilões: só anúncios que encerram nos próximos 7 dias.
+  const soon = matching.filter(
+    ({ row }) => row.endsAt !== null && row.endsAt.getTime() - now.getTime() <= REGION_AUCTIONS_WINDOW_MS,
+  );
+  const inFilter = countByAuction(soon.map(({ row }) => row));
+  const fitting = countByAuction(soon.filter(({ item }) => fits(item)).map(({ row }) => row));
+  const stats = await loadCatalogAuctionStats(user.id, [...inFilter.values()], now);
+  const auctions = selectCatalogAuctions(
+    stats.map((item) => ({ ...item, matching: inFilter.get(keyOf(item.sourceId, item.externalId))?.count ?? 0 })),
+    false,
+  )
+    .slice(0, REGION_AUCTIONS_SHOWN)
+    .map((item) => ({ ...item, fitting: fitting.get(keyOf(item.sourceId, item.externalId))?.count ?? 0 }));
+
+  return {
+    toAnalyze: toAnalyze.slice(0, TO_ANALYZE_SHOWN),
+    toAnalyzeTotal: toAnalyze.length,
+    auctions,
+    auctionsTotal: inFilter.size,
+    truncated,
+  };
+});
+
+type MatchableRow = ListingCardRow & { sourceId: string; fipeName: string | null; hasKey: boolean | null };
+
+function toMatchable(row: MatchableRow, distance: number | null): MatchableListing {
+  return {
+    sourceId: row.sourceId,
+    title: row.title,
+    brand: row.brand,
+    model: row.model,
+    fipeName: row.fipeName,
+    modelYear: row.modelYear,
+    mileageKm: row.mileageKm,
+    category: row.category,
+    fuel: row.fuel,
+    recoveryType: row.recoveryType,
+    hasKey: row.hasKey,
+    damageLevel: row.damageLevel,
+    conditionFlags: row.conditionFlags,
+    inspection: row.inspectionResult,
+    status: row.status,
+    endsAt: row.endsAt,
+    currentBid: toCents(row.currentBidCents),
+    minimumBid: toCents(row.minimumBidCents),
+    marketValue: toCents(row.marketValueCents),
+    distanceKm: distance,
+  };
 }
 
 type CatalogAuctionStatsRow = CatalogAuctionStats & { sourceName: string };

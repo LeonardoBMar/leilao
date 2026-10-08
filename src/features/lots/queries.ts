@@ -1,14 +1,18 @@
 import "server-only";
 
+import { cache } from "react";
+
 import { compareToFixedLimit, roomToFixedLimit } from "@/domain/finance/calculator";
+import { estimatePrice, limitFit } from "@/domain/listings/estimates";
 import { cents } from "@/domain/money";
+import { getEstimateContext } from "@/features/listings/queries";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
 
 import { toFixedLimit } from "./limit";
 import { LOT_GROUPS_PAGE_SIZE, LOT_POSITION_COMPARISONS, type LotFilters, LOTS_PAGE_SIZE } from "./schemas";
-import type { LotDetail, LotGroupPage, LotListItem, LotPage } from "./types";
+import type { FollowedLotsOverview, LotDetail, LotGroupPage, LotListItem, LotPage } from "./types";
 
 const listSelect = {
   id: true,
@@ -164,6 +168,75 @@ export async function listLots(filters: LotFilters, scope: { auctionId?: string 
 
   return { items: rows.map(toListItem), total, page: filters.page, pageSize: LOTS_PAGE_SIZE };
 }
+
+/**
+ * Acompanhados do dashboard (D-44): ativos, marcados e sem resultado, do que encerra primeiro (sem anúncio ou sem
+ * data, por último, pela data do leilão). Cada um com o provável do anúncio aberto ligado frente ao limite fixado.
+ * Memo por requisição: o cabeçalho conta os que têm o provável acima do limite.
+ */
+export const getFollowedLotsOverview = cache(async (): Promise<FollowedLotsOverview> => {
+  const user = await requireUser();
+  const [rows, context] = await Promise.all([
+    db.lot.findMany({
+      where: {
+        ownerId: user.id,
+        archivedAt: null,
+        auction: { archivedAt: null },
+        isFollowed: true,
+        results: { none: {} },
+      },
+      orderBy: [{ auction: { startsAt: "asc" } }, { lotNumber: "asc" }, { id: "asc" }],
+      select: {
+        ...listSelect,
+        listing: {
+          select: {
+            status: true,
+            endsAt: true,
+            mileageKm: true,
+            category: true,
+            damageLevel: true,
+            marketValueCents: true,
+          },
+        },
+      },
+    }),
+    getEstimateContext(),
+  ]);
+
+  const items = rows.map(({ listing, ...row }) => {
+    const item = toListItem(row);
+    const open = listing?.status === "open" && (listing.endsAt === null || listing.endsAt > context.now);
+    const price =
+      listing && open
+        ? estimatePrice(
+            {
+              brand: item.brand,
+              model: item.model,
+              modelYear: item.modelYear,
+              mileageKm: listing.mileageKm,
+              category: listing.category,
+              damageLevel: listing.damageLevel,
+              marketValue: listing.marketValueCents === null ? null : cents(listing.marketValueCents),
+            },
+            context.index,
+          )
+        : null;
+    const maxBid = item.limit?.isViable ? item.limit.maxBid : null;
+    return {
+      ...item,
+      endsAt: listing?.endsAt ?? null,
+      price,
+      fit: price === null ? null : limitFit(price, maxBid),
+    };
+  });
+  // Estável: sem data de fim, mantém a ordem do banco (data do leilão).
+  items.sort((a, b) => {
+    if (a.endsAt === null || b.endsAt === null) return a.endsAt === b.endsAt ? 0 : a.endsAt === null ? 1 : -1;
+    return a.endsAt.getTime() - b.endsAt.getTime();
+  });
+
+  return { items, aboveLimit: items.filter((item) => item.fit === "above").length };
+});
 
 /**
  * "Minhas análises" por leilão (D-42): os leilões do usuário, do mais recente, cada um com os lotes que atendem aos

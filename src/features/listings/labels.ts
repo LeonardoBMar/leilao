@@ -1,4 +1,5 @@
 import type { ConditionFlag, DamageLevel, InspectionResult } from "@/domain/listings/condition";
+import type { LimitFit } from "@/domain/listings/estimates";
 import type { ListingStatus } from "@/domain/listings/types";
 
 export const LISTING_STATUS_LABELS = {
@@ -55,3 +56,16 @@ export const INSPECTION_VARIANTS = {
   approved_with_notes: "warning",
   rejected: "destructive",
 } as const satisfies Record<InspectionResult, "success" | "warning" | "destructive">;
+
+/** Provável frente ao limite (D-44). O texto sempre diz a situação; a cor só reforça. */
+export const LIMIT_FIT_LABELS = {
+  comfortable: "Cabe com folga",
+  tight: "No limite",
+  above: "Provável acima do limite",
+} satisfies Record<LimitFit, string>;
+
+export const LIMIT_FIT_VARIANTS = {
+  comfortable: "success",
+  tight: "warning",
+  above: "destructive",
+} as const satisfies Record<LimitFit, "success" | "warning" | "destructive">;

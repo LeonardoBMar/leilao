@@ -1,6 +1,6 @@
 import type { CatalogAuctionState, CatalogAuctionStats } from "@/domain/listings/catalog-auctions";
 import type { ConditionFlag, DamageLevel, InspectionResult } from "@/domain/listings/condition";
-import type { LimitEstimate, PriceEstimate } from "@/domain/listings/estimates";
+import type { LimitEstimate, LimitFit, PriceEstimate } from "@/domain/listings/estimates";
 import type { ListingFacets } from "@/domain/listings/facets";
 import type { CollectorHealth } from "@/domain/listings/health";
 import type { ListingStatus } from "@/domain/listings/types";
@@ -44,8 +44,11 @@ export type ListingListItem = {
   estimate: ListingEstimate | null;
 };
 
-/** Preço provável (catálogo) e limite estimado (análises do usuário), cada um com a própria base. */
-export type ListingEstimate = { price: PriceEstimate; limit: LimitEstimate };
+/**
+ * Preço provável (catálogo) e limite estimado (análises do usuário ou premissas padrão), cada um com a própria base, e
+ * a situação do provável frente a esse limite (D-44).
+ */
+export type ListingEstimate = { price: PriceEstimate; limit: LimitEstimate; fit: LimitFit | null };
 
 export type ListingPage = {
   items: ListingListItem[];
@@ -72,6 +75,21 @@ export type CatalogAuctionPage = {
   page: number;
   pageSize: number;
   /** Mais candidatos que o teto da busca por raio: as contagens são parciais e a tela avisa. */
+  truncated: boolean;
+};
+
+/** Leilão do catálogo na home: `matching` = lotes no filtro que encerram em 7 dias; `fitting` = quantos cabem. */
+export type RegionAuction = CatalogAuctionItem & { fitting: number };
+
+/** O catálogo visto da home (D-44). */
+export type RegionOverview = {
+  /** Os primeiros de "Para analisar agora", na ordem da regra. */
+  toAnalyze: ListingListItem[];
+  toAnalyzeTotal: number;
+  /** Próximos leilões na região, do mais próximo. */
+  auctions: RegionAuction[];
+  auctionsTotal: number;
+  /** Mais candidatos que o teto da busca: as contagens são parciais. */
   truncated: boolean;
 };
 

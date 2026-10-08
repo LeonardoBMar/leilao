@@ -1,11 +1,3 @@
-/** Contagens do resumo do dashboard (SPEC §5 `/dashboard`). */
-export type DashboardCounts = {
-  activeAuctions: number;
-  activeLots: number;
-  followedLotsWithoutResult: number;
-  analyzedLots: number;
-};
-
 /** Indicador inicial do SPEC §10: comparáveis com análise anterior e quantos ficaram dentro do limite. */
 export type LimitIndicator = { comparable: number; withinLimit: number };
 

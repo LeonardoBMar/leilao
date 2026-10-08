@@ -10,6 +10,8 @@ import {
   DAMAGE_VARIANTS,
   INSPECTION_LABELS,
   INSPECTION_VARIANTS,
+  LIMIT_FIT_LABELS,
+  LIMIT_FIT_VARIANTS,
   LISTING_STATUS_LABELS,
   LISTING_STATUS_VARIANTS,
 } from "../labels";
@@ -139,7 +141,8 @@ export function ListingCard({ item, header, footer, eager = false }: ListingCard
 
 /**
  * Estimativas com dados do sistema (etapa 5, D-36), sempre com o número de casos. Sem base, diz o que falta em vez de
- * inventar um número.
+ * inventar um número. O limite sem análises parecidas vem das premissas padrão, e a situação compara o provável com
+ * ele (D-44).
  */
 function EstimateLines({ estimate }: { estimate: ListingEstimate }) {
   const { price, limit } = estimate;
@@ -177,7 +180,7 @@ function EstimateLines({ estimate }: { estimate: ListingEstimate }) {
           <dd className="text-right">
             {limit.kind === "insufficient" ? (
               <span className="text-muted">
-                Faça {limit.needed} análises parecidas ({limit.analyses} de {limit.needed})
+                Sem FIPE no anúncio e {limit.analyses} de {limit.needed} análises parecidas
               </span>
             ) : (
               <>
@@ -187,12 +190,22 @@ function EstimateLines({ estimate }: { estimate: ListingEstimate }) {
                   <Money value={limit.maxBid} className="font-semibold text-foreground" />
                 )}{" "}
                 <span className="text-muted">
-                  ({limit.n} análises{limit.marketValueFrom === "listing" ? ", venda pela FIPE do anúncio" : ""})
+                  {limit.kind === "defaults"
+                    ? "(premissas padrão)"
+                    : `(${limit.n} análises${limit.marketValueFrom === "listing" ? ", venda pela FIPE do anúncio" : ""})`}
                 </span>
               </>
             )}
           </dd>
         </div>
+        {estimate.fit === null ? null : (
+          <div className="grid grid-cols-[auto_1fr] items-center gap-x-2">
+            <dt className="text-muted">Provável × limite</dt>
+            <dd className="flex justify-end">
+              <Badge variant={LIMIT_FIT_VARIANTS[estimate.fit]}>{LIMIT_FIT_LABELS[estimate.fit]}</Badge>
+            </dd>
+          </div>
+        )}
       </dl>
     </section>
   );

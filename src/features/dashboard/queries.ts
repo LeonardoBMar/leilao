@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cache } from "react";
+
 import type { FixedLimit } from "@/domain/finance/calculator";
 import { listingOutcome } from "@/domain/listings/outcome";
 import { cents } from "@/domain/money";
@@ -7,21 +9,7 @@ import { compareResult, limitIndicator } from "@/domain/results/results";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
 
-import type { DashboardCounts, LimitIndicator, PendingItems } from "./types";
-
-export async function getDashboardCounts(): Promise<DashboardCounts> {
-  const user = await requireUser();
-  // Lote ativo: não arquivado e de leilão não arquivado (RF-08).
-  const activeLot = { ownerId: user.id, archivedAt: null, auction: { archivedAt: null } };
-
-  const [activeAuctions, activeLots, followedLotsWithoutResult, analyzedLots] = await Promise.all([
-    db.auction.count({ where: { ownerId: user.id, archivedAt: null } }),
-    db.lot.count({ where: activeLot }),
-    db.lot.count({ where: { ...activeLot, isFollowed: true, results: { none: {} } } }),
-    db.lot.count({ where: { ...activeLot, analyses: { some: { status: "fixed" } } } }),
-  ]);
-  return { activeAuctions, activeLots, followedLotsWithoutResult, analyzedLots };
-}
+import type { LimitIndicator, PendingItems } from "./types";
 
 /** Indicador do SPEC §10 sobre a revisão vigente de cada lote ativo. */
 export async function getLimitIndicator(): Promise<LimitIndicator> {
@@ -66,8 +54,9 @@ const toCents = (value: number | null) => (value === null ? null : cents(value))
 /**
  * Pendências do dashboard: rascunhos de análise abertos e lotes acompanhados cujo leilão já começou e ainda não
  * têm resultado. Lote ligado a anúncio só entra com resultado a confirmar; o resto o coletor registra. Só ativos.
+ * Memo por requisição: o cabeçalho do dashboard conta as pendências (D-44).
  */
-export async function getPendingItems(): Promise<PendingItems> {
+export const getPendingItems = cache(async (): Promise<PendingItems> => {
   const user = await requireUser();
   const now = new Date();
   const activeLot = { archivedAt: null, auction: { archivedAt: null } };
@@ -154,4 +143,4 @@ export async function getPendingItems(): Promise<PendingItems> {
       toConfirm,
     })),
   };
-}
+});

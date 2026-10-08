@@ -1,32 +1,25 @@
 import Link from "next/link";
 
-import { ButtonLink, EmptyState, Money, Skeleton } from "@/components/ui";
-import { formatDate } from "@/lib/format";
+import { Badge, ButtonLink, EmptyState, Money, Skeleton } from "@/components/ui";
+import { LIMIT_FIT_LABELS, LIMIT_FIT_VARIANTS } from "@/features/listings/labels";
+import { formatDate, formatShortDateTime } from "@/lib/format";
 
-import { listLots } from "../queries";
+import { getFollowedLotsOverview } from "../queries";
+import type { FollowedLotItem } from "../types";
 import { LimitProgress } from "./limit-progress";
 
 const SHOWN = 8;
 const ALL_FOLLOWED_HREF = "/minhas-analises?acompanhados=1&resultado=sem";
 
 /**
- * "Lotes acompanhados" do dashboard (SPEC §5, DESIGN.md §15.1 e §19.5): ativos, marcados e ainda sem resultado,
- * em linhas com lance atual, limite fixado e a distância até o limite.
+ * "Lotes acompanhados" do dashboard (SPEC §5, DESIGN.md §15.1 e §19.5, D-44): ativos, marcados e ainda sem
+ * resultado, do que encerra primeiro, em linhas com lance atual, limite fixado, a distância até o limite e o provável
+ * lance final frente ao limite.
  */
 export async function FollowedLots() {
-  const page = await listLots({
-    search: undefined,
-    followedOnly: true,
-    analysis: undefined,
-    result: "sem",
-    archived: false,
-    position: undefined,
-    timing: undefined,
-    sort: "leilao",
-    page: 1,
-  });
+  const { items } = await getFollowedLotsOverview();
 
-  if (page.total === 0) {
+  if (items.length === 0) {
     return (
       <EmptyState
         variant="inline"
@@ -44,7 +37,7 @@ export async function FollowedLots() {
   return (
     <div className="grid gap-3">
       <ul className="border-b border-border">
-        {page.items.slice(0, SHOWN).map((lot) => (
+        {items.slice(0, SHOWN).map((lot) => (
           <li
             key={lot.id}
             className="grid grid-cols-[3.5rem_minmax(0,1fr)] items-center gap-x-5 gap-y-3 border-t border-border py-4 md:grid-cols-[3.5rem_minmax(0,1fr)_9.5rem_12rem]"
@@ -55,7 +48,8 @@ export async function FollowedLots() {
                 {lot.brand} {lot.model} {lot.modelYear}
               </Link>
               <p className="truncate text-caption text-muted">
-                {lot.auction.name} · {formatDate(lot.auction.startsAt)}
+                {lot.auction.name} ·{" "}
+                {lot.endsAt ? `encerra ${formatShortDateTime(lot.endsAt)}` : formatDate(lot.auction.startsAt)}
               </p>
             </div>
             <div className="col-start-2 md:col-start-auto md:text-right">
@@ -72,18 +66,40 @@ export async function FollowedLots() {
                 )}
               </p>
             </div>
-            <div className="col-start-2 md:col-start-auto">
+            <div className="col-start-2 grid gap-1.5 md:col-start-auto">
               <LimitProgress limit={lot.limit} bid={lot.currentBid} />
+              <ProbableLine lot={lot} />
             </div>
           </li>
         ))}
       </ul>
-      {page.total > SHOWN ? (
+      {items.length > SHOWN ? (
         <Link href={ALL_FOLLOWED_HREF} className="w-fit text-label text-accent hover:underline">
-          Ver todos os {page.total} lotes acompanhados
+          Ver todos os {items.length} lotes acompanhados
         </Link>
       ) : null}
     </div>
+  );
+}
+
+/** Provável lance final do anúncio ligado frente ao limite fixado; sem anúncio aberto, nada (D-44). */
+function ProbableLine({ lot }: { lot: FollowedLotItem }) {
+  const { price, fit } = lot;
+  if (price === null) return null;
+  if (price.kind === "insufficient") {
+    return (
+      <p className="text-caption text-muted">
+        Provável: sem base ({price.comparables} de {price.needed})
+      </p>
+    );
+  }
+  return (
+    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-muted">
+      <span>
+        Provável <Money value={price.median} className="font-medium text-foreground-secondary" /> (n={price.n})
+      </span>
+      {fit === null ? null : <Badge variant={LIMIT_FIT_VARIANTS[fit]}>{LIMIT_FIT_LABELS[fit]}</Badge>}
+    </p>
   );
 }
 
