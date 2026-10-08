@@ -53,7 +53,7 @@ function SegmentedControl<T extends string>({
           <RadioGroupPrimitive.Item
             key={option.value}
             value={option.value}
-            className="flex min-h-9 min-w-0 flex-1 items-center justify-center rounded-sm px-2 py-1 text-center text-caption leading-tight font-medium text-foreground-secondary transition-colors duration-120 outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent data-[state=checked]:bg-surface data-[state=checked]:font-semibold data-[state=checked]:text-foreground data-[state=checked]:shadow-sm"
+            className="flex min-h-10 min-w-0 flex-1 items-center justify-center rounded-sm px-2 py-1 text-center text-caption leading-tight font-medium text-foreground-secondary transition-colors duration-120 outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent data-[state=checked]:bg-surface data-[state=checked]:font-semibold data-[state=checked]:text-foreground data-[state=checked]:shadow-sm"
           >
             {option.label}
           </RadioGroupPrimitive.Item>

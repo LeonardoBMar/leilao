@@ -88,16 +88,25 @@ export function PriceFields({ criteria, onChange }: CriteriaControlProps) {
     setRange(committed);
   }
   const [low, high] = range;
+  // Ponto não arrastado mostra o valor gravado (que pode ser exato, digitado no campo), não o passo mais próximo.
+  const lowText =
+    low === committed[0] && criteria.minPrice !== null ? compactBRL(criteria.minPrice) : stepText(low, "min");
+  const highText =
+    high === committed[1] && criteria.maxPrice !== null ? compactBRL(criteria.maxPrice) : stepText(high, "max");
 
+  // Grava só o ponto que mudou: o outro guarda o valor exato.
   function commitRange([nextLow, nextHigh]: number[]) {
     if (nextLow === undefined || nextHigh === undefined) return;
-    onChange({ minPrice: stepCents(nextLow), maxPrice: nextHigh === LAST_STEP ? null : stepCents(nextHigh) });
+    const patch: Partial<ListingCriteria> = {};
+    if (nextLow !== committed[0]) patch.minPrice = stepCents(nextLow);
+    if (nextHigh !== committed[1]) patch.maxPrice = nextHigh === LAST_STEP ? null : stepCents(nextHigh);
+    if (Object.keys(patch).length > 0) onChange(patch);
   }
 
   return (
     <div className="grid gap-5">
       <fieldset className="grid gap-2">
-        <legend className="mb-2 text-label text-foreground">Preço</legend>
+        <legend className="mb-2 text-label text-foreground">Faixa de preço</legend>
         <p className="text-caption text-muted">Lance atual ou, sem lance, o inicial.</p>
         <Slider
           min={0}
@@ -111,11 +120,11 @@ export function PriceFields({ criteria, onChange }: CriteriaControlProps) {
           }}
           onValueCommit={commitRange}
           thumbLabels={["Preço mínimo", "Preço máximo"]}
-          thumbValueTexts={[stepText(low, "min"), stepText(high, "max")]}
+          thumbValueTexts={[lowText, highText]}
         />
         <div aria-hidden="true" className="flex justify-between text-caption text-muted tabular-nums">
-          <span>{stepText(low, "min")}</span>
-          <span>{stepText(high, "max")}</span>
+          <span>{lowText}</span>
+          <span>{highText}</span>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <ReaisInput

@@ -2,7 +2,7 @@
 
 import { ChevronDown, LoaderCircle, SlidersHorizontal, Target } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useId, useOptimistic, useTransition } from "react";
+import { useId, useOptimistic, useRef, useTransition } from "react";
 
 import {
   Button,
@@ -76,6 +76,12 @@ export function LotFilters({
 }: LotFiltersProps) {
   const router = useRouter();
   const sortLabelId = useId();
+  // Chip, atalho e "Limpar tudo" somem ao aplicar: o foco vai para o total, que anuncia o resultado.
+  const statusRef = useRef<HTMLParagraphElement>(null);
+  const applyAndFocusStatus = (next: Parameters<typeof apply>[0]) => {
+    apply(next);
+    statusRef.current?.focus();
+  };
   const [isPending, startTransition] = useTransition();
   const [filters, setOptimisticFilters] = useOptimistic(parseLotParams(params));
   const chips = activeLotFilters(filters);
@@ -243,14 +249,22 @@ export function LotFilters({
           <ul aria-label="Filtros ativos" className="contents">
             {chips.map((chip) => (
               <li key={chip.id} className="flex max-w-full">
-                <RemovableChip removeLabel={`Remover filtro ${chip.label}`} onRemove={() => apply(chip.without)}>
+                <RemovableChip
+                  removeLabel={`Remover filtro ${chip.label}`}
+                  onRemove={() => applyAndFocusStatus(chip.without)}
+                >
                   {chip.label}
                 </RemovableChip>
               </li>
             ))}
           </ul>
           {chips.length > 1 ? (
-            <Button variant="link" size="sm" className="h-8 px-1" onClick={() => apply(clearedLotFilters(filters))}>
+            <Button
+              variant="link"
+              size="sm"
+              className="h-10 px-1"
+              onClick={() => applyAndFocusStatus(clearedLotFilters(filters))}
+            >
               Limpar tudo
             </Button>
           ) : null}
@@ -258,7 +272,12 @@ export function LotFilters({
       ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-        <p role="status" className="flex items-center gap-2 text-label text-foreground tabular-nums">
+        <p
+          ref={statusRef}
+          role="status"
+          tabIndex={-1}
+          className="flex items-center gap-2 rounded-sm text-label text-foreground tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        >
           {isPending ? (
             <>
               <LoaderCircle aria-hidden="true" className="size-4 animate-spin text-muted" />
@@ -281,7 +300,9 @@ export function LotFilters({
               }}
             >
               <SelectTrigger aria-labelledby={sortLabelId} className="w-60">
-                <SelectValue />
+                <SelectValue>
+                  {filters.sort === "leilao" && inAuction ? "Número do lote" : LOT_SORT_LABELS[filters.sort]}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {LOT_SORT_KEYS.map((key) => (
