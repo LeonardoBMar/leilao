@@ -34,7 +34,7 @@ export default defineConfig({
     { name: "setup", testMatch: /auth\.setup\.ts/, use: { ...devices["Desktop Chrome"] } },
     {
       name: "authenticated",
-      testMatch: /(flow|access|discovered|watches|tracker)\.spec\.ts/,
+      testMatch: /(flow|access|catalog|watches|tracker)\.spec\.ts/,
       dependencies: ["setup"],
       use: { ...devices["Desktop Chrome"], storageState: AUTH_STATE },
     },

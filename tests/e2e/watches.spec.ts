@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { choose, field } from "./helpers";
+import { field } from "./helpers";
 
 /**
  * Monitores e alertas (docs/PLANO-COLETA.md, etapa 2). Alertas nascem na coleta (D-32), então aqui só a tela
@@ -25,7 +25,9 @@ test("navegação tem Alertas e Monitores, e Alertas abre sem erro", async ({ pa
 test("monitor exige ao menos um critério de veículo e valida a faixa de ano", async ({ page }) => {
   await page.goto("/monitores/novo");
   await page.getByRole("button", { name: "Criar monitor" }).click();
-  await expect(page.getByText("Informe marca ou modelo, um ano ou um lance máximo.")).toBeVisible();
+  await expect(
+    page.getByText("Informe marca ou modelo, um ano, uma faixa de preço ou um teto do valor de mercado."),
+  ).toBeVisible();
 
   await field(page, "Ano de").fill("2015");
   await field(page, "Ano até").fill("2010");
@@ -40,7 +42,7 @@ test("cria, edita, desliga e exclui um monitor", async ({ page }) => {
   await field(page, "Marca, modelo ou versão").fill(search);
   await field(page, "Ano de").fill("2011");
   await field(page, "Ano até").fill("2013");
-  await choose(page, "Condição", "Até pequena monta");
+  await page.getByRole("radio", { name: "Até pequena", exact: true }).click();
   await page.getByRole("button", { name: "Criar monitor" }).click();
 
   await expect(page).toHaveURL(/\/monitores$/);

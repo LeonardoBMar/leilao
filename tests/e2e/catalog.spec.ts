@@ -31,7 +31,7 @@ test("abre um leilão do catálogo com os lotes dele", async ({ page }) => {
 
 test("todos os veículos: lotes (ou o estado vazio) e estimativas", async ({ page }) => {
   await page.goto("/leiloes/veiculos");
-  await expect(page.getByRole("search", { name: "Filtrar lotes" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Filtros" })).toBeVisible();
   await expect(
     page
       .getByRole("region", { name: "Lotes coletados" })
@@ -46,21 +46,43 @@ test("todos os veículos: lotes (ou o estado vazio) e estimativas", async ({ pag
   }
 });
 
-test("filtros vão para a URL, sobrevivem ao recarregar e passam de uma aba para a outra", async ({ page }) => {
+test("filtros aplicam na hora, vão para a URL, sobrevivem ao recarregar e passam de uma aba para a outra", async ({
+  page,
+}) => {
   await page.goto("/leiloes/veiculos");
-  await page.getByLabel("Buscar", { exact: true }).fill("Onix");
-  await page.getByLabel("Ano de", { exact: true }).fill("2015");
-  await page.getByRole("button", { name: "Filtrar" }).click();
-
+  const search = page.getByRole("combobox", { name: "Buscar por marca, modelo ou versão" });
+  await search.fill("Onix");
+  await search.press("Enter");
   await expect(page).toHaveURL(/busca=Onix/);
+
+  await page.getByRole("button", { name: "Ano", exact: true }).click();
+  const yearFrom = page.getByRole("textbox", { name: "Ano de" });
+  await yearFrom.fill("2015");
+  await yearFrom.press("Enter");
   await expect(page).toHaveURL(/anoDe=2015/);
+  await page.keyboard.press("Escape");
+
   await page.reload();
-  await expect(page.getByLabel("Buscar", { exact: true })).toHaveValue("Onix");
-  await expect(page.getByRole("button", { name: /Limpar filtros \(2\)/ })).toBeVisible();
+  await expect(search).toHaveValue("Onix");
+  const chips = page.getByRole("list", { name: "Filtros ativos" });
+  await expect(chips.getByRole("listitem")).toHaveCount(2);
+
+  // O "×" de um chip tira só aquele filtro.
+  await chips.getByRole("button", { name: /Remover filtro .*2015/ }).click();
+  await expect(page).not.toHaveURL(/anoDe=/);
+  await expect(page).toHaveURL(/busca=Onix/);
 
   await page.getByRole("navigation", { name: "Visões de leilões" }).getByRole("link", { name: "Por leilão" }).click();
   await expect(page).toHaveURL(/\/leiloes\?.*busca=Onix/);
-  await expect(page.getByLabel("Buscar", { exact: true })).toHaveValue("Onix");
+  await expect(search).toHaveValue("Onix");
+});
+
+test("Salvar como monitor leva os filtros para o novo monitor", async ({ page }) => {
+  await page.goto("/leiloes/veiculos?busca=Onix&anoDe=2015");
+  await page.getByRole("link", { name: "Salvar como monitor" }).click();
+  await expect(page).toHaveURL(/\/monitores\/novo\?.*busca=Onix/);
+  await expect(page.getByRole("textbox", { name: "Marca, modelo ou versão", exact: true })).toHaveValue("Onix");
+  await expect(page.getByRole("textbox", { name: "Ano de", exact: true })).toHaveValue("2015");
 });
 
 test("rotas antigas levam às novas, com a busca", async ({ page }) => {

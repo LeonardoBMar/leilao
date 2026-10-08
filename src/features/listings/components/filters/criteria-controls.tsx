@@ -271,8 +271,8 @@ export function YearFields({ criteria, onChange, currentYear }: CriteriaControlP
         })}
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <YearInput label="De" value={yearFrom} onCommit={(value) => onChange({ yearFrom: value })} />
-        <YearInput label="Até" value={yearTo} onCommit={(value) => onChange({ yearTo: value })} />
+        <YearInput label="Ano de" value={yearFrom} onCommit={(value) => onChange({ yearFrom: value })} />
+        <YearInput label="Ano até" value={yearTo} onCommit={(value) => onChange({ yearTo: value })} />
       </div>
     </fieldset>
   );
