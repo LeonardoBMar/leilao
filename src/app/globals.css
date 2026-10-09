@@ -38,6 +38,11 @@
   --color-info: var(--info);
   --color-info-subtle: var(--info-subtle);
   --color-info-border: var(--info-border);
+  --color-data-1: var(--data-1);
+  --color-data-2: var(--data-2);
+  --color-data-3: var(--data-3);
+  --color-data-4: var(--data-4);
+  --color-data-5: var(--data-5);
   --font-sans: var(--font-hanken-grotesk);
   --font-mono: var(--font-plex-mono);
   /* Escala da direção A (DESIGN.md §3.2): figure, title, value, section, body, label, caption, mono. */
@@ -119,6 +124,12 @@
   --info: #2b45c8;
   --info-subtle: #e9ecfa;
   --info-border: #c6cef2;
+  /* Escala sequencial dos gráficos (DESIGN.md §3.1, D-45): um tom, do claro ao escuro. Só sobre `surface`. */
+  --data-1: #84bcd1;
+  --data-2: #4f9cba;
+  --data-3: #2a7696;
+  --data-4: #195c7a;
+  --data-5: #0d3f58;
   --overlay: rgb(21 23 28 / 48%);
   --display-size: 2.25rem;
   --display-line: 2.625rem;

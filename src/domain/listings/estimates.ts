@@ -33,7 +33,7 @@ const ROUND_TO_CENTS = 10_000;
 export const SALES_WINDOW_MS = 365 * 24 * 60 * 60 * 1000;
 
 /** Grafias da mesma marca: a fonte escreve o nome completo, o usuário às vezes abrevia. */
-const BRAND_ALIASES: Record<string, string> = {
+export const BRAND_ALIASES: Readonly<Record<string, string>> = {
   VW: "VOLKSWAGEN",
   GM: "CHEVROLET",
   // normalizePlaceName troca hífen por espaço: "MERCEDES-BENZ" vira "MERCEDES BENZ".

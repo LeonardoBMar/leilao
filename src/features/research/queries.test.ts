@@ -1,0 +1,53 @@
+import { describe, expect, it, vi } from "vitest";
+
+import { DEFAULT_RESEARCH_FILTERS, type ResearchFilters } from "@/domain/research/filters";
+
+/**
+ * Teste com banco, só leitura: roda as consultas da Pesquisa contra o catálogo real com
+ * `DB_TESTS=1 npx vitest run src/features/research`. Confere que o SQL executa e que as linhas passam pelo Zod; os
+ * números dependem do catálogo e não são fixados aqui.
+ */
+vi.mock("@/server/auth", () => ({
+  requireUser: () => Promise.resolve({ id: "00000000-0000-0000-0000-000000000000" }),
+}));
+
+describe.skipIf(process.env.DB_TESTS !== "1")("consultas da Pesquisa", () => {
+  it("executam no banco e devolvem o formato esperado", async () => {
+    // O Next não carrega .env.local com NODE_ENV=test; o Node carrega direto.
+    if (!process.env.DATABASE_URL) process.loadEnvFile(".env.local");
+    const queries = await import("./queries");
+    const { db } = await import("@/server/db");
+
+    const overview = await queries.getResearchOverview();
+    expect(overview.sales).toBeGreaterThan(0);
+
+    const conditions = await queries.getConditionDistribution(DEFAULT_RESEARCH_FILTERS);
+    expect(conditions.rows.map((row) => row.condition)).toEqual(["sem-monta", "pequena", "media", "grande", "sucata"]);
+    expect(conditions.rows[0]?.summary.kind).toBe("summary");
+
+    const map = await queries.getStateMap(DEFAULT_RESEARCH_FILTERS);
+    expect(map.tiles).toHaveLength(27);
+
+    const ranking = await queries.getModelRanking(DEFAULT_RESEARCH_FILTERS);
+    expect(ranking.length).toBeGreaterThan(0);
+
+    const onix: ResearchFilters = {
+      ...DEFAULT_RESEARCH_FILTERS,
+      vehicle: { brand: "CHEVROLET", model: "ONIX" },
+      state: "SP",
+      metric: "price",
+    };
+    const [onixMap, detail, sales, curve] = await Promise.all([
+      queries.getStateMap(onix),
+      queries.getStateDetail(onix),
+      queries.getModelSales(onix),
+      queries.getBidCurve(DEFAULT_RESEARCH_FILTERS),
+    ]);
+    expect(onixMap.metric).toBe("price");
+    expect(detail?.state).toBe("SP");
+    expect(sales?.total).toBeGreaterThan(0);
+    expect(curve.points.length).toBeGreaterThan(0);
+
+    await db.$disconnect();
+  }, 60_000);
+});

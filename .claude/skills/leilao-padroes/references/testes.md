@@ -20,6 +20,7 @@
   - Testing Library + jsdom (`// @vitest-environment jsdom` no arquivo) quando houver interação. Instalar na primeira necessidade e registrar.
 - **Async Server Components** não são testados com Vitest (limitação documentada pelo Next): cobrir com E2E.
 - `server-only` é substituído por um stub nos testes (`tests/stubs/server-only.ts`), então queries e mutations podem ser importadas em testes de integração.
+- **Teste com banco, só leitura (D-45):** consulta com SQL próprio (`$queryRaw`) ganha um teste que roda contra o banco só com `DB_TESTS=1` (`describe.skipIf(process.env.DB_TESTS !== "1")`), carregando o `.env.local` com `process.loadEnvFile` (o Next não o carrega com `NODE_ENV=test`). Nada de escrita: só `SELECT`. Rode com `DB_TESTS=1 npx vitest run <pasta>` ao mexer no SQL; o `npm run check` pula esses testes. Exemplos: `src/server/vehicle-key-sql.test.ts` e `src/features/research/queries.test.ts`.
 - **Bug corrigido ganha um teste de regressão** que falha antes da correção.
 
 ## E2E (Playwright)
