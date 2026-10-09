@@ -10,7 +10,7 @@ test.describe("acesso sem sessão", () => {
   });
 
   test("rotas privadas levam ao login preservando o destino", async ({ page }) => {
-    for (const path of ["/dashboard", "/leiloes", "/minhas-analises", "/minhas-analises/leiloes/novo"]) {
+    for (const path of ["/dashboard", "/leiloes", "/minhas-analises", "/pesquisa", "/minhas-analises/leiloes/novo"]) {
       await page.goto(path);
       await expect(page).toHaveURL(`/login?next=${encodeURIComponent(path)}`);
     }

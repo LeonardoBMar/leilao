@@ -45,7 +45,7 @@ export async function ResearchView({ searchParams }: { searchParams: SearchParam
     <div className="grid gap-6">
       <ResearchFilterBar params={researchParams(filters)} facets={facets} />
       <Suspense fallback={<ResearchBlockSkeleton title={CONDITION_BLOCK_TITLE} />}>
-        <ConditionBlock filters={filters} since={since} />
+        <ConditionBlock filters={filters} total={facets.conditions[filters.condition]} since={since} />
       </Suspense>
       <Suspense fallback={<ResearchBlockSkeleton title={STATE_BLOCK_TITLE} className="h-96" />}>
         <StateBlock filters={filters} since={since} />

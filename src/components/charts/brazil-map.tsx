@@ -58,7 +58,7 @@ const percentY = (y: number) => `${(y / BRAZIL_VIEWBOX.height) * 100}%`;
 /**
  * Mapa do Brasil por estado (D-45): cor pela escala sequencial, rótulo com a sigla e o valor (fora do estado, com linha
  * guia, nos pequenos), dica ao passar o mouse ou focar e um link por estado com venda. Os textos são HTML sobre o SVG
- * para não encolher com o desenho no celular.
+ * para não encolher com o desenho no celular; abaixo de 28 rem de largura, o rótulo dentro do estado fica numa linha.
  */
 export function BrazilMap({ regions, ariaLabel }: BrazilMapProps) {
   const [active, setActive] = useState<StateCode | null>(null);
@@ -74,7 +74,7 @@ export function BrazilMap({ regions, ariaLabel }: BrazilMapProps) {
   const activeShape = shapes.find(({ shape }) => shape.state === active);
 
   return (
-    <figure className="relative w-full">
+    <figure className="@container relative w-full">
       <svg
         viewBox={`0 0 ${BRAZIL_VIEWBOX.width} ${BRAZIL_VIEWBOX.height}`}
         className="block h-auto w-full overflow-visible"
@@ -184,7 +184,7 @@ function StatePath({
 
 function StateLabel({ shape: { state, label }, region }: { shape: StateShape; region: MapRegion }) {
   const { tone } = region;
-  if (label.callout) {
+  if (label.callout && !(tone.kind === "empty" && label.codeInside)) {
     if (tone.kind === "empty") return null;
     return (
       <span
@@ -203,8 +203,13 @@ function StateLabel({ shape: { state, label }, region }: { shape: StateShape; re
       )}
       style={{ left: percentX(label.x), top: percentY(label.y) }}
     >
-      <span className="text-caption leading-none">{state}</span>
-      {region.value ? <span className="text-label leading-tight font-semibold">{region.value}</span> : null}
+      {/* Mapa estreito (celular): uma linha só, o valor no estado colorido e a sigla no de poucas vendas. */}
+      <span className={cn("text-caption leading-none", tone.kind === "colored" && "@max-[28rem]:hidden")}>{state}</span>
+      {region.value ? (
+        <span className={cn("text-label leading-tight font-semibold", tone.kind === "few" && "@max-[28rem]:hidden")}>
+          {region.value}
+        </span>
+      ) : null}
     </span>
   );
 }

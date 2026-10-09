@@ -85,6 +85,8 @@ describe("BrazilMap", () => {
           tooltip,
         },
         { state: "AC", tone: { kind: "empty" }, ariaLabel: "Acre: nenhuma venda", selected: false, tooltip },
+        { state: "ES", tone: { kind: "empty" }, ariaLabel: "Espírito Santo: nenhuma venda", selected: false, tooltip },
+        { state: "SC", tone: { kind: "empty" }, ariaLabel: "Santa Catarina: nenhuma venda", selected: false, tooltip },
       ]}
     />,
   );
@@ -95,7 +97,7 @@ describe("BrazilMap", () => {
   });
 
   it("desenha só os estados recebidos; o com venda é link, com cor do passo e marca de escolhido", () => {
-    expect(html.match(/<path/g)).toHaveLength(3);
+    expect(html.match(/<path/g)).toHaveLength(5);
     expect(html).toMatch(/<a[^>]*href="\/pesquisa\?uf=SP"/);
     expect(html).toMatch(/<a[^>]*aria-label="São Paulo: mediana 43%, 297 vendas"/);
     expect(html).toContain('aria-current="true"');
@@ -107,6 +109,11 @@ describe("BrazilMap", () => {
     expect(html.match(/<line/g)).toHaveLength(1);
     expect(html).toMatch(/<g role="img" aria-label="Acre: nenhuma venda"/);
     expect(html).toContain("fill-surface stroke-border-strong");
+  });
+
+  it("estado de rótulo externo sem venda: só a sigla dentro quando ela cabe (SC), nada quando não cabe (ES)", () => {
+    expect(html).toContain(">SC<");
+    expect(html).not.toContain(">ES<");
   });
 
   it("a legenda mostra os passos e os casos sem cor", () => {

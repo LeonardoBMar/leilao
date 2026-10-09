@@ -59,7 +59,7 @@ export async function ModelSalesBlock({
     <ResearchBlock
       id="pesquisa-vendas"
       title={title}
-      description={`Lance final de cada venda (${CONDITION_LABELS[filters.condition].toLowerCase()}) por ano-modelo; o traço é a mediana do ano, com 5 vendas ou mais. Passe o mouse num ponto para ver a venda.`}
+      description={`Lance final de cada venda (${CONDITION_LABELS[filters.condition].toLowerCase()}) por ano-modelo; o traço é a mediana do ano, com 5 vendas ou mais. Passe o mouse num ponto para ver a venda; todas estão na tabela.`}
     >
       {xValues.length > 0 ? (
         <ScatterPlot
@@ -99,14 +99,15 @@ function saleTitle(sale: ResearchSale): string {
   return `${formatDate(sale.endsAt)} · ${sale.state ?? "UF?"} · ${sale.modelYear ?? "ano?"} · ${formatBRL(sale.finalBid)}${ratio}`;
 }
 
+/** O lance e o % logo depois do anúncio: no celular, a tabela rola para o lado e eles ficam à vista. */
 const SALE_COLUMNS = [
   { key: "date", label: "Data", align: "left" },
   { key: "sale", label: "Anúncio", align: "left" },
+  { key: "bid", label: "Lance final", align: "right" },
+  { key: "ratio", label: "% do mercado", align: "right" },
   { key: "year", label: "Ano", align: "right" },
   { key: "km", label: "Km", align: "right" },
-  { key: "bid", label: "Lance final", align: "right" },
   { key: "market", label: "Valor de mercado", align: "right" },
-  { key: "ratio", label: "% do mercado", align: "right" },
 ] as const;
 
 function SaleLink({ sale }: { sale: ResearchSale }) {
@@ -160,7 +161,7 @@ function SalesTable({ sales }: { sales: readonly ResearchSale[] }) {
               {SALE_COLUMNS.map((column) => (
                 <TableCell
                   key={column.key}
-                  className={column.align === "right" ? "text-right tabular-nums" : "tabular-nums"}
+                  className={column.align === "right" ? "text-right whitespace-nowrap tabular-nums" : "tabular-nums"}
                 >
                   {row[column.key] ?? "—"}
                 </TableCell>
