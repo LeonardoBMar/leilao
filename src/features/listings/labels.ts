@@ -1,6 +1,8 @@
 import type { ConditionFlag, DamageLevel, InspectionResult } from "@/domain/listings/condition";
 import type { LimitFit } from "@/domain/listings/estimates";
+import type { MarketValueOrigin } from "@/domain/listings/fipe-match";
 import type { ListingStatus } from "@/domain/listings/types";
+import { formatShortMonth } from "@/lib/format";
 
 export const LISTING_STATUS_LABELS = {
   open: "Aberto",
@@ -69,3 +71,14 @@ export const LIMIT_FIT_VARIANTS = {
   tight: "warning",
   above: "destructive",
 } as const satisfies Record<LimitFit, "success" | "warning" | "destructive">;
+
+/**
+ * De onde veio o valor de mercado (D-47): o da fonte ou o casado pelo sistema na tabela FIPE do mês, com aviso quando
+ * a versão é aproximada (mediana das versões parecidas).
+ */
+export function marketValueOriginLabel(origin: MarketValueOrigin | null, refMonth: Date | null): string | null {
+  if (origin === null) return null;
+  if (origin === "source") return "da fonte";
+  const month = refMonth === null ? "" : ` ${formatShortMonth(refMonth)}`;
+  return origin === "fipe_version" ? `FIPE${month}` : `FIPE${month} · versão aproximada`;
+}

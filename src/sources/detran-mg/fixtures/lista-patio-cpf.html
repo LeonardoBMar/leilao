@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <!-- Meta tags Obrigatórias -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link href="https://leilao.detran.mg.gov.br/img/favicon.png" type="image/x-icon" rel="icon"/><link href="https://leilao.detran.mg.gov.br/img/favicon.png" type="image/x-icon" rel="shortcut icon"/>
+    <title>LEILÃO-DETRAN/MG</title>
+
+    
+	<link rel="stylesheet" href="/detran/css/bootstrap.min.css"/>
+	<link rel="stylesheet" href="/detran/css/style.css"/>
+	<link rel="stylesheet" href="/detran/css/select2/select2.min.css"/>
+	<link rel="stylesheet" href="/detran/css/select2/select2-bootstrap4.min.css"/>
+	<link rel="stylesheet" href="/detran/css/jquery-loading.css"/>
+	<link rel="stylesheet" href="/css/sistema.sdll.css"/>
+
+
+	<script src="/detran/js/jquery-3.4.1.min.js"></script>
+	<script src="/detran/js/bootstrap.bundle.min.js"></script>
+	<script src="/detran/js/select2/select2.min.js"></script>
+	<script src="/detran/js/select2/i18n/pt-BR.js"></script>
+	<script src="/detran/js/sweetalert2.all.min.js"></script>
+	<script src="/detran/js/meiomask.min.js"></script>
+	<script src="/detran/js/fa-icon-all.js"></script>
+	<script src="/detran/js/jquery-loading.js"></script>
+	<script src="/js/sistema.sdll.js"></script>
+
+            	<!-- Google tag (gtag.js) -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-VB66VVG2HV"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag(){dataLayer.push(arguments);}
+		gtag('js', new Date());
+		gtag('config', 'G-VB66VVG2HV');
+	</script>
+	</head>
+
+<body>
+    <!-- Cabeçalho -->
+    <header>
+        <div class="nav-image">
+            
+<!-- Menu Superior -->
+<div class="container-fluid menu-superior border-bottom">
+    <div class="container">
+
+        <div class="row justify-content-end align-items-center">
+            <div class="col-sm-8">
+                <div class="row">
+                                    </div>
+            </div>
+
+            <div class="col-sm-4 text-right">
+                <ul class="list-inline mb-0">
+                    
+                        
+                                                            <li class="list-inline-item">
+                                    <a href="/pre-arrematantes/cadastrar   " class="nav-link"><b>CADASTRAR</b></a>                                </li>
+                            
+                        
+
+                        <li class="list-inline-item">
+                            <a href="/ssc/login/login" class="nav-link"><b>ENTRAR</b></a>                        </li>
+
+                    
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Menu Mobile -->
+<!-- Menu Superior Mobile -->
+
+<div class="menu-superior-mobile">
+
+    
+        <div class="row justify-content-end">
+
+            <div class="col-12 text-right">
+                <ul class="list-inline mb-0">
+
+                    
+                                                    <li class="list-inline-item">
+                                <a href="/pre-arrematantes/cadastrar   " class="nav-link"><b>CADASTRAR</b></a>                            </li>
+                        
+                    
+                    <li class="list-inline-item">
+                        <a href="/ssc/login/login" class="nav-link"><b>ENTRAR</b></a>                    </li>
+
+
+                </ul>
+            </div>
+        </div>
+
+    
+</div>
+            <div class="container">
+    <div class="row justify-content-between align-items-center my-3">
+        <div class="col-md-7 text-center text-sm-left">
+            <a href="https://leilao.detran.mg.gov.br">
+                <img src="https://leilao.detran.mg.gov.br/img/logo.png" class="logo-detran" width="358">
+            </a>
+                    </div>
+
+        <div class="col-md-5 text-light  text-center text-sm-left">
+            <div class="col-xs-12">
+                <h1 style="margin-bottom: 0;"><b>Sistema de Leilão de Veículos</b></h1>
+            </div>
+
+            <div class="col-xs-12 sub-nome-sistema">
+                            </div>
+        </div>
+    </div>
+</div>
+            <div class="container-fluid">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            
+            <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link " href="/">Início</a>
+                    </li>
+                </ul>
+            </div>
+
+            
+        </div>
+    </nav>
+</div>
+        </div>
+    </header>
+
+    <!-- ###### Conteudo ###### -->
+    <main role="main" class="flex-shrink-0 mb-5">
+        <div class="container">
+            
+            <div class="card">
+
+                
+                <div class="card-body">
+                    
+<style>
+    .bold {
+        font-weight: bold;
+    }
+
+    .bg-primary {
+        opacity: 0.9;
+        border-radius: 3px;
+    }
+
+    .veiculo-sucata {
+        left: 0px;
+        top: 0px;
+        width: 30px;
+        height: 30px;
+        position: absolute;
+        overflow: hidden;
+        border-top-left-radius: 3px;
+        z-index: 1;
+        background: #ec5757ab;
+        padding: 5px 8px;
+        color: #9e0000;
+    }
+    .link-ordenar {
+        cursor: pointer;
+    }
+    .link-ordenar:hover {
+        color: #007bff;
+    }
+</style>
+
+<input type="hidden" name="preArrematamte" class="form-control"  id="preArrematamte" />
+<link rel="stylesheet" href="/gst/css/gst.css"/><style>
+    @media (max-width: 767px) {
+        .form-group {
+            width: 100%;
+            margin-bottom: 10px;
+            float: none;
+        }
+        
+        .btn-filtro-filtrar, .btn-filtro-limpar, .btn-mais-filtros {
+            margin-left: 5px !important;
+        }
+    }
+    @media (min-width: 767px) {
+        .form-inline .select {
+            margin-right: 3px !important;
+            display: none;
+        }
+        .btn-mais-filtros, .btn-filtro-filtrar, .btn-filtro-limpar {
+            height: 36px;
+            margin: 3px 0 0 0;
+        }
+        #leiloes-municipio-id {
+            width: 231px!important;
+            margin-bottom: 5px!important;
+        }    
+        #leiloes-numero,
+        #leiloes-data-fechamento-ini,
+        #leiloes-data-fechamento-fim {
+            width: 267px;
+        }    
+        #leiloes-tipo-veiculo,
+        #leiloes-modelo {
+            width: 160px!important;
+        }
+        #leiloes-ano-veiculo {
+            width: 90px!important;
+        }
+        #leiloes-cor-veiculo {
+            width: 120px!important;
+        }
+        #leiloes-marca,
+        #leiloes-condicao-veiculo {
+            width: 130px!important;
+        }
+        .select2-container {
+            color: #666666;
+        }
+    }
+</style>
+<div class="row">
+    <div class="col">
+        <form method="post" accept-charset="utf-8" class="form-inline form-filtro my-0" show-loader="1" role="form" action="/lotes/lista-lotes/3483/2026"><div style="display:none;"><input type="hidden" name="_method" class="form-control"  value="POST" /></div><input type="hidden" name="Leiloes[municipio_id]" class="form-control"  id="leiloes-municipio-id" value="5029" /><div class="form-group select"><select name="Leiloes[tipo_veiculo]" class="form-control"  placeholder="Tipo" autocomplete="off" id="leiloes-tipo-veiculo"><option value="">Tipo</option><option value="3">MOTONETA</option><option value="4">MOTOCICLETA</option><option value="6">AUTOMOVEL</option><option value="8">ONIBUS</option><option value="10">REBOQUE</option><option value="23">CAMINHONETE</option><option value="25">UTILITARIO</option></select></div><div class="form-group select"><select name="Leiloes[marca]" class="form-control"  placeholder="Marca" autocomplete="off" id="leiloes-marca"><option value="">Marca</option><option value="CITROEN">CITROEN</option><option value="DAFRA">DAFRA</option><option value="FABRICACAO PROPRIA">FABRICACAO PROPRIA</option><option value="FIAT">FIAT</option><option value="FORD">FORD</option><option value="GM">GM</option><option value="HONDA">HONDA</option><option value="IROS">IROS</option><option value="BENZ">MBENZ</option><option value="MMC">MITSUBISHI</option><option value="RENAULT">RENAULT</option><option value="SUNDOWN">SUNDOWN</option><option value="SUZUKI">SUZUKI</option><option value="TOYOTA">TOYOTA</option><option value="VW">VW</option><option value="YAMAHA">YAMAHA</option></select></div><div class="form-group select"><select name="Leiloes[modelo]" class="form-control"  placeholder="Modelo" autocomplete="off" id="leiloes-modelo"><option value="">Modelo</option><option value="GM/ASTRA GL">ASTRA GL</option><option value="HONDA/CB 300R">CB 300R</option><option value="HONDA/CBX 250 TWISTER">CBX 250 TWISTER</option><option value="GM/CELTA">CELTA</option><option value="GM/CELTA 2P SUPER">CELTA 2P SUPER</option><option value="HONDA/CG 125 FAN">CG 125 FAN</option><option value="HONDA/CG 125 TITAN">CG 125 TITAN</option><option value="HONDA/CG 125 TITAN ES">CG 125 TITAN ES</option><option value="HONDA/CG 125 TITAN KS">CG 125 TITAN KS</option><option value="HONDA/CG 125 TODAY">CG 125 TODAY</option><option value="HONDA/CG 150 FAN ESI">CG 150 FAN ESI</option><option value="HONDA/CG 150 JOB">CG 150 JOB</option><option value="HONDA/CG 150 SPORT">CG 150 SPORT</option><option value="HONDA/CG 150 TITAN ESD">CG 150 TITAN ESD</option><option value="HONDA/CG 150 TITAN KS">CG 150 TITAN KS</option><option value="HONDA/CG 160 TITAN">CG 160 TITAN</option><option value="GM/CHEVETTE">CHEVETTE</option><option value="TOYOTA/COROLLA XEI18VVT">COROLLA XEI18VVT</option><option value="GM/CORSA MILENIUM">CORSA MILENIUM</option><option value="GM/CORSA SUPER">CORSA SUPER</option><option value="GM/CORSA WIND">CORSA WIND</option><option value="FORD/ESCORT L">ESCORT L</option><option value="R/FABRICACAO PROPRIA">FABRICACAO PROPRIA</option><option value="YAMAHA/FACTOR YBR125 ED">FACTOR YBR125 ED</option><option value="YAMAHA/FACTOR YBR125 K">FACTOR YBR125 K</option><option value="YAMAHA/FAZER YS250">FAZER YS250</option><option value="I/FIAT SIENA ELX">FIAT SIENA ELX</option><option value="I/FIAT SIENA EX">FIAT SIENA EX</option><option value="FORD/FIESTA">FIESTA</option><option value="FORD/FIESTA FLEX">FIESTA FLEX</option><option value="IMP/FORD ESCORT GLX 16VH">FORD ESCORT GLX 16VH</option><option value="VW/FOX 1.0">FOX 1.0</option><option value="VW/FUSCA 1500">FUSCA 1500</option><option value="VW/GOL 1.0">GOL 1.0</option><option value="VW/GOL 1000">GOL 1000</option><option value="VW/GOL 16V PLUS">GOL 16V PLUS</option><option value="VW/GOL CL">GOL CL</option><option value="VW/GOL CL 1.8">GOL CL 1.8</option><option value="VW/GOL CLI">GOL CLI</option><option value="VW/GOL GL">GOL GL</option><option value="VW/GOL MI">GOL MI</option><option value="VW/GOL SERIE OURO">GOL SERIE OURO</option><option value="VW/GOL SPECIAL">GOL SPECIAL</option><option value="GM/KADETT LITE">KADETT LITE</option><option value="I/M.BENZ GLK220CDI">M.BENZ GLK220CDI</option><option value="M.BENZ/O 400 RSD PL">M.BENZ/O 400 RSD PL</option><option value="SUNDOWN/MAX 125 SE">MAX 125 SE</option><option value="GM/MONZA CLASS EFI">MONZA CLASS EFI</option><option value="IROS/ONE 125">ONE 125</option><option value="MMC/PAJERO TR4 FL 2WD HP">PAJERO TR4 FL 2WD HP</option><option value="FIAT/PALIO EX">PALIO EX</option><option value="FIAT/PALIO FIRE FLEX">PALIO FIRE FLEX</option><option value="FIAT/PALIO WEEK ELX FLEX">PALIO WEEK ELX FLEX</option><option value="FIAT/PALIO WEEKEND">PALIO WEEKEND</option><option value="FIAT/PALIO WK ADVENTURE">PALIO WK ADVENTURE</option><option value="VW/PARATI 1.6">PARATI 1.6</option><option value="VW/PARATI CLI">PARATI CLI</option><option value="CITROEN/PICASSO II16EXCS">PICASSO II16EXCS</option><option value="I/RENAULT CLIO EXP1016VH">RENAULT CLIO EXP1016VH</option><option value="GM/S10 CHAMP 98">S10 CHAMP 98</option><option value="FIAT/STRADA ADVENT FLEX">STRADA ADVENT FLEX</option><option value="JTA/SUZUKI EN125 YES">SUZUKI EN125 YES</option><option value="DAFRA/TVS APACHE RTR 150">TVS APACHE RTR 150</option><option value="FIAT/UNO 1.5 R">UNO 1.5 R</option><option value="FIAT/UNO CS">UNO CS</option><option value="FIAT/UNO ELECTRONIC">UNO ELECTRONIC</option><option value="FIAT/UNO MILLE ECONOMY">UNO MILLE ECONOMY</option><option value="FIAT/UNO MILLE EP">UNO MILLE EP</option><option value="FIAT/UNO MILLE FIRE FLEX">UNO MILLE FIRE FLEX</option><option value="FIAT/UNO MILLE SX">UNO MILLE SX</option><option value="FORD/VERONA LX">VERONA LX</option><option value="VW/VOYAGE">VOYAGE</option><option value="SUNDOWN/WEB 100">WEB 100</option><option value="HONDA/XR 250 TORNADO">XR 250 TORNADO</option><option value="HONDA/XRE 300">XRE 300</option><option value="YAMAHA/XTZ 125E">XTZ 125E</option><option value="YAMAHA/XTZ 125K">XTZ 125K</option><option value="YAMAHA/YBR 125K">YBR 125K</option></select></div><div class="form-group select"><select name="Leiloes[ano_veiculo]" class="form-control"  placeholder="Ano" autocomplete="off" id="leiloes-ano-veiculo"><option value="">Ano</option><option value="2019">2019</option><option value="2017">2017</option><option value="2014">2014</option><option value="2013">2013</option><option value="2012">2012</option><option value="2011">2011</option><option value="2010">2010</option><option value="2009">2009</option><option value="2008">2008</option><option value="2007">2007</option><option value="2006">2006</option><option value="2005">2005</option><option value="2004">2004</option><option value="2003">2003</option><option value="2002">2002</option><option value="2001">2001</option><option value="2000">2000</option><option value="1999">1999</option><option value="1998">1998</option><option value="1997">1997</option><option value="1996">1996</option><option value="1995">1995</option><option value="1994">1994</option><option value="1993">1993</option><option value="1992">1992</option><option value="1991">1991</option><option value="1990">1990</option><option value="1989">1989</option><option value="1988">1988</option><option value="1985">1985</option><option value="1982">1982</option><option value="1972">1972</option></select></div><div class="form-group select"><select name="Leiloes[cor_veiculo]" class="form-control"  placeholder="Cor" autocomplete="off" id="leiloes-cor-veiculo"><option value="">Cor</option><option value="AZUL">AZUL</option><option value="BEGE">BEGE</option><option value="BRANCA">BRANCA</option><option value="CINZA">CINZA</option><option value="LARANJA">LARANJA</option><option value="PRATA">PRATA</option><option value="PRETA">PRETA</option><option value="VERDE">VERDE</option><option value="VERMELHA">VERMELHA</option></select></div><div class="form-group select"><select name="Leiloes[condicao_veiculo]" class="form-control"  placeholder="Condição" autocomplete="off" id="leiloes-condicao-veiculo"><option value="">Condição</option><option value="R">CONSERVADO</option><option value="S">SUCATA</option></select></div><button class="btn btn-primary btn-filtro-filtrar btn-right" type="submit" disabled="disabled"><i aria-hidden="true" class="fa fa-fas fa-filter"></i> Filtrar</button><div style="display:none;"><input type="hidden" name="_Token[fields]" class="form-control"  autocomplete="off" value="e52f74b19c0c770de9d288d4149f84916805e7d7%3ALeiloes.municipio_id" /><input type="hidden" name="_Token[unlocked]" class="form-control"  autocomplete="off" value="" /></div></form>    </div>
+</div>
+
+	<link rel="stylesheet" href="/detran/css/bootstrap-datetimepicker.min.css"/>
+
+	<script src="/detran/js/bootstrap-datetimepicker.min.js"></script>
+	<script src="/detran/js/locales/bootstrap-datetimepicker.pt-BR.js"></script>
+<script>
+    $(function() {
+        var selectLoad = 0;
+        var telaLotes = 1;
+        var selMunicipio = '';
+        var selTipoVeiculo = '';
+        var selMarca = '';
+        var selModelo = '';
+        var selAnoVeiculo = '';
+        var selCorVeiculo = '';
+        var selCondicaoVeiculo = '';
+        var numRequest = '';
+        var iniDataRequest = '';
+        var fimDataRequest = '';
+        
+        $('#leiloes-numero, #leiloes-data-fechamento-ini, #leiloes-data-fechamento-fim').keyup(function(){
+            checaLiberaFiltro();
+        });
+            
+        function checaLiberaFiltro() {
+            var libera = 0;
+            var num_leilao      = $('#leiloes-numero').val();
+            var data_inicio     = $('#leiloes-data-fechamento-ini').val();
+            var data_fim        = $('#leiloes-data-fechamento-fim').val();
+            var municipio_id    = $('#leiloes-municipio-id').val();
+            var tipo_veiculo    = $('#leiloes-tipo-veiculo').val();
+            var marca           = $('#leiloes-marca').val();
+            var modelo          = $('#leiloes-modelo').val();
+            var ano_veiculo     = $('#leiloes-ano-veiculo').val();
+            var cor_veiculo     = $('#leiloes-cor-veiculo').val();
+            var condicao        = $('#leiloes-condicao-veiculo').val();
+
+            if (municipio_id != selMunicipio 
+            || tipo_veiculo != selTipoVeiculo 
+            || marca != selMarca 
+            || modelo != selModelo 
+            || ano_veiculo != selAnoVeiculo 
+            || cor_veiculo != selCorVeiculo 
+            || condicao != selCondicaoVeiculo 
+            || num_leilao != numRequest 
+            || data_inicio != iniDataRequest
+            || data_fim != fimDataRequest) {
+                liberaFiltro(1);
+            } else {
+                liberaFiltro(0);
+            }
+        }
+
+        function liberaFiltro(libera) {
+            if (libera) {
+                $('.btn-filtro-filtrar').removeAttr('disabled');
+            } else {
+                $('.btn-filtro-filtrar').prop('disabled', true);
+            }
+        }        
+
+        $('#leiloes-data-fechamento-ini, #leiloes-data-fechamento-fim').setMask({
+            mask: '99/99/9999',
+            maxmaxLength: $(this).attr('maxlength'),
+            autoTab: false
+        }).change(function() {
+            checaLiberaFiltro();
+        });
+
+        // Inicializa o datepicker
+        $('#leiloes-data-fechamento-ini, #leiloes-data-fechamento-fim').datetimepicker({
+            format: 'dd/mm/yyyy',
+            language: 'pt-BR',
+            autoclose: true,
+            keyboardNavigation: false,
+            fontAwesome: true,
+            daysOfWeekDisabled: [0, 6],
+            minView: 2,
+        });
+
+        $('#leiloes-municipio-id').change(function() {
+            ajaxFiltroLeilao('leiloes-tipo-veiculo');
+            ajaxFiltroLeilao('leiloes-marca');
+            ajaxFiltroLeilao('leiloes-modelo');
+            ajaxFiltroLeilao('leiloes-ano-veiculo');
+            ajaxFiltroLeilao('leiloes-cor-veiculo');
+            ajaxFiltroLeilao('leiloes-condicao-veiculo');
+        });
+
+        $('#leiloes-tipo-veiculo').change(function() {
+            ajaxFiltroLeilao('leiloes-marca');
+            ajaxFiltroLeilao('leiloes-modelo');
+            ajaxFiltroLeilao('leiloes-ano-veiculo');
+            ajaxFiltroLeilao('leiloes-cor-veiculo');
+            ajaxFiltroLeilao('leiloes-condicao-veiculo');
+        });
+
+        $('#leiloes-marca').change(function() {
+            ajaxFiltroLeilao('leiloes-modelo');
+            ajaxFiltroLeilao('leiloes-ano-veiculo');
+            ajaxFiltroLeilao('leiloes-cor-veiculo');
+            ajaxFiltroLeilao('leiloes-condicao-veiculo');
+        });
+
+        $('#leiloes-modelo').change(function() {
+            ajaxFiltroLeilao('leiloes-ano-veiculo');
+            ajaxFiltroLeilao('leiloes-cor-veiculo');
+            ajaxFiltroLeilao('leiloes-condicao-veiculo');
+        });
+
+        $('#leiloes-ano-veiculo').change(function() {
+            ajaxFiltroLeilao('leiloes-cor-veiculo');
+            ajaxFiltroLeilao('leiloes-condicao-veiculo');
+        });
+
+        $('#leiloes-cor-veiculo').change(function() {
+            ajaxFiltroLeilao('leiloes-condicao-veiculo');
+        });
+
+        $('#leiloes-condicao-veiculo').change(function() {
+            checaLiberaFiltro();
+        });
+
+        function ajaxFiltroLeilao(campo) {
+            selectLoad++;
+            var optionIni = $('#'+campo+' option:first').text();
+            liberaFiltro(0);
+            $('#'+campo).prop('disabled', true);
+            $('#'+campo).html('<option value=""> Carregando... </option>');
+            setTimeout(function() {
+                $.ajax({
+                    url: getBaseURL() + '/leiloes/ajaxFiltroLeilao',
+                    data: {
+                        campo: campo,
+                        num_leilao:     $('#leiloes-numero').val(),
+                        data_inicio:    $('#leiloes-data-fechamento-ini').val(),
+                        data_fim:       $('#leiloes-data-fechamento-fim').val(),
+                        municipio_id:   $('#leiloes-municipio-id').val(),
+                        tipo_veiculo:   $('#leiloes-tipo-veiculo').val(),
+                        marca:          $('#leiloes-marca').val(),
+                        modelo:         $('#leiloes-modelo').val(),
+                        ano_veiculo:    $('#leiloes-ano-veiculo').val(),
+                        cor_veiculo:    $('#leiloes-cor-veiculo').val()
+                    },
+                    type: 'POST',
+                    success: function(retorno, status) {
+                        var options = '<option value="">'+optionIni+'</option>';
+                        $.each(retorno, function(i, item) {
+                            options += '<option value="'+i+'">'+item+'</option>';
+                        });
+                        $('#'+campo).find('option').remove();
+                        $('#'+campo).append(options);
+                        $('#'+campo).prop('disabled', false);
+                        selectLoad--;
+                        if (selectLoad<=0) {
+                            checaLiberaFiltro();
+                        }                    
+                    },
+                    error: function(retorno) {
+                        alerta({
+                            title: "Ocorreu algum erro!",
+                            type: 'error'
+                        });
+                        $('#'+campo).prop('disabled', false);
+                        selectLoad--;
+                        if (selectLoad<=0) {
+                            checaLiberaFiltro();
+                        }
+                    }                
+                });
+            }, 10);
+        }
+
+        $('.btn-mais-filtros').click(function() {
+            var filtroAtivo = $(this).hasClass('active');
+            if(filtroAtivo) {
+                filtroPlusLeilao(0);
+            } else {
+                filtroPlusLeilao(1);
+            }
+        });
+
+        if (telaLotes || selMunicipio || selTipoVeiculo || selMarca || selModelo || selAnoVeiculo  || selCorVeiculo || selCondicaoVeiculo) {
+            filtroPlusLeilao(1);
+        } else {
+            filtroPlusLeilao(0);
+        }
+
+        function filtroPlusLeilao(ativar) {
+            if (ativar) {
+                $('.btn-mais-filtros').addClass('active');
+                $('.form-inline .select').show();
+            } else {
+                $('.btn-mais-filtros').removeClass('active');
+                $('.form-inline .select ').hide();
+            }
+        }
+    });
+</script>
+<hr>
+
+<div class="row">
+    <div class="col-9 align-items-center">
+        <h4>
+                    Leilão 1759 - PIUMHI                                                        </h4>
+        <h6>Patio: DEYVID ALAN COSTA CPF 123.456.789-09</h6>
+    </div>
+
+    <div class="col-3 text-right align-self-center">
+        
+            <button type="button" class="btn btn-primary btn-sm btn-doc" data-toggle="tooltip" data-target=".modal-edital" data-placement="top" title='Documentos'>
+                <i aria-hidden="true" class="fa fa-far fa-file-alt"></i>            </button>
+
+            </div>
+</div>
+
+<hr>
+
+<div class="nav navbar-nav navbar-right dropdown">
+    <div style="float: right;">
+        <div class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"  style="float: right;">
+           Ordenar por: <label class="link-ordenar">Lotes</label> <span class="caret"></span>
+        </div>
+        <div class="dropdown-menu" style="cursor: pointer;">
+            <div class="dropdown-item btn-default" id="lotes">Lotes</div><div class="dropdown-item btn-default" id="menor-preco">Menor preço</div><div class="dropdown-item btn-default" id="maior-preco">Maior preço</div>        </div>
+    </div>
+</div>
+
+<div class="row">
+
+    
+        <div class="col-12 col-md-3 mt-2">
+            <div class="card listaLotes" id="316557">
+                
+                <span style="cursor: pointer !important;" onclick="$(location).prop('href', '/lotes/detalhes/316557');" data-toggle="tooltip" data-placement="top" title="Detalhes do Lote">
+                    <img src="/../Imagens/visualizar/leiloes/leilao_3483/img_316557_1.jpg" class="card-img-top" alt=""/>                </span>
+                <div class="card-body p-1 border-top">
+
+                    <!-- informações do Lote -->
+                    <div class="row">
+                        <div class="col-12">
+                            <b><span>Lote 1</span> - <span class="">CONSERVADO</span></b>                        </div>
+                    </div>
+
+                    <!-- Informações do lance -->
+
+                    <!-- ATUALIZAR ESSAS DIVS COM DADOS DO MAIOR LANCE -->
+                    <div class="row text-center">
+
+                        <!-- data hora fim -->
+                        <div class="col-12">
+                                                            <p id="relogio_316557">Aguarde</p>
+                                                    </div>
+                    </div>
+                                            <div class="row">
+                            <div class="col-12 text-center" style="height: 40px;">
+                                <b>HONDA/CG 125 TITAN 1999</b>
+                            </div>
+                        </div>
+                                        <div class="row mb-2">
+                        <div class="col-12 text-center" style="height: 40px;">
+                                                                            </div>
+                    </div>
+
+                    <div class="row text-center">
+
+                        <!-- CPF DO ARREMATANTE COM MAIOR LANCE -->
+                        <div class="col-7 pr-0">
+                                                            <p class="update_info_lote" id="cpf_cnpj_arrematante_316557">-</p>
+                                                    </div>
+
+                        <!-- VALOR ATUAL -->
+                        <div class="col-5 pl-0">
+                            <p class="update_info_lote" id="valor_atual_lote_316557">
+                                                                    R$ 1.000,00                                                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12" id="lote_" >
+
+                            <a href="/ssc/login/login" class="btn btn-primary btn-block">Login Obrigatório</a>                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    
+        <div class="col-12 col-md-3 mt-2">
+            <div class="card listaLotes" id="316556">
+                
+                <span style="cursor: pointer !important;" onclick="$(location).prop('href', '/lotes/detalhes/316556');" data-toggle="tooltip" data-placement="top" title="Detalhes do Lote">
+                    <img src="/../Imagens/visualizar/leiloes/leilao_3483/img_316556_1.jpg" class="card-img-top" alt=""/>                </span>
+                <div class="card-body p-1 border-top">
+
+                    <!-- informações do Lote -->
+                    <div class="row">
+                        <div class="col-12">
+                            <b><span>Lote 2</span> - <span class="">CONSERVADO</span></b>                        </div>
+                    </div>
+
+                    <!-- Informações do lance -->
+
+                    <!-- ATUALIZAR ESSAS DIVS COM DADOS DO MAIOR LANCE -->
+                    <div class="row text-center">
+
+                        <!-- data hora fim -->
+                        <div class="col-12">
+                                                            <p id="relogio_316556">Aguarde</p>
+                                                    </div>
+                    </div>
+                                            <div class="row">
+                            <div class="col-12 text-center" style="height: 40px;">
+                                <b>HONDA/CG 150 SPORT 2007</b>
+                            </div>
+                        </div>
+                                        <div class="row mb-2">
+                        <div class="col-12 text-center" style="height: 40px;">
+                                                                            </div>
+                    </div>
+
+                    <div class="row text-center">
+
+                        <!-- CPF DO ARREMATANTE COM MAIOR LANCE -->
+                        <div class="col-7 pr-0">
+                                                            <p class="update_info_lote" id="cpf_cnpj_arrematante_316556">-</p>
+                                                    </div>
+
+                        <!-- VALOR ATUAL -->
+                        <div class="col-5 pl-0">
+                            <p class="update_info_lote" id="valor_atual_lote_316556">
+                                                                    R$ 1.500,00                                                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12" id="lote_" >
+
+                            <a href="/ssc/login/login" class="btn btn-primary btn-block">Login Obrigatório</a>                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    
+        <div class="col-12 col-md-3 mt-2">
+            <div class="card listaLotes" id="316550">
+                
+                <span style="cursor: pointer !important;" onclick="$(location).prop('href', '/lotes/detalhes/316550');" data-toggle="tooltip" data-placement="top" title="Detalhes do Lote">
+                    <img src="/../Imagens/visualizar/leiloes/leilao_3483/img_316550_1.jpg" class="card-img-top" alt=""/>                </span>
+                <div class="card-body p-1 border-top">
+
+                    <!-- informações do Lote -->
+                    <div class="row">
+                        <div class="col-12">
+                            <b><span>Lote 3</span> - <span class="">CONSERVADO</span></b>                        </div>
+                    </div>
+
+                    <!-- Informações do lance -->
+
+                    <!-- ATUALIZAR ESSAS DIVS COM DADOS DO MAIOR LANCE -->
+                    <div class="row text-center">
+
+                        <!-- data hora fim -->
+                        <div class="col-12">
+                                                            <p id="relogio_316550">Aguarde</p>
+                                                    </div>
+                    </div>
+                                            <div class="row">
+                            <div class="col-12 text-center" style="height: 40px;">
+                                <b>HONDA/CG 125 TITAN 1997</b>
+                            </div>
+                        </div>
+                                        <div class="row mb-2">
+                        <div class="col-12 text-center" style="height: 40px;">
+                                                                            </div>
+                    </div>
+
+                    <div class="row text-center">
+
+                        <!-- CPF DO ARREMATANTE COM MAIOR LANCE -->
+                        <div class="col-7 pr-0">
+                                                            <p class="update_info_lote" id="cpf_cnpj_arrematante_316550">-</p>
+                                                    </div>
+
+                        <!-- VALOR ATUAL -->
+                        <div class="col-5 pl-0">
+                            <p class="update_info_lote" id="valor_atual_lote_316550">
+                                                                    R$ 1.000,00                                                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12" id="lote_" >
+
+                            <a href="/ssc/login/login" class="btn btn-primary btn-block">Login Obrigatório</a>                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    
+        <div class="col-12 col-md-3 mt-2">
+            <div class="card listaLotes" id="316565">
+                
+                <span style="cursor: pointer !important;" onclick="$(location).prop('href', '/lotes/detalhes/316565');" data-toggle="tooltip" data-placement="top" title="Detalhes do Lote">
+                    <img src="/../Imagens/visualizar/leiloes/leilao_3483/img_316565_1.jpg" class="card-img-top" alt=""/>                </span>
+                <div class="card-body p-1 border-top">
+
+                    <!-- informações do Lote -->
+                    <div class="row">
+                        <div class="col-12">
+                            <b><span>Lote 4</span> - <span class="">CONSERVADO</span></b>                        </div>
+                    </div>
+
+                    <!-- Informações do lance -->
+
+                    <!-- ATUALIZAR ESSAS DIVS COM DADOS DO MAIOR LANCE -->
+                    <div class="row text-center">
+
+                        <!-- data hora fim -->
+                        <div class="col-12">
+                                                            <p id="relogio_316565">Aguarde</p>
+                                                    </div>
+                    </div>
+                                            <div class="row">
+                            <div class="col-12 text-center" style="height: 40px;">
+                                <b>HONDA/CG 160 TITAN 2019</b>
+                            </div>
+                        </div>
+                                        <div class="row mb-2">
+                        <div class="col-12 text-center" style="height: 40px;">
+                                                                            </div>
+                    </div>
+
+                    <div class="row text-center">
+
+                        <!-- CPF DO ARREMATANTE COM MAIOR LANCE -->
+                        <div class="col-7 pr-0">
+                                                            <p class="update_info_lote" id="cpf_cnpj_arrematante_316565">-</p>
+                                                    </div>
+
+                        <!-- VALOR ATUAL -->
+                        <div class="col-5 pl-0">
+                            <p class="update_info_lote" id="valor_atual_lote_316565">
+                                                                    R$ 1.500,00                                                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12" id="lote_" >
+
+                            <a href="/ssc/login/login" class="btn btn-primary btn-block">Login Obrigatório</a>                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    
+        <div class="col-12 col-md-3 mt-2">
+            <div class="card listaLotes" id="316562">
+                
+                <span style="cursor: pointer !important;" onclick="$(location).prop('href', '/lotes/detalhes/316562');" data-toggle="tooltip" data-placement="top" title="Detalhes do Lote">
+                    <img src="/../Imagens/visualizar/leiloes/leilao_3483/img_316562_1.jpg" class="card-img-top" alt=""/>                </span>
+                <div class="card-body p-1 border-top">
+
+                    <!-- informações do Lote -->
+                    <div class="row">
+                        <div class="col-12">
+                            <b><span>Lote 5</span> - <span class="">CONSERVADO</span></b>                        </div>
+                    </div>
+
+                    <!-- Informações do lance -->
+
+                    <!-- ATUALIZAR ESSAS DIVS COM DADOS DO MAIOR LANCE -->
+                    <div class="row text-center">
+
+                        <!-- data hora fim -->
+                        <div class="col-12">
+                                                            <p id="relogio_316562">Aguarde</p>
+                                                    </div>
+                    </div>
+                                            <div class="row">
+                            <div class="col-12 text-center" style="height: 40px;">
+                                <b>YAMAHA/YBR 125K 2005</b>
+                            </div>
+                        </div>
+                                        <div class="row mb-2">
+                        <div class="col-12 text-center" style="height: 40px;">
+                                                                            </div>
+                    </div>
+
+                    <div class="row text-center">
+
+                        <!-- CPF DO ARREMATANTE COM MAIOR LANCE -->
+                        <div class="col-7 pr-0">
+                                                            <p class="update_info_lote" id="cpf_cnpj_arrematante_316562">-</p>
+                                                    </div>
+
+                        <!-- VALOR ATUAL -->
+                        <div class="col-5 pl-0">
+                            <p class="update_info_lote" id="valor_atual_lote_316562">
+                                                                    R$ 1.000,00                                                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12" id="lote_" >
+
+                            <a href="/ssc/login/login" class="btn btn-primary btn-block">Login Obrigatório</a>                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    
+        <div class="col-12 col-md-3 mt-2">
+            <div class="card listaLotes" id="316553">
+                
+                <span style="cursor: pointer !important;" onclick="$(location).prop('href', '/lotes/detalhes/316553');" data-toggle="tooltip" data-placement="top" title="Detalhes do Lote">
+                    <img src="/../Imagens/visualizar/leiloes/leilao_3483/img_316553_1.jpg" class="card-img-top" alt=""/>                </span>
+                <div class="card-body p-1 border-top">
+
+                    <!-- informações do Lote -->
+                    <div class="row">
+                        <div class="col-12">
+                            <b><span>Lote 6</span> - <span class="">CONSERVADO</span></b>                        </div>
+                    </div>
+
+                    <!-- Informações do lance -->
+
+                    <!-- ATUALIZAR ESSAS DIVS COM DADOS DO MAIOR LANCE -->
+                    <div class="row text-center">
+
+                        <!-- data hora fim -->
+                        <div class="col-12">
+                                                            <p id="relogio_316553">Aguarde</p>
+                                                    </div>
+                    </div>
+                                            <div class="row">
+                            <div class="col-12 text-center" style="height: 40px;">
+                                <b>FIAT/UNO MILLE ECONOMY 2012</b>
+                            </div>
+                        </div>
+                                        <div class="row mb-2">
+                        <div class="col-12 text-center" style="height: 40px;">
+                                                                            </div>
+                    </div>
+
+                    <div class="row text-center">
+
+                        <!-- CPF DO ARREMATANTE COM MAIOR LANCE -->
+                        <div class="col-7 pr-0">
+                                                            <p class="update_info_lote" id="cpf_cnpj_arrematante_316553">-</p>
+                                                    </div>
+
+                        <!-- VALOR ATUAL -->
+                        <div class="col-5 pl-0">
+                            <p class="update_info_lote" id="valor_atual_lote_316553">
+                                                                    R$ 1.500,00                                                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12" id="lote_" >
+
+                            <a href="/ssc/login/login" class="btn btn-primary btn-block">Login Obrigatório</a>                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    
+        <div class="col-12 col-md-3 mt-2">
+            <div class="card listaLotes" id="316561">
+                
+                <span style="cursor: pointer !important;" onclick="$(location).prop('href', '/lotes/detalhes/316561');" data-toggle="tooltip" data-placement="top" title="Detalhes do Lote">
+                    <img src="/../Imagens/visualizar/leiloes/leilao_3483/img_316561_1.jpg" class="card-img-top" alt=""/>                </span>
+                <div class="card-body p-1 border-top">
+
+                    <!-- informações do Lote -->
+                    <div class="row">
+                        <div class="col-12">
+                            <b><span>Lote 7</span> - <span class="">CONSERVADO</span></b>                        </div>
+                    </div>
+
+                    <!-- Informações do lance -->
+
+                    <!-- ATUALIZAR ESSAS DIVS COM DADOS DO MAIOR LANCE -->
+                    <div class="row text-center">
+
+                        <!-- data hora fim -->
+                        <div class="col-12">
+                                                            <p id="relogio_316561">Aguarde</p>
+                                                    </div>
+                    </div>
+                                            <div class="row">
+                            <div class="col-12 text-center" style="height: 40px;">
+                                <b>I/M.BENZ GLK220CDI 2013</b>
+                            </div>
+                        </div>
+                                        <div class="row mb-2">
+                        <div class="col-12 text-center" style="height: 40px;">
+                                                                            </div>
+                    </div>
+
+                    <div class="row text-center">
+
+                        <!-- CPF DO ARREMATANTE COM MAIOR LANCE -->
+                        <div class="col-7 pr-0">
+                                                            <p class="update_info_lote" id="cpf_cnpj_arrematante_316561">-</p>
+                                                    </div>
+
+                        <!-- VALOR ATUAL -->
+                        <div class="col-5 pl-0">
+                            <p class="update_info_lote" id="valor_atual_lote_316561">
+                                                                    R$ 50.000,00                                                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12" id="lote_" >
+
+                            <a href="/ssc/login/login" class="btn btn-primary btn-block">Login Obrigatório</a>                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    
+        <div class="col-12 col-md-3 mt-2">
+            <div class="card listaLotes" id="316558">
+                
+                <span style="cursor: pointer !important;" onclick="$(location).prop('href', '/lotes/detalhes/316558');" data-toggle="tooltip" data-placement="top" title="Detalhes do Lote">
+                    <img src="/../Imagens/visualizar/leiloes/leilao_3483/img_316558_1.jpg" class="card-img-top" alt=""/>                </span>
+                <div class="card-body p-1 border-top">
+
+                    <!-- informações do Lote -->
+                    <div class="row">
+                        <div class="col-12">
+                            <b><span>Lote 8</span> - <span class="text-danger">SUCATA</span></b>                        </div>
+                    </div>
+
+                    <!-- Informações do lance -->
+
+                    <!-- ATUALIZAR ESSAS DIVS COM DADOS DO MAIOR LANCE -->
+                    <div class="row text-center">
+
+                        <!-- data hora fim -->
+                        <div class="col-12">
+                                                            <p id="relogio_316558">Aguarde</p>
+                                                    </div>
+                    </div>
+                                            <div class="row">
+                            <div class="col-12 text-center" style="height: 40px;">
+                                <b>HONDA/XRE 300 2017</b>
+                            </div>
+                        </div>
+                                        <div class="row mb-2">
+                        <div class="col-12 text-center" style="height: 40px;">
+                                                                            </div>
+                    </div>
+
+                    <div class="row text-center">
+
+                        <!-- CPF DO ARREMATANTE COM MAIOR LANCE -->
+                        <div class="col-7 pr-0">
+                                                            <p class="update_info_lote" id="cpf_cnpj_arrematante_316558">-</p>
+                                                    </div>
+
+                        <!-- VALOR ATUAL -->
+                        <div class="col-5 pl-0">
+                            <p class="update_info_lote" id="valor_atual_lote_316558">
+                                                                    R$ 400,00                                                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12" id="lote_" >
+
+                            <a href="/ssc/login/login" class="btn btn-primary btn-block">Login Obrigatório</a>                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    
+        <div class="col-12 col-md-3 mt-2">
+            <div class="card listaLotes" id="316549">
+                
+                <span style="cursor: pointer !important;" onclick="$(location).prop('href', '/lotes/detalhes/316549');" data-toggle="tooltip" data-placement="top" title="Detalhes do Lote">
+                    <img src="/../Imagens/visualizar/leiloes/leilao_3483/img_316549_1.jpg" class="card-img-top" alt=""/>                </span>
+                <div class="card-body p-1 border-top">
+
+                    <!-- informações do Lote -->
+                    <div class="row">
+                        <div class="col-12">
+                            <b><span>Lote 9</span> - <span class="text-danger">SUCATA</span></b>                        </div>
+                    </div>
+
+                    <!-- Informações do lance -->
+
+                    <!-- ATUALIZAR ESSAS DIVS COM DADOS DO MAIOR LANCE -->
+                    <div class="row text-center">
+
+                        <!-- data hora fim -->
+                        <div class="col-12">
+                                                            <p id="relogio_316549">Aguarde</p>
+                                                    </div>
+                    </div>
+                                            <div class="row">
+                            <div class="col-12 text-center" style="height: 40px;">
+                                <b>IROS/ONE 125 2012</b>
+                            </div>
+                        </div>
+                                        <div class="row mb-2">
+                        <div class="col-12 text-center" style="height: 40px;">
+                                                                            </div>
+                    </div>
+
+                    <div class="row text-center">
+
+                        <!-- CPF DO ARREMATANTE COM MAIOR LANCE -->
+                        <div class="col-7 pr-0">
+                                                            <p class="update_info_lote" id="cpf_cnpj_arrematante_316549">-</p>
+                                                    </div>
+
+                        <!-- VALOR ATUAL -->
+                        <div class="col-5 pl-0">
+                            <p class="update_info_lote" id="valor_atual_lote_316549">
+                                                                    R$ 500,00                                                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12" id="lote_" >
+
+                            <a href="/ssc/login/login" class="btn btn-primary btn-block">Login Obrigatório</a>                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    
+        <div class="col-12 col-md-3 mt-2">
+            <div class="card listaLotes" id="316555">
+                
+                <span style="cursor: pointer !important;" onclick="$(location).prop('href', '/lotes/detalhes/316555');" data-toggle="tooltip" data-placement="top" title="Detalhes do Lote">
+                    <img src="/../Imagens/visualizar/leiloes/leilao_3483/img_316555_1.jpg" class="card-img-top" alt=""/>                </span>
+                <div class="card-body p-1 border-top">
+
+                    <!-- informações do Lote -->
+                    <div class="row">
+                        <div class="col-12">
+                            <b><span>Lote 10</span> - <span class="text-danger">SUCATA</span></b>                        </div>
+                    </div>
+
+                    <!-- Informações do lance -->
+
+                    <!-- ATUALIZAR ESSAS DIVS COM DADOS DO MAIOR LANCE -->
+                    <div class="row text-center">
+
+                        <!-- data hora fim -->
+                        <div class="col-12">
+                                                            <p id="relogio_316555">Aguarde</p>
+                                                    </div>
+                    </div>
+                                            <div class="row">
+                            <div class="col-12 text-center" style="height: 40px;">
+                                <b>FORD/ESCORT L 1992</b>
+                            </div>
+                        </div>
+                                        <div class="row mb-2">
+                        <div class="col-12 text-center" style="height: 40px;">
+                                                                            </div>
+                    </div>
+
+                    <div class="row text-center">
+
+                        <!-- CPF DO ARREMATANTE COM MAIOR LANCE -->
+                        <div class="col-7 pr-0">
+                                                            <p class="update_info_lote" id="cpf_cnpj_arrematante_316555">-</p>
+                                                    </div>
+
+                        <!-- VALOR ATUAL -->
+                        <div class="col-5 pl-0">
+                            <p class="update_info_lote" id="valor_atual_lote_316555">
+                                                                    R$ 500,00                                                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12" id="lote_" >
+
+                            <a href="/ssc/login/login" class="btn btn-primary btn-block">Login Obrigatório</a>                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    
+        <div class="col-12 col-md-3 mt-2">
+            <div class="card listaLotes" id="316554">
+                
+                <span style="cursor: pointer !important;" onclick="$(location).prop('href', '/lotes/detalhes/316554');" data-toggle="tooltip" data-placement="top" title="Detalhes do Lote">
+                    <img src="/../Imagens/visualizar/leiloes/leilao_3483/img_316554_1.jpg" class="card-img-top" alt=""/>                </span>
+                <div class="card-body p-1 border-top">
+
+                    <!-- informações do Lote -->
+                    <div class="row">
+                        <div class="col-12">
+                            <b><span>Lote 11</span> - <span class="text-danger">SUCATA</span></b>                        </div>
+                    </div>
+
+                    <!-- Informações do lance -->
+
+                    <!-- ATUALIZAR ESSAS DIVS COM DADOS DO MAIOR LANCE -->
+                    <div class="row text-center">
+
+                        <!-- data hora fim -->
+                        <div class="col-12">
+                                                            <p id="relogio_316554">Aguarde</p>
+                                                    </div>
+                    </div>
+                                            <div class="row">
+                            <div class="col-12 text-center" style="height: 40px;">
+                                <b>VW/GOL 1000 1994</b>
+                            </div>
+                        </div>
+                                        <div class="row mb-2">
+                        <div class="col-12 text-center" style="height: 40px;">
+                                                                            </div>
+                    </div>
+
+                    <div class="row text-center">
+
+                        <!-- CPF DO ARREMATANTE COM MAIOR LANCE -->
+                        <div class="col-7 pr-0">
+                                                            <p class="update_info_lote" id="cpf_cnpj_arrematante_316554">-</p>
+                                                    </div>
+
+                        <!-- VALOR ATUAL -->
+                        <div class="col-5 pl-0">
+                            <p class="update_info_lote" id="valor_atual_lote_316554">
+                                                                    R$ 400,00                                                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12" id="lote_" >
+
+                            <a href="/ssc/login/login" class="btn btn-primary btn-block">Login Obrigatório</a>                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    
+        <div class="col-12 col-md-3 mt-2">
+            <div class="card listaLotes" id="316559">
+                
+                <span style="cursor: pointer !important;" onclick="$(location).prop('href', '/lotes/detalhes/316559');" data-toggle="tooltip" data-placement="top" title="Detalhes do Lote">
+                    <img src="/../Imagens/visualizar/leiloes/leilao_3483/img_316559_1.jpg" class="card-img-top" alt=""/>                </span>
+                <div class="card-body p-1 border-top">
+
+                    <!-- informações do Lote -->
+                    <div class="row">
+                        <div class="col-12">
+                            <b><span>Lote 12</span> - <span class="text-danger">SUCATA</span></b>                        </div>
+                    </div>
+
+                    <!-- Informações do lance -->
+
+                    <!-- ATUALIZAR ESSAS DIVS COM DADOS DO MAIOR LANCE -->
+                    <div class="row text-center">
+
+                        <!-- data hora fim -->
+                        <div class="col-12">
+                                                            <p id="relogio_316559">Aguarde</p>
+                                                    </div>
+                    </div>
+                                            <div class="row">
+                            <div class="col-12 text-center" style="height: 40px;">
+                                <b>FIAT/UNO MILLE EP 1996</b>
+                            </div>
+                        </div>
+                                        <div class="row mb-2">
+                        <div class="col-12 text-center" style="height: 40px;">
+                                                                            </div>
+                    </div>
+
+                    <div class="row text-center">
+
+                        <!-- CPF DO ARREMATANTE COM MAIOR LANCE -->
+                        <div class="col-7 pr-0">
+                                                            <p class="update_info_lote" id="cpf_cnpj_arrematante_316559">-</p>
+                                                    </div>
+
+                        <!-- VALOR ATUAL -->
+                        <div class="col-5 pl-0">
+                            <p class="update_info_lote" id="valor_atual_lote_316559">
+                                                                    R$ 600,00                                                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12" id="lote_" >
+
+                            <a href="/ssc/login/login" class="btn btn-primary btn-block">Login Obrigatório</a>                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    
+        <div class="col-12 col-md-3 mt-2">
+            <div class="card listaLotes" id="316552">
+                
+                <span style="cursor: pointer !important;" onclick="$(location).prop('href', '/lotes/detalhes/316552');" data-toggle="tooltip" data-placement="top" title="Detalhes do Lote">
+                    <img src="/../Imagens/visualizar/leiloes/leilao_3483/img_316552_1.jpg" class="card-img-top" alt=""/>                </span>
+                <div class="card-body p-1 border-top">
+
+                    <!-- informações do Lote -->
+                    <div class="row">
+                        <div class="col-12">
+                            <b><span>Lote 13</span> - <span class="text-danger">SUCATA</span></b>                        </div>
+                    </div>
+
+                    <!-- Informações do lance -->
+
+                    <!-- ATUALIZAR ESSAS DIVS COM DADOS DO MAIOR LANCE -->
+                    <div class="row text-center">
+
+                        <!-- data hora fim -->
+                        <div class="col-12">
+                                                            <p id="relogio_316552">Aguarde</p>
+                                                    </div>
+                    </div>
+                                            <div class="row">
+                            <div class="col-12 text-center" style="height: 40px;">
+                                <b>FORD/FIESTA 1999</b>
+                            </div>
+                        </div>
+                                        <div class="row mb-2">
+                        <div class="col-12 text-center" style="height: 40px;">
+                                                                            </div>
+                    </div>
+
+                    <div class="row text-center">
+
+                        <!-- CPF DO ARREMATANTE COM MAIOR LANCE -->
+                        <div class="col-7 pr-0">
+                                                            <p class="update_info_lote" id="cpf_cnpj_arrematante_316552">-</p>
+                                                    </div>
+
+                        <!-- VALOR ATUAL -->
+                        <div class="col-5 pl-0">
+                            <p class="update_info_lote" id="valor_atual_lote_316552">
+                                                                    R$ 500,00                                                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12" id="lote_" >
+
+                            <a href="/ssc/login/login" class="btn btn-primary btn-block">Login Obrigatório</a>                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    
+        <div class="col-12 col-md-3 mt-2">
+            <div class="card listaLotes" id="316560">
+                
+                <span style="cursor: pointer !important;" onclick="$(location).prop('href', '/lotes/detalhes/316560');" data-toggle="tooltip" data-placement="top" title="Detalhes do Lote">
+                    <img src="/../Imagens/visualizar/leiloes/leilao_3483/img_316560_1.jpg" class="card-img-top" alt=""/>                </span>
+                <div class="card-body p-1 border-top">
+
+                    <!-- informações do Lote -->
+                    <div class="row">
+                        <div class="col-12">
+                            <b><span>Lote 14</span> - <span class="text-danger">SUCATA</span></b>                        </div>
+                    </div>
+
+                    <!-- Informações do lance -->
+
+                    <!-- ATUALIZAR ESSAS DIVS COM DADOS DO MAIOR LANCE -->
+                    <div class="row text-center">
+
+                        <!-- data hora fim -->
+                        <div class="col-12">
+                                                            <p id="relogio_316560">Aguarde</p>
+                                                    </div>
+                    </div>
+                                            <div class="row">
+                            <div class="col-12 text-center" style="height: 40px;">
+                                <b>GM/MONZA CLASS EFI 1993</b>
+                            </div>
+                        </div>
+                                        <div class="row mb-2">
+                        <div class="col-12 text-center" style="height: 40px;">
+                                                                            </div>
+                    </div>
+
+                    <div class="row text-center">
+
+                        <!-- CPF DO ARREMATANTE COM MAIOR LANCE -->
+                        <div class="col-7 pr-0">
+                                                            <p class="update_info_lote" id="cpf_cnpj_arrematante_316560">-</p>
+                                                    </div>
+
+                        <!-- VALOR ATUAL -->
+                        <div class="col-5 pl-0">
+                            <p class="update_info_lote" id="valor_atual_lote_316560">
+                                                                    R$ 500,00                                                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12" id="lote_" >
+
+                            <a href="/ssc/login/login" class="btn btn-primary btn-block">Login Obrigatório</a>                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    
+        <div class="col-12 col-md-3 mt-2">
+            <div class="card listaLotes" id="316564">
+                
+                <span style="cursor: pointer !important;" onclick="$(location).prop('href', '/lotes/detalhes/316564');" data-toggle="tooltip" data-placement="top" title="Detalhes do Lote">
+                    <img src="/../Imagens/visualizar/leiloes/leilao_3483/img_316564_1.jpg" class="card-img-top" alt=""/>                </span>
+                <div class="card-body p-1 border-top">
+
+                    <!-- informações do Lote -->
+                    <div class="row">
+                        <div class="col-12">
+                            <b><span>Lote 15</span> - <span class="text-danger">SUCATA</span></b>                        </div>
+                    </div>
+
+                    <!-- Informações do lance -->
+
+                    <!-- ATUALIZAR ESSAS DIVS COM DADOS DO MAIOR LANCE -->
+                    <div class="row text-center">
+
+                        <!-- data hora fim -->
+                        <div class="col-12">
+                                                            <p id="relogio_316564">Aguarde</p>
+                                                    </div>
+                    </div>
+                                            <div class="row">
+                            <div class="col-12 text-center" style="height: 40px;">
+                                <b>VW/GOL SPECIAL 2001</b>
+                            </div>
+                        </div>
+                                        <div class="row mb-2">
+                        <div class="col-12 text-center" style="height: 40px;">
+                                                                            </div>
+                    </div>
+
+                    <div class="row text-center">
+
+                        <!-- CPF DO ARREMATANTE COM MAIOR LANCE -->
+                        <div class="col-7 pr-0">
+                                                            <p class="update_info_lote" id="cpf_cnpj_arrematante_316564">-</p>
+                                                    </div>
+
+                        <!-- VALOR ATUAL -->
+                        <div class="col-5 pl-0">
+                            <p class="update_info_lote" id="valor_atual_lote_316564">
+                                                                    R$ 500,00                                                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12" id="lote_" >
+
+                            <a href="/ssc/login/login" class="btn btn-primary btn-block">Login Obrigatório</a>                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    
+        <div class="col-12 col-md-3 mt-2">
+            <div class="card listaLotes" id="316563">
+                
+                <span style="cursor: pointer !important;" onclick="$(location).prop('href', '/lotes/detalhes/316563');" data-toggle="tooltip" data-placement="top" title="Detalhes do Lote">
+                    <img src="/../Imagens/visualizar/leiloes/leilao_3483/img_316563_1.jpg" class="card-img-top" alt=""/>                </span>
+                <div class="card-body p-1 border-top">
+
+                    <!-- informações do Lote -->
+                    <div class="row">
+                        <div class="col-12">
+                            <b><span>Lote 16</span> - <span class="text-danger">SUCATA</span></b>                        </div>
+                    </div>
+
+                    <!-- Informações do lance -->
+
+                    <!-- ATUALIZAR ESSAS DIVS COM DADOS DO MAIOR LANCE -->
+                    <div class="row text-center">
+
+                        <!-- data hora fim -->
+                        <div class="col-12">
+                                                            <p id="relogio_316563">Aguarde</p>
+                                                    </div>
+                    </div>
+                                            <div class="row">
+                            <div class="col-12 text-center" style="height: 40px;">
+                                <b>GM/KADETT LITE 1994</b>
+                            </div>
+                        </div>
+                                        <div class="row mb-2">
+                        <div class="col-12 text-center" style="height: 40px;">
+                                                                            </div>
+                    </div>
+
+                    <div class="row text-center">
+
+                        <!-- CPF DO ARREMATANTE COM MAIOR LANCE -->
+                        <div class="col-7 pr-0">
+                                                            <p class="update_info_lote" id="cpf_cnpj_arrematante_316563">-</p>
+                                                    </div>
+
+                        <!-- VALOR ATUAL -->
+                        <div class="col-5 pl-0">
+                            <p class="update_info_lote" id="valor_atual_lote_316563">
+                                                                    R$ 600,00                                                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12" id="lote_" >
+
+                            <a href="/ssc/login/login" class="btn btn-primary btn-block">Login Obrigatório</a>                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    
+        <div class="col-12 col-md-3 mt-2">
+            <div class="card listaLotes" id="316551">
+                
+                <span style="cursor: pointer !important;" onclick="$(location).prop('href', '/lotes/detalhes/316551');" data-toggle="tooltip" data-placement="top" title="Detalhes do Lote">
+                    <img src="/../Imagens/visualizar/leiloes/leilao_3483/img_316551_1.jpg" class="card-img-top" alt=""/>                </span>
+                <div class="card-body p-1 border-top">
+
+                    <!-- informações do Lote -->
+                    <div class="row">
+                        <div class="col-12">
+                            <b><span>Lote 17</span> - <span class="text-danger">SUCATA</span></b>                        </div>
+                    </div>
+
+                    <!-- Informações do lance -->
+
+                    <!-- ATUALIZAR ESSAS DIVS COM DADOS DO MAIOR LANCE -->
+                    <div class="row text-center">
+
+                        <!-- data hora fim -->
+                        <div class="col-12">
+                                                            <p id="relogio_316551">Aguarde</p>
+                                                    </div>
+                    </div>
+                                            <div class="row">
+                            <div class="col-12 text-center" style="height: 40px;">
+                                <b>MMC/PAJERO TR4 FL 2WD HP 2013</b>
+                            </div>
+                        </div>
+                                        <div class="row mb-2">
+                        <div class="col-12 text-center" style="height: 40px;">
+                                                                            </div>
+                    </div>
+
+                    <div class="row text-center">
+
+                        <!-- CPF DO ARREMATANTE COM MAIOR LANCE -->
+                        <div class="col-7 pr-0">
+                                                            <p class="update_info_lote" id="cpf_cnpj_arrematante_316551">-</p>
+                                                    </div>
+
+                        <!-- VALOR ATUAL -->
+                        <div class="col-5 pl-0">
+                            <p class="update_info_lote" id="valor_atual_lote_316551">
+                                                                    R$ 800,00                                                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12" id="lote_" >
+
+                            <a href="/ssc/login/login" class="btn btn-primary btn-block">Login Obrigatório</a>                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    
+</div>
+
+<hr>
+
+<div class="row">
+    <div class="col">
+            </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-12 text-right">
+
+        <a href="/" class="btn btn-warning"><i aria-hidden="true" class="fa fa-fas fa-arrow-left"></i> Voltar</a>    </div>
+</div>
+<script>
+    $(function(){
+        $('.btn-filtro-limpar, .page-link, a.btn-warning').click(function() {
+            showLoading();
+        });
+        $('.btn-doc').click(function(){
+             $('.modal-edital').modal('show');
+        });
+        
+        $('.dropdown-item').click(function(){
+            startAjaxLoad();
+            var ordenarPor = $(this).attr('id');
+            $.ajax({
+                url: getBaseURL() + '/Lotes/ajaxSessionOrder',
+                data: {
+                    ordenarPor: ordenarPor
+                },
+                type: 'POST',
+                success: function(retorno, status) {
+                    window.location.href = window.location.href;
+                },
+                error: function(retorno) {
+                    console.log('Ocorreu um erro');
+                }
+            });
+        });
+    });
+</script>
+<div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Documentos</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="padding: 0px; margin-bottom: -5px;">
+
+                    <div class="row">
+                        <div class="col">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Documento</th>
+                                            <th class="text-center">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                                                            </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div><div class="modal fade modal-edital" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Documentos</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="padding: 0px; margin-bottom: -5px;">
+
+                    <div class="row">
+                        <div class="col">
+                            <ul class="list-group">
+                                <li class="list-group-item">
+                                    <a href="/documentos-leiloes/edital/3483/2026" target="_blank"><i aria-hidden="true" class="fa fa-fas fa-file-alt"></i> Edital</a>                                </li>
+                                 
+                                <li class="list-group-item">
+                                    <a href="/documentos-leiloes/tabela-veiculos/3483/2026" target="_blank"><i aria-hidden="true" class="fa fa-fas fa-file-alt"></i> Tabela de Veículos</a>                                </li>
+                                                            </ul>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<script src="/js/countdown/jquery.plugin.min.js"></script><script src="/js/countdown/jquery.countdown.min.js"></script><script src="/js/countdown/jquery.countdown-pt-BR.js"></script><script src="/js/moment.js"></script>
+<script src="/js/formatacao.js"></script><script src="/js/Lotes/update.js"></script><script src="/js/Lotes/lance.js"></script>                </div>
+
+                
+            </div>
+        </div><!-- Fim div container -->
+    </main>
+
+    <footer class="footer fixed-bottom border-top py-2">
+    <div class="container">
+
+        <div class="row">
+            <div class="col-sm-6 d-none d-sm-block">
+                Desenvolvido pela PRODEMGE
+            </div>
+            <div class="col-sm-6 col-12 text-right">
+                <a href="http://www.prodemge.gov.br"><img src="/detran/img/logo_prodemge.png" alt="PRODEMGE" style="width: 130px; height: auto;"/></a>            </div>
+        </div>
+
+    </div>
+</footer>
+    <input type="hidden" name="urlBase" id="urlBase" value="//leilao.detran.mg.gov.br/" />
+    <div class="loading" id="loading"></div>
+</body>
+</html>

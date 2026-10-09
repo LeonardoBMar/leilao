@@ -64,7 +64,7 @@ export type ListingInput = {
   currentBid: Cents | null;
   minimumBid: Cents | null;
   bidCount: number | null;
-  /** Valor de mercado informado pela fonte: referência rotulada (D-30). */
+  /** Valor de mercado informado pela fonte: referência rotulada (D-30). Sem ele, o coletor casa na FIPE (D-47). */
   marketValue: Cents | null;
   costs: {
     commissionRate: Bps | null;

@@ -6,5 +6,11 @@
 export const LEILO_IMAGE_ORIGIN = "https://leilo.cdndp.com.br";
 export const PATIO_IMAGE_ORIGIN = "https://patioestadualsc.org";
 export const FREITAS_IMAGE_ORIGIN = "https://cdn3.freitasleiloeiro.com.br";
+export const DETRAN_MG_IMAGE_ORIGIN = "https://leilao.detran.mg.gov.br";
 
-export const LISTING_IMAGE_ORIGINS = [LEILO_IMAGE_ORIGIN, PATIO_IMAGE_ORIGIN, FREITAS_IMAGE_ORIGIN] as const;
+export const LISTING_IMAGE_ORIGINS = [
+  LEILO_IMAGE_ORIGIN,
+  PATIO_IMAGE_ORIGIN,
+  FREITAS_IMAGE_ORIGIN,
+  DETRAN_MG_IMAGE_ORIGIN,
+] as const;

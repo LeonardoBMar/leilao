@@ -5,7 +5,13 @@ import { err, ok, type Result } from "@/lib/result";
 import { requireUser } from "@/server/auth";
 import { db, isUniqueViolation } from "@/server/db";
 
-import { defaultsInputFromListing, draftDefaults, listingForDefaultsSelect, UNKNOWN_VEHICLE } from "./draft-defaults";
+import {
+  defaultsInputFromListing,
+  draftDefaults,
+  draftSourceOf,
+  listingForDefaultsSelect,
+  UNKNOWN_VEHICLE,
+} from "./draft-defaults";
 import { analysisColumns } from "./queries";
 import { type AnalysisForm, toAnalysisInputs, toAnalysisReferences } from "./schemas";
 
@@ -81,10 +87,7 @@ export async function createDraft(lotId: string, sourceId?: string): Promise<Res
   const premises =
     source ??
     (listing
-      ? draftDefaults(defaultsInputFromListing(listing), {
-          name: listing.source.name,
-          referenceDate: listing.lastCheckedAt,
-        })
+      ? draftDefaults(defaultsInputFromListing(listing), draftSourceOf(listing))
       : draftDefaults(UNKNOWN_VEHICLE, null));
 
   try {

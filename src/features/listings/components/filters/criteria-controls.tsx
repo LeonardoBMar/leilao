@@ -206,7 +206,8 @@ export function MarketPctField({ criteria, onChange }: CriteriaControlProps) {
         onValueChange={(value) => onChange({ maxMarketPct: value === ANY ? null : Number(value) })}
       />
       <p className="text-caption text-muted">
-        Valor de mercado informado pela fonte (Leilo e Pátio). Lotes sem ele ficam de fora.
+        Valor de mercado da fonte ou, sem ele, da tabela FIPE casado pelo sistema. Lotes sem nenhum dos dois ficam de
+        fora.
       </p>
     </div>
   );

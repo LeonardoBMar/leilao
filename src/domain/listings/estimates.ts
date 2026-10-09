@@ -15,7 +15,7 @@ import { normalizePlaceName } from "./place";
  *
  * - **Preço provável:** lances finais de vendas comparáveis já encerradas no catálogo, de qualquer região (o leilão
  *   é online). Sem comparáveis suficientes, a proporção lance final ÷ valor de mercado das vendas da mesma categoria
- *   e condição, aplicada ao valor de mercado informado pela fonte. Sempre com o número de casos.
+ *   e condição, aplicada ao valor de mercado (da fonte ou casado na FIPE, D-47). Sempre com o número de casos.
  * - **Limite estimado:** a calculadora da análise (SPEC §7) com as premissas das análises fixadas do usuário para
  *   veículos parecidos; sem 3 delas, com as premissas padrão do próprio anúncio (D-38, D-44). Nunca vira análise fixada.
  * - **Situação:** o preço provável frente ao limite (D-44). Compara o provável, nunca o lance atual, que ainda sobe.
@@ -76,12 +76,23 @@ export type PriceEstimate =
  */
 export function vehicleKey(brand: string | null, model: string | null): string | null {
   const normalizedBrand = normalizePlaceName(brand ?? "").trim();
+  const base = baseModelOf(model);
+  if (normalizedBrand === "" || base === null) return null;
+  return `${BRAND_ALIASES[normalizedBrand] ?? normalizedBrand}|${base.name}`;
+}
+
+/**
+ * Modelo base de `vehicleKey` ("ONIX PLUS JOY" → ONIX, "T CROSS" → T-CROSS) e quantas palavras do modelo ele usa.
+ * `null` sem modelo.
+ */
+export function baseModelOf(model: string | null): { name: string; words: number } | null {
   const [first, second] = normalizePlaceName(model ?? "")
     .split(/[^A-Z0-9]+/)
     .filter(Boolean);
-  if (normalizedBrand === "" || first === undefined) return null;
-  const baseModel = second !== undefined && isShortPrefix(first, second) ? `${first}-${second}` : first;
-  return `${BRAND_ALIASES[normalizedBrand] ?? normalizedBrand}|${baseModel}`;
+  if (first === undefined) return null;
+  return second !== undefined && isShortPrefix(first, second)
+    ? { name: `${first}-${second}`, words: 2 }
+    : { name: first, words: 1 };
 }
 
 /** "T" (T-Cross, F-350, C-180) ou "HR" + "V" (HR-V, CR-V, WR-V); "MT-03", "CG 160" e "KA SE" ficam na família. */

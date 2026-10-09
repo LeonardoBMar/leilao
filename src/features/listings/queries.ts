@@ -109,6 +109,8 @@ export const listingCardSelect = (ownerId: string) =>
     bidCount: true,
     finalBidCents: true,
     marketValueCents: true,
+    marketValueOrigin: true,
+    marketValueRefMonth: true,
     category: true,
     photoUrls: true,
     // Taxas do anúncio: entram no limite pelas premissas padrão (D-44), como no rascunho.
@@ -231,6 +233,8 @@ export function toListItem(row: ListingCardRow, estimates: EstimateContext | nul
     bidCount: row.bidCount,
     finalBid: toCents(row.finalBidCents),
     marketValue: toCents(row.marketValueCents),
+    marketValueOrigin: row.marketValueOrigin,
+    marketValueRefMonth: row.marketValueRefMonth,
     photoUrl: row.photoUrls[0] ?? null,
     trackable: trackerMissing(row).length === 0,
     trackedLotId: row.lots[0]?.id ?? null,

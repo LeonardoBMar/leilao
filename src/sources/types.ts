@@ -56,8 +56,16 @@ export type SourceAdapter = {
   listingUrl: (externalId: string) => string;
   /** Lista os anúncios disponíveis agora. */
   discover: (http: SourceHttp, now: Date) => Promise<Discovery>;
-  /** Baixa e lê um anúncio. `now` decide se um anúncio com situação desconhecida já deveria ter encerrado. */
-  fetchListing: (http: SourceHttp, externalId: string, now: Date) => Promise<ListingFetch>;
+  /**
+   * O coletor entrega a `fetchListing` o dado bruto já guardado do anúncio (`listings.raw`; `null` se é novo). Para a
+   * fonte que deixa de mostrar parte do anúncio depois do fim (D-48); as demais não pagam a consulta extra.
+   */
+  usesStoredRaw?: boolean;
+  /**
+   * Baixa e lê um anúncio. `now` decide se um anúncio com situação desconhecida já deveria ter encerrado. `stored`:
+   * dado bruto da última leitura, só para a fonte com `usesStoredRaw` (senão, ausente).
+   */
+  fetchListing: (http: SourceHttp, externalId: string, now: Date, stored?: unknown) => Promise<ListingFetch>;
   /**
    * Rederiva do dado bruto já guardado (`listings.raw`) campos cuja extração mudou depois da coleta (descrição,
    * condição, situação), sem baixar a página. Serve também quando a página já saiu do ar.

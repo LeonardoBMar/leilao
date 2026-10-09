@@ -92,7 +92,7 @@ export function fuelOf(fuel: string | null): FuelKey | null {
   return null;
 }
 
-/** Teto do preço frente ao valor de mercado informado pela fonte, em % (D-30). */
+/** Teto do preço frente ao valor de mercado (da fonte ou casado na FIPE; D-30, D-47), em %. */
 export const MARKET_PCT_OPTIONS = [40, 50, 60, 70, 80] as const;
 /** Teto de quilometragem. */
 export const MILEAGE_OPTIONS_KM = [50_000, 100_000, 150_000] as const;

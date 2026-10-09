@@ -5,6 +5,7 @@ import {
   type DefaultsInput,
 } from "@/domain/finance/defaults";
 import type { ConditionFlag, DamageLevel } from "@/domain/listings/condition";
+import type { MarketValueOrigin } from "@/domain/listings/fipe-match";
 import { distanceKm } from "@/domain/listings/geo";
 import { DEFAULT_REGION } from "@/domain/listings/region";
 import { type Bps, bps, type Cents, cents } from "@/domain/money";
@@ -22,6 +23,8 @@ const DAMAGE_LABELS: Record<DamageLevel | "none", string> = {
 /** Colunas do anúncio que alimentam as premissas padrão (o select de quem chama). */
 export type ListingForDefaults = {
   marketValueCents: number | null;
+  marketValueOrigin: MarketValueOrigin | null;
+  marketValueRefMonth: Date | null;
   category: string | null;
   damageLevel: DamageLevel | null;
   conditionFlags: ConditionFlag[];
@@ -36,6 +39,8 @@ export type ListingForDefaults = {
 
 export const listingForDefaultsSelect = {
   marketValueCents: true,
+  marketValueOrigin: true,
+  marketValueRefMonth: true,
   category: true,
   damageLevel: true,
   conditionFlags: true,
@@ -83,11 +88,43 @@ export function defaultsInputFromListing(listing: ListingForDefaults): DefaultsI
   };
 }
 
+/** Anúncio de onde o rascunho parte: a fonte, quando foi lido e de onde veio a FIPE (D-47). */
+export type DraftSource = {
+  name: string;
+  referenceDate: Date;
+  marketValueOrigin: MarketValueOrigin | null;
+  marketValueRefMonth: Date | null;
+};
+
+export function draftSourceOf(listing: ListingForDefaults & { lastCheckedAt: Date; source: { name: string } }) {
+  return {
+    name: listing.source.name,
+    referenceDate: listing.lastCheckedAt,
+    marketValueOrigin: listing.marketValueOrigin,
+    marketValueRefMonth: listing.marketValueRefMonth,
+  } satisfies DraftSource;
+}
+
+/** Referência da FIPE no rascunho: informada pela fonte ou casada pelo sistema na tabela do mês. */
+function fipeReference(source: DraftSource | null) {
+  if (source === null) return { fipeReferenceMonth: null, fipeReferenceSource: null };
+  if (source.marketValueOrigin === "fipe_version" || source.marketValueOrigin === "fipe_family") {
+    return {
+      fipeReferenceMonth: source.marketValueRefMonth,
+      fipeReferenceSource:
+        source.marketValueOrigin === "fipe_version"
+          ? "Tabela FIPE (casada pelo sistema)"
+          : "Tabela FIPE (casada pelo sistema, versão aproximada)",
+    };
+  }
+  return { fipeReferenceMonth: null, fipeReferenceSource: `${source.name} (informado no anúncio)` };
+}
+
 /**
  * Premissas padrão (D-38) → colunas do rascunho, com a origem de cada número nas observações. O rascunho continua
  * editável; quem fixa é o usuário.
  */
-export function draftDefaults(input: DefaultsInput, source: { name: string; referenceDate: Date } | null) {
+export function draftDefaults(input: DefaultsInput, source: DraftSource | null) {
   const defaults = defaultAssumptions(input);
   const referenceDate = source ? calendarDateToUtc(toCalendarDateInput(source.referenceDate)) : null;
   const saleDiscount = defaults.basis.saleDiscount;
@@ -99,7 +136,7 @@ export function draftDefaults(input: DefaultsInput, source: { name: string; refe
         ? null
         : `FIPE − ${formatBps(saleDiscount)} (premissa padrão, ${DAMAGE_LABELS[defaults.basis.condition]})`,
     fipeValueCents: input.fipe,
-    fipeReferenceSource: input.fipe === null || source === null ? null : `${source.name} (informado no anúncio)`,
+    ...(input.fipe === null ? { fipeReferenceMonth: null, fipeReferenceSource: null } : fipeReference(source)),
     repairCostCents: defaults.repairCost,
     documentationCostCents: defaults.documentationCost,
     transportCostCents: defaults.transportCost,

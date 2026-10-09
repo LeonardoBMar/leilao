@@ -14,6 +14,7 @@ import {
   LIMIT_FIT_VARIANTS,
   LISTING_STATUS_LABELS,
   LISTING_STATUS_VARIANTS,
+  marketValueOriginLabel,
 } from "../labels";
 import type { ListingEstimate, ListingListItem } from "../types";
 import { AddToTrackerButton } from "./add-to-tracker-button";
@@ -33,6 +34,7 @@ export function ListingCard({ item, header, footer, eager = false }: ListingCard
   const isOpen = item.status === "open";
   const bid = isOpen ? (item.currentBid ?? item.minimumBid) : item.finalBid;
   const ratio = bid !== null && item.marketValue !== null && item.marketValue > 0 ? bid / item.marketValue : null;
+  const marketOrigin = marketValueOriginLabel(item.marketValueOrigin, item.marketValueRefMonth);
 
   return (
     <article className="grid h-full content-start gap-3.5">
@@ -91,7 +93,7 @@ export function ListingCard({ item, header, footer, eager = false }: ListingCard
           </dd>
         </div>
         <div className="grid gap-0.5 text-right">
-          <dt className="text-caption text-muted">Mercado na fonte</dt>
+          <dt className="text-caption text-muted">Mercado{marketOrigin ? ` ${marketOrigin}` : ""}</dt>
           <dd className="text-body font-medium text-foreground-secondary">
             <Money value={item.marketValue} />
           </dd>

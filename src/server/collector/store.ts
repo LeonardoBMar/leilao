@@ -1,6 +1,7 @@
 import "server-only";
 
 import { finalBidOf, goneStatus, observationChanged } from "@/domain/listings/collect";
+import { marketValueOnSave } from "@/domain/listings/fipe-match";
 import { type Coordinates, distanceKm } from "@/domain/listings/geo";
 import { municipalityKey } from "@/domain/listings/place";
 import { DEFAULT_REGION } from "@/domain/listings/region";
@@ -40,6 +41,15 @@ export async function findKnownIds(sourceId: string, externalIds: readonly strin
     select: { externalId: true },
   });
   return new Set(rows.map((row) => row.externalId));
+}
+
+/** Dado bruto da última leitura (`listings.raw`), para a fonte que precisa dele na revisita (D-48). */
+export async function findStoredRaw(sourceId: string, externalId: string): Promise<unknown> {
+  const row = await db.listing.findUnique({
+    where: { sourceId_externalId: { sourceId, externalId } },
+    select: { raw: true },
+  });
+  return row?.raw ?? null;
 }
 
 /** Anúncios ainda no sitemap: atualiza "visto por último" sem baixar a página. */
@@ -130,7 +140,6 @@ export async function saveListing(
     minimumBidCents: input.minimumBid,
     bidCount: input.bidCount,
     finalBidCents: finalBidOf(input),
-    marketValueCents: input.marketValue,
     commissionBps: input.costs.commissionRate,
     dispatcherFeeCents: input.costs.dispatcherFee,
     removalFeeCents: input.costs.removalFee,
@@ -147,12 +156,27 @@ export async function saveListing(
   return db.$transaction(async (tx) => {
     const previous = await tx.listing.findUnique({
       where: { sourceId_externalId: { sourceId, externalId: input.externalId } },
-      select: { status: true, currentBidCents: true, bidCount: true },
+      select: {
+        status: true,
+        currentBidCents: true,
+        bidCount: true,
+        brand: true,
+        model: true,
+        modelYear: true,
+        category: true,
+        marketValueOrigin: true,
+      },
     });
+    const marketValue = marketValueFields(
+      marketValueOnSave(previous && { ...previous, origin: previous.marketValueOrigin }, {
+        ...input.vehicle,
+        marketValue: input.marketValue,
+      }),
+    );
     const listing = await tx.listing.upsert({
       where: { sourceId_externalId: { sourceId, externalId: input.externalId } },
-      create: { ...fields, sourceId, externalId: input.externalId, firstSeenAt: now, lastSeenAt: now },
-      update: fields,
+      create: { ...fields, ...marketValue, sourceId, externalId: input.externalId, firstSeenAt: now, lastSeenAt: now },
+      update: { ...fields, ...marketValue },
       select: { id: true },
     });
     const next = { status: input.status, bidCents: input.currentBid, bidCount: input.bidCount };
@@ -166,6 +190,24 @@ export async function saveListing(
     }
     return previous ? "updated" : "created";
   }, TRANSACTION_OPTIONS);
+}
+
+/** Colunas do valor de mercado para cada decisão de `marketValueOnSave` (D-47); `keep` não mexe em nenhuma. */
+function marketValueFields(
+  decision: ReturnType<typeof marketValueOnSave>,
+): Pick<
+  Prisma.ListingUncheckedCreateInput,
+  "marketValueCents" | "marketValueOrigin" | "marketValueFipeCode" | "marketValueRefMonth" | "marketValueCheckedAt"
+> {
+  if (decision.kind === "keep") return {};
+  const source = decision.kind === "source";
+  return {
+    marketValueCents: source ? decision.value : null,
+    marketValueOrigin: source ? "source" : null,
+    marketValueFipeCode: null,
+    marketValueRefMonth: null,
+    marketValueCheckedAt: null,
+  };
 }
 
 /**

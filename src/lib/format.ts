@@ -15,6 +15,7 @@ const dateTime = new Intl.DateTimeFormat("pt-BR", {
   timeZone: APP_TIME_ZONE,
 });
 const date = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeZone: APP_TIME_ZONE });
+const shortMonth = new Intl.DateTimeFormat("pt-BR", { month: "short", year: "numeric", timeZone: "UTC" });
 const integer = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
 
 export function formatBRL(value: Cents): string {
@@ -56,6 +57,14 @@ export function formatCalendarDate(value: Date): string {
 /** Mês de referência (ex.: FIPE): "outubro de 2026". */
 export function formatMonth(value: Date): string {
   return calendarMonth.format(value);
+}
+
+/** Mês de referência curto, para rótulos (ex.: origem do valor de mercado): "out/2026". */
+export function formatShortMonth(value: Date): string {
+  const parts = shortMonth.formatToParts(value);
+  const month = parts.find((part) => part.type === "month")?.value.replace(".", "") ?? "";
+  const year = parts.find((part) => part.type === "year")?.value ?? "";
+  return `${month}/${year}`;
 }
 
 /** Pontos-base como percentual: 525 → "5,25%". */

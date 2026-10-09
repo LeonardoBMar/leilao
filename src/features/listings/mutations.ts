@@ -3,7 +3,12 @@ import "server-only";
 import { hasEnded } from "@/domain/listings/outcome";
 import { planTracker } from "@/domain/listings/tracker";
 import { cents } from "@/domain/money";
-import { defaultsInputFromListing, draftDefaults, listingForDefaultsSelect } from "@/features/analyses/draft-defaults";
+import {
+  defaultsInputFromListing,
+  draftDefaults,
+  draftSourceOf,
+  listingForDefaultsSelect,
+} from "@/features/analyses/draft-defaults";
 import type { Prisma } from "@/generated/prisma/client";
 import { err, ok, type Result } from "@/lib/result";
 import { requireUser } from "@/server/auth";
@@ -65,10 +70,7 @@ export async function addListingToTracker(listingId: string): Promise<Result<Add
   // A tela só oferece o botão com marca, modelo e ano; aqui cobre o anúncio que mudou nesse meio-tempo.
   if (!planned.ok) return err("incomplete");
   const { auction, lot } = planned.value;
-  const premises = draftDefaults(defaultsInputFromListing(listing), {
-    name: listing.source.name,
-    referenceDate: listing.lastCheckedAt,
-  });
+  const premises = draftDefaults(defaultsInputFromListing(listing), draftSourceOf(listing));
 
   try {
     return await db.$transaction(async (tx) => {

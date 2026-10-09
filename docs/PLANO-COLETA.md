@@ -118,6 +118,20 @@ Ainda não implementada; precisa de aprovação. **Passa na regra do preço fina
 | Resultado | Depois do fim o JSON mantém **`valorArremate`** no vendido (ex.: Renault Clio 2014/2015, R$ 8.805,10; VW Up 2014/2015, R$ 23.742,74) e `null` no sem lance | **Preço final disponível** |
 | Dados pessoais | O lance traz `autor` com id, cidade, UF e apelido de quem deu o lance; o lote judicial traz número do processo | `autor` e processo descartados antes de gravar; redação comum (D-40) |
 
+### 2.8 Candidata: Leilão Detran-MG (`leilao.detran.mg.gov.br`, levantamento de 2026-10-09)
+
+Primeira fonte com lotes em Minas Gerais. É o sistema do próprio Detran-MG (feito pela Prodemge): o leilão roda nele, sem leiloeiro intermediário, para os pátios credenciados do estado inteiro. Ainda não implementada; precisa de aprovação para virar etapa.
+
+| Item | Achado | Consequência |
+| --- | --- | --- |
+| `robots.txt` e termos | Não há `robots.txt` (404, página de erro do CakePHP) nem sitemap. O único termo é o "Termo de Declaração de Concordância e Responsabilidade" do cadastro de arrematante: trata de lances, pagamento por DAE, retirada e transferência; não fala de robôs, extração ou cópia | Mesmo regime do Pátio e da Freitas: uso privado, volume baixo, coleta identificada, pausa em `sources.active` |
+| Acesso sem navegador | HTML no servidor (CakePHP + jQuery), sem anti-robô. ~80 pedidos simples com o `User-Agent` do coletor em 09/10, todos 200 | Cabe na `SourceHttp` atual, sem cookie nem login |
+| Descoberta | A página inicial lista os leilões abertos (`/lotes/lista-lotes/{leilão}/{ano}`). Cada lista traz número, município e pátio, e 8 lotes por página (`?page=N`) com id (`/lotes/detalhes/{id}`), número, condição (CONSERVADO, SUCATA), "MARCA/MODELO ano" e valor. Em 09/10: **36 leilões e ~370 páginas (~2.900 lotes) em 25 municípios de MG**: Uberlândia, Juiz de Fora, Ipatinga, Paracatu, Poços de Caldas, Andradas, Botelhos, Muzambinho, Frutal, Prata, Piumhi, Campo Belo etc. A imprensa fala em ~50 leilões e 4.300 veículos por mês. A lista do leilão encerrado redireciona (302) para a página inicial | Descoberta lê as listas e guarda id, leilão, município e pátio, porque a página do lote não traz o local. Os mais perto de São Carlos: Andradas e Poços de Caldas (~170–190 km) |
+| Dados do lote | `/lotes/detalhes/{id}`: valor inicial, marca/modelo, cor, ano do modelo e de fabricação, combustível, condição e fotos (`/Imagens/visualizar/leiloes/leilao_{L}/img_{id}_{n}.jpg`). **Sem km, sem valor de mercado e sem comissão**: a venda é do Estado, paga por DAE, sem comissão de leiloeiro; o edital (PDF) não cobra taxa além do lance. A "Tabela de Veículos" (PDF) traz a avaliação de cada lote, mas também placa, chassi e motor completos | Condição pela coluna (SUCATA → salvage). Comissão zero. Não ler a Tabela de Veículos (dados pessoais); a avaliação é o valor inicial da página |
+| Lance e fim | Consulta interna `GET /PDO/updateCountdown.php?data[]={id}&data[]=…` (a mesma que a tela usa a cada segundo), vários lotes por pedido: `valor`, `valorIncremento`, `status`, `tempo` (segundos até o fim) e `arrematante` (CPF/CNPJ **já mascarado**: "xxx.xxx.xxx-xx") | Fim = hora do pedido + `tempo`. `arrematante` descartado |
+| Resultado | Depois do fim a consulta **continua respondendo com o valor final**, inclusive em lotes antigos (ids 200000, 250000, 270000, 285000, 290000 e 293000 em 09/10). Situações: `1`/`2` aberto, `3` encerrado (com `valor` e arrematante = **vendido**, ex.: lote 280000, VW Gol 1000i, R$ 3.800; com `valor` nulo = **sem lance**), `4` cancelado, `5` encerrado (visto só no script). A página do lote encerrado continua no ar (200) | **Preço final disponível** (regra de 02/10 atendida). Revisita pela consulta interna, que responde por dezenas de lotes num pedido |
+| Dados pessoais | Arrematante mascarado pelo próprio site. O nome do pátio às vezes é pessoa física com CPF completo ("DEYVID ALAN COSTA CPF 089…") | Nome do pátio só como texto com CPF apagado pela redação comum (D-40), ou descartado; o local é o município do leilão |
+
 ## 3. Arquitetura
 
 ```text

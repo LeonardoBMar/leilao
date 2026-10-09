@@ -6,6 +6,7 @@ import { z } from "zod";
 import { DAMAGE_LEVELS } from "@/domain/listings/condition";
 import { CATEGORY_OF_KEY } from "@/domain/listings/criteria";
 import { SALES_WINDOW_MS } from "@/domain/listings/estimates";
+import { MARKET_VALUE_ORIGINS } from "@/domain/listings/fipe-match";
 import { cents } from "@/domain/money";
 import {
   DAMAGE_OF_CONDITION,
@@ -123,11 +124,13 @@ function toStats({ n, p25, median, p75 }: GroupStats): GroupStats {
 export const getResearchOverview = cache(async (): Promise<ResearchOverview> => {
   await requireUser();
   const [row] = await rows(
-    z.object({ sales: z.number().int(), since: z.date().nullable() }),
-    sql`SELECT count(*)::int AS sales, min(l.ends_at) AS since FROM listings l
+    z.object({ sales: z.number().int(), fipeMatched: z.number().int(), since: z.date().nullable() }),
+    sql`SELECT count(*)::int AS sales,
+        count(*) FILTER (WHERE l.market_value_origin IN ('fipe_version', 'fipe_family'))::int AS "fipeMatched",
+        min(l.ends_at) AS since FROM listings l
       WHERE l.status = 'sold' AND l.final_bid_cents > 0 AND l.ends_at >= ${salesSince()}`,
   );
-  return row ?? { sales: 0, since: null };
+  return row ?? { sales: 0, fipeMatched: 0, since: null };
 });
 
 /** Até quantos modelos a busca sugere. */
@@ -261,6 +264,7 @@ const saleRow = z.object({
   damage_level: z.enum(DAMAGE_LEVELS).nullable(),
   final_bid_cents: z.number().int(),
   market_value_cents: z.number().int().nullable(),
+  market_value_origin: z.enum(MARKET_VALUE_ORIGINS).nullable(),
   source: z.string(),
 });
 
@@ -278,6 +282,7 @@ function toSale(row: z.infer<typeof saleRow>): ResearchSale {
     damageLevel: row.damage_level,
     finalBid: cents(row.final_bid_cents),
     marketValue: marketValue === null ? null : cents(marketValue),
+    marketValueOrigin: marketValue === null ? null : row.market_value_origin,
     ratio: marketValue === null ? null : row.final_bid_cents / marketValue,
     source: row.source,
   };
@@ -288,7 +293,8 @@ async function listSales(where: Prisma.Sql, limit: number): Promise<ResearchSale
   const sales = await rows(
     saleRow,
     sql`SELECT l.id::text AS id, l.url, l.title, l.ends_at, l.state::text AS state, l.city, l.model_year::int AS model_year,
-        l.mileage_km, l.damage_level::text AS damage_level, l.final_bid_cents, l.market_value_cents, s.name AS source
+        l.mileage_km, l.damage_level::text AS damage_level, l.final_bid_cents, l.market_value_cents,
+        l.market_value_origin::text AS market_value_origin, s.name AS source
       FROM listings l JOIN sources s ON s.id = l.source_id
       WHERE ${where} ORDER BY l.ends_at DESC, l.id LIMIT ${limit}`,
   );

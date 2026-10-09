@@ -30,7 +30,7 @@ async function main() {
   }
   process.stdout.write(
     `Lotes ligados: ${summary.lotsUpdated} com lance novo · ${summary.resultsRecorded} resultados · ` +
-      `${summary.alertsCreated} alertas\n`,
+      `${summary.alertsCreated} alertas · ${summary.marketValuesMatched} valores de mercado da FIPE\n`,
   );
   if (summary.status === "failed") process.exitCode = 1;
 }

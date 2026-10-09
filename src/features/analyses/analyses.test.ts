@@ -4,7 +4,7 @@ import { z } from "zod";
 import { calculateMaxBid, missingFields, simulateBid } from "@/domain/finance/calculator";
 import { cents } from "@/domain/money";
 
-import { defaultsInputFromListing, draftDefaults, UNKNOWN_VEHICLE } from "./draft-defaults";
+import { defaultsInputFromListing, draftDefaults, draftSourceOf, UNKNOWN_VEHICLE } from "./draft-defaults";
 import { FORM_FIELD } from "./labels";
 import { readAnalysisInputs } from "./read-inputs";
 import { analysisFormSchema, toAnalysisInputs } from "./schemas";
@@ -189,6 +189,8 @@ describe("draftDefaults", () => {
     const draft = draftDefaults(
       defaultsInputFromListing({
         marketValueCents: 8_000_000,
+        marketValueOrigin: "source",
+        marketValueRefMonth: null,
         category: "Carros",
         damageLevel: "small",
         conditionFlags: ["airbag_deployed"],
@@ -200,12 +202,18 @@ describe("draftDefaults", () => {
         otherFeesCents: null,
         municipality: null,
       }),
-      { name: "Leilo", referenceDate: new Date("2026-10-01T12:00:00Z") },
+      {
+        name: "Leilo",
+        referenceDate: new Date("2026-10-01T12:00:00Z"),
+        marketValueOrigin: "source",
+        marketValueRefMonth: null,
+      },
     );
     expect(draft).toMatchObject({
       marketValueCents: 6_400_000,
       repairCostCents: 2_000_000,
       fipeValueCents: 8_000_000,
+      fipeReferenceSource: "Leilo (informado no anúncio)",
       transportCostCents: 55_000,
       otherFeesCents: 260_000,
       documentationCostCents: 150_000,
@@ -216,6 +224,32 @@ describe("draftDefaults", () => {
     expect(draft.notes).toMatch(/FIPE R\$\s80\.000,00 − 20% \(pequena monta\)/);
     expect(draft.notes).toMatch(/airbag acionado/);
     expect(draft.notes).toMatch(/Transporte: remoção do anúncio no Leilo/);
+  });
+
+  it("FIPE casada pelo sistema: mês da tabela e a origem na referência (D-47)", () => {
+    const listing: Parameters<typeof draftSourceOf>[0] = {
+      marketValueCents: 3_000_000,
+      marketValueOrigin: "fipe_family",
+      marketValueRefMonth: new Date("2026-09-01"),
+      category: "Carros",
+      damageLevel: null,
+      conditionFlags: [],
+      commissionBps: null,
+      dispatcherFeeCents: null,
+      removalFeeCents: null,
+      storageFeeCents: null,
+      inspectionFeeCents: null,
+      otherFeesCents: null,
+      municipality: null,
+      lastCheckedAt: new Date("2026-10-01T12:00:00Z"),
+      source: { name: "Freitas" },
+    };
+    const draft = draftDefaults(defaultsInputFromListing(listing), draftSourceOf(listing));
+    expect(draft).toMatchObject({
+      fipeValueCents: 3_000_000,
+      fipeReferenceMonth: new Date("2026-09-01"),
+      fipeReferenceSource: "Tabela FIPE (casada pelo sistema, versão aproximada)",
+    });
   });
 
   it("lote sem anúncio: só os custos fixos; venda e reparos esperam a FIPE", () => {

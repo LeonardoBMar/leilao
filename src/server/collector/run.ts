@@ -6,12 +6,16 @@ import { listingContractProblems } from "@/sources/shared/contract";
 import type { SourceAdapter } from "@/sources/types";
 
 import { db } from "../db";
+import { env } from "../env";
+import { createFipeClient, type FipeClient } from "../fipe/client";
+import { enrichMarketValues } from "../fipe/enrich";
 import { createAlerts } from "./alerts";
 import { createPoliteFetcher, DEADLINE_ERROR, type PoliteFetcher } from "./http";
 import { recordTrackedResults, syncTrackedLots } from "./lots";
 import {
   findDueVisits,
   findKnownIds,
+  findStoredRaw,
   findTrackedVisits,
   loadPlaceLookup,
   markGone,
@@ -35,6 +39,8 @@ const DEFAULT_BUDGET_MS = 12 * 60_000;
 const MAX_CONSECUTIVE_FAILURES = 10;
 /** Execução ainda "running" depois disto foi morta antes de fechar o registro (o job passa de 20 min). */
 const STALE_RUN_MS = 30 * 60_000;
+/** Depois das fontes, tempo para casar na FIPE os anúncios gravados no fim da coleta (D-47). */
+const FIPE_TAIL_MS = 2 * 60_000;
 
 type RunError = { url: string; error: string };
 
@@ -59,7 +65,9 @@ export type CollectionSummary = {
   /** Resultados registrados sozinhos nos lotes ligados a anúncios encerrados (etapa 4). */
   resultsRecorded: number;
   alertsCreated: number;
-  /** Falhas dos passos comuns a todas as fontes (lotes ligados, alertas). */
+  /** Anúncios que ganharam valor de mercado casado na FIPE nesta execução (D-47). */
+  marketValuesMatched: number;
+  /** Falhas dos passos comuns a todas as fontes (lotes ligados, valor de mercado, alertas). */
   errors: RunError[];
 };
 
@@ -74,6 +82,8 @@ type RunOptions = {
   createFetcher?: (source: SourceAdapter, deadline: number) => PoliteFetcher;
   /** Tempo das fontes nesta execução; depois dele as fontes param e os passos comuns rodam. */
   budgetMs?: number;
+  /** Casamento do valor de mercado na FIPE. Padrão: a API oficial, se `FIPE_LOOKUP` não for "off"; `null` desliga. */
+  fipe?: FipeClient | null;
   now?: () => Date;
 };
 
@@ -88,22 +98,54 @@ export async function runCollection({
   createFetcher = (_source, deadline) => createPoliteFetcher({ deadline }),
   budgetMs = DEFAULT_BUDGET_MS,
   now = () => new Date(),
+  fipe,
 }: RunOptions): Promise<CollectionSummary> {
   const startedAt = now();
   const deadline = startedAt.getTime() + budgetMs;
+  const fipeClient =
+    fipe !== undefined
+      ? fipe
+      : env.FIPE_LOOKUP === "on"
+        ? createFipeClient(createPoliteFetcher({ deadline: deadline + FIPE_TAIL_MS }).post, now)
+        : null;
   await closeStaleRuns(startedAt);
   // Uma leitura dos municípios para todas as fontes; se falhar, cada fonte registra a falha na sua execução.
   const place = loadPlaceLookup().then(
     (lookup): PlaceLoad => ({ ok: true, lookup }),
     (error: unknown): PlaceLoad => ({ ok: false, error }),
   );
-  const runs = await Promise.all(
-    sources.map((source) =>
-      collectSource({ source, fetcher: createFetcher(source, deadline), maxVisits, deadline, place, now }),
-    ),
-  );
-
   const errors: RunError[] = [];
+  // A FIPE é outro site: o valor de mercado é casado junto com as fontes (o que já estava pendente) e, depois delas,
+  // por pouco tempo, para os anúncios gravados no fim. Tudo antes dos alertas, que olham o % do mercado.
+  // Se a FIPE falhar, a segunda passada não tenta de novo: os anúncios ficam pendentes para a próxima execução.
+  let fipeFailed = false;
+  const enrich = async (until: number) => {
+    if (!fipeClient || fipeFailed) return 0;
+    let matched = 0;
+    let problem: string | null;
+    try {
+      const summary = await enrichMarketValues({ client: fipeClient, now, deadline: until });
+      matched = summary.matched.version + summary.matched.family;
+      problem = summary.stoppedBy === "tempo esgotado" ? null : summary.stoppedBy;
+    } catch (error) {
+      problem = describeError(error);
+    }
+    if (problem !== null) {
+      fipeFailed = true;
+      errors.push({ url: "(valor de mercado)", error: problem });
+    }
+    return matched;
+  };
+  const [runs, matchedDuring] = await Promise.all([
+    Promise.all(
+      sources.map((source) =>
+        collectSource({ source, fetcher: createFetcher(source, deadline), maxVisits, deadline, place, now }),
+      ),
+    ),
+    enrich(deadline),
+  ]);
+  const marketValuesMatched = matchedDuring + (await enrich(now().getTime() + FIPE_TAIL_MS));
+
   // Lance e resultado dos lotes ligados, com o que foi lido. Falha aqui não impede os alertas.
   let lotsUpdated = 0;
   let resultsRecorded = 0;
@@ -136,6 +178,7 @@ export async function runCollection({
     lotsUpdated,
     resultsRecorded,
     alertsCreated,
+    marketValuesMatched,
     errors: errors.slice(0, MAX_ERROR_SAMPLES),
   };
 }
@@ -317,7 +360,8 @@ async function visitListing(
   context: Parameters<typeof saveListing>[2],
   listReadAt: Date | null,
 ): Promise<Result<"created" | "updated">> {
-  const fetched = await source.fetchListing(fetcher, externalId, context.now);
+  const stored = source.usesStoredRaw ? await findStoredRaw(source.id, externalId) : null;
+  const fetched = await source.fetchListing(fetcher, externalId, context.now, stored);
   // Página fora do ar de anúncio encerrado ou fora da lista da fonte: desfecho, não falha (goneStatus).
   if (!fetched.ok && fetched.gone && (await markGone(source.id, externalId, context.now, listReadAt))) {
     return ok("updated");

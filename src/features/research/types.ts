@@ -1,4 +1,5 @@
 import type { DamageLevel } from "@/domain/listings/condition";
+import type { MarketValueOrigin } from "@/domain/listings/fipe-match";
 import type { Cents } from "@/domain/money";
 import type { ResearchCategory, ResearchCondition, ResearchMetric } from "@/domain/research/filters";
 import type { StateCode, StateSummary } from "@/domain/research/states";
@@ -17,13 +18,20 @@ export type ResearchSale = {
   damageLevel: DamageLevel | null;
   finalBid: Cents;
   marketValue: Cents | null;
+  /** Da fonte ou casado na FIPE pelo sistema (D-47). */
+  marketValueOrigin: MarketValueOrigin | null;
   /** Lance final ÷ valor de mercado; `null` sem valor de mercado. */
   ratio: number | null;
   source: string;
 };
 
 /** Base da Pesquisa inteira, para o cabeçalho. */
-export type ResearchOverview = { sales: number; since: Date | null };
+export type ResearchOverview = {
+  sales: number;
+  /** Vendas com valor de mercado casado na FIPE pelo sistema (D-47), e não informado pela fonte. */
+  fipeMatched: number;
+  since: Date | null;
+};
 
 /** Distribuição do % do valor de mercado: resumo e histograma (contagem por faixa de 2 pontos). */
 export type RatioDistribution = { summary: GroupSummary; bins: number[] };

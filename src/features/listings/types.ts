@@ -2,6 +2,7 @@ import type { CatalogAuctionState, CatalogAuctionStats } from "@/domain/listings
 import type { ConditionFlag, DamageLevel, InspectionResult } from "@/domain/listings/condition";
 import type { LimitEstimate, LimitFit, PriceEstimate } from "@/domain/listings/estimates";
 import type { ListingFacets } from "@/domain/listings/facets";
+import type { MarketValueOrigin } from "@/domain/listings/fipe-match";
 import type { CollectorHealth } from "@/domain/listings/health";
 import type { ListingStatus } from "@/domain/listings/types";
 import type { Cents } from "@/domain/money";
@@ -33,8 +34,11 @@ export type ListingListItem = {
   minimumBid: Cents | null;
   bidCount: number | null;
   finalBid: Cents | null;
-  /** Valor de mercado informado pela fonte (D-30). */
+  /** Valor de mercado da fonte (D-30) ou casado na FIPE pelo sistema (D-47); a origem vai no rótulo. */
   marketValue: Cents | null;
+  marketValueOrigin: MarketValueOrigin | null;
+  /** Mês da tabela FIPE do valor casado. */
+  marketValueRefMonth: Date | null;
   photoUrl: string | null;
   /** Tem o que `planTracker` exige (marca, modelo, ano e leilão): pode virar lote ("Adicionar à análise"). */
   trackable: boolean;

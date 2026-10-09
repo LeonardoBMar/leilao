@@ -1,6 +1,7 @@
 import { ChartDataTable } from "@/components/charts/chart-data-table";
 import { ScatterPlot } from "@/components/charts/scatter-plot";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui";
+import type { MarketValueOrigin } from "@/domain/listings/fipe-match";
 import { cents } from "@/domain/money";
 import { type ResearchFilters, type ResearchVehicle, vehicleLabel } from "@/domain/research/filters";
 import { niceTicks } from "@/lib/charts";
@@ -100,6 +101,13 @@ function saleTitle(sale: ResearchSale): string {
 }
 
 /** O lance e o % logo depois do anúncio: no celular, a tabela rola para o lado e eles ficam à vista. */
+/** Valor de mercado casado pelo sistema (D-47) é marcado na tabela; o da fonte fica sem marca. */
+const MARKET_ORIGIN_MARKS = {
+  source: "",
+  fipe_version: " · FIPE",
+  fipe_family: " · FIPE aprox.",
+} satisfies Record<MarketValueOrigin, string>;
+
 const SALE_COLUMNS = [
   { key: "date", label: "Data", align: "left" },
   { key: "sale", label: "Anúncio", align: "left" },
@@ -136,7 +144,10 @@ function saleRow(sale: ResearchSale) {
     year: sale.modelYear === null ? undefined : String(sale.modelYear),
     km: sale.mileageKm === null ? undefined : formatKm(sale.mileageKm),
     bid: formatBRL(sale.finalBid),
-    market: sale.marketValue === null ? undefined : formatBRL(sale.marketValue),
+    market:
+      sale.marketValue === null
+        ? undefined
+        : `${formatBRL(sale.marketValue)}${MARKET_ORIGIN_MARKS[sale.marketValueOrigin ?? "source"]}`,
     ratio: sale.ratio === null ? undefined : formatRatio(sale.ratio),
   };
 }

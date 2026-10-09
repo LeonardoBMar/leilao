@@ -281,6 +281,15 @@ enum ListingStatus {
   @@map("listing_status")
 }
 
+/// De onde veio o valor de mercado do anúncio (D-47): da fonte, ou casado pelo sistema na tabela FIPE oficial.
+enum MarketValueOrigin {
+  source
+  fipe_version
+  fipe_family
+
+  @@map("market_value_origin")
+}
+
 enum DamageLevel {
   small
   medium
@@ -353,74 +362,83 @@ model Municipality {
 
 /// Anúncio normalizado de uma fonte. Único por (fonte, id na fonte): reaparecer atualiza, não duplica.
 model Listing {
-  id                 String            @id @default(uuid(7)) @db.Uuid
-  sourceId           String            @map("source_id") @db.VarChar(40)
-  externalId         String            @map("external_id")
-  url                String
-  lotNumber          String?           @map("lot_number")
-  title              String
-  brand              String?
-  model              String?
-  fipeCode           String?           @map("fipe_code")
-  fipeName           String?           @map("fipe_name")
-  modelYear          Int?              @map("model_year") @db.SmallInt
-  manufactureYear    Int?              @map("manufacture_year") @db.SmallInt
-  mileageKm          Int?              @map("mileage_km")
-  fuel               String?
-  color              String?
-  category           String?
-  recoveryType       String?           @map("recovery_type")
-  hasKey             Boolean?          @map("has_key")
-  sellerName         String?           @map("seller_name")
+  id                   String             @id @default(uuid(7)) @db.Uuid
+  sourceId             String             @map("source_id") @db.VarChar(40)
+  externalId           String             @map("external_id")
+  url                  String
+  lotNumber            String?            @map("lot_number")
+  title                String
+  brand                String?
+  model                String?
+  fipeCode             String?            @map("fipe_code")
+  fipeName             String?            @map("fipe_name")
+  modelYear            Int?               @map("model_year") @db.SmallInt
+  manufactureYear      Int?               @map("manufacture_year") @db.SmallInt
+  mileageKm            Int?               @map("mileage_km")
+  fuel                 String?
+  color                String?
+  category             String?
+  recoveryType         String?            @map("recovery_type")
+  hasKey               Boolean?           @map("has_key")
+  sellerName           String?            @map("seller_name")
   /// Texto do leiloeiro sobre o lote, sem HTML.
-  description        String?
+  description          String?
   /// Condição declarada pela fonte (src/domain/listings/condition.ts). Nula: a fonte não classificou.
-  damageLevel        DamageLevel?      @map("damage_level")
-  conditionFlags     ConditionFlag[]   @default([]) @map("condition_flags")
-  inspectionResult   InspectionResult? @map("inspection_result")
-  inspectionNotes    String?           @map("inspection_notes")
-  auctionExternalId  String?           @map("auction_external_id")
-  auctionName        String?           @map("auction_name")
-  auctionStartsAt    DateTime?         @map("auction_starts_at") @db.Timestamptz(3)
-  startsAt           DateTime?         @map("starts_at") @db.Timestamptz(3)
-  endsAt             DateTime?         @map("ends_at") @db.Timestamptz(3)
-  yardName           String?           @map("yard_name")
-  city               String?
-  state              String?           @db.Char(2)
-  address            String?
-  municipalityId     Int?              @map("municipality_id")
-  status             ListingStatus
+  damageLevel          DamageLevel?       @map("damage_level")
+  conditionFlags       ConditionFlag[]    @default([]) @map("condition_flags")
+  inspectionResult     InspectionResult?  @map("inspection_result")
+  inspectionNotes      String?            @map("inspection_notes")
+  auctionExternalId    String?            @map("auction_external_id")
+  auctionName          String?            @map("auction_name")
+  auctionStartsAt      DateTime?          @map("auction_starts_at") @db.Timestamptz(3)
+  startsAt             DateTime?          @map("starts_at") @db.Timestamptz(3)
+  endsAt               DateTime?          @map("ends_at") @db.Timestamptz(3)
+  yardName             String?            @map("yard_name")
+  city                 String?
+  state                String?            @db.Char(2)
+  address              String?
+  municipalityId       Int?               @map("municipality_id")
+  status               ListingStatus
   /// Situação como a fonte escreve (ex.: "LiberadoLeilao", "Pago"), para auditoria do mapeamento.
-  sourceStatus       String?           @map("source_status")
-  currentBidCents    Int?              @map("current_bid_cents")
-  minimumBidCents    Int?              @map("minimum_bid_cents")
-  bidCount           Int?              @map("bid_count")
+  sourceStatus         String?            @map("source_status")
+  currentBidCents      Int?               @map("current_bid_cents")
+  minimumBidCents      Int?               @map("minimum_bid_cents")
+  bidCount             Int?               @map("bid_count")
   /// Lance final, gravado quando o anúncio encerra com lance (base das estimativas, D-28).
-  finalBidCents      Int?              @map("final_bid_cents")
-  /// Valor de mercado informado pela fonte: referência rotulada, nunca estimativa do sistema (D-30).
-  marketValueCents   Int?              @map("market_value_cents")
+  finalBidCents        Int?               @map("final_bid_cents")
+  /// Valor de mercado: informado pela fonte ou casado na FIPE (D-47), sempre com a origem. Referência rotulada, nunca
+  /// estimativa do sistema (D-30).
+  marketValueCents     Int?               @map("market_value_cents")
+  /// Nula exatamente quando não há valor de mercado.
+  marketValueOrigin    MarketValueOrigin? @map("market_value_origin")
+  /// Código FIPE da versão casada (só `fipe_version`).
+  marketValueFipeCode  String?            @map("market_value_fipe_code")
+  /// Mês da tabela FIPE usada (primeiro dia do mês); nulo quando o valor vem da fonte.
+  marketValueRefMonth  DateTime?          @map("market_value_ref_month") @db.Date
+  /// Última tentativa de casar na FIPE. Nula: pendente (anúncio novo, ou veículo mudou).
+  marketValueCheckedAt DateTime?          @map("market_value_checked_at") @db.Timestamptz(3)
   /// Coluna gerada pelo banco (D-43): lance atual ou, sem lance, o inicial (`priceOf`). Nunca gravar.
-  priceCents         Int?              @default(dbgenerated("COALESCE(current_bid_cents, minimum_bid_cents)")) @map("price_cents")
+  priceCents           Int?               @default(dbgenerated("COALESCE(current_bid_cents, minimum_bid_cents)")) @map("price_cents")
   /// Coluna gerada pelo banco (D-43): preço ÷ valor de mercado em basis points (`marketRatioBps`). Nunca gravar.
-  marketRatioBps     Int?              @default(dbgenerated("\nCASE\n    WHEN ((market_value_cents > 0) AND (COALESCE(current_bid_cents, minimum_bid_cents) IS NOT NULL)) THEN (round((((COALESCE(current_bid_cents, minimum_bid_cents))::numeric * 10000.0) / (market_value_cents)::numeric)))::integer\n    ELSE NULL::integer\nEND")) @map("market_ratio_bps")
-  commissionBps      Int?              @map("commission_bps")
-  dispatcherFeeCents Int?              @map("dispatcher_fee_cents")
-  removalFeeCents    Int?              @map("removal_fee_cents")
-  storageFeeCents    Int?              @map("storage_fee_cents")
-  inspectionFeeCents Int?              @map("inspection_fee_cents")
-  otherFeesCents     Int?              @map("other_fees_cents")
+  marketRatioBps       Int?               @default(dbgenerated("\nCASE\n    WHEN ((market_value_cents > 0) AND (COALESCE(current_bid_cents, minimum_bid_cents) IS NOT NULL)) THEN (round((((COALESCE(current_bid_cents, minimum_bid_cents))::numeric * 10000.0) / (market_value_cents)::numeric)))::integer\n    ELSE NULL::integer\nEND")) @map("market_ratio_bps")
+  commissionBps        Int?               @map("commission_bps")
+  dispatcherFeeCents   Int?               @map("dispatcher_fee_cents")
+  removalFeeCents      Int?               @map("removal_fee_cents")
+  storageFeeCents      Int?               @map("storage_fee_cents")
+  inspectionFeeCents   Int?               @map("inspection_fee_cents")
+  otherFeesCents       Int?               @map("other_fees_cents")
   /// URLs das fotos na fonte (D-29).
-  photoUrls          String[]          @map("photo_urls")
+  photoUrls            String[]           @map("photo_urls")
   /// Dado original da fonte, sem informações de quem deu lance.
-  raw                Json
-  firstSeenAt        DateTime          @default(now()) @map("first_seen_at") @db.Timestamptz(3)
-  lastSeenAt         DateTime          @default(now()) @map("last_seen_at") @db.Timestamptz(3)
-  lastCheckedAt      DateTime          @default(now()) @map("last_checked_at") @db.Timestamptz(3)
+  raw                  Json
+  firstSeenAt          DateTime           @default(now()) @map("first_seen_at") @db.Timestamptz(3)
+  lastSeenAt           DateTime           @default(now()) @map("last_seen_at") @db.Timestamptz(3)
+  lastCheckedAt        DateTime           @default(now()) @map("last_checked_at") @db.Timestamptz(3)
   /// Próxima revisita. Nulo: desfecho definitivo, não precisa voltar.
-  nextCheckAt        DateTime?         @map("next_check_at") @db.Timestamptz(3)
-  checkFailures      Int               @default(0) @map("check_failures") @db.SmallInt
-  createdAt          DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt          DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+  nextCheckAt          DateTime?          @map("next_check_at") @db.Timestamptz(3)
+  checkFailures        Int                @default(0) @map("check_failures") @db.SmallInt
+  createdAt            DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   source       Source               @relation(fields: [sourceId], references: [id], onDelete: Restrict)
   municipality Municipality?        @relation(fields: [municipalityId], references: [ibgeCode], onDelete: SetNull)
@@ -435,6 +453,8 @@ model Listing {
   @@index([brand, model, modelYear])
   /// Leilões do catálogo (D-42): agrupamento por fonte e leilão.
   @@index([sourceId, auctionExternalId])
+  /// Pendentes de casamento na FIPE (D-47).
+  @@index([marketValueCheckedAt])
   @@map("listings")
 }
 
@@ -451,6 +471,17 @@ model ListingObservation {
 
   @@index([listingId, observedAt])
   @@map("listing_observations")
+}
+
+/// Respostas da API da FIPE guardadas (D-47): tabela de mês passado não muda, então cada pedido é feito uma vez. Global,
+/// como o catálogo (D-25).
+model FipeResponse {
+  /// Pedido: método e parâmetros (ex.: "valor:338:1:59:2370:2008-1").
+  key       String   @id
+  payload   Json
+  fetchedAt DateTime @default(now()) @map("fetched_at") @db.Timestamptz(3)
+
+  @@map("fipe_responses")
 }
 
 /// Uma execução do coletor, para acompanhar saúde e falhas no app.

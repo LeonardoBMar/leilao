@@ -36,7 +36,7 @@ export async function ConditionBlock({
     <ResearchBlock
       id="pesquisa-condicao"
       title={CONDITION_BLOCK_TITLE}
-      description="Lance final como % do valor de mercado informado pela fonte. A faixa clara reúne a metade do meio das vendas; o traço é a mediana."
+      description="Lance final como % do valor de mercado (da fonte ou da tabela FIPE casado pelo sistema). A faixa clara reúne a metade do meio das vendas; o traço é a mediana."
     >
       {rows.every((row) => row.summary.kind === "none") ? (
         <NoSales since={since} />

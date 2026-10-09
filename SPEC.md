@@ -192,7 +192,7 @@ O parâmetro `id` representa uma análise, que sempre pertence a um lote. Uma no
 
 Gráficos de preço sobre as vendas do catálogo: o que aconteceu, com amostra e período, sem recomendação de compra. Plano, medição e regras em `docs/PLANO-PESQUISA.md` (D-45).
 
-- **Medida:** % do valor de mercado pago (lance final ÷ FIPE informada pela fonte), a mesma do filtro de Leilões. A Freitas não informa valor de mercado: as vendas dela aparecem só em R$.
+- **Medida:** % do valor de mercado pago (lance final ÷ valor de mercado), a mesma do filtro de Leilões. Quando a fonte não informa o valor (Freitas, Detran-MG), ele é casado pelo sistema na tabela FIPE oficial e marcado como tal (D-47); venda sem valor casado aparece só em R$.
 - **Filtros na URL:** modelo (busca com sugestões e contagem), condição declarada (sempre uma; padrão "sem monta declarada"), categoria (carros, motos, utilitários ou sucatas; padrão carros) e estado, escolhido no mapa. Sem filtro de período até a base ter 3 meses.
 - **Quanto se paga por condição:** histograma por condição, com mediana e faixa P25–P75.
 - **Por estado:** mapa do Brasil com a cor de cada estado pela mediana, a sigla e o valor escritos e uma dica com a mediana, a faixa e o `n` ao passar o mouse (D-46). O detalhe do estado mostra a distribuição frente à do Brasil e as fontes que o compõem. Com um modelo escolhido, o mapa mostra só esse modelo e pode trocar a medida para lance final em R$.
