@@ -2,13 +2,15 @@ import type { Route } from "next";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
+import { STATE_SHAPES } from "./brazil-geometry";
+import { BrazilMap } from "./brazil-map";
 import { ChartDataTable } from "./chart-data-table";
 import { percentOf, toDataStep } from "./data-steps";
 import { DistributionChart } from "./distribution-chart";
 import { LineBand } from "./line-band";
+import { MapLegend } from "./map-legend";
 import { RangeBars } from "./range-bars";
 import { ScatterPlot } from "./scatter-plot";
-import { TileGrid, TileLegend } from "./tile-grid";
 
 const pct = (value: number) => `${Math.round(value * 100)}%`;
 
@@ -58,51 +60,59 @@ describe("DistributionChart", () => {
   });
 });
 
-describe("TileGrid", () => {
+describe("BrazilMap", () => {
+  const tooltip = { title: "", lines: [] };
   const html = renderToStaticMarkup(
-    <TileGrid
+    <BrazilMap
       ariaLabel="Mediana por estado"
-      columns={7}
-      rows={8}
-      tiles={[
+      regions={[
         {
-          key: "SP",
-          column: 2,
-          row: 4,
-          label: "SP",
+          state: "SP",
           value: "43%",
-          caption: "297",
           tone: { kind: "colored", step: 2 },
           href: "/pesquisa?uf=SP" as Route,
           ariaLabel: "São Paulo: mediana 43%, 297 vendas",
           selected: true,
+          tooltip,
         },
-        { key: "MT", column: 2, row: 2, label: "MT", value: "2", tone: { kind: "few" }, ariaLabel: "Mato Grosso: 2" },
-        { key: "AC", column: 0, row: 2, label: "AC", tone: { kind: "empty" }, ariaLabel: "Acre: sem vendas" },
+        {
+          state: "DF",
+          value: "2",
+          tone: { kind: "few" },
+          href: "/pesquisa?uf=DF" as Route,
+          ariaLabel: "DF",
+          selected: false,
+          tooltip,
+        },
+        { state: "AC", tone: { kind: "empty" }, ariaLabel: "Acre: nenhuma venda", selected: false, tooltip },
       ]}
     />,
   );
 
-  it("posiciona cada estado na grade", () => {
-    expect(html).toContain("grid-column-start:3;grid-row-start:5");
+  it("o contorno tem os 27 estados", () => {
+    expect(STATE_SHAPES).toHaveLength(27);
+    expect(new Set(STATE_SHAPES.map((shape) => shape.state)).size).toBe(27);
   });
 
-  it("o estado com amostra tem a cor do passo, link e marca de selecionado", () => {
-    expect(html).toMatch(/<a[^>]*aria-label="São Paulo: mediana 43%, 297 vendas"/);
+  it("desenha só os estados recebidos; o com venda é link, com cor do passo e marca de escolhido", () => {
+    expect(html.match(/<path/g)).toHaveLength(3);
     expect(html).toMatch(/<a[^>]*href="\/pesquisa\?uf=SP"/);
+    expect(html).toMatch(/<a[^>]*aria-label="São Paulo: mediana 43%, 297 vendas"/);
     expect(html).toContain('aria-current="true"');
-    expect(html).toContain("bg-data-2");
+    expect(html).toContain("fill-data-2");
+    expect(html).toContain(">43%<");
   });
 
-  it("poucas vendas e nenhuma venda ficam sem cor", () => {
-    expect(html).toContain("bg-surface-subtle");
-    expect(html).toContain("border-border-strong");
+  it("estado pequeno com venda ganha linha guia; sem venda fica só o contorno, sem link", () => {
+    expect(html.match(/<line/g)).toHaveLength(1);
+    expect(html).toMatch(/<g role="img" aria-label="Acre: nenhuma venda"/);
+    expect(html).toContain("fill-surface stroke-border-strong");
   });
 
   it("a legenda mostra os passos e os casos sem cor", () => {
     const legend = renderToStaticMarkup(
-      <TileLegend
-        title="Mediana do % do valor de mercado"
+      <MapLegend
+        title="Mediana em % do valor de mercado"
         items={[
           { key: "1", swatch: 1, label: "35–40%" },
           { key: "few", swatch: "few", label: "1 a 4 vendas" },

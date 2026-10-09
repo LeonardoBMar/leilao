@@ -195,7 +195,7 @@ Gráficos de preço sobre as vendas do catálogo: o que aconteceu, com amostra e
 - **Medida:** % do valor de mercado pago (lance final ÷ FIPE informada pela fonte), a mesma do filtro de Leilões. A Freitas não informa valor de mercado: as vendas dela aparecem só em R$.
 - **Filtros na URL:** modelo (busca com sugestões e contagem), condição declarada (sempre uma; padrão "sem monta declarada"), categoria (carros, motos, utilitários ou sucatas; padrão carros) e estado, escolhido no mapa. Sem filtro de período até a base ter 3 meses.
 - **Quanto se paga por condição:** histograma por condição, com mediana e faixa P25–P75.
-- **Por estado:** mapa de quadrados, um por estado, com mediana, `n` e cor pela mediana. O detalhe do estado mostra a distribuição frente à do Brasil e as fontes que o compõem. Com um modelo escolhido, o mapa mostra só esse modelo e pode trocar a medida para lance final em R$.
+- **Por estado:** mapa do Brasil com a cor de cada estado pela mediana, a sigla e o valor escritos e uma dica com a mediana, a faixa e o `n` ao passar o mouse (D-46). O detalhe do estado mostra a distribuição frente à do Brasil e as fontes que o compõem. Com um modelo escolhido, o mapa mostra só esse modelo e pode trocar a medida para lance final em R$.
 - **Modelos que mais saem abaixo do valor de mercado:** ranking dos modelos com pelo menos 5 vendas na condição e categoria do filtro. Cada linha aplica o modelo.
 - **Vendas do modelo:** lance final por ano-modelo e a tabela das vendas, com link para o anúncio.
 - **Como o lance sobe:** lance observado ÷ lance final de 48 h a 1 h antes do fim, com a faixa P25–P75.

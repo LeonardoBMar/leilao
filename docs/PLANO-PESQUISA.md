@@ -82,7 +82,7 @@ Estas regras valem para todos os gráficos e evitam conclusões erradas:
 2. **"Sem monta declarada" não é "sem monta".** A fonte não declarou nada (`damage_level` nulo); o Pátio São Carlos quase nunca declara. O rótulo diz isso.
 3. **O valor de mercado é o informado pela fonte** (D-30), rotulado como "FIPE informada pela fonte".
 4. **A UF é a do pátio**, onde o veículo está, e não a do comitente nem a do comprador. Fora SP, cada estado vem de uma fonte só, então a diferença entre estados é também diferença entre fontes e comitentes.
-5. **Amostra mínima de 5 vendas** por quadrado, linha ou ponto de resumo, o mesmo mínimo do preço provável (D-36). Abaixo disso, o quadrado fica cinza e mostra "sem base (n de 5)".
+5. **Amostra mínima de 5 vendas** por estado, linha ou ponto de resumo, o mesmo mínimo do preço provável (D-36). Abaixo disso, o estado fica cinza e mostra "sem base (n de 5)".
 6. **Todo gráfico mostra `n` e período.** A base é a janela das estimativas (12 meses, `SALES_WINDOW_MS`), e o texto diz a data da venda mais antiga ("desde 28/09/2026").
 7. **Sem julgamento por cor.** Verde e vermelho significam limite atendido ou estourado (DESIGN §3.1). Na Pesquisa, mais barato não é "bom": a escala é de um tom só.
 
@@ -105,20 +105,7 @@ Sem filtro de período enquanto a base tiver menos de 3 meses (§2).
 
 1. **Quanto se paga por condição.** Uma faixa por condição com o histograma das vendas, a faixa P25–P75 e a mediana marcada, num eixo de % do valor de mercado. A condição do filtro fica destacada. Responde à pergunta 1 e ensina o cuidado 1. Respeita modelo, categoria e UF, mas não a condição, que é o que ele compara. Condição com menos de 5 vendas aparece como linha "sem base (n de 5)", com os pontos e sem mediana. Texto de apoio quando pequena monta e "sem monta declarada" ficam próximas: "sem monta declarada inclui veículos que a fonte não classificou".
 
-2. **Por estado.** Mapa de quadrados: os 27 estados com o mesmo tamanho, cada um com a sigla, a mediana e o `n`, e a cor pela mediana. Com 1 a 4 vendas, o quadrado mostra só a contagem, sem cor; sem venda, fica vazio. Ao clicar num estado, o filtro de UF é aplicado e aparece o detalhe: a distribuição do estado comparada com a do Brasil, as fontes que o compõem ("Leilo 233") e, com menos de 5 vendas, as vendas uma a uma. Com um modelo escolhido, o mapa mostra só aquele modelo (hoje, no máximo 4 estados com mediana), e o usuário pode trocar a medida para **lance final em R$** (só faz sentido dentro de um modelo, e aí as vendas da Freitas também contam).
-
-   Rascunho da grade (7 colunas × 8 linhas, conferido no navegador na etapa 4):
-
-   ```text
-   .  RR .  AP .  .  .
-   .  AM PA MA CE RN .
-   AC RO MT TO PI PB .
-   .  MS GO DF BA PE AL
-   .  .  SP MG ES SE .
-   .  .  PR RJ .  .  .
-   .  .  SC .  .  .  .
-   .  .  RS .  .  .  .
-   ```
+2. **Por estado.** Mapa do Brasil (D-46, no lugar do mapa de quadrados aprovado antes): cada estado pintado pela mediana, com a sigla e o valor escritos; estados pequenos com rótulo fora e linha guia; dica com mediana, faixa e `n` ao passar o mouse. Com 1 a 4 vendas, o estado fica cinza e mostra só a contagem; sem venda, só o contorno. Ao clicar num estado, o filtro de UF é aplicado e aparece o detalhe: a distribuição do estado comparada com a do Brasil, as fontes que o compõem ("Leilo 233") e, com menos de 5 vendas, as vendas uma a uma. Com um modelo escolhido, o mapa mostra só aquele modelo (hoje, no máximo 4 estados com mediana), e o usuário pode trocar a medida para **lance final em R$** (só faz sentido dentro de um modelo, e aí as vendas da Freitas também contam).
 
 3. **Modelos que mais saem abaixo do valor de mercado** (sem modelo escolhido). Ranking dos modelos com pelo menos 5 vendas na condição e categoria do filtro: mediana, faixa P25–P75 em barra e `n`. Cada linha aplica o filtro de modelo. É a porta de entrada para quem não sabe que modelo olhar.
 
@@ -128,9 +115,9 @@ Sem filtro de período enquanto a base tiver menos de 3 meses (§2).
 
 **Estados vazios.** Sem vendas no filtro: "Nenhuma venda com esses filtros desde 28/09/2026", com a sugestão de trocar a condição, a categoria ou o modelo.
 
-**Celular.** A mesma ordem numa coluna. O mapa cabe em 343 px (quadrados de 44 px). A barra de filtros segue o padrão da gaveta inferior (D-43).
+**Celular.** A mesma ordem numa coluna. O mapa ocupa a largura do bloco, com os textos em tamanho fixo. A barra de filtros não usa a gaveta inferior de Leilões: com três controles, a busca ocupa uma linha e condição e categoria dividem a seguinte (decidido na etapa 4).
 
-**Acessibilidade.** Cada gráfico tem `role="img"` com um resumo em texto ("SP: mediana 64% do valor de mercado, 312 vendas") e um "Ver dados em tabela" com a mesma informação. Os quadrados do mapa são links focáveis pelo teclado. Cor nunca carrega o valor sozinha: o número está escrito no quadrado.
+**Acessibilidade.** Cada gráfico tem `role="img"` com um resumo em texto ("SP: mediana 64% do valor de mercado, 312 vendas") e um "Ver dados em tabela" com a mesma informação. Os estados do mapa são links focáveis pelo teclado, com a mesma dica do mouse. Cor nunca carrega o valor sozinha: o número está escrito no quadrado.
 
 ## 5. Regras
 
@@ -145,10 +132,10 @@ Sem filtro de período enquanto a base tiver menos de 3 meses (§2).
 
 - **Agregação no Postgres.** No ritmo medido (cerca de 150 vendas por dia), a janela de 12 meses chega a uns 55 mil vendas. Trazer todas para o servidor a cada visita não escala. As consultas devolvem só os grupos: mediana, P25 e P75 com `percentile_cont`, histograma com `width_bucket` e contagens por UF, fonte, condição e modelo. Elas usam `$queryRaw` com template marcado (parâmetros sempre ligados, nunca concatenados) e validam cada linha com Zod antes de virar DTO. É o primeiro `$queryRaw` do projeto, por isso padrão novo (§7). Linhas individuais só onde o conjunto é pequeno: vendas de um modelo e de um estado com menos de 5 vendas.
 - **Mesma regra nos dois lados.** A normalização de modelo (`vehicleKey`: marca por extenso, primeira palavra do modelo) é reproduzida numa expressão SQL. Um teste com os mesmos casos de `estimates.test.ts` garante que SQL e TypeScript agrupam igual. Os limites de amostra e de valores fora da faixa ficam em constantes do domínio, passadas como parâmetro.
-- **Domínio** em `src/domain/research/`, puro e testado: da linha agregada ao que a tela mostra (situação "sem base", faixa de cor, ordem do ranking, texto de apoio), grade do mapa (`TILE_LAYOUT`) e marcas da curva do lance.
+- **Domínio** em `src/domain/research/`, puro e testado: da linha agregada ao que a tela mostra (situação "sem base", faixa de cor, ordem do ranking, texto de apoio), resumo por estado e marcas da curva do lance.
 - **Consultas** em `src/features/research/queries.ts`, com `requireUser()`, embora o catálogo seja global (D-25).
-- **Gráficos em SVG próprio, renderizados no servidor**, em `src/components/charts/`: `DistributionStrip` (histograma de 2 em 2 pontos percentuais com mediana e P25–P75, que funciona com 20 ou 20 mil vendas), `TileMap`, `RangeBars`, `ScatterPlot` e `LineBand`. São formas simples, sem animação e sem JavaScript no navegador. As escalas (linear, faixas de cor) ficam em `src/lib/charts.ts`. **Sem dependência nova.** Uma biblioteca (Recharts, visx) só entra se faltar interação, como zoom ou tooltip complexa, com decisão registrada.
-- **Interação pela URL.** Clique no quadrado e na linha do ranking são `Link` com o filtro. O único Client Component novo é a barra de filtros, reaproveitando as peças de `FilterBar` (D-43).
+- **Gráficos em SVG próprio, renderizados no servidor**, em `src/components/charts/`: `DistributionChart` (histograma de 2 em 2 pontos percentuais com mediana e P25–P75, que funciona com 20 ou 20 mil vendas), `BrazilMap` (D-46: Client Component, por causa da dica), `RangeBars`, `ScatterPlot` e `LineBand`. São formas simples e sem animação; só o mapa roda no navegador. As escalas (linear, faixas de cor) ficam em `src/lib/charts.ts`. Dependência nova só o contorno dos estados (`@svg-maps/brazil`, D-46). Uma biblioteca (Recharts, visx) só entra se faltar interação, como zoom ou tooltip complexa, com decisão registrada.
+- **Interação pela URL.** Clique no estado e na linha do ranking são `Link` com o filtro. Os Client Components novos são o mapa (pela dica) e a barra de filtros, reaproveitando as peças de `FilterBar` (D-43).
 - **Tokens de dados no DESIGN.md:** escala sequencial de um tom (`data-1` a `data-5`), `data-empty` para "sem base" e regra de cor do texto sobre cada passo, conferidos para contraste (≥ 3:1 com a superfície nos passos escuros e texto ≥ 4,5:1). Sem verde e vermelho.
 - **Cache Components:** cada bloco no seu `<Suspense>` com `Skeleton`. Sem `"use cache"` (D-04), embora o catálogo seja global (D-25). Revisitar só se a tela ficar lenta.
 - **Sem migration agora.** O índice `(status, ends_at)` já cobre o recorte das vendas. Na etapa 3, conferir o plano de execução (`EXPLAIN ANALYZE`) com o volume real. Se pesar, o índice entra numa etapa própria.
@@ -158,7 +145,7 @@ Sem filtro de período enquanto a base tiver menos de 3 meses (§2).
 1. **Menu "Pesquisa"** depois de "Monitores" (e de "Alertas", que andam juntos), com rota única `/pesquisa` e filtros na URL.
 2. **Condição sempre filtrada** no mapa, no ranking e na ficha do modelo. Padrão: sem monta declarada.
 3. **Unidade "% do valor de mercado"**, a mesma do filtro D-43, com "X% abaixo da FIPE informada" como apoio.
-4. **Mapa de quadrados** no lugar do mapa geográfico. Todos os estados têm o mesmo peso, e não é preciso arquivo de fronteiras nem biblioteca de mapas.
+4. **Mapa de quadrados** no lugar do mapa geográfico. Todos os estados têm o mesmo peso, e não é preciso arquivo de fronteiras nem biblioteca de mapas. *Revisto na etapa 4: o usuário pediu mapa geográfico interativo (D-46).*
 5. **Gráficos em SVG próprio no servidor** (`src/components/charts/`, padrão novo) e sem biblioteca de gráficos.
 6. **Etapa 0 com leitura do banco de produção** antes do domínio, como nas medições do dashboard e dos filtros.
 
@@ -180,7 +167,7 @@ Sem filtro de período enquanto a base tiver menos de 3 meses (§2).
 ## 9. Fora deste plano
 
 - **Precisão das estimativas** (preço provável × lance final). O provável não é guardado no momento da venda. Medir exige recalculá-lo só com as vendas anteriores a cada uma. Pertence à Fase 2 (SPEC §15), junto com a calibração das premissas padrão.
-- **Mapa geográfico ou por município.** O mapa de quadrados entra primeiro. O ponto por município (já há coordenadas) só faz sentido com mais volume fora de SP.
+- **Mapa por município.** O ponto por município (já há coordenadas) só faz sentido com mais volume fora de SP.
 - **Filtro de período e tendência mensal** do % do valor de mercado. A base começa em 28/09/2026. O filtro entra com 3 meses de vendas e a tendência com 12.
 - **Comparação entre fontes e leiloeiros**, taxa de venda (vendido × não vendido: a Leilo tem 961 vendidos e 625 não vendidos) e lance inicial × final.
 - **Pesados e outros** como categoria do filtro. Quase não têm valor de mercado: 2 de 9 pesados vendidos e nenhum equipamento.

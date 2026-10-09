@@ -1,7 +1,7 @@
 import type { DamageLevel } from "../listings/condition";
 import type { CategoryKey } from "../listings/criteria";
 import { vehicleKey } from "../listings/estimates";
-import type { StateCode } from "./tile-map";
+import type { StateCode } from "./states";
 
 /**
  * Filtros da Pesquisa (docs/PLANO-PESQUISA.md §4, D-45). As chaves vão na URL. A condição é sempre uma: misturar
@@ -67,4 +67,21 @@ export function researchVehicle(brand: string, model: string): ResearchVehicle |
 /** Lance em R$ só compara dentro de um modelo; sem modelo, a medida volta a ser o % do valor de mercado. */
 export function effectiveMetric(filters: Pick<ResearchFilters, "metric" | "vehicle">): ResearchMetric {
   return filters.vehicle === null ? "ratio" : filters.metric;
+}
+
+/** Marcas que se escrevem em sigla. As outras palavras só de letras ganham inicial maiúscula. */
+const ACRONYM_BRANDS = new Set(["BMW", "BYD", "GWM", "JAC", "MG", "RAM"]);
+
+/**
+ * Nome para a tela a partir da chave normalizada: "CHEVROLET" + "ONIX" vira "Chevrolet Onix". Palavras com
+ * número ("HB20", "207"), de até duas letras ("HR", de HR-V) e siglas de marca ficam em maiúsculas.
+ */
+export function vehicleLabel({ brand, model }: ResearchVehicle): string {
+  const word = (text: string, acronyms: ReadonlySet<string>) =>
+    /^[A-Z]{3,}$/.test(text) && !acronyms.has(text) ? `${text.charAt(0)}${text.slice(1).toLowerCase()}` : text;
+  const brandLabel = brand
+    .split(" ")
+    .map((part) => word(part, ACRONYM_BRANDS))
+    .join(" ");
+  return `${brandLabel} ${word(model, new Set())}`;
 }

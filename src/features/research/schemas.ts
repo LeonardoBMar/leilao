@@ -8,7 +8,7 @@ import {
   type ResearchFilters,
   researchVehicle,
 } from "@/domain/research/filters";
-import { isStateCode, type StateCode } from "@/domain/research/tile-map";
+import { isStateCode, type StateCode } from "@/domain/research/states";
 
 /** Texto livre da URL: aparado, até 60 caracteres; vazio ou inválido vira ausente. */
 const text = z

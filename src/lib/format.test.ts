@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { formatDayParts, formatShortDateTime, formatTime } from "./format";
+import { cents } from "@/domain/money";
+
+import { formatCompactBRL, formatDayParts, formatShortDateTime, formatTime } from "./format";
 
 describe("formatadores de agenda", () => {
   // 13:00 UTC = 10:00 em São Paulo.
@@ -17,5 +19,13 @@ describe("formatadores de agenda", () => {
   it("formata hora e data curta", () => {
     expect(formatTime(auction)).toBe("10:00");
     expect(formatShortDateTime(auction)).toBe("02 out 2030, 10:00");
+  });
+});
+
+describe("formatCompactBRL", () => {
+  it("abrevia milhares e milhões com uma casa", () => {
+    // O Intl separa "R$" do número com espaço não separável.
+    expect(formatCompactBRL(cents(3_254_000)).replace(/\s/g, " ")).toBe("R$ 32,5 mil");
+    expect(formatCompactBRL(cents(85_000)).replace(/\s/g, " ")).toBe("R$ 850");
   });
 });

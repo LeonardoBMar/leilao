@@ -153,7 +153,7 @@ Regras:
 
 - **Um tom só, do claro ao escuro.** Mais escuro = valor maior. Sem verde e vermelho: na Pesquisa, mais barato não é "bom" (§3.1, estados semânticos).
 - **Sem base não tem cor.** Grupo com 1 a 4 casos usa `surface-subtle` com o número em `muted`; sem caso nenhum, só o contorno `border-strong`.
-- **O valor está escrito.** Cor reforça; o número aparece no quadrado, na barra ou na tabela equivalente.
+- **O valor está escrito.** Cor reforça; o número aparece no estado, na barra ou na tabela equivalente.
 - **Marcas de referência em tinta.** Mediana em `foreground`, faixa P25–P75 em `data-1`, eixos e grade em `border` e rótulos em `muted`. Texto nunca usa a cor da série.
 - **Seleção usa `accent`.** O estado escolhido no mapa recebe anel de 2 px em `accent`, como o foco.
 
@@ -820,11 +820,11 @@ No leilão do usuário: dados do evento numa faixa rebaixada (data, local, edita
 ### 15.8 Pesquisa
 
 1. PageHeader com título “Pesquisa” e a linha “Preços de arremate do catálogo: N vendas desde dd/mm/aaaa”.
-2. Barra de filtros no padrão de Leilões (§5.15): modelo, condição, categoria e o chip do estado escolhido. Condição sem venda fica desabilitada, com a contagem zero.
+2. Barra de filtros no padrão de Leilões (§5.15), mais curta: busca de modelo (combobox que só aplica um modelo da lista, com as vendas de cada um), condição e categoria em `Select` com a contagem, o total “N vendas com esses filtros”, o chip do estado escolhido e “Limpar tudo”. Condição ou categoria sem venda fica desabilitada, com a contagem zero. Com três controles, o celular não usa gaveta: a busca ocupa uma linha e os dois `Select` dividem a seguinte.
 3. Blocos em largura total, nesta ordem, cada um com título em `heading-3`, uma linha de apoio em `muted` (`n` e o que a medida é) e “Ver dados em tabela” ao fim:
    - “Quanto se paga por condição”: uma faixa por condição, com histograma de 2 em 2 pontos percentuais em `data-3`, faixa P25–P75 em `data-1` e mediana em tinta com o valor escrito; a condição do filtro em peso 600;
-   - “Por estado”: mapa de quadrados (7 × 8, quadrados de 44 px no celular), sigla em `caption` e mediana em `body` peso 600 em `tabular-nums`, legenda com os 5 passos e o rótulo da medida; o detalhe do estado abre abaixo do mapa, com a distribuição frente à do Brasil e as fontes;
-   - “Modelos que mais saem abaixo do valor de mercado” (sem modelo) ou “Vendas do <modelo>” (com modelo): barras de faixa P25–P75 com a mediana, ou dispersão por ano-modelo seguida da tabela das vendas;
+   - “Por estado”: mapa do Brasil (D-46) com o contorno dos estados, até 32 rem de largura; preenchimento no passo da escala, `surface-subtle` com 1 a 4 vendas e só contorno em `border-strong` sem venda; divisa em `surface`; sigla em `caption` e valor em `label` peso 600 `tabular-nums`, em HTML sobre o desenho; estados pequenos (DF, ES, RJ, RN, PB, PE, AL, SE) com rótulo de uma linha sobre `surface` fora do estado, ligado por linha guia; dica ao passar o mouse ou focar (estado, mediana, faixa do meio, vendas e o que o clique faz), contorno em tinta no estado sob o mouse e em `accent` no escolhido; em lance final, o mapa escreve os milhares de reais (“38,9”) e a legenda diz “em milhares de R$”; legenda com os passos usados e crédito do contorno em `caption`; com modelo escolhido, abas de link trocam a medida; o detalhe do estado fica ao lado do mapa a partir de `lg` e abaixo dele no celular, com a distribuição frente à do Brasil, as fontes e, com menos de 5 vendas, a tabela das vendas;
+   - “Modelos que mais saem abaixo do valor de mercado” (sem modelo) ou “Vendas do <modelo>” (com modelo): barras de faixa P25–P75 com a mediana (os 15 primeiros; a tabela traz todos, com link), ou dispersão por ano-modelo seguida da tabela das vendas;
    - “Como o lance sobe”: linha da mediana com a faixa P25–P75, de 48 h a 1 h.
 4. EmptyState `inline` por bloco: “Nenhuma venda com esses filtros desde dd/mm/aaaa”, com a sugestão de trocar condição, categoria ou modelo.
 

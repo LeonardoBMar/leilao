@@ -21,12 +21,17 @@ describe.skipIf(process.env.DB_TESTS !== "1")("consultas da Pesquisa", () => {
     const overview = await queries.getResearchOverview();
     expect(overview.sales).toBeGreaterThan(0);
 
+    const facets = await queries.getResearchFacets(DEFAULT_RESEARCH_FILTERS);
+    expect(facets.conditions["sem-monta"]).toBeGreaterThan(0);
+    expect(facets.categories.carros).toBe(facets.conditions["sem-monta"]);
+    expect(facets.models.some((model) => model.label === "Chevrolet Onix")).toBe(true);
+
     const conditions = await queries.getConditionDistribution(DEFAULT_RESEARCH_FILTERS);
     expect(conditions.rows.map((row) => row.condition)).toEqual(["sem-monta", "pequena", "media", "grande", "sucata"]);
     expect(conditions.rows[0]?.summary.kind).toBe("summary");
 
     const map = await queries.getStateMap(DEFAULT_RESEARCH_FILTERS);
-    expect(map.tiles).toHaveLength(27);
+    expect(map.states).toHaveLength(27);
 
     const ranking = await queries.getModelRanking(DEFAULT_RESEARCH_FILTERS);
     expect(ranking.length).toBeGreaterThan(0);

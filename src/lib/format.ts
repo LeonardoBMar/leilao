@@ -3,6 +3,12 @@ import type { Cents } from "@/domain/money";
 export const APP_TIME_ZONE = "America/Sao_Paulo";
 
 const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+const compactBrl = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
 const dateTime = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
   timeStyle: "short",
@@ -13,6 +19,11 @@ const integer = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
 
 export function formatBRL(value: Cents): string {
   return brl.format(value / 100);
+}
+
+/** Valor curto para gráficos: "R$ 32,5 mil", "R$ 1,3 mi". */
+export function formatCompactBRL(value: Cents): string {
+  return compactBrl.format(value / 100);
 }
 
 /** Quilometragem: "55.493 km". */

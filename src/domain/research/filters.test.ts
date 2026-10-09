@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_RESEARCH_FILTERS, effectiveMetric, researchVehicle } from "./filters";
+import { DEFAULT_RESEARCH_FILTERS, effectiveMetric, researchVehicle, vehicleLabel } from "./filters";
 
 describe("researchVehicle", () => {
   it("agrupa como as estimativas: marca por extenso e primeira palavra do modelo", () => {
@@ -32,5 +32,16 @@ describe("DEFAULT_RESEARCH_FILTERS", () => {
       state: null,
       metric: "ratio",
     });
+  });
+});
+
+describe("vehicleLabel", () => {
+  it("inicial maiúscula nas palavras, número e sigla de marca em maiúsculas", () => {
+    expect(vehicleLabel({ brand: "CHEVROLET", model: "ONIX" })).toBe("Chevrolet Onix");
+    expect(vehicleLabel({ brand: "MERCEDES BENZ", model: "C" })).toBe("Mercedes Benz C");
+    expect(vehicleLabel({ brand: "HYUNDAI", model: "HB20" })).toBe("Hyundai HB20");
+    expect(vehicleLabel({ brand: "BMW", model: "X1" })).toBe("BMW X1");
+    expect(vehicleLabel({ brand: "PEUGEOT", model: "207" })).toBe("Peugeot 207");
+    expect(vehicleLabel({ brand: "HONDA", model: "HR" })).toBe("Honda HR");
   });
 });

@@ -1,36 +1,34 @@
 import type { Route } from "next";
 
+import { BrazilMap, type MapRegion } from "@/components/charts/brazil-map";
 import { ChartDataTable } from "@/components/charts/chart-data-table";
 import { DistributionChart } from "@/components/charts/distribution-chart";
 import { LineBand } from "@/components/charts/line-band";
+import { MapLegend } from "@/components/charts/map-legend";
 import { RangeBars } from "@/components/charts/range-bars";
 import { ScatterPlot } from "@/components/charts/scatter-plot";
-import { type GridTile, TileGrid, TileLegend } from "@/components/charts/tile-grid";
-import { STATE_NAMES, type StateCode, TILE_GRID, TILE_LAYOUT } from "@/domain/research/tile-map";
+import { STATE_NAMES } from "@/domain/research/states";
 import { formatRatio } from "@/lib/format";
 
 /** Gráficos da Pesquisa (D-45) com dados de exemplo próximos da medição de 08/10/2026. */
 const bins = (peaks: Record<number, number>) => Array.from({ length: 50 }, (_, index) => peaks[index] ?? 0);
 
-type SampleTile = Pick<GridTile, "value" | "caption" | "tone" | "selected"> & { state: StateCode };
-
-const SAMPLE_TILES: GridTile[] = (
+const SAMPLE_REGIONS: MapRegion[] = (
   [
-    { state: "SP", value: "43%", caption: "297", tone: { kind: "colored", step: 2 }, selected: true },
-    { state: "GO", value: "56%", caption: "233", tone: { kind: "colored", step: 4 } },
-    { state: "CE", value: "51%", caption: "94", tone: { kind: "colored", step: 3 } },
-    { state: "DF", value: "61%", caption: "11", tone: { kind: "colored", step: 5 } },
-    { state: "PR", value: "35%", caption: "14", tone: { kind: "colored", step: 1 } },
-    { state: "MT", value: "2", tone: { kind: "few" } },
-    { state: "AC", tone: { kind: "empty" } },
-  ] satisfies SampleTile[]
-).map(({ state, ...tile }) => ({
-  ...tile,
-  ...TILE_LAYOUT[state],
-  key: state,
-  label: state,
-  ariaLabel: STATE_NAMES[state],
+    { state: "SP", value: "43%", tone: { kind: "colored", step: 2 }, selected: true },
+    { state: "GO", value: "56%", tone: { kind: "colored", step: 4 }, selected: false },
+    { state: "CE", value: "51%", tone: { kind: "colored", step: 3 }, selected: false },
+    { state: "DF", value: "61%", tone: { kind: "colored", step: 5 }, selected: false },
+    { state: "PR", value: "35%", tone: { kind: "colored", step: 1 }, selected: false },
+    { state: "PE", value: "48%", tone: { kind: "colored", step: 3 }, selected: false },
+    { state: "MT", value: "2", tone: { kind: "few" }, selected: false },
+    { state: "AC", tone: { kind: "empty" }, selected: false },
+  ] satisfies Pick<MapRegion, "state" | "value" | "tone" | "selected">[]
+).map((region) => ({
+  ...region,
   href: "/componentes" as Route,
+  ariaLabel: STATE_NAMES[region.state],
+  tooltip: { title: STATE_NAMES[region.state], lines: [region.value ?? "nenhuma venda"] },
 }));
 
 export function ChartShowcase() {
@@ -88,17 +86,12 @@ export function ChartShowcase() {
         />
       </div>
 
-      <div className="grid gap-3 md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] md:gap-8">
+      <div className="grid gap-3 md:grid-cols-[minmax(0,28rem)_minmax(0,1fr)] md:gap-8">
         <div className="grid gap-3">
-          <h3 className="text-label text-muted">TileGrid e TileLegend</h3>
-          <TileGrid
-            ariaLabel="Exemplo de mapa de quadrados"
-            columns={TILE_GRID.columns}
-            rows={TILE_GRID.rows}
-            tiles={SAMPLE_TILES}
-          />
-          <TileLegend
-            title="Mediana do % do valor de mercado"
+          <h3 className="text-label text-muted">BrazilMap e MapLegend</h3>
+          <BrazilMap ariaLabel="Exemplo de mapa do Brasil" regions={SAMPLE_REGIONS} />
+          <MapLegend
+            title="Mediana em % do valor de mercado"
             items={[
               { key: "1", swatch: 1, label: "35–40%" },
               { key: "2", swatch: 2, label: "40–45%" },
@@ -106,7 +99,7 @@ export function ChartShowcase() {
               { key: "4", swatch: 4, label: "51–56%" },
               { key: "5", swatch: 5, label: "56–61%" },
               { key: "few", swatch: "few", label: "1 a 4 vendas" },
-              { key: "empty", swatch: "empty", label: "sem vendas" },
+              { key: "empty", swatch: "empty", label: "nenhuma venda" },
             ]}
           />
         </div>

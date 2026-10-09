@@ -1,8 +1,8 @@
 import type { DamageLevel } from "@/domain/listings/condition";
 import type { Cents } from "@/domain/money";
-import type { ResearchCondition, ResearchMetric } from "@/domain/research/filters";
+import type { ResearchCategory, ResearchCondition, ResearchMetric } from "@/domain/research/filters";
+import type { StateCode, StateSummary } from "@/domain/research/states";
 import type { BidCurvePoint, GroupSummary, RankedModel } from "@/domain/research/summary";
-import type { StateCode, StateTile } from "@/domain/research/tile-map";
 
 /** Uma venda do catálogo, para as listas "uma a uma" e as vendas de um modelo. */
 export type ResearchSale = {
@@ -36,7 +36,7 @@ export type ConditionDistribution = {
   looksMixed: boolean;
 };
 
-export type StateMapView = { metric: ResearchMetric; tiles: StateTile[] };
+export type StateMapView = { metric: ResearchMetric; states: StateSummary[] };
 
 export type StateDetail = {
   state: StateCode;
@@ -62,3 +62,13 @@ export type ModelSales = {
 };
 
 export type BidCurveView = { points: BidCurvePoint[] };
+
+/** Modelo sugerido na busca, com as vendas na categoria e condição do filtro. */
+export type ResearchModelOption = { brand: string; model: string; label: string; sales: number };
+
+/** Contagens da barra de filtros. */
+export type ResearchFacets = {
+  conditions: Record<ResearchCondition, number>;
+  categories: Record<ResearchCategory, number>;
+  models: ResearchModelOption[];
+};

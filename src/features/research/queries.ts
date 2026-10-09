@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { z } from "zod";
 
 import { DAMAGE_LEVELS } from "@/domain/listings/condition";
@@ -10,8 +11,12 @@ import {
   DAMAGE_OF_CONDITION,
   effectiveMetric,
   RESEARCH_CONDITIONS,
+  type ResearchCategory,
+  type ResearchCondition,
   type ResearchFilters,
+  vehicleLabel,
 } from "@/domain/research/filters";
+import { buildStateSummaries, isStateCode, type StateCode } from "@/domain/research/states";
 import {
   BID_CURVE_HOURS,
   BID_CURVE_LOOKBACK_HOURS,
@@ -26,7 +31,6 @@ import {
   summarize,
   unclassifiedLooksMixed,
 } from "@/domain/research/summary";
-import { buildTiles, isStateCode, type StateCode } from "@/domain/research/tile-map";
 import { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
@@ -37,6 +41,7 @@ import type {
   ConditionDistribution,
   ModelRanking,
   ModelSales,
+  ResearchFacets,
   ResearchOverview,
   ResearchSale,
   StateDetail,
@@ -56,6 +61,8 @@ const RATIO = sql`(l.final_bid_cents::float8 / l.market_value_cents)`;
 const VEHICLE_KEY = vehicleKeySql(sql`l.brand`, sql`l.model`);
 
 type SalesScope = {
+  /** Filtra a categoria do filtro (a barra conta as vendas de cada categoria). */
+  category?: boolean;
   /** Filtra a condição do filtro (o gráfico por condição compara todas). */
   condition?: boolean;
   /** Filtra o estado do filtro (o mapa mostra todos; o detalhe compara com o Brasil). */
@@ -69,13 +76,12 @@ function salesSince(): Date {
 }
 
 /** Venda (mesmo critério da base do preço provável) dentro dos filtros pedidos. */
-function salesWhere(filters: ResearchFilters, { condition = true, state = true, ratio = false }: SalesScope) {
-  const parts = [
-    sql`l.status = 'sold'`,
-    sql`l.final_bid_cents > 0`,
-    sql`l.ends_at >= ${salesSince()}`,
-    sql`l.category = ${CATEGORY_OF_KEY[filters.category]}`,
-  ];
+function salesWhere(
+  filters: ResearchFilters,
+  { category = true, condition = true, state = true, ratio = false }: SalesScope,
+) {
+  const parts = [sql`l.status = 'sold'`, sql`l.final_bid_cents > 0`, sql`l.ends_at >= ${salesSince()}`];
+  if (category) parts.push(sql`l.category = ${CATEGORY_OF_KEY[filters.category]}`);
   if (condition) {
     const level = DAMAGE_OF_CONDITION[filters.condition];
     parts.push(level === null ? sql`l.damage_level IS NULL` : sql`l.damage_level::text = ${level}`);
@@ -113,7 +119,8 @@ function toStats({ n, p25, median, p75 }: GroupStats): GroupStats {
   return { n, p25, median, p75 };
 }
 
-export async function getResearchOverview(): Promise<ResearchOverview> {
+/** Uma vez por requisição (cabeçalho e blocos usam a mesma base). */
+export const getResearchOverview = cache(async (): Promise<ResearchOverview> => {
   await requireUser();
   const [row] = await rows(
     z.object({ sales: z.number().int(), since: z.date().nullable() }),
@@ -121,6 +128,60 @@ export async function getResearchOverview(): Promise<ResearchOverview> {
       WHERE l.status = 'sold' AND l.final_bid_cents > 0 AND l.ends_at >= ${salesSince()}`,
   );
   return row ?? { sales: 0, since: null };
+});
+
+/** Até quantos modelos a busca sugere. */
+const MODEL_SUGGESTIONS_LIMIT = 300;
+
+/**
+ * Contagens da barra de filtros: vendas por condição e por categoria (cada uma com os outros filtros) e os modelos com
+ * venda na categoria e condição do filtro, para a busca.
+ */
+export async function getResearchFacets(filters: ResearchFilters): Promise<ResearchFacets> {
+  await requireUser();
+  const level = sql`coalesce(l.damage_level::text, 'unclassified')`;
+  const [byLevel, byCategory, models] = await Promise.all([
+    rows(
+      z.object({ level: levelSchema, n: z.number().int() }),
+      sql`SELECT ${level} AS level, count(*)::int AS n FROM listings l
+        WHERE ${salesWhere(filters, { condition: false })} GROUP BY 1`,
+    ),
+    rows(
+      z.object({ category: z.string().nullable(), n: z.number().int() }),
+      sql`SELECT l.category::text AS category, count(*)::int AS n FROM listings l
+        WHERE ${salesWhere(filters, { category: false })} GROUP BY 1`,
+    ),
+    rows(
+      z.object({ key: z.string(), n: z.number().int() }),
+      sql`SELECT t.key, count(*)::int AS n
+        FROM (SELECT ${VEHICLE_KEY} AS key FROM listings l
+          WHERE ${salesWhere({ ...filters, vehicle: null, state: null }, {})}) t
+        WHERE t.key IS NOT NULL GROUP BY t.key ORDER BY 2 DESC, 1 LIMIT ${MODEL_SUGGESTIONS_LIMIT}`,
+    ),
+  ]);
+  const byCondition = (condition: ResearchCondition) =>
+    byLevel.find((row) => row.level === (DAMAGE_OF_CONDITION[condition] ?? "unclassified"))?.n ?? 0;
+  const ofCategory = (category: ResearchCategory) =>
+    byCategory.find((row) => row.category === CATEGORY_OF_KEY[category])?.n ?? 0;
+  return {
+    conditions: {
+      "sem-monta": byCondition("sem-monta"),
+      pequena: byCondition("pequena"),
+      media: byCondition("media"),
+      grande: byCondition("grande"),
+      sucata: byCondition("sucata"),
+    },
+    categories: {
+      carros: ofCategory("carros"),
+      motos: ofCategory("motos"),
+      utilitarios: ofCategory("utilitarios"),
+      sucatas: ofCategory("sucatas"),
+    },
+    models: models.flatMap(({ key, n }) => {
+      const [brand = "", model = ""] = key.split("|");
+      return brand && model ? [{ brand, model, label: vehicleLabel({ brand, model }), sales: n }] : [];
+    }),
+  };
 }
 
 /** Resumo e histograma do % do valor de mercado num recorte, mais a maior proporção (fim do eixo). */
@@ -172,7 +233,7 @@ export async function getConditionDistribution(filters: ResearchFilters): Promis
   };
 }
 
-/** Mapa de quadrados: um resumo por estado, em % do valor de mercado ou, com modelo, em lance final (centavos). */
+/** Mapa: um resumo por estado, em % do valor de mercado ou, com modelo, em lance final (centavos). */
 export async function getStateMap(filters: ResearchFilters): Promise<StateMapView> {
   await requireUser();
   const metric = effectiveMetric(filters);
@@ -185,7 +246,7 @@ export async function getStateMap(filters: ResearchFilters): Promise<StateMapVie
   );
   const stats: Partial<Record<StateCode, GroupStats>> = {};
   for (const row of byState) if (isStateCode(row.state)) stats[row.state] = toStats(row);
-  return { metric, tiles: buildTiles(stats) };
+  return { metric, states: buildStateSummaries(stats) };
 }
 
 const saleRow = z.object({
