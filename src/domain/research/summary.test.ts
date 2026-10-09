@@ -1,0 +1,125 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  bidCurve,
+  fillHistogram,
+  type GroupStats,
+  histogramBin,
+  MIN_SAMPLE,
+  rankModels,
+  ratioAxisMax,
+  summarize,
+  unclassifiedLooksMixed,
+} from "./summary";
+
+const stats = (n: number, median = 0.5): GroupStats => ({ n, p25: median - 0.05, median, p75: median + 0.05 });
+
+describe("summarize", () => {
+  it("com a amostra mínima, mostra mediana e faixa P25–P75", () => {
+    expect(summarize(stats(MIN_SAMPLE, 0.49))).toEqual({
+      kind: "summary",
+      n: 5,
+      low: 0.44,
+      median: 0.49,
+      high: 0.54,
+    });
+  });
+
+  it.each([1, 4])("com %s venda(s), só a contagem, sem mediana", (n) => {
+    expect(summarize(stats(n))).toEqual({ kind: "few", n });
+  });
+
+  it("sem vendas ou sem linha do banco, nada", () => {
+    expect(summarize(stats(0))).toEqual({ kind: "none" });
+    expect(summarize(null)).toEqual({ kind: "none" });
+    expect(summarize(undefined)).toEqual({ kind: "none" });
+  });
+});
+
+describe("rankModels", () => {
+  it("só modelos com amostra mínima, da menor mediana para a maior", () => {
+    const ranked = rankModels([
+      { brand: "FIAT", model: "STRADA", stats: stats(7, 0.66) },
+      { brand: "PEUGEOT", model: "207", stats: stats(5, 0.21) },
+      { brand: "FORD", model: "KA", stats: stats(4, 0.1) },
+      { brand: "CHEVROLET", model: "ONIX", stats: stats(43, 0.57) },
+    ]);
+    expect(ranked.map((item) => item.model)).toEqual(["207", "ONIX", "STRADA"]);
+  });
+
+  it("no empate, a amostra maior vem antes e, depois, o nome", () => {
+    const ranked = rankModels([
+      { brand: "VOLKSWAGEN", model: "GOL", stats: stats(8, 0.5) },
+      { brand: "FIAT", model: "UNO", stats: stats(8, 0.5) },
+      { brand: "RENAULT", model: "SANDERO", stats: stats(30, 0.5) },
+    ]);
+    expect(ranked.map((item) => item.model)).toEqual(["SANDERO", "UNO", "GOL"]);
+  });
+});
+
+describe("unclassifiedLooksMixed", () => {
+  it("avisa quando sem monta declarada e pequena monta quase empatam (49% × 50% em 08/10/2026)", () => {
+    expect(
+      unclassifiedLooksMixed({ "sem-monta": summarize(stats(737, 0.49)), pequena: summarize(stats(19, 0.5)) }),
+    ).toBe(true);
+  });
+
+  it("não avisa com medianas distantes ou sem base em uma delas", () => {
+    expect(
+      unclassifiedLooksMixed({ "sem-monta": summarize(stats(737, 0.6)), pequena: summarize(stats(19, 0.45)) }),
+    ).toBe(false);
+    expect(unclassifiedLooksMixed({ "sem-monta": summarize(stats(737, 0.49)), pequena: summarize(stats(3)) })).toBe(
+      false,
+    );
+    expect(unclassifiedLooksMixed({})).toBe(false);
+  });
+});
+
+describe("histograma", () => {
+  it("faixas de 2 em 2 pontos percentuais, como o floor(ratio / 0,02) da consulta", () => {
+    expect(histogramBin(0)).toBe(0);
+    expect(histogramBin(0.019)).toBe(0);
+    expect(histogramBin(0.02)).toBe(1);
+    // 0,06 / 0,02 dá 2,9999999999999996 em ponto flutuante.
+    expect(histogramBin(0.06)).toBe(3);
+    expect(histogramBin(0.49)).toBe(24);
+  });
+
+  it("o eixo vai até 100%, ou além se alguma venda passou do valor de mercado", () => {
+    expect(ratioAxisMax(null)).toBe(1);
+    expect(ratioAxisMax(0.78)).toBe(1);
+    expect(ratioAxisMax(1.13)).toBe(1.2);
+    expect(ratioAxisMax(5)).toBe(2);
+  });
+
+  it("preenche as faixas sem venda com zero", () => {
+    const counts = fillHistogram(
+      [
+        { bin: 1, n: 3 },
+        { bin: 24, n: 10 },
+      ],
+      1,
+    );
+    expect(counts).toHaveLength(50);
+    expect(counts[0]).toBe(0);
+    expect(counts[1]).toBe(3);
+    expect(counts[24]).toBe(10);
+  });
+
+  it("venda além do fim do eixo soma na última faixa", () => {
+    const counts = fillHistogram([{ bin: 50, n: 2 }], 1);
+    expect(counts.at(-1)).toBe(2);
+  });
+});
+
+describe("bidCurve", () => {
+  it("só marcas com amostra mínima, de 48 h para 1 h", () => {
+    const points = bidCurve([
+      { hours: 1, stats: stats(466, 0.99) },
+      { hours: 48, stats: stats(251, 0.9) },
+      { hours: 24, stats: stats(4, 0.94) },
+    ]);
+    expect(points.map((point) => point.hours)).toEqual([48, 1]);
+    expect(points[0]?.summary.median).toBe(0.9);
+  });
+});
