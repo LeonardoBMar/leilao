@@ -74,7 +74,8 @@ const ACRONYM_BRANDS = new Set(["BMW", "BYD", "GWM", "JAC", "MG", "RAM"]);
 
 /**
  * Nome para a tela a partir da chave normalizada: "CHEVROLET" + "ONIX" vira "Chevrolet Onix". Palavras com
- * número ("HB20", "207"), de até duas letras ("HR", de HR-V) e siglas de marca ficam em maiúsculas.
+ * número ("HB20", "207"), de até duas letras ("HR-V") e siglas de marca ficam em maiúsculas; o hífen separa palavras
+ * ("T-CROSS" vira "T-Cross").
  */
 export function vehicleLabel({ brand, model }: ResearchVehicle): string {
   const word = (text: string, acronyms: ReadonlySet<string>) =>
@@ -83,5 +84,9 @@ export function vehicleLabel({ brand, model }: ResearchVehicle): string {
     .split(" ")
     .map((part) => word(part, ACRONYM_BRANDS))
     .join(" ");
-  return `${brandLabel} ${word(model, new Set())}`;
+  const modelLabel = model
+    .split("-")
+    .map((part) => word(part, new Set()))
+    .join("-");
+  return `${brandLabel} ${modelLabel}`;
 }

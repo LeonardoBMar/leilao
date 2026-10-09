@@ -6,7 +6,8 @@ describe("researchVehicle", () => {
   it("agrupa como as estimativas: marca por extenso e primeira palavra do modelo", () => {
     expect(researchVehicle("Chevrolet", "Onix Plus LTZ")).toEqual({ brand: "CHEVROLET", model: "ONIX" });
     expect(researchVehicle("VW", "gol 1.0")).toEqual({ brand: "VOLKSWAGEN", model: "GOL" });
-    expect(researchVehicle("Mercedes-Benz", "C 180")).toEqual({ brand: "MERCEDES BENZ", model: "C" });
+    expect(researchVehicle("Mercedes-Benz", "C 180")).toEqual({ brand: "MERCEDES BENZ", model: "C-180" });
+    expect(researchVehicle("VW", "T Cross")).toEqual({ brand: "VOLKSWAGEN", model: "T-CROSS" });
   });
 
   it("sem marca ou modelo, não há veículo", () => {
@@ -38,10 +39,11 @@ describe("DEFAULT_RESEARCH_FILTERS", () => {
 describe("vehicleLabel", () => {
   it("inicial maiúscula nas palavras, número e sigla de marca em maiúsculas", () => {
     expect(vehicleLabel({ brand: "CHEVROLET", model: "ONIX" })).toBe("Chevrolet Onix");
-    expect(vehicleLabel({ brand: "MERCEDES BENZ", model: "C" })).toBe("Mercedes Benz C");
+    expect(vehicleLabel({ brand: "MERCEDES BENZ", model: "C-180" })).toBe("Mercedes Benz C-180");
+    expect(vehicleLabel({ brand: "VOLKSWAGEN", model: "T-CROSS" })).toBe("Volkswagen T-Cross");
     expect(vehicleLabel({ brand: "HYUNDAI", model: "HB20" })).toBe("Hyundai HB20");
     expect(vehicleLabel({ brand: "BMW", model: "X1" })).toBe("BMW X1");
     expect(vehicleLabel({ brand: "PEUGEOT", model: "207" })).toBe("Peugeot 207");
-    expect(vehicleLabel({ brand: "HONDA", model: "HR" })).toBe("Honda HR");
+    expect(vehicleLabel({ brand: "HONDA", model: "HR-V" })).toBe("Honda HR-V");
   });
 });

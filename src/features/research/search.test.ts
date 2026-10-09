@@ -18,12 +18,22 @@ describe("matchModels", () => {
     { brand: "CHEVROLET", model: "ONIX" },
     { brand: "VOLKSWAGEN", model: "GOL" },
     { brand: "FIAT", model: "UNO" },
+    { brand: "VOLKSWAGEN", model: "T-CROSS" },
+    { brand: "HONDA", model: "HR-V" },
   ];
 
   it("cada palavra começa uma palavra da marca, da sigla ou do modelo", () => {
     expect(matchModels(options, "oni")).toEqual([options[0]]);
     expect(matchModels(options, "vw g")).toEqual([options[1]]);
     expect(matchModels(options, "Fiat Ônix")).toEqual([]);
+  });
+
+  it("modelo com hífen casa escrito com hífen, espaço ou junto", () => {
+    expect(matchModels(options, "t-cross")).toEqual([options[3]]);
+    expect(matchModels(options, "vw cross")).toEqual([options[3]]);
+    expect(matchModels(options, "tcross")).toEqual([options[3]]);
+    expect(matchModels(options, "hrv")).toEqual([options[4]]);
+    expect(matchModels(options, "honda hr-v")).toEqual([options[4]]);
   });
 
   it("sem texto, os mais vendidos", () => {

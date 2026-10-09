@@ -70,15 +70,23 @@ export type PriceEstimate =
 
 /**
  * Marca e modelo base comparáveis entre fonte e Tracker: sem acento, maiúsculas, marca por extenso e só a primeira
- * palavra do modelo ("ONIX PLUS JOY BLACK" → "ONIX"). `null` sem marca ou modelo.
+ * palavra do modelo ("ONIX PLUS JOY BLACK" → "ONIX"). Prefixo curto não é modelo sozinho: uma letra, ou duas letras
+ * seguidas de uma, junta-se à palavra seguinte com hífen, venha ela com hífen ou espaço na fonte ("T CROSS" e
+ * "T-Cross" → "T-CROSS", "HR-V" → "HR-V", "F 350" → "F-350"). `null` sem marca ou modelo.
  */
 export function vehicleKey(brand: string | null, model: string | null): string | null {
   const normalizedBrand = normalizePlaceName(brand ?? "").trim();
-  const [baseModel] = normalizePlaceName(model ?? "")
+  const [first, second] = normalizePlaceName(model ?? "")
     .split(/[^A-Z0-9]+/)
     .filter(Boolean);
-  if (normalizedBrand === "" || baseModel === undefined) return null;
+  if (normalizedBrand === "" || first === undefined) return null;
+  const baseModel = second !== undefined && isShortPrefix(first, second) ? `${first}-${second}` : first;
   return `${BRAND_ALIASES[normalizedBrand] ?? normalizedBrand}|${baseModel}`;
+}
+
+/** "T" (T-Cross, F-350, C-180) ou "HR" + "V" (HR-V, CR-V, WR-V); "MT-03", "CG 160" e "KA SE" ficam na família. */
+function isShortPrefix(first: string, second: string): boolean {
+  return /^[A-Z]$/.test(first) || (/^[A-Z]{2}$/.test(first) && /^[A-Z]$/.test(second));
 }
 
 /** Vendas indexadas para estimar vários anúncios de uma vez (uma tela de cartões). */

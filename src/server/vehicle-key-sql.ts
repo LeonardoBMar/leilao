@@ -12,7 +12,10 @@ import { Prisma } from "@/generated/prisma/client";
 const COMBINING_MARKS = "[̀-ͯ]";
 const APOSTROPHES = "['’`]";
 const SPACES = "\\s+";
-const MODEL_TOKEN = "[A-Z0-9]+";
+/** As duas primeiras palavras do modelo (a segunda pode faltar). */
+const MODEL_TOKENS = "([A-Z0-9]+)(?:[^A-Z0-9]+([A-Z0-9]+))?";
+const ONE_LETTER = "^[A-Z]$";
+const TWO_LETTERS = "^[A-Z]{2}$";
 
 /** `normalizePlaceName`: sem acento e apóstrofo, hífen vira espaço, maiúsculas, espaços simples. */
 function normalizedSql(column: Prisma.Sql): Prisma.Sql {
@@ -21,11 +24,17 @@ function normalizedSql(column: Prisma.Sql): Prisma.Sql {
   return Prisma.sql`btrim(regexp_replace(upper(${cleaned}), ${SPACES}, ' ', 'g'))`;
 }
 
-/** Chave "MARCA|MODELO" (marca por extenso, primeira palavra do modelo) ou `NULL` sem marca ou modelo. */
+/**
+ * Chave "MARCA|MODELO" (marca por extenso, primeira palavra do modelo, com a seguinte quando a primeira é um prefixo
+ * curto, como em "T-CROSS" e "HR-V") ou `NULL` sem marca ou modelo.
+ */
 export function vehicleKeySql(brand: Prisma.Sql, model: Prisma.Sql): Prisma.Sql {
   const normalizedBrand = normalizedSql(brand);
   const aliases = Object.entries(BRAND_ALIASES).map(([alias, full]) => Prisma.sql`WHEN ${alias} THEN ${full}`);
   const fullBrand = Prisma.sql`CASE ${normalizedBrand} ${Prisma.join(aliases, " ")} ELSE ${normalizedBrand} END`;
-  const baseModel = Prisma.sql`(regexp_match(${normalizedSql(model)}, ${MODEL_TOKEN}))[1]`;
+  // As duas palavras saem de uma só busca por linha; a regra de `isShortPrefix` (estimates.ts) decide se a segunda entra.
+  const shortPrefix = Prisma.sql`words[2] IS NOT NULL AND (words[1] ~ ${ONE_LETTER} OR (words[1] ~ ${TWO_LETTERS} AND words[2] ~ ${ONE_LETTER}))`;
+  const baseModel = Prisma.sql`(SELECT CASE WHEN ${shortPrefix} THEN words[1] || '-' || words[2] ELSE words[1] END
+    FROM (SELECT regexp_match(${normalizedSql(model)}, ${MODEL_TOKENS}) AS words) AS model_words)`;
   return Prisma.sql`CASE WHEN ${normalizedBrand} = '' OR ${baseModel} IS NULL THEN NULL ELSE ${fullBrand} || '|' || ${baseModel} END`;
 }

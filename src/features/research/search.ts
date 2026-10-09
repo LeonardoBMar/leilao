@@ -18,7 +18,8 @@ export function researchHref(filters: ResearchFilters): Route {
 
 /**
  * Modelos que casam com o texto digitado: cada palavra é o começo de uma palavra da marca ou do modelo (a sigla da
- * marca também vale: "vw gol"). Sem texto, os primeiros da lista, que vem do mais vendido ao menos vendido.
+ * marca também vale: "vw gol"). Modelo com hífen casa por parte ou junto: "t cross", "tcross" e "hrv". Sem texto,
+ * os primeiros da lista, que vem do mais vendido ao menos vendido.
  */
 export function matchModels<T extends ResearchVehicle>(options: readonly T[], typed: string, limit = 8): T[] {
   const tokens = toSearchText(typed).split(" ").filter(Boolean);
@@ -26,7 +27,7 @@ export function matchModels<T extends ResearchVehicle>(options: readonly T[], ty
   return options
     .filter(({ brand, model }) => {
       const aliases = Object.keys(BRAND_ALIASES).filter((alias) => BRAND_ALIASES[alias] === brand);
-      const words = [...brand.split(" "), ...aliases, model];
+      const words = [...brand.split(" "), ...aliases, model, ...model.split("-"), model.replaceAll("-", "")];
       return tokens.every((token) => words.some((word) => word.startsWith(token)));
     })
     .slice(0, limit);
