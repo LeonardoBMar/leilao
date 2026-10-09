@@ -215,3 +215,21 @@ describe("ChartDataTable", () => {
     expect(html).toContain(">—<");
   });
 });
+
+describe("ScatterPlot no celular", () => {
+  it("com muitos anos, metade dos rótulos some abaixo de sm, mantendo o mais novo", () => {
+    const years = Array.from({ length: 14 }, (_, index) => 2013 + index);
+    const html = renderToStaticMarkup(
+      <ScatterPlot
+        ariaLabel="Lance por ano"
+        xValues={years}
+        yDomain={[0, 100]}
+        yTicks={[0, 100]}
+        formatY={String}
+        points={[]}
+      />,
+    );
+    expect(html.match(/hidden sm:block/g)).toHaveLength(7);
+    expect(html).toMatch(/class="absolute top-1\.5[^"]*tabular-nums"[^>]*>2026</);
+  });
+});

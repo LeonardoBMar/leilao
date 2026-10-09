@@ -8,7 +8,9 @@ import { salesLabel } from "../labels";
 import { getResearchFacets, getResearchOverview } from "../queries";
 import { parseResearchParams, researchParams } from "../schemas";
 import type { SearchParams } from "../search";
+import { BID_CURVE_BLOCK_TITLE, BidCurveBlock } from "./bid-curve-block";
 import { CONDITION_BLOCK_TITLE, ConditionBlock } from "./condition-block";
+import { ModelSalesBlock, modelSalesTitle } from "./model-sales-block";
 import { RANKING_BLOCK_TITLE, RankingBlock } from "./ranking-block";
 import { ResearchBlockSkeleton } from "./research-block";
 import { ResearchFilterBar } from "./research-filter-bar";
@@ -52,7 +54,14 @@ export async function ResearchView({ searchParams }: { searchParams: SearchParam
         <Suspense fallback={<ResearchBlockSkeleton title={RANKING_BLOCK_TITLE} className="h-96" />}>
           <RankingBlock filters={filters} />
         </Suspense>
-      ) : null}
+      ) : (
+        <Suspense fallback={<ResearchBlockSkeleton title={modelSalesTitle(filters.vehicle)} className="h-96" />}>
+          <ModelSalesBlock filters={filters} vehicle={filters.vehicle} since={since} />
+        </Suspense>
+      )}
+      <Suspense fallback={<ResearchBlockSkeleton title={BID_CURVE_BLOCK_TITLE} />}>
+        <BidCurveBlock filters={filters} />
+      </Suspense>
     </div>
   );
 }

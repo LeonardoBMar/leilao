@@ -1,13 +1,15 @@
 import type { ReactNode } from "react";
 
+import { cn } from "@/lib/utils";
+
 import { percentOf } from "./data-steps";
 
 type PlotFrameProps = {
   /** Marcas do eixo vertical: valor (posição no domínio) e rótulo. */
   yTicks: readonly { value: number; label: string }[];
   yDomain: readonly [number, number];
-  /** Rótulos do eixo horizontal, com a posição em % (`at`) a partir da esquerda. */
-  xTicks: readonly { key: string; at: number; label: string }[];
+  /** Rótulos do eixo horizontal, com a posição em % (`at`) a partir da esquerda; `minor` some abaixo de `sm`. */
+  xTicks: readonly { key: string; at: number; label: string; minor?: boolean }[];
   ariaLabel: string;
   children: ReactNode;
 };
@@ -45,7 +47,10 @@ export function PlotFrame({ yTicks, yDomain, xTicks, ariaLabel, children }: Plot
         {xTicks.map((tick) => (
           <span
             key={tick.key}
-            className="absolute top-1.5 -translate-x-1/2 text-caption leading-none whitespace-nowrap text-muted tabular-nums"
+            className={cn(
+              "absolute top-1.5 -translate-x-1/2 text-caption leading-none whitespace-nowrap text-muted tabular-nums",
+              tick.minor && "hidden sm:block",
+            )}
             style={{ left: `${tick.at}%` }}
           >
             {tick.label}

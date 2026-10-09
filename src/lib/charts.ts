@@ -26,6 +26,24 @@ export function niceTicks(max: number, count = 4): number[] {
   return Array.from({ length: last + 1 }, (_, index) => Number((index * step).toPrecision(12)));
 }
 
+/**
+ * Eixo que não começa no zero (ex.: 60% a 100%): início e fim arredondados para o passo "redondo" mais próximo, e as
+ * marcas entre eles.
+ */
+export function niceRange(min: number, max: number, count = 4): { domain: [number, number]; ticks: number[] } {
+  const span = max - min || Math.abs(max) || 1;
+  const rough = span / count;
+  const magnitude = 10 ** Math.floor(Math.log10(rough));
+  const step = ([1, 2, 5, 10].find((factor) => factor * magnitude >= rough) ?? 10) * magnitude;
+  const first = Math.floor(min / step + 1e-9);
+  // Início e fim iguais (todos os valores no mesmo passo): o eixo ganha um passo acima.
+  const last = Math.max(first + 1, Math.ceil(max / step - 1e-9));
+  const ticks = Array.from({ length: last - first + 1 }, (_, index) =>
+    Number(((first + index) * step).toPrecision(12)),
+  );
+  return { domain: [ticks[0] ?? min, ticks.at(-1) ?? max], ticks };
+}
+
 /** Faixa de valores de um passo da escala sequencial (para a legenda). */
 export type SequentialBand = { step: number; from: number; to: number };
 

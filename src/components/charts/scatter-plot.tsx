@@ -15,6 +15,9 @@ type ScatterPlotProps = {
   ariaLabel: string;
 };
 
+/** Rótulos do eixo x que cabem no celular. */
+const MOBILE_X_LABELS = 7;
+
 /** Meia largura da coluna de um x usada para espalhar pontos do mesmo x, sem invadir a vizinha. */
 const SPREAD = 0.3;
 
@@ -26,6 +29,7 @@ export function ScatterPlot({ points, medians = [], xValues, yDomain, yTicks, fo
   const first = Math.min(...xValues);
   const last = Math.max(...xValues);
   const xDomain = [first - 0.5, last + 0.5] as const;
+  const labelEvery = Math.ceil(xValues.length / MOBILE_X_LABELS);
   const byX = Map.groupBy(points, (point) => point.x);
   const spread = (point: ScatterPoint) => {
     const group = byX.get(point.x) ?? [point];
@@ -37,7 +41,13 @@ export function ScatterPlot({ points, medians = [], xValues, yDomain, yTicks, fo
       ariaLabel={ariaLabel}
       yDomain={yDomain}
       yTicks={yTicks.map((value) => ({ value, label: formatY(value) }))}
-      xTicks={xValues.map((value) => ({ key: String(value), at: percentOf(value, xDomain), label: String(value) }))}
+      xTicks={xValues.map((value, index) => ({
+        key: String(value),
+        at: percentOf(value, xDomain),
+        label: String(value),
+        // No celular cabem uns 7 anos: os outros rótulos somem, contando do último (o mais novo fica).
+        minor: (xValues.length - 1 - index) % labelEvery !== 0,
+      }))}
     >
       {points.map((point) => (
         <span

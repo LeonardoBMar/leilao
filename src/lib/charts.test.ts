@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { linearScale, niceTicks, sequentialScale } from "./charts";
+import { linearScale, niceRange, niceTicks, sequentialScale } from "./charts";
 
 describe("linearScale", () => {
   it("leva o domínio ao intervalo de pixels", () => {
@@ -64,5 +64,16 @@ describe("sequentialScale", () => {
 
   it("sem valores, não há escala", () => {
     expect(sequentialScale([], 5)).toBeNull();
+  });
+});
+
+describe("niceRange", () => {
+  it("arredonda início e fim para o passo e marca os intermediários", () => {
+    expect(niceRange(0.62, 1)).toEqual({ domain: [0.6, 1], ticks: [0.6, 0.7, 0.8, 0.9, 1] });
+    expect(niceRange(0.86, 0.99)).toEqual({ domain: [0.85, 1], ticks: [0.85, 0.9, 0.95, 1] });
+  });
+
+  it("intervalo vazio ainda tem um passo", () => {
+    expect(niceRange(1, 1).ticks.length).toBeGreaterThan(1);
   });
 });
