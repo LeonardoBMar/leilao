@@ -78,5 +78,7 @@ export type ResearchModelOption = { brand: string; model: string; label: string;
 export type ResearchFacets = {
   conditions: Record<ResearchCondition, number>;
   categories: Record<ResearchCategory, number>;
+  /** Vendas por estado, com os outros filtros: o estado do mapa não entra. */
+  states: Partial<Record<StateCode, number>>;
   models: ResearchModelOption[];
 };

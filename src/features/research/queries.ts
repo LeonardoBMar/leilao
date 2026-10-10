@@ -144,7 +144,7 @@ const MODEL_SUGGESTIONS_LIMIT = 300;
 export async function getResearchFacets(filters: ResearchFilters): Promise<ResearchFacets> {
   await requireUser();
   const level = sql`coalesce(l.damage_level::text, 'unclassified')`;
-  const [byLevel, byCategory, models] = await Promise.all([
+  const [byLevel, byCategory, byState, models] = await Promise.all([
     rows(
       z.object({ level: levelSchema, n: z.number().int() }),
       sql`SELECT ${level} AS level, count(*)::int AS n FROM listings l
@@ -156,6 +156,11 @@ export async function getResearchFacets(filters: ResearchFilters): Promise<Resea
         WHERE ${salesWhere(filters, { category: false })} GROUP BY 1`,
     ),
     rows(
+      z.object({ state: z.string().nullable(), n: z.number().int() }),
+      sql`SELECT l.state::text AS state, count(*)::int AS n FROM listings l
+        WHERE ${salesWhere(filters, { state: false })} GROUP BY 1`,
+    ),
+    rows(
       z.object({ key: z.string(), n: z.number().int() }),
       sql`SELECT t.key, count(*)::int AS n
         FROM (SELECT ${VEHICLE_KEY} AS key FROM listings l
@@ -163,6 +168,8 @@ export async function getResearchFacets(filters: ResearchFilters): Promise<Resea
         WHERE t.key IS NOT NULL GROUP BY t.key ORDER BY 2 DESC, 1 LIMIT ${MODEL_SUGGESTIONS_LIMIT}`,
     ),
   ]);
+  const stateCounts: Partial<Record<StateCode, number>> = {};
+  for (const row of byState) if (row.state !== null && isStateCode(row.state)) stateCounts[row.state] = row.n;
   const byCondition = (condition: ResearchCondition) =>
     byLevel.find((row) => row.level === (DAMAGE_OF_CONDITION[condition] ?? "unclassified"))?.n ?? 0;
   const ofCategory = (category: ResearchCategory) =>
@@ -181,6 +188,7 @@ export async function getResearchFacets(filters: ResearchFilters): Promise<Resea
       utilitarios: ofCategory("utilitarios"),
       sucatas: ofCategory("sucatas"),
     },
+    states: stateCounts,
     models: models.flatMap(({ key, n }) => {
       const [brand = "", model = ""] = key.split("|");
       return brand && model ? [{ brand, model, label: vehicleLabel({ brand, model }), sales: n }] : [];

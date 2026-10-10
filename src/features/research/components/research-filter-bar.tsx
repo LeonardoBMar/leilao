@@ -4,7 +4,7 @@ import { LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useId, useOptimistic, useRef, useTransition } from "react";
 
-import { Button, RemovableChip, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
+import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import {
   DEFAULT_RESEARCH_FILTERS,
   RESEARCH_CATEGORIES,
@@ -12,13 +12,18 @@ import {
   type ResearchFilters,
   vehicleLabel,
 } from "@/domain/research/filters";
-import { STATE_NAMES } from "@/domain/research/states";
+import { isStateCode, STATE_CODES, STATE_NAMES } from "@/domain/research/states";
 
 import { CATEGORY_LABELS, CONDITION_LABELS, salesLabel } from "../labels";
 import { parseResearchParams } from "../schemas";
 import { researchHref } from "../search";
 import type { ResearchFacets } from "../types";
 import { ModelPicker } from "./model-picker";
+
+/** Valor do item "Todo o Brasil": o `Select` não aceita valor vazio. */
+const ALL_STATES = "todos";
+
+const STATES_BY_NAME = STATE_CODES.toSorted((a, b) => STATE_NAMES[a].localeCompare(STATE_NAMES[b], "pt-BR"));
 
 type ResearchFilterBarProps = {
   /** Filtros da URL na forma canônica (`researchParams`), já aplicados à tela. */
@@ -27,14 +32,15 @@ type ResearchFilterBarProps = {
 };
 
 /**
- * Barra de filtros da Pesquisa (DESIGN.md §15.8): modelo, condição, categoria e o chip do estado escolhido no mapa.
+ * Barra de filtros da Pesquisa (DESIGN.md §15.8): modelo, condição, categoria e estado (que o mapa também escolhe).
  * Cada escolha aplica na hora e vai para a URL; enquanto a tela recarrega, os controles já mostram a escolha.
  */
 export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
   const router = useRouter();
   const conditionLabelId = useId();
   const categoryLabelId = useId();
-  // O chip e "Limpar tudo" somem ao aplicar: o foco vai para o total, que anuncia o resultado.
+  const stateLabelId = useId();
+  // "Limpar tudo" some ao aplicar: o foco vai para o total, que anuncia o resultado.
   const statusRef = useRef<HTMLParagraphElement>(null);
   const [isPending, startTransition] = useTransition();
   const [filters, setOptimisticFilters] = useOptimistic(parseResearchParams(params));
@@ -64,7 +70,7 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
           }
           className="md:min-w-64 md:flex-1"
         />
-        <div className="grid grid-cols-[3fr_2fr] gap-3 md:flex">
+        <div className="grid grid-cols-2 gap-3 md:flex">
           <span id={conditionLabelId} className="sr-only">
             Condição
           </span>
@@ -75,7 +81,7 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
               if (condition) apply({ ...filters, condition });
             }}
           >
-            <SelectTrigger aria-labelledby={conditionLabelId} className="md:w-60">
+            <SelectTrigger aria-labelledby={conditionLabelId} className="col-span-2 md:col-span-1 md:w-60">
               <SelectValue>{CONDITION_LABELS[filters.condition]}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -115,6 +121,32 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
               ))}
             </SelectContent>
           </Select>
+          <span id={stateLabelId} className="sr-only">
+            Estado
+          </span>
+          <Select
+            value={filters.state ?? ALL_STATES}
+            onValueChange={(value) => {
+              if (value === ALL_STATES) apply({ ...filters, state: null });
+              else if (isStateCode(value)) apply({ ...filters, state: value });
+            }}
+          >
+            <SelectTrigger aria-labelledby={stateLabelId} className="md:w-48">
+              <SelectValue>{filters.state === null ? "Todo o Brasil" : STATE_NAMES[filters.state]}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_STATES}>Todo o Brasil</SelectItem>
+              {STATES_BY_NAME.map((code) => (
+                <SelectItem
+                  key={code}
+                  value={code}
+                  disabled={(facets.states[code] ?? 0) === 0 && code !== filters.state}
+                >
+                  <OptionWithCount label={STATE_NAMES[code]} count={facets.states[code] ?? 0} />
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -134,14 +166,6 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
             `${salesLabel(total)} com esses filtros`
           )}
         </p>
-        {filters.state === null ? null : (
-          <RemovableChip
-            removeLabel={`Remover filtro ${STATE_NAMES[filters.state]}`}
-            onRemove={() => apply({ ...filters, state: null }, { focusStatus: true })}
-          >
-            {STATE_NAMES[filters.state]}
-          </RemovableChip>
-        )}
         {isDefault ? null : (
           <Button
             variant="link"
