@@ -13,15 +13,10 @@ export function AlertCard({ alert, eager = false }: { alert: AlertItem; eager?: 
       item={alert.listing}
       eager={eager}
       header={
-        <div className="grid gap-1">
-          <p className="flex flex-wrap items-center gap-2 text-caption font-semibold text-foreground">
-            {unread ? <Badge variant="primary">Novo</Badge> : null}
-            Novo veículo encontrado
-          </p>
-          <p className="text-caption text-muted">
-            Monitor “{alert.watchTitle}” · {formatDateTime(alert.createdAt)}
-          </p>
-        </div>
+        <p className="flex flex-wrap items-center gap-2 text-caption text-muted">
+          {unread ? <Badge variant="primary">Novo</Badge> : null}
+          Monitor “{alert.watchTitle}” · {formatDateTime(alert.createdAt)}
+        </p>
       }
       footer={unread ? <MarkAlertReadButton alertId={alert.id} /> : null}
     />

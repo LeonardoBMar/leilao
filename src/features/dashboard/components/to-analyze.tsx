@@ -32,15 +32,16 @@ export async function ToAnalyze() {
   const more = region.toAnalyzeTotal - region.toAnalyze.length;
   return (
     <div className="grid gap-5">
-      <p className="text-caption text-muted">
-        Lotes abertos até {DEFAULT_RADIUS_KM} km de {DEFAULT_REGION.label} (carros, motos e utilitários) ou dos seus
-        monitores, ainda fora das suas análises, cujo provável lance final cabe no limite. Primeiro os estimados por
-        vendas parecidas, depois os que encerram antes.
+      <p
+        className="text-caption text-muted"
+        title={`Lotes abertos até ${DEFAULT_RADIUS_KM} km de ${DEFAULT_REGION.label} (carros, motos e utilitários) ou dos seus monitores, ainda fora das suas análises. Primeiro os estimados por vendas parecidas, depois os que encerram antes.`}
+      >
+        Da região ou dos seus monitores, com o provável lance final dentro do limite.
       </p>
-      <ul className="grid gap-x-7 gap-y-11 sm:grid-cols-2 2xl:grid-cols-3">
-        {region.toAnalyze.map((item, index) => (
-          <li key={item.id} className="flex">
-            <ListingCard item={item} eager={index === 0} />
+      <ul className="grid gap-5">
+        {region.toAnalyze.map((item) => (
+          <li key={item.id} className="flex border-t border-border pt-5 first:border-t-0 first:pt-0">
+            <ListingCard item={item} compact />
           </li>
         ))}
       </ul>
@@ -55,9 +56,10 @@ export async function ToAnalyze() {
 
 export function ToAnalyzeSkeleton() {
   return (
-    <div className="grid gap-x-7 gap-y-11 sm:grid-cols-2 2xl:grid-cols-3" aria-hidden="true">
-      <Skeleton className="h-96" />
-      <Skeleton className="h-96" />
+    <div className="grid gap-5" aria-hidden="true">
+      <Skeleton className="h-24" />
+      <Skeleton className="h-24" />
+      <Skeleton className="h-24" />
     </div>
   );
 }

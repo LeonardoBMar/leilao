@@ -2,6 +2,7 @@ import { Car, ClipboardCheck, Clock, ExternalLink, MapPin } from "lucide-react";
 import Image from "next/image";
 
 import { Badge, ButtonLink, Money } from "@/components/ui";
+import type { Cents } from "@/domain/money";
 import { formatDateTime, formatKm, formatRatio } from "@/lib/format";
 
 import {
@@ -27,14 +28,19 @@ type ListingCardProps = {
   footer?: React.ReactNode;
   /** Primeira linha da lista, visível sem rolar: a foto carrega já (é a candidata a LCP), sem esperar o lazy. */
   eager?: boolean;
+  /** Linha com miniatura (dashboard): título, lance, situação frente ao limite, fim e ações. */
+  compact?: boolean;
 };
 
 /** Anúncio coletado em cartão: "Leilões" e alertas. Direção A: foto arredondada e conteúdo sem caixa. */
-export function ListingCard({ item, header, footer, eager = false }: ListingCardProps) {
+export function ListingCard({ item, header, footer, eager = false, compact = false }: ListingCardProps) {
   const isOpen = item.status === "open";
   const bid = isOpen ? (item.currentBid ?? item.minimumBid) : item.finalBid;
   const ratio = bid !== null && item.marketValue !== null && item.marketValue > 0 ? bid / item.marketValue : null;
   const marketOrigin = marketValueOriginLabel(item.marketValueOrigin, item.marketValueRefMonth);
+  const fit = item.estimate?.fit ?? null;
+
+  if (compact) return <CompactCard item={item} bid={bid} footer={footer} />;
 
   return (
     <article className="grid h-full content-start gap-3.5">
@@ -83,31 +89,32 @@ export function ListingCard({ item, header, footer, eager = false }: ListingCard
 
       <ConditionBadges item={item} />
 
-      <dl className="flex items-end justify-between gap-4">
-        <div className="grid gap-0.5">
-          <dt className="text-caption text-muted">
-            {isOpen ? (item.currentBid ? "Lance atual" : "Lance inicial") : "Lance final"}
-          </dt>
-          <dd className="text-heading-2 font-semibold text-foreground">
-            <Money value={bid} />
-          </dd>
-        </div>
-        <div className="grid gap-0.5 text-right">
-          <dt className="text-caption text-muted">Mercado{marketOrigin ? ` ${marketOrigin}` : ""}</dt>
-          <dd className="text-body font-medium text-foreground-secondary">
-            <Money value={item.marketValue} />
-          </dd>
-        </div>
-      </dl>
-
-      {ratio !== null ? (
-        <div className="grid gap-1.5">
-          <div aria-hidden="true" className="h-1 rounded-full bg-border">
-            <div className="h-1 rounded-full bg-foreground" style={{ width: `${Math.min(ratio * 100, 100)}%` }} />
+      <div className="grid gap-1">
+        <dl className="flex items-end justify-between gap-4">
+          <div className="grid gap-0.5">
+            <dt className="text-caption text-muted">
+              {isOpen ? (item.currentBid ? "Lance atual" : "Lance inicial") : "Lance final"}
+            </dt>
+            <dd className="text-heading-2 font-semibold text-foreground">
+              <Money value={bid} />
+            </dd>
           </div>
-          <p className="text-caption text-muted tabular-nums">Lance em {formatRatio(ratio)} do valor de mercado</p>
-        </div>
-      ) : null}
+          {fit === null ? null : (
+            <div className="grid justify-items-end">
+              <dt className="sr-only">Provável × limite</dt>
+              <dd>
+                <Badge variant={LIMIT_FIT_VARIANTS[fit]}>{LIMIT_FIT_LABELS[fit]}</Badge>
+              </dd>
+            </div>
+          )}
+        </dl>
+        {item.marketValue !== null ? (
+          <p className="text-caption text-muted tabular-nums">
+            Mercado{marketOrigin ? ` ${marketOrigin}` : ""} <Money value={item.marketValue} />
+            {ratio !== null ? ` · lance em ${formatRatio(ratio)}` : null}
+          </p>
+        ) : null}
+      </div>
 
       <p className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-border pt-3 text-label font-normal text-foreground-secondary">
         <span className="flex items-center gap-1.5 tabular-nums">
@@ -164,17 +171,6 @@ function EstimateLines({ estimate }: { estimate: ListingEstimate }) {
                 <span className="text-muted">(n={price.n})</span>
               </>
             )}
-            {price.kind === "comparables" ? (
-              <span className="block text-muted">
-                Faixa <Money value={price.low} /> a <Money value={price.high} /> em vendas parecidas
-              </span>
-            ) : null}
-            {price.kind === "market_ratio" ? (
-              <span className="block text-muted">
-                {formatRatio(price.ratio.median)} do mercado, como vendas na mesma categoria e condição (faixa{" "}
-                {formatRatio(price.ratio.low)} a {formatRatio(price.ratio.high)})
-              </span>
-            ) : null}
           </dd>
         </div>
         <div className="grid grid-cols-[auto_1fr] gap-x-2">
@@ -190,25 +186,37 @@ function EstimateLines({ estimate }: { estimate: ListingEstimate }) {
                   <span className="text-foreground">Sem lance viável</span>
                 ) : (
                   <Money value={limit.maxBid} className="font-semibold text-foreground" />
-                )}{" "}
-                <span className="text-muted">
-                  {limit.kind === "defaults"
-                    ? "(premissas padrão)"
-                    : `(${limit.n} análises${limit.marketValueFrom === "listing" ? ", venda pela FIPE do anúncio" : ""})`}
-                </span>
+                )}
               </>
             )}
           </dd>
         </div>
-        {estimate.fit === null ? null : (
-          <div className="grid grid-cols-[auto_1fr] items-center gap-x-2">
-            <dt className="text-muted">Provável × limite</dt>
-            <dd className="flex justify-end">
-              <Badge variant={LIMIT_FIT_VARIANTS[estimate.fit]}>{LIMIT_FIT_LABELS[estimate.fit]}</Badge>
-            </dd>
-          </div>
-        )}
       </dl>
+      <details className="mt-1.5">
+        <summary className="cursor-pointer text-muted hover:text-foreground">Como foi estimado</summary>
+        <ul className="mt-1.5 grid gap-1 text-muted">
+          {price.kind === "comparables" ? (
+            <li>
+              Provável: {price.n} vendas parecidas, faixa <Money value={price.low} /> a <Money value={price.high} />.
+            </li>
+          ) : null}
+          {price.kind === "market_ratio" ? (
+            <li>
+              Provável: {formatRatio(price.ratio.median)} do mercado, como vendas na mesma categoria e condição (faixa{" "}
+              {formatRatio(price.ratio.low)} a {formatRatio(price.ratio.high)}; n={price.n}).
+            </li>
+          ) : null}
+          {limit.kind === "insufficient" ? null : (
+            <li>
+              Limite:{" "}
+              {limit.kind === "defaults"
+                ? "premissas padrão"
+                : `${limit.n} análises parecidas${limit.marketValueFrom === "listing" ? ", venda pela FIPE do anúncio" : ""}`}
+              .
+            </li>
+          )}
+        </ul>
+      </details>
     </section>
   );
 }
@@ -251,5 +259,60 @@ function ConditionBadges({ item }: { item: ListingListItem }) {
         </li>
       ) : null}
     </ul>
+  );
+}
+
+/** Variante em linha (dashboard): miniatura, título, lance com a situação, fim e as ações. */
+function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents | null; footer: React.ReactNode }) {
+  const fit = item.estimate?.fit ?? null;
+  const price = item.estimate?.price;
+  return (
+    <article className="grid w-full grid-cols-[6.5rem_minmax(0,1fr)] gap-x-4 gap-y-2 sm:grid-cols-[8rem_minmax(0,1fr)]">
+      <div className="relative row-span-2 aspect-4/3 overflow-hidden rounded-md bg-surface-subtle">
+        {item.photoUrl ? (
+          <Image src={item.photoUrl} alt="" fill unoptimized loading="lazy" sizes="8rem" className="object-cover" />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-muted-subtle">
+            <Car aria-hidden="true" className="size-6" />
+          </div>
+        )}
+      </div>
+      <div className="grid min-w-0 gap-0.5">
+        <h3 className="truncate text-body font-semibold text-foreground">
+          {item.title}
+          {item.modelYear ? <span className="font-medium text-muted tabular-nums"> {item.modelYear}</span> : null}
+        </h3>
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-muted tabular-nums">
+          <span>
+            Lance <Money value={bid} className="font-semibold text-foreground" />
+          </span>
+          {price && price.kind !== "insufficient" ? (
+            <span>
+              · provável <Money value={price.median} /> (n={price.n})
+            </span>
+          ) : null}
+          {fit === null ? null : <Badge variant={LIMIT_FIT_VARIANTS[fit]}>{LIMIT_FIT_LABELS[fit]}</Badge>}
+        </p>
+        <p className="flex items-center gap-1.5 text-caption text-muted tabular-nums">
+          <Clock aria-hidden="true" className="size-3.5 shrink-0" />
+          Encerra {item.endsAt ? formatDateTime(item.endsAt) : "—"}
+          {item.city && item.state ? ` · ${item.city}/${item.state}` : null}
+        </p>
+      </div>
+      <div className="col-start-2 flex flex-wrap items-center gap-2">
+        <TrackerAction item={item} />
+        <a
+          href={item.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-label text-accent hover:underline"
+        >
+          {item.sourceName}
+          <ExternalLink aria-hidden="true" className="size-3.5" />
+          <span className="sr-only">(abre em nova aba)</span>
+        </a>
+        {footer}
+      </div>
+    </article>
   );
 }

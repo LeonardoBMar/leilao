@@ -55,13 +55,6 @@ export default function DashboardPage() {
 
       <div className="grid gap-10 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] xl:gap-14">
         <div className="grid content-start gap-10">
-          <Section aria-labelledby="to-analyze" className="gap-2">
-            <SectionTitle id="to-analyze">Para analisar agora</SectionTitle>
-            <Suspense fallback={<ToAnalyzeSkeleton />}>
-              <ToAnalyze />
-            </Suspense>
-          </Section>
-
           <Section aria-labelledby="followed-lots" className="gap-2">
             <SectionHeader>
               <SectionTitle id="followed-lots">Lotes acompanhados</SectionTitle>
@@ -71,6 +64,13 @@ export default function DashboardPage() {
             </SectionHeader>
             <Suspense fallback={<FollowedLotsSkeleton />}>
               <FollowedLots />
+            </Suspense>
+          </Section>
+
+          <Section aria-labelledby="to-analyze" className="gap-2">
+            <SectionTitle id="to-analyze">Para analisar agora</SectionTitle>
+            <Suspense fallback={<ToAnalyzeSkeleton />}>
+              <ToAnalyze />
             </Suspense>
           </Section>
 
