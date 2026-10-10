@@ -397,7 +397,7 @@ Variantes:
 
 Cards não devem conter cards idênticos aninhados. Para subdivisões internas, use `surface-subtle`, divisores ou grupos sem borda.
 
-**Section (direção A).** Na maior parte das telas o conteúdo não vai em caixa: `Section` + `SectionHeader` + `SectionTitle` (`heading-3`, 15/22) e o conteúdo separado por linhas finas. `DataList` + `DataRow` formam linhas de rótulo e valor com divisor `border` (`emphasis` para totais, com `border-strong`). Card fica para o que precisa de destaque: o painel rebaixado (Summary) com o número que decide, pendências e indicadores.
+**Section (direção A).** Na maior parte das telas o conteúdo não vai em caixa: `Section` + `SectionHeader` + `SectionTitle` (`heading-3`, 15/22) e o conteúdo separado por linhas finas. `DataList` + `DataRow` formam linhas de rótulo e valor com divisor `border` (`emphasis` para totais, com `border-strong`). `Stat` põe rótulo `caption` sobre o valor, em colunas (fichas e números do painel), com o tamanho do valor de `body` a `heading-2`. Card fica para o que precisa de destaque: o painel rebaixado (Summary) com o número que decide, pendências e indicadores.
 
 ### 5.5 Badge / StatusBadge
 
