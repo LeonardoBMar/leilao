@@ -152,8 +152,7 @@ export function ChartShowcase() {
             ariaLabel="Exemplo de dispersão"
             xValues={[2016, 2017, 2018, 2019, 2020]}
             yDomain={[0, 60_000]}
-            yTicks={[0, 20_000, 40_000, 60_000]}
-            formatY={(value) => `${value / 1000} mil`}
+            yTicks={[0, 20_000, 40_000, 60_000].map((value) => ({ value, label: `${value / 1000} mil` }))}
             points={[
               [2016, 21_000],
               [2016, 24_500],

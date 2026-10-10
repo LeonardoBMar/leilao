@@ -121,8 +121,7 @@ export function ModelSalesScatter({ sales, medians, subject, yearSummary }: Mode
           xValues={xValues}
           xAxis={xAxis}
           yDomain={[0, yTicks.at(-1) ?? 1]}
-          yTicks={yTicks}
-          formatY={(value) => formatCompactBRL(cents(value))}
+          yTicks={yTicks.map((value) => ({ value, label: formatCompactBRL(cents(value)) }))}
           points={points}
           medians={axis === "year" ? medians : []}
         />

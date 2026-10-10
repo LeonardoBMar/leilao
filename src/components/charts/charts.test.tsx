@@ -165,8 +165,7 @@ describe("ScatterPlot", () => {
         ariaLabel="Lance final por ano"
         xValues={[2019, 2020]}
         yDomain={[0, 100]}
-        yTicks={[0, 50, 100]}
-        formatY={String}
+        yTicks={[0, 50, 100].map((value) => ({ value, label: String(value) }))}
         points={[
           { key: "a", x: 2019, y: 40, title: "a" },
           { key: "b", x: 2019, y: 60, title: "b" },
@@ -188,8 +187,7 @@ describe("ScatterPlot", () => {
         ariaLabel="Lance final por ano"
         xValues={[2019]}
         yDomain={[0, 100]}
-        yTicks={[0, 100]}
-        formatY={String}
+        yTicks={[0, 100].map((value) => ({ value, label: String(value) }))}
         points={[{ key: "a", x: 2019, y: 40, title: "a" }]}
       />,
     );
@@ -249,8 +247,7 @@ describe("ScatterPlot com eixo contínuo e destaque", () => {
         ],
       }}
       yDomain={[0, 100]}
-      yTicks={[0, 100]}
-      formatY={String}
+      yTicks={[0, 100].map((value) => ({ value, label: String(value) }))}
       points={[
         { key: "a", x: 25, y: 40, title: "a", highlighted: true },
         { key: "b", x: 25, y: 60, title: "b" },
@@ -282,8 +279,7 @@ describe("ScatterPlot no celular", () => {
         ariaLabel="Lance por ano"
         xValues={years}
         yDomain={[0, 100]}
-        yTicks={[0, 100]}
-        formatY={String}
+        yTicks={[0, 100].map((value) => ({ value, label: String(value) }))}
         points={[]}
       />,
     );

@@ -31,8 +31,8 @@ type ScatterPlotProps = {
   /** Eixo x contínuo, no lugar de `xValues`: os pontos ficam onde caem. */
   xAxis?: ContinuousAxis;
   yDomain: readonly [number, number];
-  yTicks: readonly number[];
-  formatY: (value: number) => string;
+  /** Marcas do eixo y já com o rótulo escrito (o gráfico é client e não recebe função). */
+  yTicks: readonly { value: number; label: string }[];
   ariaLabel: string;
 };
 
@@ -54,7 +54,6 @@ export function ScatterPlot({
   xAxis,
   yDomain,
   yTicks,
-  formatY,
   ariaLabel,
 }: ScatterPlotProps) {
   const [activeKey, setActiveKey] = useState<string | null>(null);
@@ -76,7 +75,7 @@ export function ScatterPlot({
       <PlotFrame
         ariaLabel={ariaLabel}
         yDomain={yDomain}
-        yTicks={yTicks.map((value) => ({ value, label: formatY(value) }))}
+        yTicks={yTicks}
         xTicks={
           xAxis
             ? xAxis.ticks.map(({ value, label }) => ({ key: String(value), at: percentOf(value, xDomain), label }))
