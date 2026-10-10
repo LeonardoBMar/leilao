@@ -27,6 +27,7 @@ Na página do leilão, **Adicionar lote**.
 - Obrigatórios: número do lote e o veículo (marca, modelo e ano-modelo). Link, lance inicial e observações ficam recolhidos.
 - **Cadastrar e analisar** salva o lote e já abre o rascunho da análise.
 - O número do lote não se repete no mesmo leilão; em outro leilão, pode.
+- **Editar** na ficha do lote abre os dados numa gaveta lateral; ao salvar, ela fecha e a ficha já mostra o novo valor.
 - **Lance atual:** na ficha do lote, **Atualizar lance** (ou **Corrigir lance**, num lote acompanhado no site) abre um campo ali mesmo. O app registra quando foi atualizado.
 - **Acompanhar este lote:** coloca o lote no dashboard, com lance atual e seu limite lado a lado.
 - **Fotos:** até 10 por lote, JPEG, PNG ou WebP até 5 MB. A primeira vira capa; dá para trocar a capa e reordenar.

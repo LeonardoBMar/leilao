@@ -64,7 +64,8 @@ export async function updateLotAction(id: string, _prev: ActionState, formData: 
   const result = await updateLot(parsedId.data, parsed.data);
   if (!result.ok) return duplicateOr(result.error, formData);
 
-  redirect(`/lotes/${parsedId.data}`);
+  refresh();
+  return { status: "success", message: "Lote atualizado." };
 }
 
 export async function updateCurrentBidAction(id: string, _prev: ActionState, formData: FormData): Promise<ActionState> {

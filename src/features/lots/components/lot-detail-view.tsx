@@ -1,15 +1,16 @@
-import { ExternalLink, Pencil } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { BreadcrumbLink, BreadcrumbPage, Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { PageHeader } from "@/components/layout/page-header";
-import { Alert, AlertDescription, Badge, ButtonLink, Section, SectionTitle, Skeleton } from "@/components/ui";
+import { Alert, AlertDescription, Badge, Section, SectionTitle, Skeleton } from "@/components/ui";
 import { formatDateTime, formatKm } from "@/lib/format";
 
 import { getLot } from "../queries";
 import { lotIdSchema } from "../schemas";
 import type { LotDetail } from "../types";
 import { BidLimitPanel } from "./bid-limit-panel";
+import { EditLotDrawer } from "./edit-lot-drawer";
 import { FollowSwitch } from "./follow-switch";
 import { LotActions } from "./lot-actions";
 
@@ -48,10 +49,7 @@ export async function LotDetailView({ params, analysis, result, photos, nextActi
         meta={isArchived ? <Badge variant="outline">Arquivado</Badge> : undefined}
         actions={
           <>
-            <ButtonLink href={`/lotes/${lot.id}/editar`} variant="secondary">
-              <Pencil aria-hidden="true" />
-              Editar
-            </ButtonLink>
+            <EditLotDrawer lot={lot} />
             {nextAction}
             <LotActions
               lotId={lot.id}

@@ -4,7 +4,19 @@ import type { Route } from "next";
 import Link from "next/link";
 import { useActionState } from "react";
 
-import { Alert, AlertDescription, Button, Checkbox, CurrencyInput, Input, Textarea } from "@/components/ui";
+import {
+  Alert,
+  AlertDescription,
+  Button,
+  Checkbox,
+  CurrencyInput,
+  DialogClose,
+  DrawerBody,
+  DrawerFooter,
+  Input,
+  Textarea,
+  toast,
+} from "@/components/ui";
 import { type ActionState, fieldError, fieldValue, idleState } from "@/lib/action-state";
 
 import type { LotDetail } from "../types";
@@ -12,17 +24,28 @@ import type { LotDetail } from "../types";
 type LotFormProps = {
   action: (prev: ActionState, formData: FormData) => Promise<ActionState>;
   lot?: LotDetail;
-  cancelHref: Route;
   submitLabel: string;
-};
+} & (
+  | { layout?: "page"; cancelHref: Route }
+  /** Dentro de uma gaveta: corpo rolável, rodapé fixo, "Cancelar" fecha e `onSaved` roda no sucesso. */
+  | { layout: "drawer"; onSaved: () => void }
+);
 
 /** Centavos → texto no formato do CurrencyInput ("1234,56"), sem separador de milhar para facilitar a edição. */
 function centsToInput(value: number | null | undefined): string | undefined {
   return value == null ? undefined : (value / 100).toFixed(2).replace(".", ",");
 }
 
-export function LotForm({ action, lot, cancelHref, submitLabel }: LotFormProps) {
-  const [state, formAction, pending] = useActionState(action, idleState);
+export function LotForm(props: LotFormProps) {
+  const { action, lot, submitLabel } = props;
+  const [state, formAction, pending] = useActionState<ActionState, FormData>(async (prev, formData) => {
+    const next = await action(prev, formData);
+    if (next.status === "success" && props.layout === "drawer") {
+      props.onSaved();
+      if (next.message) toast.success(next.message);
+    }
+    return next;
+  }, idleState);
   const value = (field: string, saved?: string | number | null) =>
     fieldValue(state, field) ?? (saved == null ? undefined : String(saved));
   const isFollowed =
@@ -31,8 +54,8 @@ export function LotForm({ action, lot, cancelHref, submitLabel }: LotFormProps) 
   const extrasError = ["lotUrl", "startingBid", "notes"].some((field) => fieldError(state, field) !== undefined);
   const hasExtras = Boolean(lot?.lotUrl || lot?.startingBid || lot?.notes);
 
-  return (
-    <form action={formAction} className="grid gap-8" noValidate>
+  const fields = (
+    <>
       {state.status === "error" && !state.fieldErrors ? (
         <Alert variant="error">
           <AlertDescription>{state.message}</AlertDescription>
@@ -159,19 +182,46 @@ export function LotForm({ action, lot, cancelHref, submitLabel }: LotFormProps) 
           />
         </fieldset>
       </details>
+    </>
+  );
 
+  const submit = (
+    <>
+      <Button type="submit" variant={isEdit ? "primary" : "secondary"} loading={pending} loadingLabel="Salvando…">
+        {submitLabel}
+      </Button>
+      {isEdit ? null : (
+        <Button type="submit" name="intent" value="analyze" loading={pending} loadingLabel="Salvando…">
+          Cadastrar e analisar
+        </Button>
+      )}
+    </>
+  );
+
+  if (props.layout === "drawer") {
+    return (
+      <form action={formAction} className="flex min-h-0 flex-1 flex-col" noValidate>
+        <DrawerBody>{fields}</DrawerBody>
+        <DrawerFooter>
+          <DialogClose asChild>
+            <Button type="button" variant="secondary">
+              Cancelar
+            </Button>
+          </DialogClose>
+          {submit}
+        </DrawerFooter>
+      </form>
+    );
+  }
+
+  return (
+    <form action={formAction} className="grid gap-8" noValidate>
+      {fields}
       <div className="flex flex-col-reverse gap-3 border-t border-border pt-6 md:flex-row md:justify-end">
         <Button asChild variant="secondary">
-          <Link href={cancelHref}>Cancelar</Link>
+          <Link href={props.cancelHref}>Cancelar</Link>
         </Button>
-        <Button type="submit" variant={isEdit ? "primary" : "secondary"} loading={pending} loadingLabel="Salvando…">
-          {submitLabel}
-        </Button>
-        {isEdit ? null : (
-          <Button type="submit" name="intent" value="analyze" loading={pending} loadingLabel="Salvando…">
-            Cadastrar e analisar
-          </Button>
-        )}
+        {submit}
       </div>
     </form>
   );

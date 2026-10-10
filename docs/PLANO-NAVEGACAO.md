@@ -23,7 +23,7 @@ Levantamento no banco (07/10/2026): 2.485 anúncios da Leilo em 27 leilões, 650
 | `/minhas-analises` | **Minhas análises**: "Todos os lotes" (padrão) ou "Por leilão" | `/lotes` |
 | `/minhas-analises/leiloes/novo` | Cadastro manual de leilão | `/leiloes/novo` |
 | `/minhas-analises/leiloes/[id]` (+ `editar`, `lotes/novo`) | Registro do leilão do usuário: lotes, edição, arquivamento | `/leiloes/[id]…` |
-| `/lotes/[id]` (+ `editar`, `resultado`), `/analise/[id]` | Ficha do lote e análise | Sem mudança |
+| `/lotes/[id]` (edição e resultado em gaveta/modal na ficha), `/analise/[id]` | Ficha do lote e análise | Sem mudança |
 
 O registro do leilão sai de `/leiloes/[id]` porque o Next não aceita `[id]` e `[fonte]/[leilao]` no mesmo nível. As URLs antigas redirecionam (`next.config.ts`), com a query: `/descobertos` → `/leiloes/veiculos`, `/lotes` → `/minhas-analises`, `/leiloes/novo` e `/leiloes/<uuid>…` → `/minhas-analises/leiloes/…`.
 
