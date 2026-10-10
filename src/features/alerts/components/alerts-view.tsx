@@ -3,8 +3,7 @@ import type { Route } from "next";
 import Link from "next/link";
 
 import { ListPagination } from "@/components/layout/list-pagination";
-import { ButtonLink, EmptyState, Skeleton } from "@/components/ui";
-import { cn } from "@/lib/utils";
+import { ButtonLink, EmptyState, LinkTabs, Skeleton } from "@/components/ui";
 
 import { listAlerts } from "../queries";
 import { alertFiltersSchema } from "../schemas";
@@ -32,7 +31,7 @@ export async function AlertsView({ searchParams }: { searchParams: SearchParams 
   const hrefWith = (situacao: "todos" | "nao-lidos") => {
     const params = new URLSearchParams();
     if (filters.watchId) params.set("monitor", filters.watchId);
-    if (situacao === "nao-lidos") params.set("situacao", situacao);
+    if (situacao === "todos") params.set("situacao", situacao);
     const query = params.toString();
     return (query ? `/alertas?${query}` : "/alertas") as Route;
   };
@@ -40,13 +39,14 @@ export async function AlertsView({ searchParams }: { searchParams: SearchParams 
   return (
     <div className="grid gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <nav aria-label="Situação dos alertas" className="flex flex-wrap items-center gap-2 text-label">
-          <FilterLink href={hrefWith("todos")} active={!filters.unreadOnly}>
-            Todos
-          </FilterLink>
-          <FilterLink href={hrefWith("nao-lidos")} active={filters.unreadOnly}>
-            Não lidos ({page.unread})
-          </FilterLink>
+        <div className="flex flex-wrap items-center gap-3">
+          <LinkTabs
+            label="Situação dos alertas"
+            tabs={[
+              { href: hrefWith("nao-lidos"), label: `Não lidos (${page.unread})`, active: filters.unreadOnly },
+              { href: hrefWith("todos"), label: "Todos", active: !filters.unreadOnly },
+            ]}
+          />
           {page.watchTitle ? (
             <span className="text-caption text-muted">
               Monitor “{page.watchTitle}” ·{" "}
@@ -55,7 +55,7 @@ export async function AlertsView({ searchParams }: { searchParams: SearchParams 
               </Link>
             </span>
           ) : null}
-        </nav>
+        </div>
         {page.unread > 0 ? <MarkAllAlertsReadButton watchId={filters.watchId ?? null} /> : null}
       </div>
 
@@ -81,7 +81,7 @@ export async function AlertsView({ searchParams }: { searchParams: SearchParams 
           </ul>
           <ListPagination
             basePath="/alertas"
-            params={{ monitor: filters.watchId, situacao: filters.unreadOnly ? "nao-lidos" : undefined }}
+            params={{ monitor: filters.watchId, situacao: filters.unreadOnly ? undefined : "todos" }}
             page={page.page}
             pageSize={page.pageSize}
             total={page.total}
@@ -89,21 +89,6 @@ export async function AlertsView({ searchParams }: { searchParams: SearchParams 
         </section>
       )}
     </div>
-  );
-}
-
-function FilterLink({ href, active, children }: { href: Route; active: boolean; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      aria-current={active ? "page" : undefined}
-      className={cn(
-        "inline-flex min-h-8 items-center rounded-md px-3 text-foreground-secondary hover:bg-surface-subtle",
-        active && "bg-surface font-semibold text-foreground shadow-sm hover:bg-surface",
-      )}
-    >
-      {children}
-    </Link>
   );
 }
 

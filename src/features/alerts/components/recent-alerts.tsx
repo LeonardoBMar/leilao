@@ -16,7 +16,7 @@ export async function RecentAlerts() {
         <h2 id="recent-alerts" className="text-heading-3 text-foreground">
           Alertas não lidos ({total})
         </h2>
-        <ButtonLink href="/alertas?situacao=nao-lidos" variant="secondary" size="sm">
+        <ButtonLink href="/alertas" variant="secondary" size="sm">
           Ver todos os alertas
         </ButtonLink>
       </div>

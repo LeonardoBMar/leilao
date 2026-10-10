@@ -32,6 +32,21 @@ export type AddToTrackerOutcome =
  * Não duplica: o leilão é um por leilão da fonte e o lote, um por anúncio (índices únicos por dono).
  */
 export async function addListingToTracker(listingId: string): Promise<Result<AddToTrackerOutcome, AddToTrackerError>> {
+  const result = await createFromListing(listingId);
+  if (result.ok) await markListingAlertsRead(listingId);
+  return result;
+}
+
+/**
+ * O anúncio virou análise: os alertas dele já foram vistos. Fora da transação de propósito: é idempotente e não
+ * deve desfazer o lote criado se falhar (o próximo clique, ou "Marcar como lido", resolve).
+ */
+async function markListingAlertsRead(listingId: string): Promise<void> {
+  const user = await requireUser();
+  await db.alert.updateMany({ where: { ownerId: user.id, listingId, readAt: null }, data: { readAt: new Date() } });
+}
+
+async function createFromListing(listingId: string): Promise<Result<AddToTrackerOutcome, AddToTrackerError>> {
   const user = await requireUser();
 
   const linked = await db.lot.findFirst({ where: { ownerId: user.id, listingId }, select: { id: true } });
