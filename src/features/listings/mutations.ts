@@ -175,3 +175,28 @@ const trackerSelect = {
   lastCheckedAt: true,
   source: { select: { name: true } },
 } satisfies Prisma.ListingSelect;
+
+export type DismissListingError = "not_found";
+
+/**
+ * "Dispensar" em "Para analisar agora" (D-56): o anúncio sai das sugestões deste usuário, sem mexer no catálogo.
+ * `dismissed = false` desfaz. Idempotente.
+ */
+export async function setListingDismissed(
+  listingId: string,
+  dismissed: boolean,
+): Promise<Result<null, DismissListingError>> {
+  const user = await requireUser();
+  if (!dismissed) {
+    await db.listingDismissal.deleteMany({ where: { ownerId: user.id, listingId } });
+    return ok(null);
+  }
+  const listing = await db.listing.findUnique({ where: { id: listingId }, select: { id: true } });
+  if (!listing) return err("not_found");
+  await db.listingDismissal.upsert({
+    where: { ownerId_listingId: { ownerId: user.id, listingId } },
+    create: { ownerId: user.id, listingId },
+    update: {},
+  });
+  return ok(null);
+}

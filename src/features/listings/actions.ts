@@ -3,9 +3,10 @@
 import type { Route } from "next";
 import { refresh } from "next/cache";
 
+import { type ActionState, failure } from "@/lib/action-state";
 import { entityId } from "@/lib/schemas";
 
-import { addListingToTracker, type AddToTrackerError } from "./mutations";
+import { addListingToTracker, type AddToTrackerError, setListingDismissed } from "./mutations";
 
 const ERRORS = {
   not_found: "Anúncio não encontrado.",
@@ -36,4 +37,16 @@ export async function addListingToTrackerAction(listingId: string): Promise<AddT
   return outcome.kind === "created"
     ? { status: "success", message: "Adicionado à análise.", href: `/analise/${outcome.analysisId}` as Route }
     : { status: "success", message: "Este anúncio já estava na análise.", href: `/lotes/${outcome.lotId}` as Route };
+}
+
+/** "Dispensar" (ou "Desfazer") uma sugestão de "Para analisar agora". */
+export async function setListingDismissedAction(listingId: string, dismissed: boolean): Promise<ActionState> {
+  const parsed = listingIdSchema.safeParse(listingId);
+  if (!parsed.success) return failure(ERRORS.not_found);
+
+  const result = await setListingDismissed(parsed.data, dismissed === true);
+  if (!result.ok) return failure(ERRORS[result.error]);
+
+  refresh();
+  return { status: "success", message: dismissed ? "Sugestão dispensada." : "Sugestão de volta." };
 }

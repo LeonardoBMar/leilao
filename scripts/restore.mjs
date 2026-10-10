@@ -28,8 +28,11 @@ nextEnv.loadEnvConfig(process.cwd(), false, { info() {}, error: console.error })
 const TABLE_ORDER = ["auctions", "lots", "analyses", "results", "lot_images"];
 /** Backups antigos não têm `catalog`: vira vazio. */
 const CATALOG_ORDER = ["listings", "listing_observations"];
-/** Backups antigos não têm `watches`: vira vazio. Alertas dependem de monitores e anúncios: entram por último. */
-const WATCH_ORDER = ["watches", "alerts"];
+/**
+ * Backups antigos não têm `watches` (nem `listing_dismissals`, D-56): vira vazio. Alertas e dispensas dependem de
+ * anúncios (e alertas, de monitores): entram por último.
+ */
+const WATCH_ORDER = ["watches", "alerts", "listing_dismissals"];
 
 /** Confere, dentro do backup, as mesmas garantias que o banco impõe (FKs por dono e por lote). */
 function validate({ tables, catalog, watches }) {
@@ -39,6 +42,9 @@ function validate({ tables, catalog, watches }) {
   for (const alert of watches.alerts) {
     if (watchOwners.get(alert.watch_id) !== alert.owner_id) problems.push(`alerta ${alert.id}: monitor ausente`);
     if (!listingIds.has(alert.listing_id)) problems.push(`alerta ${alert.id}: anúncio ausente`);
+  }
+  for (const dismissal of watches.listing_dismissals) {
+    if (!listingIds.has(dismissal.listing_id)) problems.push(`dispensa ${dismissal.id}: anúncio ausente`);
   }
   for (const observation of catalog.listing_observations) {
     if (!listingIds.has(observation.listing_id)) problems.push(`observação ${observation.id}: anúncio ausente`);
@@ -114,6 +120,9 @@ async function apply(backup) {
       throw new Error(`Destino sem as migrations do backup: ${missing.join(", ")}. Rode prisma migrate deploy.`);
 
     for (const table of [...TABLE_ORDER, ...CATALOG_ORDER, ...WATCH_ORDER]) {
+      // Tabela de migration posterior ao backup (ex.: listing_dismissals) pode não existir num destino mais antigo.
+      const { rows: found } = await client.query("select to_regclass($1) is not null as ok", [`public.${table}`]);
+      if (!found[0].ok) continue;
       const { rows } = await client.query(`select count(*)::int as n from "${table}"`);
       if (rows[0].n > 0)
         throw new Error(`Destino não está vazio (${table} tem ${rows[0].n} linhas). Nada foi alterado.`);

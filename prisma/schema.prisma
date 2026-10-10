@@ -465,6 +465,7 @@ model Listing {
   observations ListingObservation[]
   alerts       Alert[]
   lots         Lot[]
+  dismissals   ListingDismissal[]
 
   @@unique([sourceId, externalId])
   @@index([nextCheckAt])
@@ -640,4 +641,18 @@ model Alert {
   @@index([ownerId, readAt, createdAt])
   @@index([listingId])
   @@map("alerts")
+}
+
+/// "Dispensar" em "Para analisar agora" (D-56): o anúncio deixa de ser sugerido a este usuário. Não muda o catálogo.
+model ListingDismissal {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  ownerId   String   @map("owner_id") @db.Uuid
+  listingId String   @map("listing_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, listingId])
+  @@index([listingId])
+  @@map("listing_dismissals")
 }

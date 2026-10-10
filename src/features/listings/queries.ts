@@ -665,9 +665,18 @@ export const getRegionOverview = cache(async (): Promise<RegionOverview> => {
       return criteriaList.some((criteria) => matchesCriteria(criteria, listing, now));
     });
 
+  // Dispensados (D-56) saem só das sugestões; continuam contando nos leilões e no catálogo.
+  const dismissed = new Set(
+    (
+      await db.listingDismissal.findMany({
+        where: { ownerId: user.id, listingId: { in: matching.map(({ row }) => row.id) } },
+        select: { listingId: true },
+      })
+    ).map(({ listingId }) => listingId),
+  );
   const toAnalyze = matching
     .flatMap(({ item }) =>
-      item.trackedLotId === null && item.estimate && fits(item)
+      item.trackedLotId === null && !dismissed.has(item.id) && item.estimate && fits(item)
         ? [{ item, candidate: { ...item.estimate, endsAt: item.endsAt } }]
         : [],
     )

@@ -69,7 +69,7 @@
 npm run backup
 ```
 
-- **Gera** `backups/<data>/database.json` (tabelas do domínio, catálogo coletado, monitores e alertas, e migrations aplicadas) e, com `SUPABASE_SECRET_KEY`, a pasta `backups/<data>/photos/`.
+- **Gera** `backups/<data>/database.json` (tabelas do domínio, catálogo coletado, monitores, alertas, sugestões dispensadas e migrations aplicadas) e, com `SUPABASE_SECRET_KEY`, a pasta `backups/<data>/photos/`.
 - **Leitura consistente:** as tabelas são lidas numa única transação somente leitura.
 - **`backups/` não é versionada.**
 - **Backups do plano Supabase:** o plano Free não oferece backups para download; o Pro mantém 7 dias diários. Este script vale para qualquer plano e é a fonte principal.

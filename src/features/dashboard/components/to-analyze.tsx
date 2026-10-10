@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ButtonLink, EmptyState, Skeleton } from "@/components/ui";
 import { DEFAULT_RADIUS_KM } from "@/domain/listings/criteria";
 import { DEFAULT_REGION } from "@/domain/listings/region";
+import { DismissListingButton } from "@/features/listings/components/dismiss-listing-button";
 import { ListingCard } from "@/features/listings/components/listing-card";
 import { getRegionOverview } from "@/features/listings/queries";
 import { CATALOG_LISTINGS_PATH } from "@/features/listings/search";
@@ -41,7 +42,7 @@ export async function ToAnalyze() {
       <ul className="grid gap-5">
         {region.toAnalyze.map((item) => (
           <li key={item.id} className="flex border-t border-border pt-5 first:border-t-0 first:pt-0">
-            <ListingCard item={item} compact />
+            <ListingCard item={item} compact footer={<DismissListingButton listingId={item.id} />} />
           </li>
         ))}
       </ul>

@@ -112,7 +112,7 @@ A ação principal é **Ver leilões**; **Novo leilão** é secundária.
 
 Conteúdo principal:
 
-- **Para analisar agora:** até 6 anúncios abertos no filtro padrão do catálogo (até 150 km da região; carros, motos e utilitários) ou em algum monitor ligado, ainda não adicionados à análise, cujo preço provável cabe no limite.
+- **Para analisar agora:** até 6 anúncios abertos no filtro padrão do catálogo (até 150 km da região; carros, motos e utilitários) ou em algum monitor ligado, ainda não adicionados à análise nem dispensados, cujo preço provável cabe no limite. **Dispensar** tira a sugestão só para o usuário, com desfazer.
   - **Cabe com folga:** P75 do provável ≤ limite.
   - **No limite:** mediana ≤ limite < P75.
   - **Ordem:** provável por vendas comparáveis antes do provável pela proporção, folga antes de "no limite" e, depois, encerra primeiro.

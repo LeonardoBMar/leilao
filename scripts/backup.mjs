@@ -43,6 +43,9 @@ const WATCH_TABLES = [
   { name: "alerts", orderBy: "created_at, id" },
 ];
 
+/** Sugestões dispensadas (D-56): por dono, apontam para anúncios. Só existem a partir da migration própria. */
+const DISMISSAL_TABLE = { name: "listing_dismissals", orderBy: "created_at, id" };
+
 async function main() {
   const databaseUrl = process.env.DIRECT_URL;
   if (!databaseUrl) throw new Error("DIRECT_URL não definida (.env.local).");
@@ -77,6 +80,11 @@ async function main() {
       for (const table of WATCH_TABLES) {
         watches[table.name] = (await client.query(`select * from "${table.name}" order by ${table.orderBy}`)).rows;
       }
+    }
+    if (migrations.some((name) => name.endsWith("_listing_dismissals"))) {
+      watches[DISMISSAL_TABLE.name] = (
+        await client.query(`select * from "${DISMISSAL_TABLE.name}" order by ${DISMISSAL_TABLE.orderBy}`)
+      ).rows;
     }
     await client.query("COMMIT");
   } finally {
