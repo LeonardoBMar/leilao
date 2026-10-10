@@ -17,7 +17,29 @@ import {
 } from "@/components/ui";
 import type { ActionState } from "@/lib/action-state";
 
-import { deleteAuctionAction, setAuctionArchivedAction } from "../actions";
+import { deleteAuctionAction, markAuctionFinishedAction, setAuctionArchivedAction } from "../actions";
+
+/** Sugestão quando a data do leilão manual já passou e o status continua agendado ou em andamento. */
+export function MarkFinishedButton({ auctionId }: { auctionId: string }) {
+  const [isPending, startTransition] = useTransition();
+  return (
+    <Button
+      variant="secondary"
+      size="sm"
+      loading={isPending}
+      loadingLabel="Salvando…"
+      onClick={() =>
+        startTransition(async () => {
+          const result = await markAuctionFinishedAction(auctionId);
+          if (result.status === "error") toast.error(result.message);
+          else if (result.status === "success" && result.message) toast.success(result.message);
+        })
+      }
+    >
+      Marcar como encerrado
+    </Button>
+  );
+}
 
 type AuctionActionsProps = {
   auctionId: string;

@@ -18,7 +18,7 @@ Leilão que está no catálogo (seção 9) não precisa ser cadastrado: **Adicio
 
 - Obrigatórios: nome, organizador, data e hora, origem (já vem "Não informada") e status.
 - Opcionais, recolhidos em *Local, links e observações*: cidade, UF, links do edital e da plataforma e observações.
-- O **status é manual**. A data passar não encerra o leilão sozinho: mude para *Encerrado* quando for o caso.
+- O **status é manual**. A data passar não encerra o leilão sozinho, mas a ficha avisa e oferece **Marcar como encerrado** num clique.
 
 ## 3. Cadastrar os lotes
 

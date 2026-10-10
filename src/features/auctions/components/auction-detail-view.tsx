@@ -20,7 +20,7 @@ import { formatDateTime } from "@/lib/format";
 import { ORIGIN_LABELS, STATUS_BADGE_VARIANTS, STATUS_LABELS } from "../labels";
 import { getAuction } from "../queries";
 import { auctionIdSchema } from "../schemas";
-import { AuctionActions } from "./auction-actions";
+import { AuctionActions, MarkFinishedButton } from "./auction-actions";
 
 type AuctionDetailViewProps = {
   params: Promise<{ id: string }>;
@@ -35,6 +35,9 @@ export async function AuctionDetailView({ params, lots }: AuctionDetailViewProps
   if (!auction) notFound();
 
   const location = [auction.city, auction.state].filter(Boolean).join(" — ");
+  // O status é manual: quando a data passa, a tela sugere encerrar em vez de exigir a edição.
+  const looksFinished =
+    (auction.status === "scheduled" || auction.status === "in_progress") && auction.startsAt < new Date();
 
   return (
     <div className="grid gap-7">
@@ -79,6 +82,15 @@ export async function AuctionDetailView({ params, lots }: AuctionDetailViewProps
         <Alert variant="warning">
           <AlertDescription>
             Leilão arquivado em {formatDateTime(auction.archivedAt)}. Ele e seus lotes não aparecem nas visões ativas.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {looksFinished && !auction.archivedAt ? (
+        <Alert variant="info">
+          <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+            <span>A data deste leilão já passou, mas ele ainda está como “{STATUS_LABELS[auction.status]}”.</span>
+            <MarkFinishedButton auctionId={auction.id} />
           </AlertDescription>
         </Alert>
       ) : null}

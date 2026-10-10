@@ -9,6 +9,7 @@ import {
   createAuction,
   deleteAuction,
   type DeleteAuctionError,
+  markAuctionFinished,
   setAuctionArchived,
   updateAuction,
   type UpdateAuctionError,
@@ -53,6 +54,17 @@ export async function setAuctionArchivedAction(id: string, archived: boolean): P
 
   refresh();
   return { status: "success", message: archived ? "Leilão arquivado." : "Leilão reativado." };
+}
+
+export async function markAuctionFinishedAction(id: string): Promise<ActionState> {
+  const parsedId = auctionIdSchema.safeParse(id);
+  if (!parsedId.success) return failure(NOT_FOUND);
+
+  const result = await markAuctionFinished(parsedId.data);
+  if (!result.ok) return failure(UPDATE_ERRORS[result.error]);
+
+  refresh();
+  return { status: "success", message: "Leilão marcado como encerrado." };
 }
 
 export async function deleteAuctionAction(id: string): Promise<ActionState> {

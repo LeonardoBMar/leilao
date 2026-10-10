@@ -47,6 +47,13 @@ export async function setAuctionArchived(id: string, archived: boolean): Promise
   return count === 0 ? err("not_found") : ok(null);
 }
 
+/** "Marcar como encerrado": o status do leilão manual é declarado pelo usuário (GUIA §2). */
+export async function markAuctionFinished(id: string): Promise<Result<null, UpdateAuctionError>> {
+  const user = await requireUser();
+  const { count } = await db.auction.updateMany({ where: { id, ownerId: user.id }, data: { status: "finished" } });
+  return count === 0 ? err("not_found") : ok(null);
+}
+
 export type DeleteAuctionError = "not_found" | "has_lots";
 
 /** Exclusão definitiva só sem lotes vinculados, inclusive arquivados (RF-08). */
