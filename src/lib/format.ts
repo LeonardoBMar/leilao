@@ -7,6 +7,8 @@ const compactBrl = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
   notation: "compact",
+  // Mínimo explícito: o Intl do Node 22 aplica o mínimo de moeda (2 → 1) e escreve "R$ 850,0".
+  minimumFractionDigits: 0,
   maximumFractionDigits: 1,
 });
 const dateTime = new Intl.DateTimeFormat("pt-BR", {
