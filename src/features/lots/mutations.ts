@@ -103,6 +103,18 @@ export async function setLotArchived(id: string, archived: boolean): Promise<Res
   return count === 0 ? err("not_found") : ok(null);
 }
 
+/** Ações em lote da lista: só os lotes do usuário entre `ids` mudam; devolve quantos mudaram. */
+export async function updateLotsState(
+  ids: readonly string[],
+  change: { isFollowed: boolean } | { archived: boolean },
+): Promise<number> {
+  const user = await requireUser();
+  const data =
+    "isFollowed" in change ? { isFollowed: change.isFollowed } : { archivedAt: change.archived ? new Date() : null };
+  const { count } = await db.lot.updateMany({ where: { id: { in: [...ids] }, ownerId: user.id }, data });
+  return count;
+}
+
 export type DeleteLotError = "not_found" | "has_history";
 
 /**

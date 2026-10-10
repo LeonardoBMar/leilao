@@ -26,6 +26,7 @@ import type { LotListItem, LotPage } from "../types";
 import { LimitProgress } from "./limit-progress";
 import { LotFilters as LotFiltersBar } from "./lot-filters";
 import { LotRowMenu } from "./lot-row-menu";
+import { LotBulkBar, LotSelectAll, LotSelectCheckbox, LotSelectionProvider } from "./lot-selection";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -125,7 +126,11 @@ function LotList({
 
   return (
     <section aria-label="Lotes" className="grid gap-4">
-      <LotRows items={result.items} showAuction={showAuction} />
+      {/* A chave remonta a seleção quando a página ou os filtros mudam. */}
+      <LotSelectionProvider key={JSON.stringify(params)} ids={result.items.map((lot) => lot.id)}>
+        <LotBulkBar />
+        <LotRows items={result.items} showAuction={showAuction} />
+      </LotSelectionProvider>
 
       <ListPagination
         basePath={basePath}
@@ -147,7 +152,8 @@ export function LotRows({ items, showAuction }: { items: readonly LotListItem[];
         {items.map((lot) => (
           <li key={lot.id} className="grid gap-3 border-t border-border py-4">
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
+              <LotSelectCheckbox lotId={lot.id} label={rowLabel(lot)} />
+              <div className="min-w-0 flex-1">
                 <Link href={`/lotes/${lot.id}`} className="text-body font-semibold text-foreground hover:underline">
                   {vehicleTitle(lot)}
                 </Link>
@@ -183,6 +189,7 @@ export function LotRows({ items, showAuction }: { items: readonly LotListItem[];
         <Table className="min-w-200">
           <TableHeader>
             <TableRow>
+              <SelectHead />
               <TableHead className="w-18">Lote</TableHead>
               <TableHead>{showAuction ? "Veículo e leilão" : "Veículo"}</TableHead>
               <TableHead className="text-right">Lance atual</TableHead>
@@ -197,6 +204,7 @@ export function LotRows({ items, showAuction }: { items: readonly LotListItem[];
           <TableBody>
             {items.map((lot) => (
               <TableRow key={lot.id}>
+                <SelectCell lotId={lot.id} label={rowLabel(lot)} />
                 <TableCell className="font-mono text-label font-normal whitespace-nowrap text-foreground-secondary">
                   {lot.lotNumber}
                 </TableCell>
@@ -243,11 +251,35 @@ export function LotRows({ items, showAuction }: { items: readonly LotListItem[];
   );
 }
 
+/**
+ * Coluna de seleção: os checkboxes só aparecem dentro de um LotSelectionProvider (a lista principal). Sem ele, a
+ * célula fica vazia e estreita.
+ */
+function SelectHead() {
+  return (
+    <TableHead className="w-12 px-1 empty:w-0 empty:p-0">
+      <LotSelectAll />
+    </TableHead>
+  );
+}
+
+function SelectCell({ lotId, label }: { lotId: string; label: string }) {
+  return (
+    <TableCell className="px-1 empty:p-0">
+      <LotSelectCheckbox lotId={lotId} label={label} />
+    </TableCell>
+  );
+}
+
+function rowLabel(lot: LotListItem) {
+  return `Lote ${lot.lotNumber} · ${vehicleTitle(lot)}`;
+}
+
 function RowMenu({ lot }: { lot: LotListItem }) {
   return (
     <LotRowMenu
       lotId={lot.id}
-      lotLabel={`Lote ${lot.lotNumber} · ${vehicleTitle(lot)}`}
+      lotLabel={rowLabel(lot)}
       currentBid={lot.currentBid}
       isFollowed={lot.isFollowed}
       isArchived={lot.archivedAt !== null}

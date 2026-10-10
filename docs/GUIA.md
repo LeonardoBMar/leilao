@@ -103,6 +103,7 @@ Por que o dashboard não compara o lance atual com o histórico: o lance sobe at
 ## 8. Arquivar e excluir
 
 - **Arquivar** (no lote, pelo menu **⋯** ao lado de Editar) tira leilão ou lote das listas e do dashboard, sem apagar nada. Veja de novo em *Mais filtros → Só arquivados*; **Reativar** traz de volta.
+- **Vários lotes de uma vez:** em *Minhas análises*, marque as caixas das linhas (ou a do cabeçalho, para a página toda) e use a barra que aparece: **Acompanhar**, **Parar de acompanhar**, **Arquivar** ou **Reativar**.
 - **Excluir** só aparece quando não há histórico (nenhuma análise fixada nem resultado). Com histórico, arquive.
 
 ## 9. Leilões, monitores e alertas

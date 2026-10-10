@@ -2,6 +2,7 @@
 
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 
 import { createDraft } from "@/features/analyses/mutations";
 import { type ActionState, failure, validationError } from "@/lib/action-state";
@@ -17,6 +18,7 @@ import {
   setLotFollowed,
   updateCurrentBid,
   updateLot,
+  updateLotsState,
 } from "./mutations";
 import { currentBidInputSchema, lotIdSchema, lotInputSchema } from "./schemas";
 
@@ -98,6 +100,40 @@ export async function setLotArchivedAction(id: string, archived: boolean): Promi
 
   refresh();
   return { status: "success", message: archived ? "Lote arquivado." : "Lote reativado." };
+}
+
+export type BulkLotOperation = "follow" | "unfollow" | "archive" | "unarchive";
+
+const bulkLotSchema = z.object({
+  ids: z.array(lotIdSchema).min(1).max(100),
+  operation: z.enum(["follow", "unfollow", "archive", "unarchive"]),
+});
+
+const BULK_CHANGES = {
+  follow: { isFollowed: true },
+  unfollow: { isFollowed: false },
+  archive: { archived: true },
+  unarchive: { archived: false },
+} satisfies Record<BulkLotOperation, { isFollowed: boolean } | { archived: boolean }>;
+
+const BULK_MESSAGES = {
+  follow: ["acompanhado", "acompanhados"],
+  unfollow: ["deixou de ser acompanhado", "deixaram de ser acompanhados"],
+  archive: ["arquivado", "arquivados"],
+  unarchive: ["reativado", "reativados"],
+} satisfies Record<BulkLotOperation, readonly [string, string]>;
+
+/** Ações em lote da lista de lotes (Minhas análises). */
+export async function bulkLotAction(ids: string[], operation: BulkLotOperation): Promise<ActionState> {
+  const parsed = bulkLotSchema.safeParse({ ids, operation });
+  if (!parsed.success) return failure("Seleção inválida. Recarregue a página e tente de novo.");
+
+  const count = await updateLotsState(parsed.data.ids, BULK_CHANGES[parsed.data.operation]);
+  if (count === 0) return failure("Nenhum dos lotes selecionados foi encontrado.");
+
+  refresh();
+  const [one, many] = BULK_MESSAGES[parsed.data.operation];
+  return { status: "success", message: count === 1 ? `1 lote ${one}.` : `${count} lotes ${many}.` };
 }
 
 export async function deleteLotAction(id: string): Promise<ActionState> {
