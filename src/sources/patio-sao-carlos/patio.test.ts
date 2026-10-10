@@ -271,6 +271,48 @@ describe("patioSaoCarlosSource", () => {
     expect(fetched.ok && fetched.value.location.state).toBeNull();
   });
 
+  it("revisita com o `raw` guardado: só a consulta de situação, e o anúncio sai igual ao da leitura completa", async () => {
+    const full = fakeHttp({
+      [patioListingUrl("991")]: { ok: true, text: openPage },
+      [patioEditalUrl("991")]: { ok: true, text: fixture("edital.html") },
+    });
+    const first = await patioSaoCarlosSource.fetchListing(full.http, "991", now);
+    if (!first.ok) throw new Error(first.error);
+
+    const { http, calls } = fakeHttp({});
+    const revisit = await patioSaoCarlosSource.fetchListing(http, "991", now, first.value.raw);
+    expect(calls).toEqual([expect.stringMatching(/^POST /)]);
+    expect(revisit).toEqual(first);
+  });
+
+  it("revisita com `raw` antigo (sem os dados da página) ou de outro lote lê a página inteira", async () => {
+    const full = fakeHttp({ [patioListingUrl("991")]: { ok: true, text: openPage } });
+    const first = await patioSaoCarlosSource.fetchListing(full.http, "991", now);
+    if (!first.ok) throw new Error(first.error);
+    const { page: _page, ...oldRaw } = z.record(z.string(), z.unknown()).parse(first.value.raw);
+
+    const { http, calls } = fakeHttp({ [patioListingUrl("991")]: { ok: true, text: openPage } });
+    expect(await patioSaoCarlosSource.fetchListing(http, "991", now, oldRaw)).toMatchObject({ ok: true });
+    expect(calls).toContain(`GET ${patioListingUrl("991")}`);
+
+    const other = fakeHttp({ [patioListingUrl("1406")]: { ok: true, text: gonePage } });
+    expect(await patioSaoCarlosSource.fetchListing(other.http, "1406", now, first.value.raw)).toMatchObject({
+      ok: false,
+      gone: true,
+    });
+  });
+
+  it("revisita de lote que sumiu da consulta: a página confirma que saiu do ar", async () => {
+    const full = fakeHttp({ [patioListingUrl("991")]: { ok: true, text: openPage } });
+    const first = await patioSaoCarlosSource.fetchListing(full.http, "991", now);
+    if (!first.ok) throw new Error(first.error);
+    const { http } = fakeHttp({ [patioListingUrl("777")]: { ok: true, text: gonePage } });
+    expect(await patioSaoCarlosSource.fetchListing(http, "777", now, first.value.raw)).toMatchObject({
+      ok: false,
+      gone: true,
+    });
+  });
+
   it("página fora do ar ('Nenhum Lote Encontrado', 404 ou 410) é `gone`", async () => {
     const { http } = fakeHttp({ [patioListingUrl("1225")]: { ok: true, text: gonePage } });
     expect(await patioSaoCarlosSource.fetchListing(http, "1225", now)).toMatchObject({ ok: false, gone: true });

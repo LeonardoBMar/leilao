@@ -134,6 +134,51 @@ describe("chooseFipeModels", () => {
     expect(chooseFipeModels("GOL", many)).toEqual({ kind: "none", reason: "too_many" });
   });
 
+  describe("segunda leitura, quando a primeira não acha candidata (rótulos reais da FIPE)", () => {
+    const yamaha = options([
+      "YBR 125 FACTOR E",
+      "YBR 125 FACTOR ED/FACTOR EDITION",
+      "YBR 125 FACTOR K/ FACTOR K1",
+      "YS 250 FAZER/ FAZER L. EDITION /BLUEFLEX",
+      "XTZ 250 LANDER 249cc/LANDER BLUEFLEX/ABS",
+    ]);
+    const version = (model: string, list: readonly FipeOption[]) => {
+      const choice = chooseFipeModels(model, list);
+      return choice.kind === "version" ? labelOf(list, choice.code) : choice.kind;
+    };
+
+    it("ordem trocada: o modelo da FIPE entre as palavras do anúncio, ou o do anúncio entre as da FIPE", () => {
+      expect(version("FACTOR YBR125 K", yamaha)).toBe("YBR 125 FACTOR K/ FACTOR K1");
+      expect(version("FACTOR YBR125 ED", yamaha)).toBe("YBR 125 FACTOR ED/FACTOR EDITION");
+      expect(version("LANDER XTZ250", yamaha)).toBe("XTZ 250 LANDER 249cc/LANDER BLUEFLEX/ABS");
+      expect(version("FAZER250 BLUEFLEX", yamaha)).toBe("YS 250 FAZER/ FAZER L. EDITION /BLUEFLEX");
+    });
+
+    it("letras coladas no número e hífen: CB250F, C100, S1000", () => {
+      const honda = options(["CB 250 TWISTER/FLEXONE", "CB 300F Twister Flex", "C 100 BIZ-ES", "C 100 DREAM"]);
+      expect(version("CB250F TWISTER CBS", honda)).toBe("CB 250 TWISTER/FLEXONE");
+      expect(version("C100 BIZ ES", honda)).toBe("C 100 BIZ-ES");
+      expect(version("S1000 R", options(["S 1000 R", "S 1000 RR", "R 1250 GS"]))).toBe("S 1000 R");
+    });
+
+    it("'NOVO VOYAGE' é Voyage", () => {
+      const vw = options(["VOYAGE 1.6/1.6 City  Mi Total Flex 8V 4p", "VOYAGE 1.0/1.0 City Mi Total Flex 8V 4p"]);
+      expect(version("NOVO VOYAGE 1.6 CITY", vw)).toBe("VOYAGE 1.6/1.6 City  Mi Total Flex 8V 4p");
+    });
+
+    it("modelo de uma letra só com número em comum: o 'F' de '13F' não é F-250; C4 não puxa C3", () => {
+      const ford = options(["F-250 Tropical SL/ Van T.Diesel (todas)", "F-1000 XL 3.9 Diesel"]);
+      expect(chooseFipeModels("RANGER XLS 13F", ford)).toEqual({ kind: "none", reason: "no_candidates" });
+      const citroen = options(["C3 Excl. 1.6 VTi Flex Start 16V 5p Aut.", "C4 LOUNGE Exclusive 1.6 Turbo Flex Aut."]);
+      expect(version("C4L THP A EXCL", citroen)).toBe("C4 LOUNGE Exclusive 1.6 Turbo Flex Aut.");
+    });
+  });
+
+  it("família grande vale (até MAX_FAMILY_CANDIDATES); a dispersão de preço decide depois", () => {
+    const many = options(Array.from({ length: 12 }, (_, index) => `Gol 1.0 Versão${index}`));
+    expect(chooseFipeModels("GOL 1.0", many)).toMatchObject({ kind: "family" });
+  });
+
   it("sem modelo ou sem candidata do mesmo modelo base", () => {
     expect(chooseFipeModels(null, GOL_1994)).toEqual({ kind: "none", reason: "no_model" });
     expect(chooseFipeModels("PALIO EX", GOL_1994)).toEqual({ kind: "none", reason: "no_candidates" });

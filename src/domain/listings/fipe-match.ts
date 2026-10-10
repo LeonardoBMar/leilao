@@ -99,20 +99,26 @@ export type FipeModelChoice =
   | { kind: "family"; codes: string[] }
   | { kind: "none"; reason: "no_model" | "no_candidates" | "too_many" };
 
-/** Mais versões empatadas que isto: o modelo do anúncio diz pouco, e cada versão custa um pedido. */
-export const MAX_FAMILY_CANDIDATES = 8;
+/**
+ * Mais versões empatadas que isto: o modelo do anúncio não diz quase nada. Até aqui, a família só vale se as versões
+ * custarem quase o mesmo (`MAX_FAMILY_SPREAD`), então o limite é só contra o anúncio de uma palavra só.
+ */
+export const MAX_FAMILY_CANDIDATES = 30;
+
+type Scored = { code: string; score: number };
 
 /**
  * Escolhe as versões da FIPE para o modelo do anúncio. Candidatas: mesmo modelo base (`baseModelOf`, a regra das
  * estimativas; "CG150" casa com "CG 150"). Fora as que contradizem a cilindrada. Pontua os outros sinais do título
- * (cilindrada, acabamento, câmbio, portas) e fica com a de maior nota; empate vira família.
+ * (cilindrada, acabamento, câmbio, portas) e fica com a de maior nota; empate vira família. Sem nenhuma candidata,
+ * uma segunda leitura mais solta (`looseCandidates`) cobre a ordem trocada e as letras coladas no número.
  */
 export function chooseFipeModels(model: string | null, candidates: readonly FipeOption[]): FipeModelChoice {
   const base = baseModelOf(model);
   if (base === null || model === null) return { kind: "none", reason: "no_model" };
   const listingWords = normalizePlaceName(model).split(/\s+/).slice(base.words);
 
-  const scored: { code: string; score: number }[] = [];
+  let scored: Scored[] = [];
   for (const candidate of candidates) {
     const candidateBase = baseModelOf(candidate.label);
     if (candidateBase === null) continue;
@@ -129,6 +135,7 @@ export function chooseFipeModels(model: string | null, candidates: readonly Fipe
     if (contradicts(signals, labelTokens)) continue;
     scored.push({ code: candidate.code, score: new Set(signals.filter((token) => labelTokens.has(token))).size });
   }
+  if (scored.length === 0) scored = looseCandidates(model, candidates);
 
   if (scored.length === 0) return { kind: "none", reason: "no_candidates" };
   const best = Math.max(...scored.map((item) => item.score));
@@ -139,11 +146,57 @@ export function chooseFipeModels(model: string | null, candidates: readonly Fipe
   return { kind: "family", codes: top.map((item) => item.code) };
 }
 
+/** Prefixos que a fonte põe e a FIPE escreve depois ("NOVO GOL" é "Gol (novo)"). */
+const LEADING_NOISE = new Set(["NOVO", "NOVA"]);
+
 /**
- * O resto do nome quando os modelos base casam: "" se iguais; os dígitos colados quando um é o outro mais um número
- * ("CG150" e "CG" → "150"). `null` se não casam.
+ * Segunda leitura, só quando a primeira não achou candidata. Palavras separadas nas letras coladas ao número
+ * ("207PASSION" → 207 PASSION, "CB250F" → CB 250 F) e o modelo em qualquer posição: o da FIPE entre as palavras do
+ * anúncio ("YBR" em "FACTOR YBR125 K") ou o do anúncio entre as da FIPE ("FAZER" em "YS 250 FAZER"), este só se
+ * um número (cilindrada, versão) também bater. Modelo de uma letra também exige o número.
  */
-function familySuffix(listing: string, fipe: string): string | null {
+function looseCandidates(model: string, candidates: readonly FipeOption[]): Scored[] {
+  const words = normalizePlaceName(model).split(/\s+/);
+  const listing = looseTokens(LEADING_NOISE.has(words[0] ?? "") ? words.slice(1) : words);
+  const [listingBase] = listing;
+  if (listingBase === undefined) return [];
+  const scored: Scored[] = [];
+  for (const candidate of candidates) {
+    const label = looseTokens(normalizePlaceName(candidate.label).split(/[^A-Z0-9.]+/));
+    const [labelBase] = label;
+    if (labelBase === undefined) continue;
+    const labelSet = new Set(label);
+    const sharesNumber = listing.some((token) => isNumber(token) && labelSet.has(token));
+    // Modelo de uma letra ("C 100", "F-250") só com um número em comum: senão o "F" de "13F" vira F-250.
+    const anchor =
+      listing.includes(labelBase) && !isNumber(labelBase) && (labelBase.length > 1 || sharesNumber) ? labelBase : null;
+    const reverse = anchor === null && !isNumber(listingBase) && labelSet.has(listingBase) && sharesNumber;
+    if (anchor === null && !reverse) continue;
+    const signals = listing.filter((token) => token !== (anchor ?? listingBase));
+    if (contradicts(signals, labelSet)) continue;
+    scored.push({ code: candidate.code, score: new Set(signals.filter((token) => labelSet.has(token))).size });
+  }
+  return scored;
+}
+
+/** `versionTokens` e, depois, letras e números colados separados (fora válvulas e cilindrada: "16V", "1.6"). */
+function looseTokens(words: readonly string[]): string[] {
+  return versionTokens(words.filter(Boolean)).flatMap((token) =>
+    /^\d{1,2}V$/.test(token) || isDisplacement(token)
+      ? [token]
+      : (token.match(/[A-Z]+|\d+/g) ?? []).filter((part) => part !== ""),
+  );
+}
+
+const isNumber = (token: string) => /^\d+$/.test(token) || isDisplacement(token);
+
+/**
+ * O resto do nome quando os modelos base casam: "" se iguais (sem contar hífen: "C100" é "C-100"); os dígitos colados
+ * quando um é o outro mais um número ("CG150" e "CG" → "150"). `null` se não casam.
+ */
+function familySuffix(listingName: string, fipeName: string): string | null {
+  const listing = listingName.replaceAll("-", "");
+  const fipe = fipeName.replaceAll("-", "");
   if (listing === fipe) return "";
   const [longer, shorter] = listing.length > fipe.length ? [listing, fipe] : [fipe, listing];
   if (!longer.startsWith(shorter)) return null;
@@ -307,8 +360,9 @@ export function marketValueOnSave(
  * Versão da regra de escolha (D-49). Suba sempre que `chooseFipeModels`, `matchFipeBrand`, os tipos ou os combustíveis
  * mudarem: as correlações automáticas de versão anterior são refeitas e os anúncios ligados a elas, recalculados.
  * 2: catálogo do dataset (D-51), com a marca pelo nome e a versão pelo código FIPE.
+ * 3: segunda leitura solta (ordem trocada, letras coladas, "NOVO") e famílias de até 30 versões (D-53).
  */
-export const MATCHER_VERSION = 2;
+export const MATCHER_VERSION = 3;
 
 export type FipeVehicle = {
   brand: string | null;

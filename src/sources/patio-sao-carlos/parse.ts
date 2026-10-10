@@ -152,7 +152,14 @@ type PatioRaw = {
   live: PatioLiveLot;
   /** Endereço do pátio no edital; `null` se o edital não carregou. */
   yardAddress: string | null;
+  /**
+   * O que só a página do lote traz além da ficha, para a revisita montar o anúncio sem baixá-la de novo (só a
+   * consulta de situação). Ausente no `raw` gravado antes de 10/10/2026: a revisita lê a página.
+   */
+  page?: PatioPageInfo;
 };
+
+type PatioPageInfo = { lotNumber: string | null; commission: string | null; photoUrls: string[] };
 
 /**
  * Página do lote + situação da consulta interna + endereço do edital → anúncio no formato único. O local da consulta
@@ -169,8 +176,24 @@ export function parsePatioListing(
   const { info, notes } = readInfo(htmlToLines(infoHtml));
   const descriptionHtml = sliceBetween(html, "lote-page__descricao-texto", "</div>");
   const description = descriptionHtml === null ? null : htmlToLines(descriptionHtml).join("\n");
-  const raw: PatioRaw = { info, notes, description, live: sanitizeLive(live), yardAddress };
-  return ok(fromRaw(raw, html, now));
+  const page: PatioPageInfo = {
+    lotNumber: /class="lote-page__title-lote">\s*Lote\s+(\w+)/.exec(html)?.[1] ?? null,
+    commission: /id="lote6ModalComissaoPct">\s*([\d.,]+)\s*</.exec(html)?.[1] ?? null,
+    photoUrls: photosOf(html),
+  };
+  const raw: PatioRaw = { info, notes, description, live: sanitizeLive(live), yardAddress, page };
+  return ok(fromRaw(raw, page, now));
+}
+
+/**
+ * Revisita com uma requisição só: o `raw` da última leitura (ficha, descrição, edital, página) + a situação nova da
+ * consulta interna. `null` se o `raw` não serve (formato antigo, sem os dados da página, ou de outro lote): a
+ * revisita lê a página inteira.
+ */
+export function parsePatioRevisit(stored: unknown, live: PatioLiveLot, now: Date): ListingInput | null {
+  const previous = readRaw(stored);
+  if (!previous?.page || previous.live.box_id !== live.box_id) return null;
+  return fromRaw({ ...previous, live: sanitizeLive(live) }, previous.page, now);
 }
 
 /** Descrição, condição e situação a partir de `raw`. */
@@ -186,14 +209,13 @@ export function patioDetailsFromRaw(raw: unknown, now: Date): ListingDetails | n
   };
 }
 
-function fromRaw(raw: PatioRaw, html: string, now: Date): ListingInput {
+function fromRaw(raw: PatioRaw, page: PatioPageInfo, now: Date): ListingInput {
   const { info, live } = raw;
   const field = (name: InfoField) => info[name] ?? null;
   const externalId = live.box_id;
   const startsAt = brasiliaDate(live.cronometro.data.ini);
   const endsAt = brasiliaDate(live.cronometro.data.fim);
-  const lotNumber = /class="lote-page__title-lote">\s*Lote\s+(\w+)/.exec(html)?.[1] ?? null;
-  const commission = /id="lote6ModalComissaoPct">\s*([\d.,]+)\s*</.exec(html)?.[1];
+  const { lotNumber, commission } = page;
 
   return {
     externalId,
@@ -233,14 +255,14 @@ function fromRaw(raw: PatioRaw, html: string, now: Date): ListingInput {
     bidCount: live.count_lances,
     marketValue: money(field("fipe")),
     costs: {
-      commissionRate: commission === undefined ? null : toBps(commission),
+      commissionRate: commission === null ? null : toBps(commission),
       dispatcherFee: null,
       removalFee: null,
       storageFee: null,
       inspectionFee: null,
       otherFees: null,
     },
-    photoUrls: photosOf(html),
+    photoUrls: page.photoUrls,
     raw,
   };
 }
@@ -336,7 +358,17 @@ function readRaw(raw: unknown): PatioRaw | null {
   const notes = raw.notes.filter((note): note is string => typeof note === "string");
   const description = typeof raw.description === "string" ? raw.description : null;
   const yardAddress = typeof raw.yardAddress === "string" ? raw.yardAddress : null;
-  return { info, notes, description, live: live.data, yardAddress };
+  const page = readPage(raw.page);
+  return { info, notes, description, live: live.data, yardAddress, ...(page ? { page } : {}) };
+}
+
+function readPage(value: unknown): PatioPageInfo | null {
+  if (!isRecord(value) || !Array.isArray(value.photoUrls)) return null;
+  return {
+    lotNumber: typeof value.lotNumber === "string" ? value.lotNumber : null,
+    commission: typeof value.commission === "string" ? value.commission : null,
+    photoUrls: value.photoUrls.filter((url): url is string => typeof url === "string"),
+  };
 }
 
 function brasiliaDate(parts: PatioDateParts): Date | null {

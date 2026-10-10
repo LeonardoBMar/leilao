@@ -5,6 +5,7 @@ import {
   parsePatioListing,
   parsePatioLive,
   parsePatioLotList,
+  parsePatioRevisit,
   PATIO_BASE_URL,
   PATIO_LIVE_URL,
   PATIO_NAME,
@@ -38,7 +39,18 @@ export const patioSaoCarlosSource: SourceAdapter = {
   baseUrl: PATIO_BASE_URL,
   listingUrl: patioListingUrl,
   discover,
-  async fetchListing(http, externalId, now) {
+  // Revisita só com a consulta de situação (1 requisição em vez de 3): o resto vem do `raw` da última leitura.
+  usesStoredRaw: true,
+  async fetchListing(http, externalId, now, stored) {
+    if (stored !== undefined && stored !== null) {
+      const live = await fetchLive(http, [externalId]);
+      if (!live.ok) return { ok: false, gone: false, error: live.error };
+      const lot = live.lots.get(externalId);
+      const revisit = lot ? parsePatioRevisit(stored, lot, now) : null;
+      // Fora da consulta (lote retirado?) ou `raw` antigo: a página decide, inclusive se saiu do ar.
+      if (revisit) return { ok: true, value: revisit };
+    }
+
     const page = await http.get(patioListingUrl(externalId));
     if (!page.ok) return { ok: false, gone: page.status === 404 || page.status === 410, error: page.error };
     if (isPatioPageGone(page.text)) return { ok: false, gone: true, error: "lote fora do ar no site" };
