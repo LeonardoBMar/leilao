@@ -6,12 +6,16 @@ import {
   fipeFuelCodes,
   type FipeOption,
   fipeReferenceMonth,
+  fipeVehicleIdentity,
   fipeVehicleTypes,
   marketValueOnSave,
+  MATCHER_VERSION,
   matchFipeBrand,
   MAX_FAMILY_CANDIDATES,
+  needsRematch,
   parseFipeMonth,
   pickFipeTable,
+  pickProvisionalPrices,
   settleFipeValue,
   versionTokens,
 } from "./fipe-match";
@@ -243,5 +247,73 @@ describe("marketValueOnSave", () => {
     expect(
       marketValueOnSave({ ...vehicle, origin: "fipe_family" }, { ...vehicle, modelYear: 2013, marketValue: null }),
     ).toEqual({ kind: "clear" });
+  });
+});
+
+describe("correlação (D-49)", () => {
+  const vehicle = {
+    brand: "vw",
+    model: "Gol  1.0 ",
+    modelYear: 2012,
+    fuel: "Álcool/Gasolina",
+    category: "Carros" as const,
+  };
+
+  it("chave normaliza a grafia e o combustível", () => {
+    expect(fipeVehicleIdentity(vehicle)).toEqual({
+      key: "VW|GOL 1.0|2012|flex|Carros",
+      brand: "VW",
+      model: "GOL 1.0",
+      modelYear: 2012,
+      fuel: "flex",
+      category: "Carros",
+    });
+    expect(fipeVehicleIdentity({ ...vehicle, model: "GOL 1.0", fuel: "FLEX" })?.key).toBe(
+      "VW|GOL 1.0|2012|flex|Carros",
+    );
+  });
+
+  it("sem marca, ano ou categoria de veículo não há chave", () => {
+    expect(fipeVehicleIdentity({ ...vehicle, brand: null })).toBeNull();
+    expect(fipeVehicleIdentity({ ...vehicle, modelYear: null })).toBeNull();
+    expect(fipeVehicleIdentity({ ...vehicle, category: "Equipamentos" })).toBeNull();
+  });
+
+  it("refaz só a automática de regra antiga", () => {
+    expect(needsRematch({ origin: "auto", matcherVersion: MATCHER_VERSION - 1 })).toBe(true);
+    expect(needsRematch({ origin: "auto", matcherVersion: MATCHER_VERSION })).toBe(false);
+    expect(needsRematch({ origin: "manual", matcherVersion: 0 })).toBe(false);
+  });
+});
+
+describe("pickProvisionalPrices", () => {
+  const price = (table: number, month: string, code: string, reais: number) => ({
+    referenceTable: table,
+    referenceMonth: new Date(month),
+    modelCode: code,
+    fuelCode: 1,
+    value: cents(reais * 100),
+    fipeCode: `00000${code}-0`,
+  });
+  const models = [
+    { code: "a", fuel: 1 },
+    { code: "b", fuel: 1 },
+  ];
+
+  it("tabela anterior mais recente com todas as versões", () => {
+    const prices = [
+      price(337, "2026-09-01", "a", 20_000),
+      price(337, "2026-09-01", "b", 21_000),
+      price(338, "2026-10-01", "a", 20_500),
+    ];
+    const picked = pickProvisionalPrices(prices, models, new Date("2026-11-01"));
+    expect(picked?.referenceMonth).toEqual(new Date("2026-09-01"));
+    expect(picked?.values.get("b")?.value).toBe(cents(2_100_000));
+  });
+
+  it("nada do próprio mês nem de depois; sem tabela completa, nada", () => {
+    const prices = [price(338, "2026-10-01", "a", 20_500), price(338, "2026-10-01", "b", 21_000)];
+    expect(pickProvisionalPrices(prices, models, new Date("2026-10-01"))).toBeNull();
+    expect(pickProvisionalPrices([price(337, "2026-09-01", "a", 1)], models, new Date("2026-11-01"))).toBeNull();
   });
 });

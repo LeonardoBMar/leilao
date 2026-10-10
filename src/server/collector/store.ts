@@ -197,7 +197,12 @@ function marketValueFields(
   decision: ReturnType<typeof marketValueOnSave>,
 ): Pick<
   Prisma.ListingUncheckedCreateInput,
-  "marketValueCents" | "marketValueOrigin" | "marketValueFipeCode" | "marketValueRefMonth" | "marketValueCheckedAt"
+  | "marketValueCents"
+  | "marketValueOrigin"
+  | "marketValueFipeCode"
+  | "marketValueRefMonth"
+  | "marketValueCheckedAt"
+  | "fipeMatchId"
 > {
   if (decision.kind === "keep") return {};
   const source = decision.kind === "source";
@@ -207,6 +212,8 @@ function marketValueFields(
     marketValueFipeCode: null,
     marketValueRefMonth: null,
     marketValueCheckedAt: null,
+    // A correlação (D-49) vale para o veículo antigo; o novo procura a dele no próximo casamento.
+    fipeMatchId: null,
   };
 }
 

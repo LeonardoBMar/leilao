@@ -1,5 +1,5 @@
 import { type Cents, cents } from "../money";
-import { fuelOf } from "./criteria";
+import { type FuelKey, fuelOf } from "./criteria";
 import { baseModelOf, BRAND_ALIASES, percentile } from "./estimates";
 import { normalizePlaceName } from "./place";
 import type { ListingCategory, ListingStatus } from "./types";
@@ -301,4 +301,94 @@ export function marketValueOnSave(
     previous.modelYear !== input.modelYear ||
     previous.category !== input.category;
   return changed ? { kind: "clear" } : { kind: "keep" };
+}
+
+/**
+ * Versão da regra de escolha (D-49). Suba sempre que `chooseFipeModels`, `matchFipeBrand`, os tipos ou os combustíveis
+ * mudarem: as correlações automáticas de versão anterior são refeitas e os anúncios ligados a elas, recalculados.
+ */
+export const MATCHER_VERSION = 1;
+
+export type FipeVehicle = {
+  brand: string | null;
+  model: string | null;
+  modelYear: number | null;
+  fuel: string | null;
+  category: ListingCategory | null;
+};
+
+/** O que a chave da correlação guarda, já normalizado. */
+export type FipeVehicleIdentity = {
+  key: string;
+  brand: string;
+  model: string | null;
+  modelYear: number;
+  fuel: FuelKey | null;
+  category: ListingCategory;
+};
+
+/**
+ * Chave da correlação (D-49): o veículo como a fonte escreve, normalizado (maiúsculas, sem acento, espaços simples).
+ * Anúncios com a mesma chave recebem a mesma escolha de versão. Nula quando não há o que casar.
+ */
+export function fipeVehicleIdentity(vehicle: FipeVehicle): FipeVehicleIdentity | null {
+  const { brand, model, modelYear, fuel, category } = vehicle;
+  if (brand === null || modelYear === null || category === null || fipeVehicleType(category) === null) return null;
+  const identity = {
+    brand: normalizePlaceName(brand),
+    model: model === null ? null : normalizePlaceName(model) || null,
+    modelYear,
+    fuel: fuelOf(fuel),
+    category,
+  };
+  if (identity.brand === "") return null;
+  const key = [identity.brand, identity.model ?? "", modelYear, identity.fuel ?? "", category].join("|");
+  return { key, ...identity };
+}
+
+/** Versão escolhida da FIPE, como a correlação guarda: código, combustível e nome. */
+export type FipeMatchModel = { code: string; fuel: number; label: string };
+
+/** Correlação automática de regra antiga é refeita; a manual nunca. */
+export function needsRematch(match: { origin: "auto" | "manual"; matcherVersion: number }): boolean {
+  return match.origin === "auto" && match.matcherVersion < MATCHER_VERSION;
+}
+
+/** Preço guardado de uma versão numa tabela do mês. */
+export type StoredFipePrice = {
+  referenceTable: number;
+  referenceMonth: Date;
+  modelCode: string;
+  fuelCode: number;
+  value: Cents;
+  fipeCode: string;
+};
+
+/**
+ * Valor provisório (D-49, PLANO-FIPE-TABELAS §5): enquanto a tabela do mês não pode ser pedida, um anúncio aberto
+ * usa a tabela mais recente **anterior** em que todas as versões escolhidas já têm preço guardado. Um mês só: as
+ * versões de uma família vêm da mesma tabela, para a mediana não misturar meses.
+ */
+export function pickProvisionalPrices(
+  prices: readonly StoredFipePrice[],
+  models: readonly Pick<FipeMatchModel, "code" | "fuel">[],
+  before: Date,
+): { referenceMonth: Date; values: Map<string, FipeValue> } | null {
+  if (models.length === 0) return null;
+  const tables = [...new Set(prices.map((price) => price.referenceTable))]
+    .map((table) => prices.find((price) => price.referenceTable === table))
+    .filter((price): price is StoredFipePrice => price !== undefined && price.referenceMonth < before)
+    .sort((a, b) => b.referenceMonth.getTime() - a.referenceMonth.getTime());
+  for (const { referenceTable, referenceMonth } of tables) {
+    const values = new Map<string, FipeValue>();
+    for (const model of models) {
+      const price = prices.find(
+        (item) =>
+          item.referenceTable === referenceTable && item.modelCode === model.code && item.fuelCode === model.fuel,
+      );
+      if (price) values.set(model.code, { value: price.value, fipeCode: price.fipeCode });
+    }
+    if (values.size === models.length) return { referenceMonth, values };
+  }
+  return null;
 }

@@ -290,6 +290,23 @@ enum MarketValueOrigin {
   @@map("market_value_origin")
 }
 
+/// Escolha da correlação com a FIPE (D-49): uma versão, uma família de versões parecidas, ou nenhuma.
+enum FipeMatchKind {
+  version
+  family
+  none
+
+  @@map("fipe_match_kind")
+}
+
+/// Quem escolheu: a regra (`auto`, refeita quando a regra muda) ou o usuário (`manual`, nunca sobrescrita).
+enum FipeMatchOrigin {
+  auto
+  manual
+
+  @@map("fipe_match_origin")
+}
+
 enum DamageLevel {
   small
   medium
@@ -415,8 +432,10 @@ model Listing {
   marketValueFipeCode  String?            @map("market_value_fipe_code")
   /// Mês da tabela FIPE usada (primeiro dia do mês); nulo quando o valor vem da fonte.
   marketValueRefMonth  DateTime?          @map("market_value_ref_month") @db.Date
-  /// Última tentativa de casar na FIPE. Nula: pendente (anúncio novo, ou veículo mudou).
+  /// Última tentativa de casar na FIPE. Nula: pendente (anúncio novo, veículo mudou, regra nova ou valor provisório).
   marketValueCheckedAt DateTime?          @map("market_value_checked_at") @db.Timestamptz(3)
+  /// Correlação da FIPE usada na última tentativa (D-49): de onde veio o valor casado, ou por que não casou.
+  fipeMatchId          String?            @map("fipe_match_id") @db.Uuid
   /// Coluna gerada pelo banco (D-43): lance atual ou, sem lance, o inicial (`priceOf`). Nunca gravar.
   priceCents           Int?               @default(dbgenerated("COALESCE(current_bid_cents, minimum_bid_cents)")) @map("price_cents")
   /// Coluna gerada pelo banco (D-43): preço ÷ valor de mercado em basis points (`marketRatioBps`). Nunca gravar.
@@ -442,6 +461,7 @@ model Listing {
 
   source       Source               @relation(fields: [sourceId], references: [id], onDelete: Restrict)
   municipality Municipality?        @relation(fields: [municipalityId], references: [ibgeCode], onDelete: SetNull)
+  fipeMatch    FipeMatch?           @relation(fields: [fipeMatchId], references: [id], onDelete: SetNull)
   observations ListingObservation[]
   alerts       Alert[]
   lots         Lot[]
@@ -455,6 +475,7 @@ model Listing {
   @@index([sourceId, auctionExternalId])
   /// Pendentes de casamento na FIPE (D-47).
   @@index([marketValueCheckedAt])
+  @@index([fipeMatchId])
   @@map("listings")
 }
 
@@ -482,6 +503,64 @@ model FipeResponse {
   fetchedAt DateTime @default(now()) @map("fetched_at") @db.Timestamptz(3)
 
   @@map("fipe_responses")
+}
+
+/// Catálogo de preços da FIPE (D-49): um valor por tabela do mês, versão, ano e combustível, a partir das respostas
+/// pedidas (nenhum pedido a mais). Global e só do servidor.
+model FipePrice {
+  id             String   @id @default(uuid()) @db.Uuid
+  /// Código da tabela de referência da FIPE (ex.: 338 = outubro de 2026).
+  referenceTable Int      @map("reference_table")
+  /// Primeiro dia do mês da tabela.
+  referenceMonth DateTime @map("reference_month") @db.Date
+  /// 1 carros, 2 motos, 3 caminhões.
+  vehicleType    Int      @map("vehicle_type") @db.SmallInt
+  brandCode      String   @map("brand_code")
+  brandName      String   @map("brand_name")
+  modelCode      String   @map("model_code")
+  modelName      String   @map("model_name")
+  modelYear      Int      @map("model_year") @db.SmallInt
+  /// 1 gasolina, 2 álcool, 3 diesel, 4 elétrico, 5 flex, 6 híbrido.
+  fuelCode       Int      @map("fuel_code") @db.SmallInt
+  fipeCode       String   @map("fipe_code")
+  valueCents     Int      @map("value_cents")
+  fetchedAt      DateTime @default(now()) @map("fetched_at") @db.Timestamptz(3)
+
+  @@unique([referenceTable, vehicleType, brandCode, modelCode, modelYear, fuelCode])
+  @@index([fipeCode, referenceMonth])
+  @@index([vehicleType, brandCode, modelCode, modelYear, fuelCode, referenceMonth])
+  @@map("fipe_prices")
+}
+
+/// Correlação do veículo como a fonte escreve com a FIPE (D-49): uma linha por marca, modelo, ano, combustível e
+/// categoria, e não por anúncio. Corrigir aqui vale para todos os anúncios iguais.
+model FipeMatch {
+  id             String          @id @default(uuid()) @db.Uuid
+  /// Chave normalizada (`fipeVehicleIdentity`): marca|modelo|ano|combustível|categoria.
+  vehicleKey     String          @unique @map("vehicle_key")
+  brand          String
+  model          String?
+  modelYear      Int             @map("model_year") @db.SmallInt
+  /// Combustível normalizado (`fuelOf`); nulo quando a fonte não informa.
+  fuel           String?
+  category       String
+  kind           FipeMatchKind
+  /// Por que não casou (só `none`): no_brand, no_model, no_candidates, too_many, spread, no_value.
+  reason         String?
+  vehicleType    Int?            @map("vehicle_type") @db.SmallInt
+  brandCode      String?         @map("brand_code")
+  /// Versões escolhidas: `[{ code, fuel, label }]` (uma na versão, várias na família, nenhuma no `none`).
+  models         Json
+  origin         FipeMatchOrigin @default(auto)
+  /// Versão da regra que escolheu (`MATCHER_VERSION`); `auto` de versão antiga é refeita.
+  matcherVersion Int             @map("matcher_version") @db.SmallInt
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  listings Listing[]
+
+  @@index([origin, matcherVersion])
+  @@map("fipe_matches")
 }
 
 /// Uma execução do coletor, para acompanhar saúde e falhas no app.

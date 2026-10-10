@@ -42,7 +42,7 @@ async function main() {
 
   process.stdout.write(
     `\n${summary.checked} anúncios · ${summary.matched.version} por versão · ${summary.matched.family} por família · ` +
-      `${fetcher.requests} pedidos à FIPE${dryRun ? " · nada gravado" : ""}\n`,
+      `${summary.provisional} provisórios (mês anterior) · ${fetcher.requests} pedidos à FIPE${dryRun ? " · nada gravado" : ""}\n`,
   );
   for (const [reason, count] of reasons) process.stdout.write(`  ${reason}: ${count}\n`);
   if (summary.stoppedBy) process.stdout.write(`Parou antes do fim: ${summary.stoppedBy.message}\n`);

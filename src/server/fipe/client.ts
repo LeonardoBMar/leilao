@@ -15,6 +15,7 @@ import type { FetchOutcome } from "@/sources/types";
 
 import { createPoliteFetcher, DEADLINE_ERROR } from "../collector/http";
 import { db } from "../db";
+import { fipePriceFromResponse, recordFipePrices } from "./catalog";
 
 /**
  * API pública da tabela FIPE (veiculos.fipe.org.br), a mesma que o site usa (D-47). Cada resposta fica guardada em
@@ -96,6 +97,8 @@ export function createFipeClient(post: FipePost, now: () => Date = () => new Dat
     method: string,
     form: Record<string, string>,
     read: (data: unknown) => T | null,
+    /** Depois de guardar uma resposta nova (ex.: o valor também vai para o catálogo de preços). */
+    onStored?: (data: unknown) => Promise<unknown>,
   ): Promise<T | null> {
     const stored = await db.fipeResponse.findUnique({ where: { key }, select: { payload: true } });
     if (stored) return read(stored.payload);
@@ -114,6 +117,7 @@ export function createFipeClient(post: FipePost, now: () => Date = () => new Dat
       create: { key, payload: toJson(data) },
       update: { payload: toJson(data), fetchedAt: now() },
     });
+    if (data !== null) await onStored?.(data);
     return data === null ? null : read(data);
   }
 
@@ -167,11 +171,21 @@ export function createFipeClient(post: FipePost, now: () => Date = () => new Dat
         tipoConsulta: "tradicional",
       };
       const key = `valor:${table.code}:${type}:${brand}:${model}:${year}-${fuel}`;
-      return cached(key, "ConsultarValorComTodosParametros", form, (data) => {
-        const parsed = valueSchema.safeParse(data);
-        const value = parsed.success ? parseBRL(parsed.data.Valor) : null;
-        return parsed.success && value !== null ? { value, fipeCode: parsed.data.CodigoFipe } : null;
-      });
+      return cached(
+        key,
+        "ConsultarValorComTodosParametros",
+        form,
+        (data) => {
+          const parsed = valueSchema.safeParse(data);
+          const value = parsed.success ? parseBRL(parsed.data.Valor) : null;
+          return parsed.success && value !== null ? { value, fipeCode: parsed.data.CodigoFipe } : null;
+        },
+        // Catálogo de preços (D-49): a resposta nova vira linha consultável.
+        async (data) => {
+          const row = fipePriceFromResponse(key, data);
+          if (row) await recordFipePrices([row]);
+        },
+      );
     },
   };
 }
