@@ -22,7 +22,14 @@ export function AuctionForm({ action, auction, cancelHref, submitLabel }: Auctio
   const [state, formAction, pending] = useActionState(action, idleState);
   // Após erro, o valor digitado prevalece sobre o salvo.
   const value = (field: string, saved?: string | null) => fieldValue(state, field) ?? saved ?? undefined;
-  const origin = value("origin", auction?.origin);
+  // Cadastro novo parte de "Não informada": a origem raramente muda a análise.
+  const origin = value("origin", auction?.origin ?? "unknown");
+  const hasExtras = Boolean(
+    auction?.city || auction?.state || auction?.noticeUrl || auction?.platformUrl || auction?.notes,
+  );
+  const extrasError = ["city", "state", "noticeUrl", "platformUrl", "notes"].some(
+    (field) => fieldError(state, field) !== undefined,
+  );
   const status = value("status", auction?.status ?? "scheduled");
 
   return (
@@ -85,53 +92,58 @@ export function AuctionForm({ action, auction, cancelHref, submitLabel }: Auctio
         />
       </fieldset>
 
-      <fieldset className="grid gap-4 md:grid-cols-2 md:gap-6">
-        <legend className="mb-4 text-heading-3 text-foreground">Local e referências</legend>
-        <Input
-          name="city"
-          label="Cidade"
-          maxLength={120}
-          defaultValue={value("city", auction?.city)}
-          error={fieldError(state, "city")}
-        />
-        <Input
-          name="state"
-          label="UF"
-          placeholder="SP"
-          maxLength={2}
-          autoCapitalize="characters"
-          className="uppercase"
-          defaultValue={value("state", auction?.state)}
-          error={fieldError(state, "state")}
-        />
-        <Input
-          name="noticeUrl"
-          type="url"
-          label="URL do edital"
-          placeholder="https://"
-          containerClassName="md:col-span-2"
-          defaultValue={value("noticeUrl", auction?.noticeUrl)}
-          error={fieldError(state, "noticeUrl")}
-        />
-        <Input
-          name="platformUrl"
-          type="url"
-          label="URL da plataforma"
-          placeholder="https://"
-          containerClassName="md:col-span-2"
-          defaultValue={value("platformUrl", auction?.platformUrl)}
-          error={fieldError(state, "platformUrl")}
-        />
-        <Textarea
-          name="notes"
-          label="Observações"
-          rows={4}
-          maxLength={5_000}
-          containerClassName="md:col-span-2"
-          defaultValue={value("notes", auction?.notes)}
-          error={fieldError(state, "notes")}
-        />
-      </fieldset>
+      <details className="group" open={hasExtras || extrasError}>
+        <summary className="cursor-pointer text-label text-foreground-secondary hover:text-foreground">
+          Local, links e observações
+        </summary>
+        <fieldset className="mt-4 grid gap-4 md:grid-cols-2 md:gap-6">
+          <legend className="sr-only">Local e referências</legend>
+          <Input
+            name="city"
+            label="Cidade"
+            maxLength={120}
+            defaultValue={value("city", auction?.city)}
+            error={fieldError(state, "city")}
+          />
+          <Input
+            name="state"
+            label="UF"
+            placeholder="SP"
+            maxLength={2}
+            autoCapitalize="characters"
+            className="uppercase"
+            defaultValue={value("state", auction?.state)}
+            error={fieldError(state, "state")}
+          />
+          <Input
+            name="noticeUrl"
+            type="url"
+            label="URL do edital"
+            placeholder="https://"
+            containerClassName="md:col-span-2"
+            defaultValue={value("noticeUrl", auction?.noticeUrl)}
+            error={fieldError(state, "noticeUrl")}
+          />
+          <Input
+            name="platformUrl"
+            type="url"
+            label="URL da plataforma"
+            placeholder="https://"
+            containerClassName="md:col-span-2"
+            defaultValue={value("platformUrl", auction?.platformUrl)}
+            error={fieldError(state, "platformUrl")}
+          />
+          <Textarea
+            name="notes"
+            label="Observações"
+            rows={4}
+            maxLength={5_000}
+            containerClassName="md:col-span-2"
+            defaultValue={value("notes", auction?.notes)}
+            error={fieldError(state, "notes")}
+          />
+        </fieldset>
+      </details>
 
       <div className="flex flex-col-reverse gap-3 border-t border-border pt-6 md:flex-row md:justify-end">
         <Button asChild variant="secondary">

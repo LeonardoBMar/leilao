@@ -3,6 +3,7 @@
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { createDraft } from "@/features/analyses/mutations";
 import { type ActionState, failure, validationError } from "@/lib/action-state";
 import { entityId } from "@/lib/schemas";
 
@@ -44,6 +45,11 @@ export async function createLotAction(auctionId: string, _prev: ActionState, for
   const result = await createLot(parsedAuctionId.data, parsed.data);
   if (!result.ok) return duplicateOr(result.error, formData);
 
+  // "Cadastrar e analisar": o lote manual sempre precisa de análise; vai direto ao rascunho.
+  if (formData.get("intent") === "analyze") {
+    const draft = await createDraft(result.value.id);
+    if (draft.ok) redirect(`/analise/${draft.value.id}`);
+  }
   redirect(`/lotes/${result.value.id}`);
 }
 

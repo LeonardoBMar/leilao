@@ -59,12 +59,10 @@ export async function updateLot(id: string, input: LotInput): Promise<Result<nul
   });
   if (!current) return err("not_found");
 
-  const data = toLotData(input);
+  // Lance atual e acompanhamento têm controles próprios na ficha; o formulário de edição não os envia.
+  const { currentBidCents: _bid, isFollowed: _followed, ...data } = toLotData(input);
   try {
-    await db.lot.updateMany({
-      where: { id, ownerId: user.id },
-      data: { ...data, currentBidObservedAt: observedAt(current, data.currentBidCents) },
-    });
+    await db.lot.updateMany({ where: { id, ownerId: user.id }, data });
     return ok(null);
   } catch (error) {
     if (isUniqueViolation(error)) return err("duplicate_lot_number");

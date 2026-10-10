@@ -16,15 +16,16 @@ Acesse o endereço do app e entre com e-mail e senha. Não há cadastro público
 
 Leilão que está no catálogo (seção 9) não precisa ser cadastrado: **Adicionar à análise** cria o leilão e o lote de uma vez. Para os outros, **Minhas análises → Novo leilão**.
 
-- Obrigatórios: nome, organizador, data e hora, origem (Detran, seguradora, financeira, judicial…) e status.
-- Opcionais: cidade, UF, links do edital e da plataforma e observações.
+- Obrigatórios: nome, organizador, data e hora, origem (já vem "Não informada") e status.
+- Opcionais, recolhidos em *Local, links e observações*: cidade, UF, links do edital e da plataforma e observações.
 - O **status é manual**. A data passar não encerra o leilão sozinho: mude para *Encerrado* quando for o caso.
 
 ## 3. Cadastrar os lotes
 
 Na página do leilão, **Adicionar lote**.
 
-- Obrigatórios: número do lote e o veículo (marca, modelo e ano-modelo).
+- Obrigatórios: número do lote e o veículo (marca, modelo e ano-modelo). Link, lance inicial e observações ficam recolhidos.
+- **Cadastrar e analisar** salva o lote e já abre o rascunho da análise.
 - O número do lote não se repete no mesmo leilão; em outro leilão, pode.
 - **Lance atual:** na ficha do lote, **Atualizar lance** (ou **Corrigir lance**, num lote acompanhado no site) abre um campo ali mesmo. O app registra quando foi atualizado.
 - **Acompanhar este lote:** coloca o lote no dashboard, com lance atual e seu limite lado a lado.

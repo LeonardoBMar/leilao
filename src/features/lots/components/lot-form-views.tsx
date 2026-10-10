@@ -21,7 +21,7 @@ export async function NewLotView({ params }: { params: Promise<{ id: string }> }
 
   return (
     <div className="grid max-w-4xl gap-6">
-      <PageHeader title="Novo lote" description={`${auction.name} · Campos com * são obrigatórios.`} />
+      <PageHeader title="Novo lote" description={auction.name} />
       <FreshOnNavigation>
         <LotForm
           action={createLotAction.bind(null, auction.id)}

@@ -27,6 +27,9 @@ export function LotForm({ action, lot, cancelHref, submitLabel }: LotFormProps) 
     fieldValue(state, field) ?? (saved == null ? undefined : String(saved));
   const isFollowed =
     state.status === "error" ? fieldValue(state, "isFollowed") !== undefined : (lot?.isFollowed ?? true);
+  const isEdit = lot !== undefined;
+  const extrasError = ["lotUrl", "startingBid", "notes"].some((field) => fieldError(state, field) !== undefined);
+  const hasExtras = Boolean(lot?.lotUrl || lot?.startingBid || lot?.notes);
 
   return (
     <form action={formAction} className="grid gap-8" noValidate>
@@ -47,14 +50,6 @@ export function LotForm({ action, lot, cancelHref, submitLabel }: LotFormProps) 
           helperText="Único dentro do leilão."
           defaultValue={value("lotNumber", lot?.lotNumber)}
           error={fieldError(state, "lotNumber")}
-        />
-        <Input
-          name="lotUrl"
-          type="url"
-          label="URL do lote"
-          placeholder="https://"
-          defaultValue={value("lotUrl", lot?.lotUrl)}
-          error={fieldError(state, "lotUrl")}
         />
       </fieldset>
 
@@ -111,49 +106,72 @@ export function LotForm({ action, lot, cancelHref, submitLabel }: LotFormProps) 
         />
       </fieldset>
 
-      <fieldset className="grid gap-4 md:grid-cols-2 md:gap-6">
-        <legend className="mb-4 text-heading-3 text-foreground">Lances observados</legend>
-        <CurrencyInput
-          name="startingBid"
-          label="Lance inicial"
-          defaultValue={value("startingBid", centsToInput(lot?.startingBid))}
-          error={fieldError(state, "startingBid")}
-        />
-        <CurrencyInput
-          name="currentBid"
-          label="Lance atual"
-          helperText="Última observação manual; não atualiza sozinho."
-          defaultValue={value("currentBid", centsToInput(lot?.currentBid))}
-          error={fieldError(state, "currentBid")}
-        />
-      </fieldset>
+      {/* Na edição, lance atual e acompanhamento se mudam na própria ficha (a mutation os ignora). */}
+      {isEdit ? null : (
+        <fieldset className="grid gap-4 md:grid-cols-2 md:gap-6">
+          <legend className="mb-4 text-heading-3 text-foreground">Lance e acompanhamento</legend>
+          <CurrencyInput
+            name="currentBid"
+            label="Lance atual"
+            helperText="Última observação manual; não atualiza sozinho."
+            defaultValue={value("currentBid")}
+            error={fieldError(state, "currentBid")}
+          />
+          <Checkbox
+            key={`followed-${isFollowed}`}
+            name="isFollowed"
+            label="Acompanhar este lote"
+            description="Aparece no dashboard enquanto não houver resultado."
+            defaultChecked={isFollowed}
+            containerClassName="md:mt-7"
+          />
+        </fieldset>
+      )}
 
-      <fieldset className="grid gap-4">
-        <legend className="mb-4 text-heading-3 text-foreground">Acompanhamento</legend>
-        <Checkbox
-          key={`followed-${isFollowed}`}
-          name="isFollowed"
-          label="Acompanhar este lote"
-          description="Aparece no dashboard enquanto não houver resultado. Acompanhar não significa participar."
-          defaultChecked={isFollowed}
-        />
-        <Textarea
-          name="notes"
-          label="Observações"
-          rows={4}
-          maxLength={5_000}
-          defaultValue={value("notes", lot?.notes)}
-          error={fieldError(state, "notes")}
-        />
-      </fieldset>
+      <details className="group" open={hasExtras || extrasError}>
+        <summary className="cursor-pointer text-label text-foreground-secondary hover:text-foreground">
+          Link, lance inicial e observações
+        </summary>
+        <fieldset className="mt-4 grid gap-4 md:grid-cols-2 md:gap-6">
+          <legend className="sr-only">Mais dados do lote</legend>
+          <Input
+            name="lotUrl"
+            type="url"
+            label="URL do lote"
+            placeholder="https://"
+            defaultValue={value("lotUrl", lot?.lotUrl)}
+            error={fieldError(state, "lotUrl")}
+          />
+          <CurrencyInput
+            name="startingBid"
+            label="Lance inicial"
+            defaultValue={value("startingBid", centsToInput(lot?.startingBid))}
+            error={fieldError(state, "startingBid")}
+          />
+          <Textarea
+            name="notes"
+            label="Observações"
+            rows={4}
+            maxLength={5_000}
+            containerClassName="md:col-span-2"
+            defaultValue={value("notes", lot?.notes)}
+            error={fieldError(state, "notes")}
+          />
+        </fieldset>
+      </details>
 
       <div className="flex flex-col-reverse gap-3 border-t border-border pt-6 md:flex-row md:justify-end">
         <Button asChild variant="secondary">
           <Link href={cancelHref}>Cancelar</Link>
         </Button>
-        <Button type="submit" loading={pending} loadingLabel="Salvando…">
+        <Button type="submit" variant={isEdit ? "primary" : "secondary"} loading={pending} loadingLabel="Salvando…">
           {submitLabel}
         </Button>
+        {isEdit ? null : (
+          <Button type="submit" name="intent" value="analyze" loading={pending} loadingLabel="Salvando…">
+            Cadastrar e analisar
+          </Button>
+        )}
       </div>
     </form>
   );
