@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_RESEARCH_FILTERS, effectiveMetric, normalizeYears, researchVehicle, vehicleLabel } from "./filters";
+import {
+  comparisonGroups,
+  DEFAULT_RESEARCH_FILTERS,
+  effectiveMetric,
+  groupLabel,
+  normalizeComparison,
+  normalizeYears,
+  researchVehicle,
+  vehicleLabel,
+} from "./filters";
 
 describe("researchVehicle", () => {
   it("agrupa como as estimativas: marca por extenso e primeira palavra do modelo", () => {
@@ -33,6 +42,7 @@ describe("DEFAULT_RESEARCH_FILTERS", () => {
       state: null,
       yearFrom: null,
       yearTo: null,
+      compare: null,
       metric: "ratio",
     });
   });
@@ -61,5 +71,72 @@ describe("normalizeYears", () => {
     [2018.5, 3000, { yearFrom: null, yearTo: null }],
   ])("de %s até %s", (from, to, expected) => {
     expect(normalizeYears(from, to)).toEqual(expected);
+  });
+});
+
+describe("normalizeComparison", () => {
+  const onix = { brand: "CHEVROLET", model: "ONIX" };
+  const hb20 = { brand: "HYUNDAI", model: "HB20" };
+
+  it("sem comparação, nada", () => {
+    expect(normalizeComparison({ vehicle: onix, state: null }, null)).toBeNull();
+  });
+
+  it("compara com outro modelo quando há um modelo escolhido", () => {
+    expect(normalizeComparison({ vehicle: onix, state: null }, { vehicle: hb20, state: null })).toEqual({
+      vehicle: hb20,
+      state: null,
+    });
+  });
+
+  it("outro modelo sem modelo escolhido não vale", () => {
+    expect(normalizeComparison({ vehicle: null, state: null }, { vehicle: hb20, state: null })).toBeNull();
+  });
+
+  it("o mesmo modelo ou o mesmo estado não é comparação", () => {
+    expect(normalizeComparison({ vehicle: onix, state: "SP" }, { vehicle: onix, state: "SP" })).toBeNull();
+  });
+
+  it("compara dois estados, e o Brasil todo com um estado", () => {
+    expect(normalizeComparison({ vehicle: null, state: "SP" }, { vehicle: null, state: "GO" })).toEqual({
+      vehicle: null,
+      state: "GO",
+    });
+    expect(normalizeComparison({ vehicle: null, state: null }, { vehicle: null, state: "GO" })).toEqual({
+      vehicle: null,
+      state: "GO",
+    });
+  });
+});
+
+describe("comparisonGroups", () => {
+  const onix = { brand: "CHEVROLET", model: "ONIX" };
+  const hb20 = { brand: "HYUNDAI", model: "HB20" };
+
+  it("sem comparação, não há dois grupos", () => {
+    expect(comparisonGroups(DEFAULT_RESEARCH_FILTERS)).toBeNull();
+  });
+
+  it("o segundo grupo troca só o que a comparação traz", () => {
+    const groups = comparisonGroups({
+      ...DEFAULT_RESEARCH_FILTERS,
+      vehicle: onix,
+      state: "SP",
+      compare: { vehicle: hb20, state: null },
+    });
+    expect(groups?.map(({ vehicle, state }) => [vehicle, state])).toEqual([
+      [onix, "SP"],
+      [hb20, "SP"],
+    ]);
+  });
+});
+
+describe("groupLabel", () => {
+  it("junta modelo e estado, e sem nenhum dos dois é o Brasil", () => {
+    expect(groupLabel({ vehicle: { brand: "CHEVROLET", model: "ONIX" }, state: "SP" })).toBe(
+      "Chevrolet Onix · São Paulo",
+    );
+    expect(groupLabel({ vehicle: null, state: "GO" })).toBe("Goiás");
+    expect(groupLabel({ vehicle: null, state: null })).toBe("Brasil");
   });
 });

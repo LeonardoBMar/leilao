@@ -1,7 +1,7 @@
 import type { DamageLevel } from "../listings/condition";
 import type { CategoryKey } from "../listings/criteria";
 import { vehicleKey } from "../listings/estimates";
-import type { StateCode } from "./states";
+import { STATE_NAMES, type StateCode } from "./states";
 
 /**
  * Filtros da Pesquisa (docs/PLANO-PESQUISA.md §4, D-45). As chaves vão na URL. A condição é sempre uma: misturar
@@ -36,6 +36,12 @@ export type ResearchMetric = (typeof RESEARCH_METRICS)[number];
 /** Marca e modelo base, normalizados como nas estimativas (`vehicleKey`). */
 export type ResearchVehicle = { brand: string; model: string };
 
+/**
+ * Segundo grupo da comparação: o que difere do grupo dos filtros. Cada campo `null` repete o do grupo principal, então
+ * "Onix × HB20" só traz o modelo e "SP × GO" só traz o estado.
+ */
+export type ResearchComparison = { vehicle: ResearchVehicle | null; state: StateCode | null };
+
 export type ResearchFilters = {
   category: ResearchCategory;
   condition: ResearchCondition;
@@ -44,6 +50,8 @@ export type ResearchFilters = {
   /** Ano-modelo, de e até (inclusive). Só vale com um modelo escolhido: o ano pesa no preço dentro de um modelo. */
   yearFrom: number | null;
   yearTo: number | null;
+  /** Compara o grupo dos filtros com outro modelo e/ou outro estado; `null` sem comparação. */
+  compare: ResearchComparison | null;
   metric: ResearchMetric;
 };
 
@@ -63,6 +71,39 @@ export function normalizeYears(from: number | null, to: number | null): Pick<Res
   return a !== null && b !== null && a > b ? { yearFrom: b, yearTo: a } : { yearFrom: a, yearTo: b };
 }
 
+/**
+ * Comparação já pronta para o filtro: o outro modelo só vale com um modelo escolhido e o outro estado só se difere do
+ * estado dos filtros; igual ao principal não compara nada, e sem diferença nenhuma não há comparação.
+ */
+export function normalizeComparison(
+  filters: Pick<ResearchFilters, "vehicle" | "state">,
+  compare: ResearchComparison | null,
+): ResearchComparison | null {
+  if (compare === null) return null;
+  const sameVehicle =
+    compare.vehicle !== null &&
+    filters.vehicle !== null &&
+    compare.vehicle.brand === filters.vehicle.brand &&
+    compare.vehicle.model === filters.vehicle.model;
+  const vehicle = filters.vehicle === null || sameVehicle ? null : compare.vehicle;
+  const state = compare.state === filters.state ? null : compare.state;
+  return vehicle === null && state === null ? null : { vehicle, state };
+}
+
+/** Os dois grupos da comparação como filtros completos (o segundo herda o que a comparação não troca). */
+export function comparisonGroups(filters: ResearchFilters): [ResearchFilters, ResearchFilters] | null {
+  const { compare } = filters;
+  if (compare === null) return null;
+  const first: ResearchFilters = { ...filters, compare: null };
+  return [first, { ...first, vehicle: compare.vehicle ?? filters.vehicle, state: compare.state ?? filters.state }];
+}
+
+/** Nome de um grupo da comparação: "Chevrolet Onix · São Paulo", "Hyundai HB20", "Brasil". */
+export function groupLabel({ vehicle, state }: Pick<ResearchFilters, "vehicle" | "state">): string {
+  const parts = [vehicle === null ? null : vehicleLabel(vehicle), state === null ? null : STATE_NAMES[state]];
+  return parts.filter((part) => part !== null).join(" · ") || "Brasil";
+}
+
 /** Padrão medido em 08/10/2026: carros sem monta declarada são 737 das 1.231 vendas com valor de mercado. */
 export const DEFAULT_RESEARCH_FILTERS: ResearchFilters = {
   category: "carros",
@@ -71,6 +112,7 @@ export const DEFAULT_RESEARCH_FILTERS: ResearchFilters = {
   state: null,
   yearFrom: null,
   yearTo: null,
+  compare: null,
   metric: "ratio",
 };
 

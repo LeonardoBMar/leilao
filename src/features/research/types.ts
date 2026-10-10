@@ -60,6 +60,12 @@ export type StateDetail = {
   few: ResearchSale[];
 };
 
+/** Os dois grupos da comparação (modelo × modelo, estado × estado), na mesma escala. */
+export type ComparisonView = {
+  groups: { label: string; distribution: RatioDistribution }[];
+  axisMax: number;
+};
+
 export type ModelRanking = RankedModel[];
 
 export type ModelSales = {

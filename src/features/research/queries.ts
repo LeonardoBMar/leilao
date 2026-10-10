@@ -9,8 +9,10 @@ import { SALES_WINDOW_MS } from "@/domain/listings/estimates";
 import { MARKET_VALUE_ORIGINS } from "@/domain/listings/fipe-match";
 import { cents } from "@/domain/money";
 import {
+  comparisonGroups,
   DAMAGE_OF_CONDITION,
   effectiveMetric,
+  groupLabel,
   RESEARCH_CONDITIONS,
   type ResearchCategory,
   type ResearchCondition,
@@ -41,6 +43,7 @@ import { vehicleKeySql } from "@/server/vehicle-key-sql";
 import type { LotResearchContext } from "./lot-link";
 import type {
   BidCurveView,
+  ComparisonView,
   ConditionDistribution,
   ModelRanking,
   ModelSales,
@@ -373,6 +376,28 @@ export async function getStateDetail(filters: ResearchFilters): Promise<StateDet
     few: sales > 0 && sales < MIN_SAMPLE ? await listSales(inState, MIN_SAMPLE) : [],
   };
 }
+
+/**
+ * "Comparação": a distribuição do % do valor de mercado dos dois grupos (o dos filtros e o que a comparação troca), com
+ * o resto dos filtros iguais e o mesmo fim de eixo. `null` sem comparação.
+ */
+export const getComparison = cache(async (filters: ResearchFilters): Promise<ComparisonView | null> => {
+  await requireUser();
+  const groups = comparisonGroups(filters);
+  if (groups === null) return null;
+  const parts = await Promise.all(groups.map((group) => ratioDistribution(salesWhere(group, { ratio: true }))));
+  const axisMax = ratioAxisMax(Math.max(0, ...parts.map((part) => part.max ?? 0)) || null);
+  return {
+    axisMax,
+    groups: groups.map((group, index) => ({
+      label: groupLabel(group),
+      distribution: {
+        summary: summarize(parts[index]?.stats),
+        bins: fillHistogram(parts[index]?.bins ?? [], axisMax),
+      },
+    })),
+  };
+});
 
 /** "Modelos que mais saem abaixo do valor de mercado": só com a amostra mínima (D-45). */
 export async function getModelRanking(filters: ResearchFilters): Promise<ModelRanking> {

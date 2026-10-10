@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import {
   DEFAULT_RESEARCH_FILTERS,
+  normalizeComparison,
   normalizeYears,
   RESEARCH_CATEGORIES,
   RESEARCH_CONDITIONS,
@@ -48,11 +49,18 @@ export const researchFiltersSchema = z
     uf: state,
     anode: year,
     anoate: year,
+    vsmarca: text,
+    vsmodelo: text,
+    vsuf: state,
     medida: z.enum(RESEARCH_METRICS).catch(DEFAULT_RESEARCH_FILTERS.metric),
   })
   .transform((input): ResearchFilters => {
     const vehicle =
       input.marca === undefined || input.modelo === undefined ? null : researchVehicle(input.marca, input.modelo);
+    const compareVehicle =
+      input.vsmarca === undefined || input.vsmodelo === undefined
+        ? null
+        : researchVehicle(input.vsmarca, input.vsmodelo);
     return {
       category: input.categoria,
       condition: input.condicao,
@@ -60,6 +68,8 @@ export const researchFiltersSchema = z
       state: input.uf,
       // O ano só vale dentro de um modelo.
       ...(vehicle === null ? { yearFrom: null, yearTo: null } : normalizeYears(input.anode, input.anoate)),
+      // A comparação só vale se difere dos filtros (outro modelo ou outro estado).
+      compare: normalizeComparison({ vehicle, state: input.uf }, { vehicle: compareVehicle, state: input.vsuf }),
       metric: input.medida,
     };
   });
@@ -81,6 +91,9 @@ export function researchParams(filters: ResearchFilters): Record<string, string>
     uf: filters.state ?? undefined,
     anode: filters.vehicle === null ? undefined : filters.yearFrom?.toString(),
     anoate: filters.vehicle === null ? undefined : filters.yearTo?.toString(),
+    vsmarca: filters.compare?.vehicle?.brand,
+    vsmodelo: filters.compare?.vehicle?.model,
+    vsuf: filters.compare?.state ?? undefined,
     medida: filters.metric === DEFAULT_RESEARCH_FILTERS.metric ? undefined : filters.metric,
   };
   return Object.fromEntries(

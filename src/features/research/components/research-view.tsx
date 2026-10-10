@@ -10,6 +10,7 @@ import { getResearchFacets, getResearchOverview } from "../queries";
 import { parseResearchParams, researchParams } from "../schemas";
 import type { SearchParams } from "../search";
 import { BID_CURVE_BLOCK_TITLE, BidCurveBlock } from "./bid-curve-block";
+import { COMPARISON_BLOCK_TITLE, ComparisonBlock } from "./comparison-block";
 import { CONDITION_BLOCK_TITLE, ConditionBlock } from "./condition-block";
 import { ModelSalesBlock, modelSalesTitle } from "./model-sales-block";
 import { RANKING_BLOCK_TITLE, RankingBlock } from "./ranking-block";
@@ -59,6 +60,11 @@ export async function ResearchView({ searchParams }: { searchParams: SearchParam
       <Suspense fallback={<ResearchBlockSkeleton title={CONDITION_BLOCK_TITLE} />}>
         <ConditionBlock filters={filters} total={facets.conditions[filters.condition]} noSales={noSales} />
       </Suspense>
+      {filters.compare === null ? null : (
+        <Suspense fallback={<ResearchBlockSkeleton title={COMPARISON_BLOCK_TITLE} />}>
+          <ComparisonBlock filters={filters} noSales={noSales} />
+        </Suspense>
+      )}
       <Suspense fallback={<ResearchBlockSkeleton title={STATE_BLOCK_TITLE} className="h-96" />}>
         <StateBlock filters={filters} noSales={noSales} />
       </Suspense>

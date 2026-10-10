@@ -28,6 +28,7 @@ describe("parseResearchParams", () => {
       state: "GO",
       yearFrom: 2018,
       yearTo: 2020,
+      compare: null,
       metric: "price",
     } satisfies ResearchFilters);
   });
@@ -54,6 +55,19 @@ describe("parseResearchParams", () => {
     });
   });
 
+  it("lê a comparação com outro modelo e outro estado", () => {
+    expect(
+      parseResearchParams({ marca: "Fiat", modelo: "Uno", uf: "SP", vsmarca: "Hyundai", vsmodelo: "HB20", vsuf: "GO" })
+        .compare,
+    ).toEqual({ vehicle: { brand: "HYUNDAI", model: "HB20" }, state: "GO" });
+  });
+
+  it("comparação igual aos filtros, ou com outro modelo sem modelo escolhido, some", () => {
+    expect(parseResearchParams({ marca: "Fiat", modelo: "Uno", vsmarca: "Fiat", vsmodelo: "Uno" }).compare).toBeNull();
+    expect(parseResearchParams({ vsmarca: "Hyundai", vsmodelo: "HB20" }).compare).toBeNull();
+    expect(parseResearchParams({ uf: "SP", vsuf: "SP" }).compare).toBeNull();
+  });
+
   it("ano sem modelo não filtra", () => {
     expect(parseResearchParams({ anode: "2018", anoate: "2020" })).toEqual(DEFAULT_RESEARCH_FILTERS);
   });
@@ -76,6 +90,7 @@ describe("researchParams", () => {
       state: "CE",
       yearFrom: 2015,
       yearTo: null,
+      compare: { vehicle: { brand: "FIAT", model: "TORO" }, state: "BA" },
       metric: "price",
     };
     expect(parseResearchParams(researchParams(filters))).toEqual(filters);

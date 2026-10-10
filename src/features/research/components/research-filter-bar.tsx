@@ -7,13 +7,14 @@ import { useId, useOptimistic, useRef } from "react";
 import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import {
   DEFAULT_RESEARCH_FILTERS,
+  normalizeComparison,
   normalizeYears,
   RESEARCH_CATEGORIES,
   RESEARCH_CONDITIONS,
   type ResearchFilters,
   vehicleLabel,
 } from "@/domain/research/filters";
-import { isStateCode, STATE_CODES, STATE_NAMES } from "@/domain/research/states";
+import { isStateCode, STATE_CODES, STATE_NAMES, type StateCode } from "@/domain/research/states";
 
 import { CATEGORY_LABELS, CONDITION_LABELS, salesLabel } from "../labels";
 import { parseResearchParams } from "../schemas";
@@ -27,6 +28,9 @@ const ALL_STATES = "todos";
 
 /** Valor do item "Todos os anos". */
 const ALL_YEARS = "todos";
+
+/** Valor do item "sem outro estado" da comparação. */
+const NO_COMPARE_STATE = "nenhum";
 
 const STATES_BY_NAME = STATE_CODES.toSorted((a, b) => STATE_NAMES[a].localeCompare(STATE_NAMES[b], "pt-BR"));
 
@@ -52,7 +56,9 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
   const total = facets.conditions[filters.condition];
   const isDefault = Object.keys(params).length === 0;
 
-  function apply(next: ResearchFilters, { focusStatus = false } = {}) {
+  function apply(changed: ResearchFilters, { focusStatus = false } = {}) {
+    // A comparação acompanha os filtros: outro modelo ou estado igual ao principal deixa de ser comparação.
+    const next = { ...changed, compare: normalizeComparison(changed, changed.compare) };
     startTransition(() => {
       setOptimisticFilters(next);
       router.push(researchHref(next), { scroll: false });
@@ -161,6 +167,39 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
         </div>
       </div>
 
+      {filters.vehicle !== null || filters.state !== null ? (
+        <div className="grid gap-3 md:flex md:flex-wrap md:items-center">
+          <span className="text-label text-muted">Comparar com</span>
+          {filters.vehicle === null ? null : (
+            <ModelPicker
+              label="Comparar com outro modelo"
+              placeholder="Outro modelo"
+              shortcut={false}
+              value={filters.compare?.vehicle ? vehicleLabel(filters.compare.vehicle) : null}
+              options={facets.models.filter(
+                (option) => option.brand !== filters.vehicle?.brand || option.model !== filters.vehicle.model,
+              )}
+              onChange={(option) =>
+                apply({
+                  ...filters,
+                  compare: {
+                    vehicle: option === null ? null : { brand: option.brand, model: option.model },
+                    state: filters.compare?.state ?? null,
+                  },
+                })
+              }
+              className="md:min-w-64 md:flex-1"
+            />
+          )}
+          <CompareStateSelect
+            value={filters.compare?.state ?? null}
+            current={filters.state}
+            counts={facets.states}
+            onChange={(state) => apply({ ...filters, compare: { vehicle: filters.compare?.vehicle ?? null, state } })}
+          />
+        </div>
+      ) : null}
+
       {filters.vehicle === null ? null : (
         <div className="grid grid-cols-2 gap-3 md:flex">
           <YearSelect
@@ -204,16 +243,17 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
             Limpar tudo
           </Button>
         )}
-        <SectionIndex hasModel={filters.vehicle !== null} />
+        <SectionIndex hasModel={filters.vehicle !== null} hasComparison={filters.compare !== null} />
       </div>
     </section>
   );
 }
 
 /** Âncoras dos blocos (DESIGN.md §15.8): a página é longa e cada bloco tem o seu `id`. */
-function SectionIndex({ hasModel }: { hasModel: boolean }) {
+function SectionIndex({ hasModel, hasComparison }: { hasModel: boolean; hasComparison: boolean }) {
   const sections = [
     { id: "pesquisa-condicao", label: "Condição" },
+    ...(hasComparison ? [{ id: "pesquisa-comparacao", label: "Comparação" }] : []),
     { id: "pesquisa-estado", label: "Estado" },
     hasModel ? { id: "pesquisa-vendas", label: "Vendas do modelo" } : { id: "pesquisa-modelos", label: "Modelos" },
     { id: "pesquisa-lance", label: "Lance" },
@@ -265,6 +305,41 @@ function YearSelect({
           {options.map(({ year, sales }) => (
             <SelectItem key={year} value={String(year)}>
               <OptionWithCount label={String(year)} count={sales} />
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </>
+  );
+}
+
+/** "Comparar com outro estado": o segundo grupo da comparação; o estado dos filtros não se repete na lista. */
+function CompareStateSelect({
+  value,
+  current,
+  counts,
+  onChange,
+}: {
+  value: StateCode | null;
+  current: StateCode | null;
+  counts: ResearchFacets["states"];
+  onChange: (state: StateCode | null) => void;
+}) {
+  const labelId = useId();
+  return (
+    <>
+      <span id={labelId} className="sr-only">
+        Comparar com outro estado
+      </span>
+      <Select value={value ?? NO_COMPARE_STATE} onValueChange={(next) => onChange(isStateCode(next) ? next : null)}>
+        <SelectTrigger aria-labelledby={labelId} className="md:w-60">
+          <SelectValue>{value === null ? "Outro estado" : STATE_NAMES[value]}</SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={NO_COMPARE_STATE}>{current === null ? "Nenhum estado" : "Sem outro estado"}</SelectItem>
+          {STATES_BY_NAME.filter((code) => code !== current).map((code) => (
+            <SelectItem key={code} value={code} disabled={(counts[code] ?? 0) === 0 && code !== value}>
+              <OptionWithCount label={STATE_NAMES[code]} count={counts[code] ?? 0} />
             </SelectItem>
           ))}
         </SelectContent>

@@ -21,6 +21,11 @@ type ModelPickerProps = {
   options: readonly ResearchModelOption[];
   onChange: (option: ResearchModelOption | null) => void;
   className?: string;
+  /** Nome do campo para leitores de tela. */
+  label?: string;
+  placeholder?: string;
+  /** A tecla `/` foca este campo (só um por página). */
+  shortcut?: boolean;
 };
 
 /** Mais sugestões que isso só atrapalham a lista; cabem os recentes e os mais vendidos. */
@@ -38,7 +43,15 @@ function isTypingTarget(target: EventTarget | null): boolean {
  * Com o campo vazio, sugere os modelos pesquisados por último e depois os mais vendidos. Setas escolhem, Enter aplica o
  * destacado (ou o primeiro), Escape fecha e devolve o texto do modelo atual; `/` foca o campo.
  */
-export function ModelPicker({ value, options, onChange, className }: ModelPickerProps) {
+export function ModelPicker({
+  value,
+  options,
+  onChange,
+  className,
+  label = "Modelo",
+  placeholder = "Todos os modelos",
+  shortcut = true,
+}: ModelPickerProps) {
   const inputId = useId();
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -54,6 +67,7 @@ export function ModelPicker({ value, options, onChange, className }: ModelPicker
   }
 
   useEffect(() => {
+    if (!shortcut) return;
     function focusOnSlash(event: globalThis.KeyboardEvent) {
       if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey || isTypingTarget(event.target)) return;
       event.preventDefault();
@@ -61,7 +75,7 @@ export function ModelPicker({ value, options, onChange, className }: ModelPicker
     }
     document.addEventListener("keydown", focusOnSlash);
     return () => document.removeEventListener("keydown", focusOnSlash);
-  }, []);
+  }, [shortcut]);
 
   const typed = text === value ? "" : text;
   // Sem texto, os recentes vêm antes (com as vendas de hoje) e os mais vendidos completam a lista.
@@ -112,7 +126,7 @@ export function ModelPicker({ value, options, onChange, className }: ModelPicker
   return (
     <div className={cn("relative grid min-w-0 gap-2", className)}>
       <label htmlFor={inputId} className="sr-only">
-        Modelo
+        {label}
       </label>
       <div className="relative">
         <Search
@@ -130,7 +144,7 @@ export function ModelPicker({ value, options, onChange, className }: ModelPicker
           aria-activedescendant={expanded && active >= 0 ? `${listId}-${active}` : undefined}
           autoComplete="off"
           spellCheck={false}
-          placeholder="Todos os modelos"
+          placeholder={placeholder}
           value={text}
           onChange={(event) => {
             setText(event.target.value);
@@ -145,7 +159,7 @@ export function ModelPicker({ value, options, onChange, className }: ModelPicker
           onBlur={close}
           className="h-10 w-full rounded-md border border-control-border bg-surface pr-10 pl-9 text-body text-foreground transition-[border-color,box-shadow] duration-120 outline-none placeholder:text-placeholder focus:border-accent focus:ring-2 focus:ring-accent/20"
         />
-        {value ? null : (
+        {value || !shortcut ? null : (
           <kbd
             aria-hidden="true"
             className="pointer-events-none absolute top-1/2 right-3 hidden -translate-y-1/2 rounded-sm border border-border px-1.5 text-caption text-muted md:block"

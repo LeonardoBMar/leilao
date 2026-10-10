@@ -53,6 +53,34 @@ describe.skipIf(process.env.DB_TESTS !== "1")("consultas da Pesquisa", () => {
     expect(sales?.total).toBeGreaterThan(0);
     expect(curve.points.length).toBeGreaterThan(0);
 
+    // Estado e ano-modelo na barra: contagens por estado, anos do modelo e a faixa de ano no filtro.
+    const onixFacets = await queries.getResearchFacets({ ...onix, state: null });
+    expect(Object.values(onixFacets.states).reduce((total, n) => total + n, 0)).toBeGreaterThan(0);
+    const [newest] = onixFacets.years;
+    expect(newest?.sales).toBeGreaterThan(0);
+    const inYear = await queries.getModelSales({
+      ...onix,
+      state: null,
+      yearFrom: newest?.year ?? null,
+      yearTo: newest?.year ?? null,
+    });
+    expect(inYear?.total).toBe(newest?.sales);
+    expect((await queries.getPriceSummary({ ...onix, state: null })).kind).not.toBe("none");
+
+    // Comparação: modelo × modelo e Brasil × estado, na mesma escala.
+    const versus = await queries.getComparison({
+      ...DEFAULT_RESEARCH_FILTERS,
+      vehicle: { brand: "CHEVROLET", model: "ONIX" },
+      compare: { vehicle: { brand: "HYUNDAI", model: "HB20" }, state: null },
+    });
+    expect(versus?.groups.map((group) => group.label)).toEqual(["Chevrolet Onix", "Hyundai HB20"]);
+    const brazilVsState = await queries.getComparison({
+      ...DEFAULT_RESEARCH_FILTERS,
+      compare: { vehicle: null, state: "SP" },
+    });
+    expect(brazilVsState?.groups.map((group) => group.label)).toEqual(["Brasil", "São Paulo"]);
+    expect(await queries.getComparison(DEFAULT_RESEARCH_FILTERS)).toBeNull();
+
     await db.$disconnect();
   }, 60_000);
 });
