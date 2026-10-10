@@ -1,4 +1,4 @@
-import { Badge, Card, Money } from "@/components/ui";
+import { Badge, Card, Money, Stat } from "@/components/ui";
 import { compareToFixedLimit } from "@/domain/finance/calculator";
 import { cents } from "@/domain/money";
 import { LIMIT_FIT_LABELS, LIMIT_FIT_VARIANTS, marketValueOriginLabel } from "@/features/listings/labels";
@@ -29,10 +29,11 @@ export function BidLimitPanel({ lot, bidNote }: { lot: LotDetail; bidNote: strin
         <div className="grid content-start gap-1.5">
           <Figure lot={lot} maxBid={maxBid} />
         </div>
-        <Value
+        <Stat
+          size="heading-2"
           label="Lance atual"
           note={bidNote}
-          extra={
+          footer={
             <CurrentBidForm
               action={updateCurrentBidAction.bind(null, lot.id)}
               currentBid={lot.currentBid}
@@ -41,10 +42,10 @@ export function BidLimitPanel({ lot, bidNote }: { lot: LotDetail; bidNote: strin
           }
         >
           <Money value={lot.currentBid} />
-        </Value>
-        <Value label="Meu limite" note={limitNote}>
+        </Stat>
+        <Stat size="heading-2" label="Meu limite" note={limitNote}>
           {lot.limit && !lot.limit.isViable ? "Sem lance viável" : <Money value={maxBid} />}
-        </Value>
+        </Stat>
       </dl>
 
       {maxBid !== null && lot.currentBid !== null ? (
@@ -90,27 +91,6 @@ function Figure({ lot, maxBid }: { lot: LotDetail; maxBid: number | null }) {
   );
 }
 
-function Value({
-  label,
-  note,
-  extra,
-  children,
-}: {
-  label: string;
-  note?: string;
-  extra?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="grid content-start gap-1">
-      <dt className="text-caption text-muted">{label}</dt>
-      <dd className="text-heading-2 text-foreground">{children}</dd>
-      {note ? <dd className="text-caption text-muted">{note}</dd> : null}
-      {extra ? <dd>{extra}</dd> : null}
-    </div>
-  );
-}
-
 /** Barra do lance até o limite; a marca vertical é o limite. Decorativa: o texto abaixo diz o mesmo. */
 function Proximity({ bid, maxBid, isAbove }: { bid: number; maxBid: number; isAbove: boolean }) {
   const percent = maxBid > 0 ? Math.round((bid / maxBid) * 100) : 100;
@@ -135,12 +115,12 @@ function ListingFacts({ tracking }: { tracking: Tracking }) {
   return (
     <dl className="grid gap-4 border-t border-border-strong pt-5 sm:grid-cols-3 sm:gap-8">
       {market ? (
-        <Fact label={`Mercado (${marketValueOriginLabel(market.origin, market.refMonth) ?? "referência"})`}>
+        <Stat size="lg" label={`Mercado (${marketValueOriginLabel(market.origin, market.refMonth) ?? "referência"})`}>
           <Money value={market.value} />
-        </Fact>
+        </Stat>
       ) : null}
       {price ? (
-        <Fact label="Provável lance final">
+        <Stat size="lg" label="Provável lance final">
           {price.kind === "insufficient" ? (
             <span className="text-muted">
               Sem base ({price.comparables} de {price.needed})
@@ -152,18 +132,13 @@ function ListingFacts({ tracking }: { tracking: Tracking }) {
               {fit === null ? null : <Badge variant={LIMIT_FIT_VARIANTS[fit]}>{LIMIT_FIT_LABELS[fit]}</Badge>}
             </span>
           )}
-        </Fact>
+        </Stat>
       ) : null}
-      {endsAt ? <Fact label="Encerra">{formatDateTime(endsAt)}</Fact> : null}
+      {endsAt ? (
+        <Stat size="lg" label="Encerra">
+          {formatDateTime(endsAt)}
+        </Stat>
+      ) : null}
     </dl>
-  );
-}
-
-function Fact({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="grid content-start gap-1">
-      <dt className="text-caption text-muted">{label}</dt>
-      <dd className="text-body-lg text-foreground tabular-nums">{children}</dd>
-    </div>
   );
 }

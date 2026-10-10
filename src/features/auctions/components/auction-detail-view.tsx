@@ -13,6 +13,7 @@ import {
   SectionHeader,
   SectionTitle,
   Skeleton,
+  Stat,
 } from "@/components/ui";
 import { catalogAuctionPath } from "@/features/listings/search";
 import { formatDateTime } from "@/lib/format";
@@ -97,14 +98,14 @@ export async function AuctionDetailView({ params, lots }: AuctionDetailViewProps
 
       <Card variant="summary" aria-label="Dados do evento" className="p-5 md:px-8 md:py-6">
         <dl className="grid gap-x-8 gap-y-4 text-body sm:grid-cols-2 xl:grid-cols-4">
-          <Detail label="Data e hora">{formatDateTime(auction.startsAt)}</Detail>
-          <Detail label="Local">{location || <span className="text-muted">—</span>}</Detail>
-          <Detail label="Edital">
+          <Stat label="Data e hora">{formatDateTime(auction.startsAt)}</Stat>
+          <Stat label="Local">{location || <span className="text-muted">—</span>}</Stat>
+          <Stat label="Edital">
             <ExternalAnchor href={auction.noticeUrl} />
-          </Detail>
-          <Detail label="Plataforma">
+          </Stat>
+          <Stat label="Plataforma">
             <ExternalAnchor href={auction.platformUrl} />
-          </Detail>
+          </Stat>
           {auction.notes ? (
             <div className="grid gap-1 sm:col-span-2 xl:col-span-4">
               <dt className="text-caption text-muted">Observações</dt>
@@ -124,15 +125,6 @@ export async function AuctionDetailView({ params, lots }: AuctionDetailViewProps
         </SectionHeader>
         {lots}
       </Section>
-    </div>
-  );
-}
-
-function Detail({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="grid gap-1">
-      <dt className="text-caption text-muted">{label}</dt>
-      <dd className="text-foreground">{children}</dd>
     </div>
   );
 }

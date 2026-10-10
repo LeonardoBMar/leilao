@@ -11,6 +11,7 @@ import {
   SectionHeader,
   SectionTitle,
   Skeleton,
+  Stat,
 } from "@/components/ui";
 import { formatDateTime } from "@/lib/format";
 
@@ -86,10 +87,10 @@ function CurrentResult({ result }: { result: ResultRevision }) {
       ) : null}
 
       <dl className="grid gap-4 border-y border-border py-4 sm:grid-cols-3">
-        <Stat label="Preço final">
+        <Stat size="heading-3" label="Preço final">
           <Money value={result.finalBid} />
         </Stat>
-        <Stat label="Limite da análise vinculada">
+        <Stat size="heading-3" label="Limite da análise vinculada">
           {result.analysis ? (
             <Link href={`/analise/${result.analysis.id}`} className="text-accent hover:underline">
               {result.analysis.isViable ? <Money value={result.analysis.maxBid} /> : "Sem lance viável"} · v
@@ -99,7 +100,7 @@ function CurrentResult({ result }: { result: ResultRevision }) {
             <span className="text-muted">Nenhuma</span>
           )}
         </Stat>
-        <Stat label="Desfecho em">
+        <Stat size="heading-3" label="Desfecho em">
           {result.eventAt ? formatDateTime(result.eventAt) : <span className="text-muted">—</span>}
         </Stat>
       </dl>
@@ -108,10 +109,18 @@ function CurrentResult({ result }: { result: ResultRevision }) {
 
       {result.decisionReason || result.notes || result.sourceUrl || result.sourceNotes ? (
         <dl className="grid gap-3 text-body">
-          {result.decisionReason ? <Text label="Motivo da decisão">{result.decisionReason}</Text> : null}
-          {result.notes ? <Text label="Observações">{result.notes}</Text> : null}
+          {result.decisionReason ? (
+            <Stat label="Motivo da decisão" valueClassName="whitespace-pre-line">
+              {result.decisionReason}
+            </Stat>
+          ) : null}
+          {result.notes ? (
+            <Stat label="Observações" valueClassName="whitespace-pre-line">
+              {result.notes}
+            </Stat>
+          ) : null}
           {result.sourceUrl || result.sourceNotes ? (
-            <Text label="Fonte">
+            <Stat label="Fonte" valueClassName="whitespace-pre-line">
               {result.sourceUrl ? (
                 <a
                   href={result.sourceUrl}
@@ -125,7 +134,7 @@ function CurrentResult({ result }: { result: ResultRevision }) {
                 </a>
               ) : null}
               {result.sourceNotes ? <span className="block">{result.sourceNotes}</span> : null}
-            </Text>
+            </Stat>
           ) : null}
         </dl>
       ) : null}
@@ -177,24 +186,6 @@ function Corrections({ revisions }: { revisions: ResultRevision[] }) {
         ))}
       </ol>
     </details>
-  );
-}
-
-function Stat({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="grid content-start gap-1">
-      <dt className="text-caption text-muted">{label}</dt>
-      <dd className="text-heading-3 text-foreground">{children}</dd>
-    </div>
-  );
-}
-
-function Text({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="grid gap-1">
-      <dt className="text-caption text-muted">{label}</dt>
-      <dd className="whitespace-pre-line text-foreground">{children}</dd>
-    </div>
   );
 }
 

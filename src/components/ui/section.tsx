@@ -39,4 +39,35 @@ function DataRow({ label, emphasis = false, className, children, ...props }: Dat
   );
 }
 
-export { DataList, DataRow, Section, SectionHeader, SectionTitle };
+const STAT_SIZES = {
+  body: "text-body",
+  lg: "text-body-lg tabular-nums",
+  "heading-3": "text-heading-3",
+  "heading-2": "text-heading-2",
+} as const;
+
+type StatProps = Omit<React.ComponentProps<"div">, "children"> & {
+  label: React.ReactNode;
+  children: React.ReactNode;
+  /** Tamanho do valor: `body` em fichas, `lg` em fatos, `heading-2`/`heading-3` em números de destaque. */
+  size?: keyof typeof STAT_SIZES;
+  /** Linha discreta abaixo do valor (origem, data da observação). */
+  note?: React.ReactNode;
+  /** Conteúdo extra abaixo, como um botão de ação. */
+  footer?: React.ReactNode;
+  valueClassName?: string;
+};
+
+/** Rótulo pequeno sobre um valor, em colunas (`<dl>` em grade). Para linhas rótulo ↔ valor, use `DataRow`. */
+function Stat({ label, size = "body", note, footer, valueClassName, className, children, ...props }: StatProps) {
+  return (
+    <div className={cn("grid min-w-0 content-start gap-1", className)} {...props}>
+      <dt className="text-caption text-muted">{label}</dt>
+      <dd className={cn("text-foreground", STAT_SIZES[size], valueClassName)}>{children}</dd>
+      {note ? <dd className="text-caption text-muted">{note}</dd> : null}
+      {footer ? <dd>{footer}</dd> : null}
+    </div>
+  );
+}
+
+export { DataList, DataRow, Section, SectionHeader, SectionTitle, Stat };
