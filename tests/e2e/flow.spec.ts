@@ -99,7 +99,6 @@ test("análise: exemplos do SPEC, pendências e fixação (CA-03, CA-04, CA-05, 
   // CA-07: fixar com campo vazio salva o rascunho e aponta a pendência.
   await field(page, "Pneus").fill("");
   await page.getByRole("button", { name: "Fixar análise" }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Fixar análise" }).click();
   await expect(page.getByText("Para fixar, preencha os campos pendentes.")).toBeVisible();
   await expect(page.getByText("Obrigatório para fixar.")).toBeVisible();
 
@@ -109,7 +108,6 @@ test("análise: exemplos do SPEC, pendências e fixação (CA-03, CA-04, CA-05, 
   await field(page, "Comissão fixa").fill("2.000");
   await expect(section(page, "Lance máximo")).toContainText(brl("33.200,00"));
   await page.getByRole("button", { name: "Fixar análise" }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Fixar análise" }).click();
 
   // Fixada: a tela troca o editor pela versão em leitura (o aviso some junto com o editor).
   await expect(page.getByText(/^Fixada em /)).toBeVisible();
@@ -166,7 +164,6 @@ test("nova versão depois do resultado não muda a comparação vinculada (CA-09
   await field(page, "Valor de venda esperado").fill("60.000");
   await expect(section(page, "Lance máximo")).toContainText(brl("41.600,00"));
   await page.getByRole("button", { name: "Fixar análise" }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Fixar análise" }).click();
   await expect(page.getByText(/^Fixada em /)).toBeVisible();
 
   // O resultado continua comparado com a v1 (R$ 33.200,00), não com a v2.
@@ -183,8 +180,8 @@ test("duas fixações simultâneas do mesmo rascunho: só uma vale (CA-19)", asy
   const other = await context.newPage();
   await other.goto(page.url());
   const tabs = [page, other];
-  for (const tab of tabs) await tab.getByRole("button", { name: "Fixar análise" }).click();
-  await Promise.all(tabs.map((tab) => tab.getByRole("dialog").getByRole("button", { name: "Fixar análise" }).click()));
+
+  await Promise.all(tabs.map((tab) => tab.getByRole("button", { name: "Fixar análise" }).click()));
 
   const outcomes = await Promise.all(
     tabs.map((tab) =>

@@ -47,9 +47,7 @@ export function AnalysisSummary({ model, currentBid }: AnalysisSummaryProps) {
             </p>
           </div>
         )}
-        <p className="text-label font-normal text-muted">
-          Maior lance que preserva a margem desejada. Não considera incrementos mínimos da plataforma.
-        </p>
+        <p className="text-caption text-muted">Maior lance que preserva a margem desejada.</p>
       </section>
 
       {complete && outcome.kind === "viable" ? (
@@ -100,12 +98,14 @@ export function AnalysisSummary({ model, currentBid }: AnalysisSummaryProps) {
             </Row>
           </dl>
         ) : null}
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface px-3.5 py-3">
-          <Badge variant={LIMIT_COMPARISON_VARIANTS[comparison]}>{LIMIT_COMPARISON_LABELS[comparison]}</Badge>
-          {simulation && outcome.kind === "viable" ? (
-            <DifferenceText value={differenceToLimit(outcome.maxBid, simulation.bid)} />
-          ) : null}
-        </div>
+        {/* Com limite e lance, o texto colorido já diz a situação; sem eles, o rótulo da comparação. */}
+        {simulation && outcome.kind === "viable" ? (
+          <DifferenceText value={differenceToLimit(outcome.maxBid, simulation.bid)} />
+        ) : (
+          <Badge variant={LIMIT_COMPARISON_VARIANTS[comparison]} className="w-fit">
+            {LIMIT_COMPARISON_LABELS[comparison]}
+          </Badge>
+        )}
       </section>
     </Card>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { Calculator, Lock, Save, Trash2 } from "lucide-react";
-import { useActionState, useEffect, useId, useRef, useState, useTransition } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 
 import {
   Alert,
@@ -51,13 +51,11 @@ type MoneyField = (typeof FIXED_COST_LABELS)[number][0] | "riskReserve" | "desir
 
 /** Rascunho da análise (SPEC `/analise/[id]`, RF-04): formulário + resumo ao vivo. */
 export function AnalysisEditor({ analysis }: { analysis: AnalysisDetail }) {
-  const formId = useId();
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, pending] = useActionState(saveAnalysisAction.bind(null, analysis.id), idleState);
   const [inputs, setInputs] = useState(analysis.inputs);
   const [mode, setMode] = useState<CommissionMode | "">(analysis.inputs.commissionMode ?? "");
   const [intent, setIntent] = useState<"draft" | "fix">("draft");
-  const [isFixOpen, setIsFixOpen] = useState(false);
   // "Estimar a partir da FIPE" remonta o formulário com os valores atuais mais os estimados (campos não controlados).
   const [prefill, setPrefill] = useState<Record<string, string> | null>(null);
   const [formKey, setFormKey] = useState(0);
@@ -132,7 +130,6 @@ export function AnalysisEditor({ analysis }: { analysis: AnalysisDetail }) {
     <div className="grid items-start gap-9 xl:grid-cols-[minmax(0,1fr)_28.75rem] xl:gap-14">
       <form
         key={formKey}
-        id={formId}
         ref={formRef}
         action={formAction}
         onInput={() => recompute()}
@@ -148,6 +145,19 @@ export function AnalysisEditor({ analysis }: { analysis: AnalysisDetail }) {
         <fieldset className="grid gap-4 md:grid-cols-2 md:gap-6">
           <legend className="mb-4 text-heading-3 text-foreground">Referências de preço</legend>
           <CurrencyInput
+            name="fipeValue"
+            label="FIPE (opcional)"
+            helperText="Base das premissas padrão de valor de venda e reparos."
+            defaultValue={value("fipeValue", centsToInput(references.fipeValue))}
+            error={fieldError(state, "fipeValue")}
+          />
+          <div>
+            <Button type="button" variant="secondary" className="md:mt-7" onClick={estimateSaleAndRepairs}>
+              <Calculator aria-hidden="true" />
+              Estimar a partir da FIPE
+            </Button>
+          </div>
+          <CurrencyInput
             name="marketValue"
             label="Valor de venda esperado"
             helperText="Quanto o veículo vale após os reparos. Padrão: FIPE menos o desconto pela condição."
@@ -155,59 +165,59 @@ export function AnalysisEditor({ analysis }: { analysis: AnalysisDetail }) {
             defaultValue={value("marketValue", centsToInput(saved.marketValue))}
             error={fieldError(state, "marketValue")}
           />
-          <Input
-            name="marketReferenceDate"
-            type="date"
-            label="Data da referência"
-            defaultValue={value(
-              "marketReferenceDate",
-              references.marketReferenceDate ? toCalendarDateInput(references.marketReferenceDate) : undefined,
+          {/* Metadados raros: recolhidos, mas sempre enviados com o formulário. */}
+          <details
+            className="group md:col-span-2"
+            open={["marketReferenceDate", "marketReferenceSource", "fipeReferenceMonth", "fipeReferenceSource"].some(
+              (field) => fieldError(state, field) !== undefined,
             )}
-            error={fieldError(state, "marketReferenceDate")}
-          />
-          <Input
-            name="marketReferenceSource"
-            label="Fonte da referência"
-            placeholder="Ex.: anúncios similares, avaliação"
-            maxLength={200}
-            defaultValue={value("marketReferenceSource", references.marketReferenceSource ?? undefined)}
-            error={fieldError(state, "marketReferenceSource")}
-          />
-          <CurrencyInput
-            name="fipeValue"
-            label="FIPE (opcional)"
-            helperText="Base das premissas padrão de valor de venda e reparos."
-            defaultValue={value("fipeValue", centsToInput(references.fipeValue))}
-            error={fieldError(state, "fipeValue")}
-          />
-          <div className="flex items-end">
-            <Button type="button" variant="secondary" onClick={estimateSaleAndRepairs}>
-              <Calculator aria-hidden="true" />
-              Estimar a partir da FIPE
-            </Button>
-          </div>
-          <Input
-            name="fipeReferenceMonth"
-            type="month"
-            label="Mês da FIPE"
-            defaultValue={value(
-              "fipeReferenceMonth",
-              references.fipeReferenceMonth ? toMonthInput(references.fipeReferenceMonth) : undefined,
-            )}
-            error={fieldError(state, "fipeReferenceMonth")}
-          />
-          <Input
-            name="fipeReferenceSource"
-            label="Fonte da FIPE"
-            maxLength={200}
-            defaultValue={value("fipeReferenceSource", references.fipeReferenceSource ?? undefined)}
-            error={fieldError(state, "fipeReferenceSource")}
-          />
+          >
+            <summary className="cursor-pointer text-label text-foreground-secondary hover:text-foreground">
+              Fontes e datas das referências
+            </summary>
+            <div className="mt-4 grid gap-4 md:grid-cols-2 md:gap-6">
+              <Input
+                name="marketReferenceDate"
+                type="date"
+                label="Data da referência"
+                defaultValue={value(
+                  "marketReferenceDate",
+                  references.marketReferenceDate ? toCalendarDateInput(references.marketReferenceDate) : undefined,
+                )}
+                error={fieldError(state, "marketReferenceDate")}
+              />
+              <Input
+                name="marketReferenceSource"
+                label="Fonte da referência"
+                placeholder="Ex.: anúncios similares, avaliação"
+                maxLength={200}
+                defaultValue={value("marketReferenceSource", references.marketReferenceSource ?? undefined)}
+                error={fieldError(state, "marketReferenceSource")}
+              />
+              <Input
+                name="fipeReferenceMonth"
+                type="month"
+                label="Mês da FIPE"
+                defaultValue={value(
+                  "fipeReferenceMonth",
+                  references.fipeReferenceMonth ? toMonthInput(references.fipeReferenceMonth) : undefined,
+                )}
+                error={fieldError(state, "fipeReferenceMonth")}
+              />
+              <Input
+                name="fipeReferenceSource"
+                label="Fonte da FIPE"
+                maxLength={200}
+                defaultValue={value("fipeReferenceSource", references.fipeReferenceSource ?? undefined)}
+                error={fieldError(state, "fipeReferenceSource")}
+              />
+            </div>
+          </details>
         </fieldset>
 
         <fieldset className="grid gap-4 md:grid-cols-2 md:gap-6">
-          <legend className="mb-1 text-heading-3 text-foreground">Custos fixos</legend>
-          <p className="text-caption text-muted md:col-span-2">
+          <legend className="mb-4 text-heading-3 text-foreground">Custos fixos</legend>
+          <p className="-mt-2 text-caption text-muted md:col-span-2">
             Informe 0 quando não houver o custo. Campo vazio significa “não informado” e impede a fixação.
           </p>
           {FIXED_COST_LABELS.map(([name, label]) => (
@@ -314,45 +324,18 @@ export function AnalysisEditor({ analysis }: { analysis: AnalysisDetail }) {
               <Save aria-hidden="true" />
               Salvar rascunho
             </Button>
-            <Dialog open={isFixOpen} onOpenChange={setIsFixOpen}>
-              <DialogTrigger asChild>
-                <Button type="button" loading={pending && intent === "fix"} loadingLabel="Fixando…">
-                  <Lock aria-hidden="true" />
-                  Fixar análise
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Fixar a análise v{analysis.version}?</DialogTitle>
-                  <DialogDescription>
-                    As premissas, as notas e o limite calculado ficam preservados e não poderão ser alterados. Para
-                    revisar depois, você cria uma nova versão.
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button variant="secondary">Voltar</Button>
-                  </DialogClose>
-                  {/* O diálogo é renderizado fora do <form>; `form` liga o botão a ele. */}
-                  <Button
-                    type="submit"
-                    form={formId}
-                    name="intent"
-                    value="fix"
-                    onClick={(event) => {
-                      // Fechar o diálogo remove este botão da página antes do envio nativo, que o navegador
-                      // então cancela. Por isso o envio é disparado aqui, com o botão ainda conectado.
-                      event.preventDefault();
-                      formRef.current?.requestSubmit(event.currentTarget);
-                      setIntent("fix");
-                      setIsFixOpen(false);
-                    }}
-                  >
-                    Fixar análise
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            {/* Fixar é seguro sem confirmação: "Revisar premissas" cria a próxima versão. */}
+            <Button
+              type="submit"
+              name="intent"
+              value="fix"
+              onClick={() => setIntent("fix")}
+              loading={pending && intent === "fix"}
+              loadingLabel="Fixando…"
+            >
+              <Lock aria-hidden="true" />
+              Fixar análise
+            </Button>
           </div>
         </div>
       </form>

@@ -1,4 +1,4 @@
-import { FilePen, GitBranchPlus } from "lucide-react";
+import { ArrowLeft, FilePen, GitBranchPlus } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { BreadcrumbLink, BreadcrumbPage, Breadcrumbs } from "@/components/layout/breadcrumbs";
@@ -46,25 +46,31 @@ export async function AnalysisView({ params }: { params: Promise<{ id: string }>
             {analysis.references.knownResultAtCreation ? <Badge variant="warning">Retrospectiva</Badge> : null}
             <span className="ml-1">
               {isFixed && analysis.fixedAt
-                ? `Fixada em ${formatDateTime(analysis.fixedAt)} · fórmula v${analysis.outputs?.formulaVersion ?? "?"} · não pode ser editada`
+                ? `Fixada em ${formatDateTime(analysis.fixedAt)}`
                 : `Rascunho atualizado em ${formatDateTime(analysis.updatedAt)}`}
             </span>
           </>
         }
         actions={
-          isFixed ? (
-            analysis.openDraftId ? (
-              <ButtonLink href={`/analise/${analysis.openDraftId}`}>
-                <FilePen aria-hidden="true" />
-                Continuar rascunho
-              </ButtonLink>
-            ) : (
-              <CreateAnalysisButton lotId={lot.id} sourceId={analysis.id} variant="secondary">
-                <GitBranchPlus aria-hidden="true" />
-                Criar nova versão
-              </CreateAnalysisButton>
-            )
-          ) : undefined
+          <>
+            <ButtonLink href={`/lotes/${lot.id}`} variant="secondary">
+              <ArrowLeft aria-hidden="true" />
+              Ver lote
+            </ButtonLink>
+            {isFixed ? (
+              analysis.openDraftId ? (
+                <ButtonLink href={`/analise/${analysis.openDraftId}`}>
+                  <FilePen aria-hidden="true" />
+                  Continuar rascunho
+                </ButtonLink>
+              ) : (
+                <CreateAnalysisButton lotId={lot.id} sourceId={analysis.id} variant="secondary">
+                  <GitBranchPlus aria-hidden="true" />
+                  Criar nova versão
+                </CreateAnalysisButton>
+              )
+            ) : null}
+          </>
         }
       />
 

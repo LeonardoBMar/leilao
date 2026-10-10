@@ -62,7 +62,7 @@ lance máximo = maior lance em que  lance + custos + comissão + reserva + marge
 
 ## 5. Fixar a análise
 
-**Fixar análise** congela premissas, notas e o limite calculado. É o registro da sua decisão **antes** do resultado.
+**Fixar análise** congela premissas, notas e o limite calculado. É o registro da sua decisão **antes** do resultado. Fixa na hora, sem confirmação; para mudar algo depois, **Revisar premissas** cria a próxima versão. Datas e fontes das referências ficam recolhidas em *Fontes e datas das referências*.
 
 - Todos os custos precisam estar preenchidos (mesmo que zero).
 - A versão fixada **nunca muda**. Para rever números, use **Revisar premissas**: nasce um rascunho novo (v2, v3…) com os dados da anterior, e a antiga continua no histórico.
