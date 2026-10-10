@@ -98,7 +98,7 @@ function CurrentResult({ result }: { result: ResultRevision }) {
           )}
         </Stat>
         <Stat label="Desfecho em">
-          {result.eventAt ? formatDateTime(result.eventAt) : <span className="text-muted">Não informado</span>}
+          {result.eventAt ? formatDateTime(result.eventAt) : <span className="text-muted">—</span>}
         </Stat>
       </dl>
 

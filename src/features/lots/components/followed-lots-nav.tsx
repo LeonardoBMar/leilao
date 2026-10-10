@@ -47,7 +47,7 @@ export async function FollowedLotsNav() {
             <li key={lot.id}>
               <Link
                 href={`/lotes/${lot.id}`}
-                className="flex min-h-9 items-center gap-2.5 rounded-md px-2.5 text-body font-medium text-foreground-secondary transition-colors duration-120 outline-none hover:bg-foreground/5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent"
+                className="flex min-h-10 items-center gap-2.5 rounded-md px-2.5 text-body font-medium text-foreground-secondary transition-colors duration-120 outline-none hover:bg-foreground/5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent"
               >
                 <span aria-hidden="true" className="flex w-4 shrink-0 justify-center">
                   <span className={cn("size-1.75 rounded-full", DOT[comparison])} />

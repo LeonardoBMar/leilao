@@ -201,7 +201,7 @@ export function LotFilters({
             </PopoverTrigger>
             <PopoverContent className="w-96">{position}</PopoverContent>
           </Popover>
-          {inAuction ? null : <div className="w-72">{timing(true)}</div>}
+          {inAuction ? null : <div className="w-full sm:w-72">{timing(true)}</div>}
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="secondary" className={cn(moreCount > 0 && activeTriggerClass)}>
@@ -299,7 +299,7 @@ export function LotFilters({
                 if (sort) apply({ ...filters, sort });
               }}
             >
-              <SelectTrigger aria-labelledby={sortLabelId} className="w-60">
+              <SelectTrigger aria-labelledby={sortLabelId} className="w-auto min-w-44">
                 <SelectValue>
                   {filters.sort === "leilao" && inAuction ? "Número do lote" : LOT_SORT_LABELS[filters.sort]}
                 </SelectValue>

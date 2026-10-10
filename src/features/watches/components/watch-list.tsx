@@ -49,7 +49,7 @@ function WatchCard({ watch }: { watch: WatchListItem }) {
       <div className="grid min-w-0 gap-1.5">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className={watch.active ? "text-heading-3 text-foreground" : "text-heading-3 text-muted"}>{title}</h2>
-          <Badge variant={watch.active ? "success" : "default"}>{watch.active ? "Ligado" : "Desligado"}</Badge>
+          <Badge variant={watch.active ? "default" : "outline"}>{watch.active ? "Ligado" : "Desligado"}</Badge>
         </div>
         <p className="text-label font-normal text-muted">{watch.description}</p>
         <ul className="flex flex-wrap gap-x-4 gap-y-1 text-label font-normal text-foreground-secondary">

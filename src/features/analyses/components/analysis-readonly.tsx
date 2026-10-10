@@ -115,5 +115,5 @@ function Joined({ parts }: { parts: (string | null)[] }) {
 }
 
 function Muted() {
-  return <span className="text-muted-subtle">—</span>;
+  return <span className="text-muted">—</span>;
 }

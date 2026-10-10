@@ -13,11 +13,13 @@ export default function CatalogListingsPage({ searchParams }: PageProps<"/leiloe
     <div className="grid gap-6">
       <PageHeader
         title="Leilões"
-        description="Lotes encontrados automaticamente nos sites de leilão. Valor de mercado: o informado pela fonte ou, sem ele, o da tabela FIPE casado pelo sistema."
+        description="Lotes encontrados automaticamente nos sites de leilão."
+        actions={
+          <Suspense fallback={<CollectorStatusLineSkeleton />}>
+            <CollectorStatusLine />
+          </Suspense>
+        }
       />
-      <Suspense fallback={<CollectorStatusLineSkeleton />}>
-        <CollectorStatusLine />
-      </Suspense>
       <Suspense fallback={<ListingsViewSkeleton />}>
         <ListingsView searchParams={searchParams} basePath={CATALOG_LISTINGS_PATH} />
       </Suspense>

@@ -1,6 +1,7 @@
 import type { Route } from "next";
 import { notFound } from "next/navigation";
 
+import { BreadcrumbLink, BreadcrumbPage, Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { FreshOnNavigation } from "@/components/layout/fresh-on-navigation";
 import { PageHeader } from "@/components/layout/page-header";
 import { getAuction } from "@/features/auctions/queries";
@@ -21,6 +22,10 @@ export async function NewLotView({ params }: { params: Promise<{ id: string }> }
 
   return (
     <div className="grid max-w-4xl gap-6">
+      <Breadcrumbs>
+        <BreadcrumbLink href={`/minhas-analises/leiloes/${auction.id}`}>{auction.name}</BreadcrumbLink>
+        <BreadcrumbPage>Novo lote</BreadcrumbPage>
+      </Breadcrumbs>
       <PageHeader title="Novo lote" description={auction.name} />
       <FreshOnNavigation>
         <LotForm
@@ -41,6 +46,10 @@ export async function EditLotView({ params }: { params: Promise<{ id: string }> 
 
   return (
     <div className="grid max-w-4xl gap-6">
+      <Breadcrumbs>
+        <BreadcrumbLink href={`/lotes/${lot.id}`}>Lote {lot.lotNumber}</BreadcrumbLink>
+        <BreadcrumbPage>Editar</BreadcrumbPage>
+      </Breadcrumbs>
       <PageHeader title="Editar lote" description={`Lote ${lot.lotNumber} · ${lot.auction.name}`} />
       <LotForm
         key={lot.updatedAt.getTime()}

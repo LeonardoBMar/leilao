@@ -44,13 +44,13 @@ export async function AuctionDetailView({ params, lots }: AuctionDetailViewProps
       </Breadcrumbs>
 
       <PageHeader
-        eyebrow={`${ORIGIN_LABELS[auction.origin]} · ${formatDateTime(auction.startsAt)}`}
+        eyebrow={ORIGIN_LABELS[auction.origin]}
         title={auction.name}
         description={auction.auctioneer}
         meta={
           <>
             <Badge variant={STATUS_BADGE_VARIANTS[auction.status]}>{STATUS_LABELS[auction.status]}</Badge>
-            {auction.archivedAt ? <Badge variant="warning">Arquivado</Badge> : null}
+            {auction.archivedAt ? <Badge variant="outline">Arquivado</Badge> : null}
           </>
         }
         actions={
@@ -86,7 +86,7 @@ export async function AuctionDetailView({ params, lots }: AuctionDetailViewProps
       <Card variant="summary" aria-label="Dados do evento" className="p-5 md:px-8 md:py-6">
         <dl className="grid gap-x-8 gap-y-4 text-body sm:grid-cols-2 xl:grid-cols-4">
           <Detail label="Data e hora">{formatDateTime(auction.startsAt)}</Detail>
-          <Detail label="Local">{location || <span className="text-muted">Não informado</span>}</Detail>
+          <Detail label="Local">{location || <span className="text-muted">—</span>}</Detail>
           <Detail label="Edital">
             <ExternalAnchor href={auction.noticeUrl} />
           </Detail>
@@ -127,7 +127,7 @@ function Detail({ label, children }: { label: string; children: React.ReactNode 
 
 /** Link externo seguro: só http/https (validado no cadastro), em nova aba, sem `opener` (SPEC §11). */
 function ExternalAnchor({ href }: { href: string | null }) {
-  if (!href) return <span className="text-muted">Não informado</span>;
+  if (!href) return <span className="text-muted">—</span>;
   return (
     <a
       href={href}
