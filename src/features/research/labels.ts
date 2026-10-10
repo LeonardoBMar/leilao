@@ -1,6 +1,6 @@
 import { cents } from "@/domain/money";
 import type { ResearchCategory, ResearchCondition, ResearchMetric } from "@/domain/research/filters";
-import { type GroupSummary, MIN_SAMPLE } from "@/domain/research/summary";
+import { type GroupSummary, isSmallSample, MIN_SAMPLE } from "@/domain/research/summary";
 import { formatCompactBRL, formatRatio } from "@/lib/format";
 
 export const CONDITION_LABELS = {
@@ -42,9 +42,14 @@ export function yearRangeLabel({
   return null;
 }
 
+/** O `n` do grupo e, se a amostra é pequena, o aviso: "8 vendas · amostra pequena". */
+export function smallSampleLabel(n: number): string {
+  return isSmallSample(n) ? `${salesLabel(n)} · amostra pequena` : salesLabel(n);
+}
+
 /** Linha de apoio de um grupo: o `n`, ou quantas faltam para a mediana. */
 export function summaryDetail(summary: GroupSummary): string {
-  if (summary.kind === "summary") return salesLabel(summary.n);
+  if (summary.kind === "summary") return smallSampleLabel(summary.n);
   if (summary.kind === "few") return `sem base (${summary.n} de ${MIN_SAMPLE})`;
   return "nenhuma venda";
 }

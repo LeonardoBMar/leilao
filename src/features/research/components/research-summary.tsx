@@ -1,6 +1,7 @@
 import { DataList, Skeleton, Stat } from "@/components/ui";
 import { cents } from "@/domain/money";
 import { type ResearchFilters, vehicleLabel } from "@/domain/research/filters";
+import { isSmallSample } from "@/domain/research/summary";
 import { formatBRL, formatRatio } from "@/lib/format";
 
 import { belowMarketLabel, CONDITION_LABELS, salesLabel, summaryDetail, yearRangeLabel } from "../labels";
@@ -53,7 +54,11 @@ export async function ResearchSummary({ filters }: { filters: ResearchFilters })
             {summaryDetail(selected)}
           </Stat>
         )}
-        <Stat label="Vendas com valor de mercado" size="heading-2" note="Base da mediana ao lado.">
+        <Stat
+          label="Vendas com valor de mercado"
+          size="heading-2"
+          note={isSmallSample(selected.n) ? "Amostra pequena: leia a mediana com cuidado." : "Base da mediana ao lado."}
+        >
           {selected.n.toLocaleString("pt-BR")}
         </Stat>
         {price?.kind === "summary" ? (

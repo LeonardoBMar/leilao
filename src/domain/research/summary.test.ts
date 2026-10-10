@@ -5,6 +5,7 @@ import {
   fillHistogram,
   type GroupStats,
   histogramBin,
+  isSmallSample,
   MIN_SAMPLE,
   rankModels,
   ratioAxisMax,
@@ -13,6 +14,18 @@ import {
 } from "./summary";
 
 const stats = (n: number, median = 0.5): GroupStats => ({ n, p25: median - 0.05, median, p75: median + 0.05 });
+
+describe("isSmallSample", () => {
+  it.each([
+    [MIN_SAMPLE - 1, false],
+    [MIN_SAMPLE, true],
+    [14, true],
+    [15, false],
+    [300, false],
+  ])("%s vendas", (n, expected) => {
+    expect(isSmallSample(n)).toBe(expected);
+  });
+});
 
 describe("summarize", () => {
   it("com a amostra mínima, mostra mediana e faixa P25–P75", () => {

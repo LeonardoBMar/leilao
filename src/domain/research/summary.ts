@@ -10,6 +10,17 @@ import type { ResearchCondition, ResearchVehicle } from "./filters";
 export const MIN_SAMPLE = MIN_COMPARABLES;
 
 /**
+ * Com menos vendas que isto a mediana existe, mas balança: a tela marca "amostra pequena" (sem esconder o número). Fica
+ * em 15, o triplo do mínimo: com 5 vendas a mediana muda bastante com uma venda a mais ou a menos.
+ */
+export const SMALL_SAMPLE = 15;
+
+/** Amostra que tem mediana, mas é pequena (`MIN_SAMPLE` a `SMALL_SAMPLE - 1` vendas). */
+export function isSmallSample(n: number): boolean {
+  return n >= MIN_SAMPLE && n < SMALL_SAMPLE;
+}
+
+/**
  * Proporções lance final ÷ valor de mercado fora desta faixa indicam valor de mercado errado na fonte e ficam fora das
  * estatísticas. Em 08/10/2026 nenhuma venda caiu fora (P1 12%, P99 78%): é proteção contra erro futuro.
  */

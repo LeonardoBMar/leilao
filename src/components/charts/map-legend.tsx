@@ -4,9 +4,10 @@ import { cn } from "@/lib/utils";
 
 import { type DataStep, STEP_CLASSES } from "./data-steps";
 
-export type LegendItem = { key: string; swatch: DataStep | "few" | "empty"; label: ReactNode };
+export type LegendItem = { key: string; swatch: DataStep | "small" | "few" | "empty"; label: ReactNode };
 
 const SWATCH_CLASSES = {
+  small: "",
   few: "bg-surface-subtle",
   empty: "border border-border-strong",
 } as const;
@@ -19,13 +20,19 @@ export function MapLegend({ title, items }: { title: string; items: readonly Leg
       <ul className="flex flex-wrap gap-x-4 gap-y-2">
         {items.map((item) => (
           <li key={item.key} className="flex items-center gap-1.5 text-caption text-foreground-secondary tabular-nums">
-            <span
-              aria-hidden="true"
-              className={cn(
-                "size-3 shrink-0 rounded-sm",
-                typeof item.swatch === "number" ? STEP_CLASSES[item.swatch] : SWATCH_CLASSES[item.swatch],
-              )}
-            />
+            {item.swatch === "small" ? (
+              <span aria-hidden="true" className="w-3 shrink-0 text-center text-label font-semibold text-foreground">
+                *
+              </span>
+            ) : (
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "size-3 shrink-0 rounded-sm",
+                  typeof item.swatch === "number" ? STEP_CLASSES[item.swatch] : SWATCH_CLASSES[item.swatch],
+                )}
+              />
+            )}
             {item.label}
           </li>
         ))}

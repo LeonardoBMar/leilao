@@ -199,7 +199,7 @@ Gráficos de preço sobre as vendas do catálogo: o que aconteceu, com amostra e
 - **Modelos que mais saem abaixo do valor de mercado:** ranking dos modelos com pelo menos 5 vendas na condição e categoria do filtro. Cada linha aplica o modelo.
 - **Vendas do modelo:** lance final por ano-modelo e a tabela das vendas, com link para o anúncio.
 - **Como o lance sobe:** lance observado ÷ lance final de 48 h a 1 h antes do fim, com a faixa P25–P75.
-- **Regras de leitura:** a condição nunca é misturada; grupo com menos de 5 vendas não tem mediana nem cor, e as vendas aparecem uma a uma; todo gráfico mostra `n` e desde quando há vendas; "sem monta declarada" quer dizer que a fonte não informou; a UF é a do pátio.
+- **Regras de leitura:** a condição nunca é misturada; grupo com menos de 5 vendas não tem mediana nem cor, e as vendas aparecem uma a uma; de 5 a 14 vendas a mediana aparece marcada como "amostra pequena" (asterisco no mapa, faixa mais clara no ranking, aviso no texto); todo gráfico mostra `n` e desde quando há vendas; "sem monta declarada" quer dizer que a fonte não informou; a UF é a do pátio.
 
 ## 6. Requisitos funcionais
 

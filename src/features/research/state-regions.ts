@@ -3,11 +3,11 @@ import { toDataStep } from "@/components/charts/data-steps";
 import type { LegendItem } from "@/components/charts/map-legend";
 import type { ResearchFilters } from "@/domain/research/filters";
 import { STATE_NAMES } from "@/domain/research/states";
-import { MIN_SAMPLE } from "@/domain/research/summary";
+import { isSmallSample, MIN_SAMPLE, SMALL_SAMPLE } from "@/domain/research/summary";
 import { sequentialScale } from "@/lib/charts";
 import { formatRatio } from "@/lib/format";
 
-import { formatMetric, salesLabel } from "./labels";
+import { formatMetric, salesLabel, smallSampleLabel } from "./labels";
 import { researchHref } from "./search";
 import type { StateMapView } from "./types";
 
@@ -43,19 +43,21 @@ export function stateMapRegions(
     const selected = filters.state === state;
     const href = researchHref({ ...filters, state: selected ? null : state });
     if (summary.kind === "summary") {
+      const small = isSmallSample(summary.n);
       return {
         state,
         selected,
-        value: mapValue(view.metric, summary.median),
+        // O asterisco marca a amostra pequena sem tirar o número (a legenda explica).
+        value: `${mapValue(view.metric, summary.median)}${small ? "*" : ""}`,
         tone: { kind: "colored", step: toDataStep(scale?.step(summary.median) ?? 3) },
         href,
-        ariaLabel: `${name}: mediana ${format(summary.median)} ${measure}, ${salesLabel(summary.n)}`,
+        ariaLabel: `${name}: mediana ${format(summary.median)} ${measure}, ${smallSampleLabel(summary.n)}`,
         tooltip: {
           title: name,
           lines: [
             `Mediana ${format(summary.median)} ${measure}`,
             `Metade das vendas entre ${format(summary.low)} e ${format(summary.high)}`,
-            salesLabel(summary.n),
+            smallSampleLabel(summary.n),
             action(selected),
           ],
         },
@@ -94,6 +96,15 @@ export function stateMapRegions(
   });
   const legend: LegendItem[] = [
     ...bands,
+    ...(regions.some(({ value }) => value?.endsWith("*"))
+      ? [
+          {
+            key: "small",
+            swatch: "small" as const,
+            label: `amostra pequena (${MIN_SAMPLE} a ${SMALL_SAMPLE - 1} vendas)`,
+          },
+        ]
+      : []),
     { key: "few", swatch: "few", label: `1 a ${MIN_SAMPLE - 1} vendas` },
     { key: "empty", swatch: "empty", label: "nenhuma venda" },
   ];

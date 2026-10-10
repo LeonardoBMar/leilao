@@ -3,10 +3,10 @@ import Link from "next/link";
 import { ChartDataTable } from "@/components/charts/chart-data-table";
 import { RangeBars } from "@/components/charts/range-bars";
 import { type ResearchFilters, vehicleLabel } from "@/domain/research/filters";
-import { MIN_SAMPLE, ratioAxisMax } from "@/domain/research/summary";
+import { isSmallSample, MIN_SAMPLE, ratioAxisMax } from "@/domain/research/summary";
 import { formatRatio } from "@/lib/format";
 
-import { salesLabel } from "../labels";
+import { smallSampleLabel } from "../labels";
 import { getModelRanking } from "../queries";
 import { researchHref } from "../search";
 import { ResearchBlock } from "./research-block";
@@ -31,9 +31,10 @@ export async function RankingBlock({ filters }: { filters: ResearchFilters }) {
       median: summary.median,
       high: summary.high,
       valueLabel: formatRatio(summary.median),
-      detail: salesLabel(summary.n),
+      detail: smallSampleLabel(summary.n),
+      faint: isSmallSample(summary.n),
       href: researchHref({ ...filters, vehicle: { brand, model } }),
-      ariaLabel: `${label}: mediana ${formatRatio(summary.median)} do valor de mercado, ${salesLabel(summary.n)}`,
+      ariaLabel: `${label}: mediana ${formatRatio(summary.median)} do valor de mercado, ${smallSampleLabel(summary.n)}`,
     };
   });
   const domain = [0, ratioAxisMax(Math.max(0, ...rows.map((row) => row.high)))] as const;

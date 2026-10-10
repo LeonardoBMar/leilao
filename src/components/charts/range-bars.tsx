@@ -16,6 +16,8 @@ export type RangeRow = {
   valueLabel: string;
   /** Linha de apoio (ex.: "43 vendas"). */
   detail?: string;
+  /** Amostra pequena: a faixa fica mais clara (o aviso em texto vai em `detail`). */
+  faint?: boolean;
   href?: Route;
   /** Texto completo da linha para leitores de tela. */
   ariaLabel: string;
@@ -45,7 +47,10 @@ export function RangeBars({ rows, domain, ariaLabel }: RangeBarsProps) {
             <span aria-hidden="true" className="relative h-4">
               <span className="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-surface-subtle" />
               <span
-                className="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-data-3"
+                className={cn(
+                  "absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-data-3",
+                  row.faint && "opacity-50",
+                )}
                 style={{
                   left: `${percentOf(row.low, domain)}%`,
                   width: `${percentOf(row.high, domain) - percentOf(row.low, domain)}%`,

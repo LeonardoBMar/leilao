@@ -828,6 +828,8 @@ No leilão do usuário: dados do evento numa faixa rebaixada (data, local, edita
    - “Como o lance sobe”: frase com a leitura (“48 h antes do fim, o lance estava em 93% do lance final, na mediana: ainda subiu 8% até o fim.”) e a linha da mediana com a faixa P25–P75, de 48 h a 1 h; o eixo do lance não começa no zero, para a subida aparecer.
 4. EmptyState `inline` por bloco: “Nenhuma venda com esses filtros desde dd/mm/aaaa”, com até três botões que afrouxam um filtro e dizem quantas vendas aparecem (“Ver o Brasil todo (40 vendas)”, “Tirar a faixa de ano”, “Ver todos os modelos”, a condição com mais vendas); só aparece a saída que tem venda.
 
+**Amostra pequena** (5 a 14 vendas, `SMALL_SAMPLE`): o número aparece, marcado sem cor nova: asterisco no valor do mapa (a legenda diz “amostra pequena (5 a 14 vendas)”), faixa a 50% de opacidade no ranking e “· amostra pequena” na linha de apoio (ranking, distribuições, dica e leitor de tela).
+
 Os gráficos são descritivos: sempre com `n` e o início da base, sem “oportunidade”, score ou cor de estado (`success`/`error`). Cada gráfico tem `role="img"` com resumo em texto.
 
 ---
