@@ -57,7 +57,7 @@ test("cadastra um lote e bloqueia número repetido no mesmo leilão (CA-02)", as
 
 test("análise: exemplos do SPEC, pendências e fixação (CA-03, CA-04, CA-05, CA-07)", async ({ page }) => {
   await page.goto(`/lotes/${lotId}`);
-  await page.getByRole("button", { name: "Analisar lote" }).click();
+  await page.getByRole("button", { name: "Analisar lote" }).first().click();
   await expect(page.getByRole("heading", { name: "Análise financeira v1" })).toBeVisible();
   // D-38: o rascunho nasce com as premissas padrão (lote sem anúncio: custos fixos, reserva e margem em %).
   await expect(field(page, "Pneus")).toHaveValue("2400,00");
@@ -135,7 +135,7 @@ test("revisar premissas cria nova versão e preserva a fixada (CA-08)", async ({
 test("resultado acima do limite e correção preservando a revisão anterior (CA-10, CA-11, CA-14)", async ({ page }) => {
   // Modal da ficha (D-54): desfecho já em "Arrematado" e data de hoje.
   await page.goto(`/lotes/${lotId}`);
-  await page.getByRole("button", { name: "Registrar resultado" }).click();
+  await page.getByRole("button", { name: "Registrar resultado" }).first().click();
   const dialog = page.getByRole("dialog");
   await field(dialog, "Preço final").fill("35.500");
   await dialog.getByRole("button", { name: "Registrar", exact: true }).click();
@@ -250,7 +250,8 @@ test("arquivar lote com histórico: sai das listas e continua acessível (CA-17)
   const lotLink = page.getByRole("link", { name: "Toyota Corolla 2020" });
 
   await page.goto(`/lotes/${lotId}`);
-  await page.getByRole("button", { name: "Arquivar" }).click();
+  await page.getByRole("button", { name: "Mais ações do lote" }).click();
+  await page.getByRole("menuitem", { name: "Arquivar" }).click();
   await expectToast(page, "Lote arquivado.");
   await expect(page.getByText(/Lote arquivado em/)).toBeVisible();
 

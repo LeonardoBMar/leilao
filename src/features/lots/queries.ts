@@ -3,7 +3,7 @@ import "server-only";
 import { cache } from "react";
 
 import { compareToFixedLimit, roomToFixedLimit } from "@/domain/finance/calculator";
-import { estimatePrice, limitFit } from "@/domain/listings/estimates";
+import { estimatePrice, limitFit, type PriceEstimate } from "@/domain/listings/estimates";
 import { cents } from "@/domain/money";
 import { getEstimateContext } from "@/features/listings/queries";
 import type { Prisma } from "@/generated/prisma/client";
@@ -324,14 +324,48 @@ export async function getLot(id: string): Promise<LotDetail | null> {
       lotUrl: true,
       notes: true,
       updatedAt: true,
-      listing: { select: { lastCheckedAt: true, source: { select: { name: true } } } },
+      listing: {
+        select: {
+          lastCheckedAt: true,
+          source: { select: { name: true } },
+          status: true,
+          endsAt: true,
+          mileageKm: true,
+          category: true,
+          damageLevel: true,
+          marketValueCents: true,
+          marketValueOrigin: true,
+          marketValueRefMonth: true,
+        },
+      },
       _count: { select: { results: true, analyses: { where: { status: "fixed" } } } },
     },
   });
   if (!row) return null;
 
+  const item = toListItem(row);
+  const { listing } = row;
+  const marketValue = listing?.marketValueCents == null ? null : cents(listing.marketValueCents);
+  let price: PriceEstimate | null = null;
+  if (listing?.status === "open" && (listing.endsAt === null || listing.endsAt > new Date())) {
+    const context = await getEstimateContext();
+    price = estimatePrice(
+      {
+        brand: item.brand,
+        model: item.model,
+        modelYear: item.modelYear,
+        mileageKm: listing.mileageKm,
+        category: listing.category,
+        damageLevel: listing.damageLevel,
+        marketValue,
+      },
+      context.index,
+    );
+  }
+  const maxBid = item.limit?.isViable ? item.limit.maxBid : null;
+
   return {
-    ...toListItem(row),
+    ...item,
     manufactureYear: row.manufactureYear,
     mileageKm: row.mileageKm,
     startingBid: row.startingBidCents === null ? null : cents(row.startingBidCents),
@@ -340,6 +374,16 @@ export async function getLot(id: string): Promise<LotDetail | null> {
     fixedAnalysisCount: row._count.analyses,
     resultCount: row._count.results,
     updatedAt: row.updatedAt,
-    tracking: row.listing && { sourceName: row.listing.source.name, lastCheckedAt: row.listing.lastCheckedAt },
+    tracking: listing && {
+      sourceName: listing.source.name,
+      lastCheckedAt: listing.lastCheckedAt,
+      endsAt: listing.endsAt,
+      market:
+        marketValue === null || listing.marketValueOrigin === null
+          ? null
+          : { value: marketValue, origin: listing.marketValueOrigin, refMonth: listing.marketValueRefMonth },
+      price,
+      fit: price === null ? null : limitFit(price, maxBid),
+    },
   };
 }

@@ -19,7 +19,7 @@ export async function LotAnalysisPanel({ lotId }: { lotId: string }) {
       Continuar rascunho v{draft.version}
     </ButtonLink>
   ) : (
-    <CreateAnalysisButton lotId={lotId} sourceId={latestFixed?.id} variant={latestFixed ? "secondary" : "primary"}>
+    <CreateAnalysisButton lotId={lotId} sourceId={latestFixed?.id} variant="secondary">
       {latestFixed ? <GitBranchPlus aria-hidden="true" /> : <Calculator aria-hidden="true" />}
       {latestFixed ? "Revisar premissas" : "Analisar lote"}
     </CreateAnalysisButton>

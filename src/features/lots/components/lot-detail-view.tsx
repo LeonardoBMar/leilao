@@ -20,9 +20,11 @@ type LotDetailViewProps = {
   analysis: React.ReactNode;
   result: React.ReactNode;
   photos: React.ReactNode;
+  /** Próximo passo (analisar, continuar o rascunho ou registrar o resultado), em destaque no cabeçalho. */
+  nextAction: React.ReactNode;
 };
 
-export async function LotDetailView({ params, analysis, result, photos }: LotDetailViewProps) {
+export async function LotDetailView({ params, analysis, result, photos, nextAction }: LotDetailViewProps) {
   const parsed = lotIdSchema.safeParse((await params).id);
   if (!parsed.success) notFound();
   const lot = await getLot(parsed.data);
@@ -43,25 +45,20 @@ export async function LotDetailView({ params, analysis, result, photos }: LotDet
         eyebrow={`Lote ${lot.lotNumber} · ${formatDateTime(lot.auction.startsAt)}`}
         title={title}
         description={lot.vehicleVersion ?? undefined}
-        meta={
-          <>
-            {lot.isFollowed ? <Badge>Acompanhando</Badge> : null}
-            {lot.limit ? <Badge>Análise v{lot.limit.version} fixada</Badge> : null}
-            {isArchived ? <Badge variant="warning">Arquivado</Badge> : null}
-          </>
-        }
+        meta={isArchived ? <Badge variant="outline">Arquivado</Badge> : undefined}
         actions={
           <>
+            <ButtonLink href={`/lotes/${lot.id}/editar`} variant="secondary">
+              <Pencil aria-hidden="true" />
+              Editar
+            </ButtonLink>
+            {nextAction}
             <LotActions
               lotId={lot.id}
               lotLabel={`Lote ${lot.lotNumber} — ${title}`}
               isArchived={lot.archivedAt !== null}
               canDelete={lot.fixedAnalysisCount === 0 && lot.resultCount === 0}
             />
-            <ButtonLink href={`/lotes/${lot.id}/editar`} variant="secondary">
-              <Pencil aria-hidden="true" />
-              Editar
-            </ButtonLink>
           </>
         }
       />
@@ -132,8 +129,6 @@ export async function LotDetailView({ params, analysis, result, photos }: LotDet
           ) : null}
         </aside>
       </div>
-
-      <p className="text-caption text-muted">Atualizado em {formatDateTime(lot.updatedAt)}</p>
     </div>
   );
 }
@@ -148,7 +143,7 @@ function Detail({ label, children }: { label: string; children: React.ReactNode 
 }
 
 function Unknown() {
-  return <span className="text-muted-subtle">—</span>;
+  return <span className="text-muted">—</span>;
 }
 
 export function LotDetailSkeleton() {

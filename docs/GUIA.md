@@ -26,7 +26,7 @@ Na página do leilão, **Adicionar lote**.
 
 - Obrigatórios: número do lote e o veículo (marca, modelo e ano-modelo).
 - O número do lote não se repete no mesmo leilão; em outro leilão, pode.
-- **Lance atual:** atualize na ficha do lote (campo *Novo lance atual* → *Atualizar*). O app registra quando foi atualizado.
+- **Lance atual:** na ficha do lote, **Atualizar lance** (ou **Corrigir lance**, num lote acompanhado no site) abre um campo ali mesmo. O app registra quando foi atualizado.
 - **Acompanhar este lote:** coloca o lote no dashboard, com lance atual e seu limite lado a lado.
 - **Fotos:** até 10 por lote, JPEG, PNG ou WebP até 5 MB. A primeira vira capa; dá para trocar a capa e reordenar.
 
@@ -101,7 +101,7 @@ Por que o dashboard não compara o lance atual com o histórico: o lance sobe at
 
 ## 8. Arquivar e excluir
 
-- **Arquivar** tira leilão ou lote das listas e do dashboard, sem apagar nada. Veja de novo em *Mais filtros → Só arquivados*; **Reativar** traz de volta.
+- **Arquivar** (no lote, pelo menu **⋯** ao lado de Editar) tira leilão ou lote das listas e do dashboard, sem apagar nada. Veja de novo em *Mais filtros → Só arquivados*; **Reativar** traz de volta.
 - **Excluir** só aparece quando não há histórico (nenhuma análise fixada nem resultado). Com histórico, arquive.
 
 ## 9. Leilões, monitores e alertas

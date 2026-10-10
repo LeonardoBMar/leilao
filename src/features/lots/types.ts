@@ -1,4 +1,5 @@
 import type { LimitFit, PriceEstimate } from "@/domain/listings/estimates";
+import type { MarketValueOrigin } from "@/domain/listings/fipe-match";
 import type { Cents } from "@/domain/money";
 
 /** Limite da análise fixada mais recente do lote. */
@@ -61,5 +62,14 @@ export type LotDetail = LotListItem & {
   resultCount: number;
   updatedAt: Date;
   /** Anúncio coletado ligado ao lote: o coletor mantém o lance atual (etapa 3). */
-  tracking: { sourceName: string; lastCheckedAt: Date } | null;
+  tracking: {
+    sourceName: string;
+    lastCheckedAt: Date;
+    endsAt: Date | null;
+    /** Valor de mercado do anúncio, com a origem (D-47). */
+    market: { value: Cents; origin: MarketValueOrigin; refMonth: Date | null } | null;
+    /** Provável lance final, só com o anúncio aberto (D-36). */
+    price: PriceEstimate | null;
+    fit: LimitFit | null;
+  } | null;
 };

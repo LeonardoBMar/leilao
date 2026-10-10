@@ -1,38 +1,71 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { Pencil } from "lucide-react";
+import { useActionState, useState } from "react";
 
-import { Button, CurrencyInput, toast } from "@/components/ui";
+import { Button, CurrencyInput, Popover, PopoverContent, PopoverTrigger, toast } from "@/components/ui";
 import { type ActionState, fieldError, fieldValue, idleState } from "@/lib/action-state";
 
+type BidAction = (prev: ActionState, formData: FormData) => Promise<ActionState>;
+
 type CurrentBidFormProps = {
-  action: (prev: ActionState, formData: FormData) => Promise<ActionState>;
+  action: BidAction;
   /** Valor atual em centavos, para preencher o campo. */
   currentBid: number | null;
+  /** Lance mantido pelo coletor: o botão vira "Corrigir". */
+  isTracked: boolean;
 };
 
-/** Atualização manual do lance atual, sem sair da ficha (fluxo principal, passo 7). */
-export function CurrentBidForm({ action, currentBid }: CurrentBidFormProps) {
-  const [state, formAction, pending] = useActionState(action, idleState);
+/** Atualização manual do lance atual num popover, sem sair da ficha (fluxo principal, passo 7). */
+export function CurrentBidForm({ action, currentBid, isTracked }: CurrentBidFormProps) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="link" size="sm" className="h-auto w-fit px-0">
+          <Pencil aria-hidden="true" />
+          {isTracked ? "Corrigir lance" : "Atualizar lance"}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent>
+        <BidForm action={action} currentBid={currentBid} onSaved={() => setOpen(false)} />
+      </PopoverContent>
+    </Popover>
+  );
+}
 
-  useEffect(() => {
-    if (state.status === "success" && state.message) toast.success(state.message);
-  }, [state]);
+function BidForm({
+  action,
+  currentBid,
+  onSaved,
+}: {
+  action: BidAction;
+  currentBid: number | null;
+  onSaved: () => void;
+}) {
+  const [state, formAction, pending] = useActionState<ActionState, FormData>(async (prev, formData) => {
+    const next = await action(prev, formData);
+    if (next.status === "success") {
+      onSaved();
+      if (next.message) toast.success(next.message);
+    }
+    return next;
+  }, idleState);
 
   const saved = currentBid === null ? undefined : (currentBid / 100).toFixed(2).replace(".", ",");
 
   return (
-    <form action={formAction} className="flex flex-col gap-3 sm:flex-row sm:items-start">
+    <form action={formAction} className="grid gap-3">
       <CurrencyInput
         name="currentBid"
-        label="Novo lance atual"
-        containerClassName="sm:w-72"
+        label="Lance atual"
+        autoFocus
         defaultValue={fieldValue(state, "currentBid") ?? saved}
         error={fieldError(state, "currentBid")}
         helperText="Deixe vazio para limpar."
       />
-      <Button type="submit" variant="secondary" className="sm:mt-7" loading={pending} loadingLabel="Salvando…">
-        Atualizar lance
+      <Button type="submit" loading={pending} loadingLabel="Salvando…">
+        Salvar lance
       </Button>
     </form>
   );
