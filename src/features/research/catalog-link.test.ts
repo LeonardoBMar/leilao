@@ -25,6 +25,11 @@ describe("catalogParams", () => {
     });
   });
 
+  it("sucata não vira com-monta, que não a inclui: fica sem filtro de condição", () => {
+    const params = catalogParams({ ...DEFAULT_RESEARCH_FILTERS, vehicle: onix, condition: "sucata" });
+    expect(params?.condicao).toBe("qualquer");
+  });
+
   it("não leva o estado: o catálogo filtra por distância", () => {
     expect(catalogParams({ ...DEFAULT_RESEARCH_FILTERS, vehicle: onix, state: "SP" })).not.toHaveProperty("uf");
   });

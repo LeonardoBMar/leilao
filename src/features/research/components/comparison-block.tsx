@@ -37,7 +37,7 @@ export async function ComparisonBlock({ filters, noSales }: { filters: ResearchF
     <ResearchBlock
       id="pesquisa-comparacao"
       title={COMPARISON_BLOCK_TITLE}
-      description="Lance final em % do valor de mercado dos dois grupos, com a mesma condição, categoria e o resto dos filtros. A faixa clara reúne a metade do meio das vendas; o traço é a mediana."
+      description="Lance final em % do valor de mercado dos dois grupos, com a mesma condição, categoria, faixa de ano e o resto dos filtros (só o modelo ou o estado trocado muda). A faixa clara reúne a metade do meio das vendas; o traço é a mediana."
     >
       {groups.every(({ distribution }) => distribution.summary.kind === "none") ? (
         noSales

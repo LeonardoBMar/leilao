@@ -97,7 +97,7 @@ export function stateMapRegions(
   });
   const legend: LegendItem[] = [
     ...bands,
-    ...(regions.some(({ value }) => value?.endsWith("*"))
+    ...(view.states.some(({ summary }) => summary.kind === "summary" && isSmallSample(summary.n))
       ? [
           {
             key: "small",

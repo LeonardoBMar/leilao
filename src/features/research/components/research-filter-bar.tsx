@@ -167,38 +167,36 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
         </div>
       </div>
 
-      {filters.vehicle !== null || filters.state !== null ? (
-        <div className="grid gap-3 md:flex md:flex-wrap md:items-center">
-          <span className="text-label text-muted">Comparar com</span>
-          {filters.vehicle === null ? null : (
-            <ModelPicker
-              label="Comparar com outro modelo"
-              placeholder="Outro modelo"
-              shortcut={false}
-              value={filters.compare?.vehicle ? vehicleLabel(filters.compare.vehicle) : null}
-              options={facets.models.filter(
-                (option) => option.brand !== filters.vehicle?.brand || option.model !== filters.vehicle.model,
-              )}
-              onChange={(option) =>
-                apply({
-                  ...filters,
-                  compare: {
-                    vehicle: option === null ? null : { brand: option.brand, model: option.model },
-                    state: filters.compare?.state ?? null,
-                  },
-                })
-              }
-              className="md:min-w-64 md:flex-1"
-            />
-          )}
-          <CompareStateSelect
-            value={filters.compare?.state ?? null}
-            current={filters.state}
-            counts={facets.states}
-            onChange={(state) => apply({ ...filters, compare: { vehicle: filters.compare?.vehicle ?? null, state } })}
+      <div className="grid gap-3 md:flex md:flex-wrap md:items-center">
+        <span className="text-label text-muted">Comparar com</span>
+        {filters.vehicle === null ? null : (
+          <ModelPicker
+            label="Comparar com outro modelo"
+            placeholder="Outro modelo"
+            shortcut={false}
+            value={filters.compare?.vehicle ? vehicleLabel(filters.compare.vehicle) : null}
+            options={facets.models.filter(
+              (option) => option.brand !== filters.vehicle?.brand || option.model !== filters.vehicle.model,
+            )}
+            onChange={(option) =>
+              apply({
+                ...filters,
+                compare: {
+                  vehicle: option === null ? null : { brand: option.brand, model: option.model },
+                  state: filters.compare?.state ?? null,
+                },
+              })
+            }
+            className="md:min-w-64 md:flex-1"
           />
-        </div>
-      ) : null}
+        )}
+        <CompareStateSelect
+          value={filters.compare?.state ?? null}
+          current={filters.state}
+          counts={facets.states}
+          onChange={(state) => apply({ ...filters, compare: { vehicle: filters.compare?.vehicle ?? null, state } })}
+        />
+      </div>
 
       {filters.vehicle === null ? null : (
         <div className="grid grid-cols-2 gap-3 md:flex">

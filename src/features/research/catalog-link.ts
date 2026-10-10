@@ -4,13 +4,15 @@ import { type ResearchCondition, type ResearchFilters, vehicleLabel } from "@/do
 /**
  * Condição do catálogo mais próxima de cada condição da Pesquisa. O catálogo filtra "até" (cumulativo) e a Pesquisa
  * olha uma condição só, então fora de "sem monta" a correspondência é aproximada: o catálogo mostra o filtro aplicado.
+ * Sucata não está em nenhuma condição do catálogo (`com-monta` vai só até grande monta), então fica sem filtro de
+ * condição, em vez de mostrar lotes que não são sucata.
  */
 const CATALOG_CONDITION = {
   "sem-monta": "sem-monta",
   pequena: "ate-pequena",
   media: "ate-media",
   grande: "com-monta",
-  sucata: "com-monta",
+  sucata: "qualquer",
 } as const satisfies Record<ResearchCondition, ConditionKey>;
 
 /**

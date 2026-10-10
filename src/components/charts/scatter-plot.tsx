@@ -95,6 +95,7 @@ export function ScatterPlot({
             type="button"
             tabIndex={-1}
             title={point.title}
+            aria-label={point.title}
             onMouseEnter={() => setActiveKey(point.key)}
             onClick={() => setActiveKey((current) => (current === point.key ? null : point.key))}
             className="absolute flex size-6 -translate-x-1/2 translate-y-1/2 cursor-pointer items-center justify-center"

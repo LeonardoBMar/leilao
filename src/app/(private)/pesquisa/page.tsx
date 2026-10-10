@@ -8,6 +8,8 @@ import {
   ResearchViewSkeleton,
 } from "@/features/research/components/research-view";
 
+import { ModelCatalogActions } from "./model-catalog-actions";
+
 export const metadata: Metadata = { title: "Pesquisa · Leilão Tracker" };
 
 export default function ResearchPage({ searchParams }: PageProps<"/pesquisa">) {
@@ -17,7 +19,10 @@ export default function ResearchPage({ searchParams }: PageProps<"/pesquisa">) {
         <ResearchHeader />
       </Suspense>
       <Suspense fallback={<ResearchViewSkeleton />}>
-        <ResearchView searchParams={searchParams} />
+        <ResearchView
+          searchParams={searchParams}
+          modelActions={(filters) => <ModelCatalogActions filters={filters} />}
+        />
       </Suspense>
     </div>
   );

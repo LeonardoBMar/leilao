@@ -6,8 +6,8 @@ import { formatBRL, formatDate, formatKm, formatRatio } from "@/lib/format";
 
 import { CONDITION_LABELS, salesLabel } from "../labels";
 import { getModelSales, MODEL_SALES_LIMIT } from "../queries";
+import { researchHref } from "../search";
 import type { ResearchSale } from "../types";
-import { ModelCatalogActions } from "./model-catalog-actions";
 import { ModelSalesScatter } from "./model-sales-scatter";
 import { ModelSalesTable } from "./model-sales-table";
 import { ResearchBlock } from "./research-block";
@@ -24,16 +24,19 @@ export async function ModelSalesBlock({
   filters,
   vehicle,
   noSales,
+  actions,
 }: {
   filters: ResearchFilters;
   vehicle: ResearchVehicle;
   noSales: ReactNode;
+  /** Ações do modelo (lotes abertos, monitor), compostas pela rota. */
+  actions: ReactNode;
 }) {
   const data = await getModelSales(filters);
   const title = modelSalesTitle(vehicle);
   if (data === null || data.total === 0) {
     return (
-      <ResearchBlock id="pesquisa-vendas" title={title} actions={<ModelCatalogActions filters={filters} />}>
+      <ResearchBlock id="pesquisa-vendas" title={title} actions={actions}>
         {noSales}
       </ResearchBlock>
     );
@@ -58,23 +61,29 @@ export async function ModelSalesBlock({
       summary.kind === "summary" ? [`${year}, mediana ${formatBRL(cents(Math.round(summary.median)))}`] : [],
     )
     .join("; ")}`;
-  const note = total > sales.length ? `Mostrando as ${MODEL_SALES_LIMIT} mais recentes de ${salesLabel(total)}.` : null;
+  const note =
+    total > sales.length
+      ? `Mostrando as ${MODEL_SALES_LIMIT} mais recentes de ${salesLabel(total)}; a ordem e o filtro da tabela valem dentro delas.`
+      : null;
+  // Outro recorte recomeça a ordem, o filtro de estado e o destaque (senão a tabela poderia ficar vazia).
+  const recortKey = researchHref(filters);
 
   return (
     <ResearchBlock
       id="pesquisa-vendas"
       title={title}
-      actions={<ModelCatalogActions filters={filters} />}
+      actions={actions}
       description={`Lance final de cada venda (${CONDITION_LABELS[filters.condition].toLowerCase()}) por ano-modelo ou quilometragem; o traço é a mediana do ano, com 5 vendas ou mais. Destaque um estado ou uma fonte para ver onde ele cai. Passe o mouse ou toque num ponto para ver a venda; todas estão na tabela.`}
     >
       <ModelSalesScatter
+        key={recortKey}
         sales={scatterSales}
         medians={medians}
         subject={vehicleLabel(vehicle)}
         yearSummary={yearSummary}
       />
       {note ? <p className="text-label font-normal text-muted">{note}</p> : null}
-      <ModelSalesTable sales={sales} />
+      <ModelSalesTable key={recortKey} sales={sales} />
     </ResearchBlock>
   );
 }

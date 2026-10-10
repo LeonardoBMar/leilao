@@ -3,9 +3,8 @@ import { Search } from "lucide-react";
 import { ButtonLink } from "@/components/ui";
 import type { ResearchFilters } from "@/domain/research/filters";
 import { CATALOG_LISTINGS_PATH, withQuery } from "@/features/listings/search";
+import { catalogParams } from "@/features/research/catalog-link";
 import { SaveWatchButton } from "@/features/watches/components/save-watch-button";
-
-import { catalogParams } from "../catalog-link";
 
 /**
  * Do modelo pesquisado para o que fazer com ele (D-45): ver os lotes abertos dele no catálogo ou criar um monitor que

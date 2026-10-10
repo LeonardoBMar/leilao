@@ -1,7 +1,8 @@
-import { Suspense } from "react";
+import { type ReactNode, Suspense } from "react";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { Skeleton } from "@/components/ui";
+import type { ResearchFilters } from "@/domain/research/filters";
 import { formatDate } from "@/lib/format";
 
 import { salesLabel } from "../labels";
@@ -46,7 +47,14 @@ export function ResearchHeaderSkeleton() {
  * Pesquisa (D-45): filtros da URL, barra de filtros e os blocos, cada um no seu `<Suspense>` para aparecer assim que a
  * consulta dele termina.
  */
-export async function ResearchView({ searchParams }: { searchParams: SearchParams }) {
+export async function ResearchView({
+  searchParams,
+  modelActions,
+}: {
+  searchParams: SearchParams;
+  /** Ações do modelo escolhido (lotes abertos, monitor), compostas pela rota: elas juntam outras features. */
+  modelActions: (filters: ResearchFilters) => ReactNode;
+}) {
   const filters = parseResearchParams(await searchParams);
   const [facets, { since }] = await Promise.all([getResearchFacets(filters), getResearchOverview()]);
 
@@ -74,7 +82,12 @@ export async function ResearchView({ searchParams }: { searchParams: SearchParam
         </Suspense>
       ) : (
         <Suspense fallback={<ResearchBlockSkeleton title={modelSalesTitle(filters.vehicle)} className="h-96" />}>
-          <ModelSalesBlock filters={filters} vehicle={filters.vehicle} noSales={noSales} />
+          <ModelSalesBlock
+            filters={filters}
+            vehicle={filters.vehicle}
+            noSales={noSales}
+            actions={modelActions(filters)}
+          />
         </Suspense>
       )}
       <Suspense fallback={<ResearchBlockSkeleton title={BID_CURVE_BLOCK_TITLE} />}>
