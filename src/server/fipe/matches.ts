@@ -7,6 +7,7 @@ import {
   type FipeVehicleIdentity,
   type FipeVehicleType,
   MATCHER_VERSION,
+  rematchAllBelow,
 } from "@/domain/listings/fipe-match";
 import type { FipeMatchKind, FipeMatchOrigin } from "@/generated/prisma/client";
 
@@ -161,7 +162,16 @@ export async function requeueStaleMatches(): Promise<number> {
   const { count } = await db.listing.updateMany({
     where: {
       marketValueCheckedAt: { not: null },
-      fipeMatch: { is: { origin: "auto", matcherVersion: { lt: MATCHER_VERSION } } },
+      // Mesma condição de `needsRematch`: sem casamento de versão anterior, ou qualquer uma antes da última `all`.
+      fipeMatch: {
+        is: {
+          origin: "auto",
+          OR: [
+            { kind: "none", matcherVersion: { lt: MATCHER_VERSION } },
+            { matcherVersion: { lt: rematchAllBelow() } },
+          ],
+        },
+      },
       ...notFromSource,
     },
     data: { marketValueCheckedAt: null },

@@ -358,11 +358,31 @@ export function marketValueOnSave(
 
 /**
  * Versão da regra de escolha (D-49). Suba sempre que `chooseFipeModels`, `matchFipeBrand`, os tipos ou os combustíveis
- * mudarem: as correlações automáticas de versão anterior são refeitas e os anúncios ligados a elas, recalculados.
- * 2: catálogo do dataset (D-51), com a marca pelo nome e a versão pelo código FIPE.
- * 3: segunda leitura solta (ordem trocada, letras coladas, "NOVO") e famílias de até 30 versões (D-53).
+ * mudarem, e diga em `MATCHER_CHANGES` o que a versão nova pode mudar: as correlações automáticas afetadas são refeitas
+ * e os anúncios ligados a elas, recalculados.
  */
 export const MATCHER_VERSION = 3;
+
+/**
+ * O que cada versão da regra muda (D-53). `all`: a escolha de quem já casou pode mudar, e todas as automáticas de
+ * versão anterior são refeitas. `unmatched`: a regra só amplia a busca, e só as sem casamento (`none`) são refeitas;
+ * as que casaram ficam como estão (sairiam iguais).
+ */
+export const MATCHER_CHANGES: Readonly<Record<number, "all" | "unmatched">> = {
+  1: "all",
+  // Catálogo do dataset (D-51): marca pelo nome e versão pelo código FIPE.
+  2: "all",
+  // Segunda leitura solta (ordem trocada, letras coladas, "NOVO") e famílias de até 30 versões (D-53).
+  3: "unmatched",
+};
+
+/** Correlação automática anterior a esta versão é refeita, qualquer que seja o tipo: a última versão `all`. */
+export function rematchAllBelow(): number {
+  return Math.max(
+    0,
+    ...Object.entries(MATCHER_CHANGES).flatMap(([version, change]) => (change === "all" ? [Number(version)] : [])),
+  );
+}
 
 export type FipeVehicle = {
   brand: string | null;
@@ -405,6 +425,11 @@ export function fipeVehicleIdentity(vehicle: FipeVehicle): FipeVehicleIdentity |
 export type FipeMatchModel = { code: string; fuel: number; label: string };
 
 /** Correlação automática de regra antiga é refeita; a manual nunca. */
-export function needsRematch(match: { origin: "auto" | "manual"; matcherVersion: number }): boolean {
-  return match.origin === "auto" && match.matcherVersion < MATCHER_VERSION;
+export function needsRematch(match: {
+  origin: "auto" | "manual";
+  matcherVersion: number;
+  kind: "version" | "family" | "none";
+}): boolean {
+  if (match.origin !== "auto" || match.matcherVersion >= MATCHER_VERSION) return false;
+  return match.kind === "none" || match.matcherVersion < rematchAllBelow();
 }

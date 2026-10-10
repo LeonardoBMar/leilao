@@ -9,12 +9,14 @@ import {
   fipeVehicleIdentity,
   fipeVehicleTypes,
   marketValueOnSave,
+  MATCHER_CHANGES,
   MATCHER_VERSION,
   matchFipeBrand,
   MAX_FAMILY_CANDIDATES,
   needsRematch,
   parseFipeMonth,
   pickFipeTable,
+  rematchAllBelow,
   settleFipeValue,
   versionTokens,
 } from "./fipe-match";
@@ -323,9 +325,21 @@ describe("correlação (D-49)", () => {
     expect(fipeVehicleIdentity({ ...vehicle, category: "Equipamentos" })).toBeNull();
   });
 
-  it("refaz só a automática de regra antiga", () => {
-    expect(needsRematch({ origin: "auto", matcherVersion: MATCHER_VERSION - 1 })).toBe(true);
-    expect(needsRematch({ origin: "auto", matcherVersion: MATCHER_VERSION })).toBe(false);
-    expect(needsRematch({ origin: "manual", matcherVersion: 0 })).toBe(false);
+  it("refaz só a automática de regra antiga que a versão nova pode mudar", () => {
+    const all = rematchAllBelow();
+    expect(needsRematch({ origin: "auto", matcherVersion: MATCHER_VERSION - 1, kind: "none" })).toBe(true);
+    expect(needsRematch({ origin: "auto", matcherVersion: all - 1, kind: "version" })).toBe(true);
+    expect(needsRematch({ origin: "auto", matcherVersion: MATCHER_VERSION, kind: "none" })).toBe(false);
+    expect(needsRematch({ origin: "manual", matcherVersion: 0, kind: "none" })).toBe(false);
+  });
+
+  it("versão que só amplia a busca não refaz quem já casou", () => {
+    expect(MATCHER_CHANGES[MATCHER_VERSION]).toBe("unmatched");
+    expect(needsRematch({ origin: "auto", matcherVersion: MATCHER_VERSION - 1, kind: "family" })).toBe(false);
+  });
+
+  it("toda versão da regra diz o que muda", () => {
+    const versions = Array.from({ length: MATCHER_VERSION }, (_, index) => index + 1);
+    expect(versions.every((version) => MATCHER_CHANGES[version] !== undefined)).toBe(true);
   });
 });
