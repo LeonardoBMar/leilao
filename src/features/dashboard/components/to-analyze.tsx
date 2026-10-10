@@ -6,7 +6,7 @@ import { DEFAULT_REGION } from "@/domain/listings/region";
 import { DismissListingButton } from "@/features/listings/components/dismiss-listing-button";
 import { ListingCard } from "@/features/listings/components/listing-card";
 import { getRegionOverview } from "@/features/listings/queries";
-import { CATALOG_LISTINGS_PATH } from "@/features/listings/search";
+import { CATALOG_LISTINGS_PATH, withQuery } from "@/features/listings/search";
 
 /**
  * "Para analisar agora" (D-44, DESIGN.md §15.1): anúncios da região ou dos monitores cujo provável cabe no limite,
@@ -47,7 +47,11 @@ export async function ToAnalyze() {
         ))}
       </ul>
       {more > 0 ? (
-        <Link href={CATALOG_LISTINGS_PATH} className="w-fit text-label text-accent hover:underline">
+        // O catálogo não filtra "cabe no limite" nem soma os monitores: leva ao filtro padrão sem os já analisados.
+        <Link
+          href={withQuery(CATALOG_LISTINGS_PATH, { analisados: "esconder" })}
+          className="w-fit text-label text-accent hover:underline"
+        >
           E mais {more} {more === 1 ? "lote" : "lotes"} · Ver no catálogo
         </Link>
       ) : null}
