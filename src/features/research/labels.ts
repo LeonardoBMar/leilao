@@ -28,6 +28,20 @@ export function salesLabel(count: number): string {
   return `${count.toLocaleString("pt-BR")} ${count === 1 ? "venda" : "vendas"}`;
 }
 
+/** "2018 a 2020", "a partir de 2018", "até 2020"; `null` sem faixa de ano. */
+export function yearRangeLabel({
+  yearFrom,
+  yearTo,
+}: {
+  yearFrom: number | null;
+  yearTo: number | null;
+}): string | null {
+  if (yearFrom !== null && yearTo !== null) return yearFrom === yearTo ? String(yearFrom) : `${yearFrom} a ${yearTo}`;
+  if (yearFrom !== null) return `a partir de ${yearFrom}`;
+  if (yearTo !== null) return `até ${yearTo}`;
+  return null;
+}
+
 /** Linha de apoio de um grupo: o `n`, ou quantas faltam para a mediana. */
 export function summaryDetail(summary: GroupSummary): string {
   if (summary.kind === "summary") return salesLabel(summary.n);

@@ -89,8 +89,11 @@ function salesWhere(
     parts.push(level === null ? sql`l.damage_level IS NULL` : sql`l.damage_level::text = ${level}`);
   }
   if (state && filters.state !== null) parts.push(sql`l.state = ${filters.state}`);
-  if (filters.vehicle !== null)
+  if (filters.vehicle !== null) {
     parts.push(sql`${VEHICLE_KEY} = ${`${filters.vehicle.brand}|${filters.vehicle.model}`}`);
+    if (filters.yearFrom !== null) parts.push(sql`l.model_year >= ${filters.yearFrom}`);
+    if (filters.yearTo !== null) parts.push(sql`l.model_year <= ${filters.yearTo}`);
+  }
   if (ratio) {
     parts.push(
       sql`l.market_value_cents > 0`,
@@ -144,7 +147,7 @@ const MODEL_SUGGESTIONS_LIMIT = 300;
 export async function getResearchFacets(filters: ResearchFilters): Promise<ResearchFacets> {
   await requireUser();
   const level = sql`coalesce(l.damage_level::text, 'unclassified')`;
-  const [byLevel, byCategory, byState, models] = await Promise.all([
+  const [byLevel, byCategory, byState, byYear, models] = await Promise.all([
     rows(
       z.object({ level: levelSchema, n: z.number().int() }),
       sql`SELECT ${level} AS level, count(*)::int AS n FROM listings l
@@ -160,6 +163,15 @@ export async function getResearchFacets(filters: ResearchFilters): Promise<Resea
       sql`SELECT l.state::text AS state, count(*)::int AS n FROM listings l
         WHERE ${salesWhere(filters, { state: false })} GROUP BY 1`,
     ),
+    // Anos do modelo escolhido, sem o próprio filtro de ano (senão a lista encolheria para a faixa).
+    filters.vehicle === null
+      ? Promise.resolve([])
+      : rows(
+          z.object({ year: z.number().int(), n: z.number().int() }),
+          sql`SELECT l.model_year::int AS year, count(*)::int AS n FROM listings l
+            WHERE ${salesWhere({ ...filters, yearFrom: null, yearTo: null }, {})} AND l.model_year IS NOT NULL
+            GROUP BY 1 ORDER BY 1 DESC`,
+        ),
     rows(
       z.object({ key: z.string(), n: z.number().int() }),
       sql`SELECT t.key, count(*)::int AS n
@@ -189,6 +201,7 @@ export async function getResearchFacets(filters: ResearchFilters): Promise<Resea
       sucatas: ofCategory("sucatas"),
     },
     states: stateCounts,
+    years: byYear.map(({ year, n }) => ({ year, sales: n })),
     models: models.flatMap(({ key, n }) => {
       const [brand = "", model = ""] = key.split("|");
       return brand && model ? [{ brand, model, label: vehicleLabel({ brand, model }), sales: n }] : [];

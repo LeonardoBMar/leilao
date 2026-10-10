@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_RESEARCH_FILTERS, effectiveMetric, researchVehicle, vehicleLabel } from "./filters";
+import { DEFAULT_RESEARCH_FILTERS, effectiveMetric, normalizeYears, researchVehicle, vehicleLabel } from "./filters";
 
 describe("researchVehicle", () => {
   it("agrupa como as estimativas: marca por extenso e primeira palavra do modelo", () => {
@@ -31,6 +31,8 @@ describe("DEFAULT_RESEARCH_FILTERS", () => {
       condition: "sem-monta",
       vehicle: null,
       state: null,
+      yearFrom: null,
+      yearTo: null,
       metric: "ratio",
     });
   });
@@ -45,5 +47,19 @@ describe("vehicleLabel", () => {
     expect(vehicleLabel({ brand: "BMW", model: "X1" })).toBe("BMW X1");
     expect(vehicleLabel({ brand: "PEUGEOT", model: "207" })).toBe("Peugeot 207");
     expect(vehicleLabel({ brand: "HONDA", model: "HR-V" })).toBe("Honda HR-V");
+  });
+});
+
+describe("normalizeYears", () => {
+  it.each([
+    [2018, 2020, { yearFrom: 2018, yearTo: 2020 }],
+    [2020, 2018, { yearFrom: 2018, yearTo: 2020 }],
+    [2018, null, { yearFrom: 2018, yearTo: null }],
+    [null, 2020, { yearFrom: null, yearTo: 2020 }],
+    [null, null, { yearFrom: null, yearTo: null }],
+    [1800, 2020, { yearFrom: null, yearTo: 2020 }],
+    [2018.5, 3000, { yearFrom: null, yearTo: null }],
+  ])("de %s até %s", (from, to, expected) => {
+    expect(normalizeYears(from, to)).toEqual(expected);
   });
 });

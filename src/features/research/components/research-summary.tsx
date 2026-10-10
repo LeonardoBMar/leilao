@@ -3,7 +3,7 @@ import { cents } from "@/domain/money";
 import { type ResearchFilters, vehicleLabel } from "@/domain/research/filters";
 import { formatBRL, formatRatio } from "@/lib/format";
 
-import { belowMarketLabel, CONDITION_LABELS, salesLabel, summaryDetail } from "../labels";
+import { belowMarketLabel, CONDITION_LABELS, salesLabel, summaryDetail, yearRangeLabel } from "../labels";
 import { getBidCurve, getConditionDistribution, getPriceSummary } from "../queries";
 
 /** Marca da curva de lance usada na leitura "ainda sobe": a véspera do fim. */
@@ -24,7 +24,11 @@ export async function ResearchSummary({ filters }: { filters: ResearchFilters })
   if (selected === undefined || selected.kind === "none") return null;
 
   const rise = bidCurve.points.find((point) => point.hours === RISE_MARK_HOURS)?.summary;
-  const scope = [filters.vehicle === null ? null : vehicleLabel(filters.vehicle), CONDITION_LABELS[filters.condition]]
+  const scope = [
+    filters.vehicle === null ? null : vehicleLabel(filters.vehicle),
+    yearRangeLabel(filters),
+    CONDITION_LABELS[filters.condition],
+  ]
     .filter((part) => part !== null)
     .join(" · ");
 

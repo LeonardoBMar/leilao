@@ -80,5 +80,7 @@ export type ResearchFacets = {
   categories: Record<ResearchCategory, number>;
   /** Vendas por estado, com os outros filtros: o estado do mapa não entra. */
   states: Partial<Record<StateCode, number>>;
+  /** Anos-modelo do modelo escolhido, do mais novo ao mais velho, com as vendas de cada um; vazio sem modelo. */
+  years: { year: number; sales: number }[];
   models: ResearchModelOption[];
 };

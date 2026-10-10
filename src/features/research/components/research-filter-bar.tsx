@@ -7,6 +7,7 @@ import { useId, useOptimistic, useRef, useTransition } from "react";
 import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import {
   DEFAULT_RESEARCH_FILTERS,
+  normalizeYears,
   RESEARCH_CATEGORIES,
   RESEARCH_CONDITIONS,
   type ResearchFilters,
@@ -22,6 +23,9 @@ import { ModelPicker } from "./model-picker";
 
 /** Valor do item "Todo o Brasil": o `Select` não aceita valor vazio. */
 const ALL_STATES = "todos";
+
+/** Valor do item "Todos os anos". */
+const ALL_YEARS = "todos";
 
 const STATES_BY_NAME = STATE_CODES.toSorted((a, b) => STATE_NAMES[a].localeCompare(STATE_NAMES[b], "pt-BR"));
 
@@ -66,7 +70,13 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
           value={filters.vehicle === null ? null : vehicleLabel(filters.vehicle)}
           options={facets.models}
           onChange={(option) =>
-            apply({ ...filters, vehicle: option === null ? null : { brand: option.brand, model: option.model } })
+            // Os anos são de um modelo: outro modelo recomeça sem faixa.
+            apply({
+              ...filters,
+              vehicle: option === null ? null : { brand: option.brand, model: option.model },
+              yearFrom: null,
+              yearTo: null,
+            })
           }
           className="md:min-w-64 md:flex-1"
         />
@@ -150,6 +160,23 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
         </div>
       </div>
 
+      {filters.vehicle === null ? null : (
+        <div className="grid grid-cols-2 gap-3 md:flex">
+          <YearSelect
+            label="Ano-modelo de"
+            value={filters.yearFrom}
+            years={facets.years}
+            onChange={(yearFrom) => apply({ ...filters, ...normalizeYears(yearFrom, filters.yearTo) })}
+          />
+          <YearSelect
+            label="Ano-modelo até"
+            value={filters.yearTo}
+            years={facets.years}
+            onChange={(yearTo) => apply({ ...filters, ...normalizeYears(filters.yearFrom, yearTo) })}
+          />
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <p
           ref={statusRef}
@@ -202,6 +229,46 @@ function SectionIndex({ hasModel }: { hasModel: boolean }) {
         </a>
       ))}
     </nav>
+  );
+}
+
+/** Ano-modelo inicial ou final. A lista traz os anos com venda e o escolhido, mesmo que o resto do filtro o esvazie. */
+function YearSelect({
+  label,
+  value,
+  years,
+  onChange,
+}: {
+  label: string;
+  value: number | null;
+  years: ResearchFacets["years"];
+  onChange: (year: number | null) => void;
+}) {
+  const labelId = useId();
+  const options =
+    value === null || years.some(({ year }) => year === value) ? years : [{ year: value, sales: 0 }, ...years];
+  return (
+    <>
+      <span id={labelId} className="sr-only">
+        {label}
+      </span>
+      <Select
+        value={value === null ? ALL_YEARS : String(value)}
+        onValueChange={(next) => onChange(next === ALL_YEARS ? null : Number(next))}
+      >
+        <SelectTrigger aria-labelledby={labelId} className="md:w-48">
+          <SelectValue>{value === null ? `${label}: todos` : `${label} ${value}`}</SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL_YEARS}>Todos os anos</SelectItem>
+          {options.map(({ year, sales }) => (
+            <SelectItem key={year} value={String(year)}>
+              <OptionWithCount label={String(year)} count={sales} />
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </>
   );
 }
 

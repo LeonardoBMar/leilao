@@ -41,8 +41,27 @@ export type ResearchFilters = {
   condition: ResearchCondition;
   vehicle: ResearchVehicle | null;
   state: StateCode | null;
+  /** Ano-modelo, de e até (inclusive). Só vale com um modelo escolhido: o ano pesa no preço dentro de um modelo. */
+  yearFrom: number | null;
+  yearTo: number | null;
   metric: ResearchMetric;
 };
+
+/** Anos-modelo aceitos na URL. */
+export const MODEL_YEAR_BOUNDS = { min: 1950, max: 2100 } as const;
+
+/**
+ * Faixa de anos já pronta para o filtro: valor fora dos limites vira ausente e, se vierem trocados, a faixa se
+ * inverte (2020 a 2018 é 2018 a 2020).
+ */
+export function normalizeYears(from: number | null, to: number | null): Pick<ResearchFilters, "yearFrom" | "yearTo"> {
+  const valid = (year: number | null) =>
+    year !== null && Number.isInteger(year) && year >= MODEL_YEAR_BOUNDS.min && year <= MODEL_YEAR_BOUNDS.max
+      ? year
+      : null;
+  const [a, b] = [valid(from), valid(to)];
+  return a !== null && b !== null && a > b ? { yearFrom: b, yearTo: a } : { yearFrom: a, yearTo: b };
+}
 
 /** Padrão medido em 08/10/2026: carros sem monta declarada são 737 das 1.231 vendas com valor de mercado. */
 export const DEFAULT_RESEARCH_FILTERS: ResearchFilters = {
@@ -50,6 +69,8 @@ export const DEFAULT_RESEARCH_FILTERS: ResearchFilters = {
   condition: "sem-monta",
   vehicle: null,
   state: null,
+  yearFrom: null,
+  yearTo: null,
   metric: "ratio",
 };
 
