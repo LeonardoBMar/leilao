@@ -190,7 +190,7 @@ O parâmetro `id` representa uma análise, que sempre pertence a um lote. Uma no
 - Histórico das análises fixadas, com data e indicação da utilizada no resultado.
 - Versões fixadas em modo de leitura; revisões geram um novo rascunho.
 
-### `/pesquisa` — Pesquisa
+### `/mercado` — Pesquisa
 
 Gráficos de preço sobre as vendas do catálogo: o que aconteceu, com amostra e período, sem recomendação de compra. Plano, medição e regras em `docs/PLANO-PESQUISA.md` (D-45).
 
@@ -705,7 +705,7 @@ O MVP estará concluído quando o usuário conseguir executar o fluxo inteiro co
 Iniciar após o uso real confirmar os campos e o fluxo, idealmente com 50 a 100 lotes analisados.
 
 - Filtros detalhados por versão, origem, região, documentação e tipo de dano.
-- Média, mediana e distribuição de preços finais por grupos comparáveis. Antecipado em parte pela Pesquisa (`/pesquisa`, D-45), sobre as vendas do catálogo.
+- Média, mediana e distribuição de preços finais por grupos comparáveis. Antecipado em parte pela Pesquisa (`/mercado`, D-45), sobre as vendas do catálogo.
 - Comparação histórica entre FIPE, valor de mercado e arrematação.
 - Custos reais de recuperação, data/preço de venda e resultado efetivamente realizado.
 - Precisão das estimativas por categoria, considerando apenas pares com estimativa e custo real conhecidos.

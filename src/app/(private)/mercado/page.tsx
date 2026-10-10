@@ -12,7 +12,7 @@ import { ModelCatalogActions } from "./model-catalog-actions";
 
 export const metadata: Metadata = { title: "Pesquisa · Leilão Tracker" };
 
-export default function ResearchPage({ searchParams }: PageProps<"/pesquisa">) {
+export default function ResearchPage({ searchParams }: PageProps<"/mercado">) {
   return (
     <div className="grid gap-6">
       <Suspense fallback={<ResearchHeaderSkeleton />}>

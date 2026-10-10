@@ -6,9 +6,9 @@ import { matchModels, researchHref } from "./search";
 
 describe("researchHref", () => {
   it("sem filtros fora do padrão, só o caminho", () => {
-    expect(researchHref(DEFAULT_RESEARCH_FILTERS)).toBe("/pesquisa");
+    expect(researchHref(DEFAULT_RESEARCH_FILTERS)).toBe("/mercado");
     expect(researchHref({ ...DEFAULT_RESEARCH_FILTERS, vehicle: { brand: "FIAT", model: "UNO" }, state: "SP" })).toBe(
-      "/pesquisa?marca=FIAT&modelo=UNO&uf=SP",
+      "/mercado?marca=FIAT&modelo=UNO&uf=SP",
     );
   });
 });

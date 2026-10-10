@@ -88,7 +88,7 @@ Estas regras valem para todos os gráficos e evitam conclusões erradas:
 
 ## 4. Tela
 
-Rota única **`/pesquisa`**, item **"Pesquisa"** no menu depois de "Monitores" e "Alertas", que andam juntos. Filtros na URL e aplicados na hora, como em "Leilões" (D-43).
+Rota única **`/mercado`**, item **"Pesquisa"** no menu depois de "Monitores" e "Alertas", que andam juntos. Filtros na URL e aplicados na hora, como em "Leilões" (D-43).
 
 **Cabeçalho.** Título "Pesquisa" e a linha "Preços de arremate do catálogo: 1.506 vendas desde 28/09/2026".
 
@@ -142,7 +142,7 @@ Sem filtro de período enquanto a base tiver menos de 3 meses (§2).
 
 ## 7. Aprovado em 08/10/2026
 
-1. **Menu "Pesquisa"** depois de "Monitores" (e de "Alertas", que andam juntos), com rota única `/pesquisa` e filtros na URL.
+1. **Menu "Pesquisa"** depois de "Monitores" (e de "Alertas", que andam juntos), com rota única `/mercado` e filtros na URL.
 2. **Condição sempre filtrada** no mapa, no ranking e na ficha do modelo. Padrão: sem monta declarada.
 3. **Unidade "% do valor de mercado"**, a mesma do filtro D-43, com "X% abaixo da FIPE informada" como apoio.
 4. **Mapa de quadrados** no lugar do mapa geográfico. Todos os estados têm o mesmo peso, e não é preciso arquivo de fronteiras nem biblioteca de mapas. *Revisto na etapa 4: o usuário pediu mapa geográfico interativo (D-46).*
@@ -157,7 +157,7 @@ Sem filtro de período enquanto a base tiver menos de 3 meses (§2).
 ## 8. Etapas
 
 0. **Medição** (§2), só leitura. Feita em 08/10/2026: o mapa fica, com os ajustes do §2.
-1. **Documentos:** este plano com os números, D-45, SPEC §5 (`/pesquisa`), DESIGN (tokens de dados e §15 Pesquisa) e GUIA.
+1. **Documentos:** este plano com os números, D-45, SPEC §5 (`/mercado`), DESIGN (tokens de dados e §15 Pesquisa) e GUIA.
 2. **Domínio:** `src/domain/research/` e as escalas de `src/lib/charts.ts`, com testes.
 3. **Consultas e gráficos:** `queries.ts` e os componentes de `src/components/charts/`, conferidos em `/componentes`.
 4. **Tela, primeira parte:** menu, filtros, "Quanto se paga por condição", mapa por estado e ranking de modelos.

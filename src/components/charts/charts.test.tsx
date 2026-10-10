@@ -70,7 +70,7 @@ describe("BrazilMap", () => {
           state: "SP",
           value: "43%",
           tone: { kind: "colored", step: 2 },
-          href: "/pesquisa?uf=SP" as Route,
+          href: "/mercado?uf=SP" as Route,
           ariaLabel: "São Paulo: mediana 43%, 297 vendas",
           selected: true,
           tooltip,
@@ -79,7 +79,7 @@ describe("BrazilMap", () => {
           state: "DF",
           value: "2",
           tone: { kind: "few" },
-          href: "/pesquisa?uf=DF" as Route,
+          href: "/mercado?uf=DF" as Route,
           ariaLabel: "DF",
           selected: false,
           tooltip,
@@ -98,7 +98,7 @@ describe("BrazilMap", () => {
 
   it("desenha só os estados recebidos; o com venda é link, com cor do passo e marca de escolhido", () => {
     expect(html.match(/<path/g)).toHaveLength(5);
-    expect(html).toMatch(/<a[^>]*href="\/pesquisa\?uf=SP"/);
+    expect(html).toMatch(/<a[^>]*href="\/mercado\?uf=SP"/);
     expect(html).toMatch(/<a[^>]*aria-label="São Paulo: mediana 43%, 297 vendas"/);
     expect(html).toContain('aria-current="true"');
     expect(html).toContain("fill-data-2");
@@ -146,13 +146,13 @@ describe("RangeBars", () => {
             high: 0.25,
             valueLabel: "21%",
             detail: "5 vendas",
-            href: "/pesquisa?marca=PEUGEOT&modelo=207" as Route,
+            href: "/mercado?marca=PEUGEOT&modelo=207" as Route,
             ariaLabel: "Peugeot 207: mediana 21%, 5 vendas",
           },
         ]}
       />,
     );
-    expect(html).toMatch(/href="\/pesquisa\?marca=PEUGEOT&amp;modelo=207"/);
+    expect(html).toMatch(/href="\/mercado\?marca=PEUGEOT&amp;modelo=207"/);
     expect(html).toContain("left:20%;width:5%");
     expect(html).toContain("left:21%");
   });

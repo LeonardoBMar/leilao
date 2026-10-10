@@ -44,6 +44,6 @@ describe("lotResearchFilters", () => {
 
   it("vira o endereço da Pesquisa com os filtros na URL", () => {
     const href = researchHref(lotResearchFilters({ ...base, damageLevel: "small", state: "SP" }));
-    expect(href).toBe("/pesquisa?condicao=pequena&marca=CHEVROLET&modelo=ONIX&uf=SP");
+    expect(href).toBe("/mercado?condicao=pequena&marca=CHEVROLET&modelo=ONIX&uf=SP");
   });
 });

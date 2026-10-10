@@ -23,7 +23,7 @@ describe("stateMapRegions", () => {
       value: "43%",
       tone: { kind: "colored", step: 1 },
       selected: true,
-      href: "/pesquisa",
+      href: "/mercado",
       ariaLabel: "São Paulo: mediana 43% do valor de mercado, 297 vendas",
       tooltip: {
         title: "São Paulo",
@@ -35,11 +35,11 @@ describe("stateMapRegions", () => {
         ],
       },
     });
-    expect(region("GO")).toMatchObject({ tone: { kind: "colored", step: 5 }, href: "/pesquisa?uf=GO" });
+    expect(region("GO")).toMatchObject({ tone: { kind: "colored", step: 5 }, href: "/mercado?uf=GO" });
   });
 
   it("poucas vendas: só a contagem, sem cor; nenhuma venda: sem link", () => {
-    expect(region("MT")).toMatchObject({ value: "2", tone: { kind: "few" }, href: "/pesquisa?uf=MT" });
+    expect(region("MT")).toMatchObject({ value: "2", tone: { kind: "few" }, href: "/mercado?uf=MT" });
     expect(region("AC")).toMatchObject({ tone: { kind: "empty" }, href: undefined, ariaLabel: "Acre: nenhuma venda" });
   });
 
@@ -73,7 +73,7 @@ describe("stateRangeRows", () => {
   });
 
   it("o link do estado escolhido volta ao Brasil e o dos outros escolhe a UF", () => {
-    expect(list.rows.map((row) => row.href)).toEqual(["/pesquisa", "/pesquisa?uf=GO"]);
+    expect(list.rows.map((row) => row.href)).toEqual(["/mercado", "/mercado?uf=GO"]);
   });
 
   it("estado com poucas vendas sai à parte, sem mediana", () => {

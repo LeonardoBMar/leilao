@@ -6,7 +6,7 @@ import type { ResearchFilters, ResearchVehicle } from "@/domain/research/filters
 
 import { researchParams } from "./schemas";
 
-export const RESEARCH_PATH = "/pesquisa";
+export const RESEARCH_PATH = "/mercado";
 
 export type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
