@@ -8,7 +8,6 @@ import {
   type FipeOption,
   fipeReferenceMonth,
   type FipeTable,
-  type FipeValue,
   type FipeVehicleIdentity,
   fipeVehicleIdentity,
   type FipeVehicleType,
@@ -16,14 +15,12 @@ import {
   matchFipeBrand,
   needsRematch,
   pickFipeTable,
-  pickProvisionalPrices,
   settleFipeValue,
 } from "@/domain/listings/fipe-match";
 import { type ListingStatus, toListingCategory } from "@/domain/listings/types";
 
 import { db } from "../db";
-import { findStoredPrices } from "./catalog";
-import { FipeBudgetError, type FipeClient, FipeUnavailableError } from "./client";
+import type { FipeCatalog } from "./catalog";
 import {
   findFipeMatch,
   type FipeMatchChoice,
@@ -34,12 +31,12 @@ import {
 } from "./matches";
 
 /**
- * Casa na tabela FIPE oficial o valor de mercado dos anúncios sem valor da fonte (D-47, D-49; planos
+ * Casa na tabela FIPE oficial o valor de mercado dos anúncios sem valor da fonte (D-47, D-49, D-51; planos
  * docs/PLANO-VALOR-MERCADO.md e docs/PLANO-FIPE-TABELAS.md). Duas etapas: a **escolha** da versão vem da correlação
- * do veículo (`fipe_matches`), feita uma vez por chave; o **valor** vem da tabela do mês, guardada ou pedida. Roda
- * junto com a coleta e pelo `npm run db:market-values`. Cada anúncio é tentado uma vez (`market_value_checked_at`);
- * volta a ser tentado se o veículo mudar, se a regra mudar, se alguém corrigir a correlação ou se o valor for
- * provisório.
+ * do veículo (`fipe_matches`), feita uma vez por chave; o **valor** vem da tabela do mês no catálogo (`fipe_prices`).
+ * Tudo no banco, sem pedido à FIPE. Roda junto com a coleta e pelo `npm run db:market-values`. Cada anúncio é tentado
+ * uma vez (`market_value_checked_at`); volta a ser tentado se o veículo mudar, se a regra mudar, se alguém corrigir a
+ * correlação ou se chegar a tabela do mês dele (o valor veio de uma anterior).
  */
 
 const VEHICLE_CATEGORIES = ["Carros", "Utilitarios", "Motos", "Pesados"];
@@ -47,7 +44,6 @@ const BATCH = 50;
 
 export type MatchReason =
   | "matched"
-  | "provisional"
   | "no_type"
   | "no_brand"
   | Extract<ReturnType<typeof chooseFipeModels>, { kind: "none" }>["reason"]
@@ -61,7 +57,7 @@ export type MatchSample = {
   match: FipeMatch | null;
   /** Versões da FIPE escolhidas (uma na versão, várias na família). */
   labels: string[];
-  /** Mês da tabela do valor (o do anúncio, ou o anterior no provisório). */
+  /** Mês da tabela do valor: o do anúncio ou, enquanto ela não chega, o mais recente antes dele. */
   referenceMonth: Date | null;
   /** Correlação usada; nula quando o veículo não tem chave (sem categoria de veículo, por exemplo). */
   matchId: string | null;
@@ -70,13 +66,8 @@ export type MatchSample = {
 export type EnrichSummary = {
   checked: number;
   matched: { version: number; family: number };
-  /** Anúncios abertos que ficaram com o valor do mês anterior até a tabela do mês poder ser pedida. */
-  provisional: number;
-  /**
-   * Por que parou antes de acabar os pendentes; nulo se acabou. Só `unavailable` é falha: tempo e limite de pedidos
-   * deixam o resto para a próxima execução.
-   */
-  stoppedBy: { kind: "time" | "budget" | "unavailable"; message: string } | null;
+  /** Por que parou antes de acabar os pendentes; nulo se acabou. O resto fica para a próxima execução. */
+  stoppedBy: { kind: "time" | "no_catalog"; message: string } | null;
 };
 
 export type PendingListing = {
@@ -106,7 +97,7 @@ export const pendingListingSelect = {
 } as const;
 
 export async function enrichMarketValues(input: {
-  client: FipeClient;
+  catalog: FipeCatalog;
   now: () => Date;
   /** Fim do tempo (ms desde a época); depois dele nenhum anúncio novo é tentado. */
   deadline: number;
@@ -118,11 +109,15 @@ export async function enrichMarketValues(input: {
   sourceId?: string;
   onSample?: (sample: MatchSample) => void;
 }): Promise<EnrichSummary> {
-  const { client, now, deadline, limit = Number.POSITIVE_INFINITY, dryRun = false, sourceId, onSample } = input;
-  const summary: EnrichSummary = { checked: 0, matched: { version: 0, family: 0 }, provisional: 0, stoppedBy: null };
-  // Já vistos nesta chamada ficam de fora: o provisório e o adiado continuam pendentes.
+  const { catalog, now, deadline, limit = Number.POSITIVE_INFINITY, dryRun = false, sourceId, onSample } = input;
+  const summary: EnrichSummary = { checked: 0, matched: { version: 0, family: 0 }, stoppedBy: null };
+  // Já vistos nesta chamada ficam de fora (no `dryRun` nada é gravado e eles continuariam pendentes).
   const seen = new Set<string>();
-  let tables: FipeTable[] | null = null;
+  const tables = await catalog.tables();
+  if (tables.length === 0) {
+    summary.stoppedBy = { kind: "no_catalog", message: "catálogo da FIPE vazio (nenhum mês importado)" };
+    return summary;
+  }
   if (!dryRun) await requeueStaleMatches();
 
   while (summary.checked < limit) {
@@ -149,30 +144,9 @@ export async function enrichMarketValues(input: {
         return summary;
       }
       seen.add(listing.id);
-      let outcome: ListingOutcome;
-      try {
-        tables ??= await client.tables();
-        outcome = await evaluateListing(client, tables, listing, { dryRun });
-      } catch (error) {
-        // Sem a lista de tabelas não há o que fazer sem pedir: para como no fim do tempo.
-        if (error instanceof FipeBudgetError) {
-          summary.stoppedBy = { kind: "budget", message: error.message };
-          return summary;
-        }
-        // FIPE fora do ar: o anúncio fica pendente e a próxima execução tenta de novo.
-        if (error instanceof FipeUnavailableError) {
-          summary.stoppedBy = { kind: "unavailable", message: error.message };
-          return summary;
-        }
-        throw error;
-      }
-      // Limite de pedidos: segue só com o que está guardado (escolhas e preços), sem pedir mais.
-      if (outcome.budget) summary.stoppedBy ??= { kind: "budget", message: outcome.budget };
-      if (outcome.sample === null) continue;
-      const { sample } = outcome;
+      const sample = await evaluateListing(catalog, tables, listing, { dryRun });
       summary.checked++;
-      if (sample.reason === "provisional") summary.provisional++;
-      else if (sample.match) summary.matched[sample.match.origin === "fipe_version" ? "version" : "family"]++;
+      if (sample.match) summary.matched[sample.match.origin === "fipe_version" ? "version" : "family"]++;
       onSample?.(sample);
       if (!dryRun) await saveOutcome(listing.id, sample, now());
     }
@@ -180,91 +154,38 @@ export async function enrichMarketValues(input: {
   return summary;
 }
 
-/** `sample` nulo: adiado (faltou pedido para decidir); `budget`: o limite de pedidos foi atingido nesta avaliação. */
-export type ListingOutcome = { sample: MatchSample | null; budget: string | null };
-
 /**
- * Escolha (correlação guardada ou refeita) e valor (tabela do mês) de um anúncio. Sem gravar o anúncio; a correlação
- * nova é gravada, salvo em `dryRun`. Pedido barrado pelo limite vira valor provisório (aberto com preço guardado do
- * mês anterior) ou adiamento; FIPE fora do ar lança `FipeUnavailableError`.
+ * Escolha (correlação guardada ou refeita) e valor (tabela do mês do anúncio, ou a mais recente antes dele) de um
+ * anúncio. Sem gravar o anúncio; a correlação nova é gravada, salvo em `dryRun`.
  */
 export async function evaluateListing(
-  client: FipeClient,
+  catalog: FipeCatalog,
   tables: readonly FipeTable[],
   listing: PendingListing,
   options: { dryRun?: boolean } = {},
-): Promise<ListingOutcome> {
+): Promise<MatchSample> {
   const base = { listingId: listing.id, title: listing.title, match: null, labels: [], referenceMonth: null };
   const category = toListingCategory(listing.category);
   const identity = fipeVehicleIdentity({ ...listing, category });
   const table = pickFipeTable(fipeReferenceMonth(listing), tables);
-  if (identity === null || table === null) {
-    return { sample: { ...base, reason: "no_type", matchId: null }, budget: null };
-  }
+  if (identity === null || table === null) return { ...base, reason: "no_type", matchId: null };
 
-  let match: StoredFipeMatch;
-  try {
-    match = await resolveMatch(client, table, identity, options.dryRun ?? false);
-  } catch (error) {
-    if (error instanceof FipeBudgetError) return { sample: null, budget: error.message };
-    throw error;
-  }
+  const match = await resolveMatch(catalog, table, identity, options.dryRun ?? false);
   const matchId = match.id || null;
   if (match.kind === "none" || match.vehicleType === null || match.brandCode === null) {
-    return { sample: { ...base, reason: noneReason(match.reason), matchId }, budget: null };
+    return { ...base, reason: noneReason(match.reason), matchId };
   }
-  const { vehicleType: type, brandCode, models } = match;
+  const { models } = match;
   const labels = models.map((model) => model.label);
   const choice =
     match.kind === "version" && models[0]
       ? { kind: "version" as const, code: models[0].code }
       : { kind: "family" as const, codes: models.map((model) => model.code) };
 
-  const values = new Map<string, FipeValue>();
-  let budget: string | null = null;
-  try {
-    for (const model of models) {
-      const value = await client.value(table, type, brandCode, model.code, identity.modelYear, model.fuel);
-      if (value) values.set(model.code, value);
-    }
-  } catch (error) {
-    if (!(error instanceof FipeBudgetError)) throw error;
-    budget = error.message;
-  }
-
-  if (budget !== null) {
-    // Só anúncio aberto fica com o mês anterior: o encerrado espera a tabela do mês dele.
-    const provisional =
-      listing.status === "open"
-        ? pickProvisionalPrices(
-            await findStoredPrices({ type, brandCode, modelYear: identity.modelYear, models }),
-            models,
-            table.month,
-          )
-        : null;
-    const settled = provisional ? settleFipeValue(choice, provisional.values) : null;
-    if (provisional === null || settled === null) return { sample: null, budget };
-    return {
-      sample: {
-        ...base,
-        reason: "provisional",
-        match: settled,
-        labels,
-        referenceMonth: provisional.referenceMonth,
-        matchId,
-      },
-      budget,
-    };
-  }
-
+  const values = await catalog.values(table, identity.modelYear, models);
   const settled = settleFipeValue(choice, values);
-  if (settled === null) {
-    return { sample: { ...base, reason: values.size === 0 ? "no_value" : "spread", labels, matchId }, budget: null };
-  }
-  return {
-    sample: { ...base, reason: "matched", match: settled, labels, referenceMonth: table.month, matchId },
-    budget: null,
-  };
+  if (settled === null) return { ...base, reason: values.size === 0 ? "no_value" : "spread", labels, matchId };
+  return { ...base, reason: "matched", match: settled, labels, referenceMonth: table.month, matchId };
 }
 
 function noneReason(reason: string | null): MatchReason {
@@ -274,14 +195,14 @@ function noneReason(reason: string | null): MatchReason {
 
 /** Correlação da chave: a guardada, se vale; senão a regra escolhe sobre as listas da tabela do anúncio e grava. */
 async function resolveMatch(
-  client: FipeClient,
+  catalog: FipeCatalog,
   table: FipeTable,
   identity: FipeVehicleIdentity,
   dryRun: boolean,
 ): Promise<StoredFipeMatch> {
   const stored = await findFipeMatch(identity.key);
   if (stored && !needsRematch(stored)) return stored;
-  const choice = await chooseForTable(client, table, identity);
+  const choice = await chooseForTable(catalog, table, identity);
   if (dryRun) {
     return {
       id: stored?.id ?? "",
@@ -293,15 +214,15 @@ async function resolveMatch(
   return saveAutoMatch(identity, choice);
 }
 
-/** A regra de D-47 sobre as listas da FIPE: marca no tipo certo, modelos de todos os combustíveis possíveis. */
+/** A regra de D-47 sobre as listas do catálogo: marca no tipo certo, modelos de todos os combustíveis possíveis. */
 export async function chooseForTable(
-  client: FipeClient,
+  catalog: FipeCatalog,
   table: FipeTable,
   identity: FipeVehicleIdentity,
 ): Promise<FipeMatchChoice> {
   let found: { type: FipeVehicleType; brand: FipeOption } | null = null;
   for (const type of fipeVehicleTypes(identity.category)) {
-    const brand = matchFipeBrand(identity.brand, await client.brands(table, type));
+    const brand = matchFipeBrand(identity.brand, await catalog.brands(table, type));
     if (brand) {
       found = { type, brand };
       break;
@@ -313,7 +234,7 @@ export async function chooseForTable(
   // Candidatas de todos os combustíveis possíveis: a FIPE lista a moto flex ora como gasolina, ora como flex.
   const candidates: FipeMatchModel[] = [];
   for (const fuel of fipeFuelCodes(type, identity.fuel)) {
-    for (const model of await client.modelsByYear(table, type, brand.code, identity.modelYear, fuel)) {
+    for (const model of await catalog.modelsByYear(table, type, brand.code, identity.modelYear, fuel)) {
       if (candidates.some((item) => item.code === model.code)) continue;
       candidates.push({ code: model.code, fuel, label: model.label });
     }
@@ -325,10 +246,7 @@ export async function chooseForTable(
   return { kind: choice.kind, vehicleType: type, brandCode: brand.code, models };
 }
 
-/**
- * Grava o resultado no anúncio, só se ele continua sem valor da fonte (a fonte pode ter informado o dela enquanto a
- * FIPE respondia). Provisório fica pendente, para a tabela do mês substituir quando puder ser pedida.
- */
+/** Grava o resultado no anúncio, só se ele continua sem valor da fonte (a fonte pode ter informado o dela no meio). */
 export async function saveOutcome(listingId: string, sample: MatchSample, checkedAt: Date) {
   const where = { id: listingId, ...notFromSource };
   const link = sample.matchId ? { fipeMatchId: sample.matchId } : { fipeMatchId: null };
@@ -353,7 +271,7 @@ export async function saveOutcome(listingId: string, sample: MatchSample, checke
       marketValueOrigin: sample.match.origin,
       marketValueFipeCode: sample.match.fipeCode,
       marketValueRefMonth: sample.referenceMonth,
-      marketValueCheckedAt: sample.reason === "provisional" ? null : checkedAt,
+      marketValueCheckedAt: checkedAt,
       ...link,
     },
   });

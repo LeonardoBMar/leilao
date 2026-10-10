@@ -15,7 +15,6 @@ import {
   needsRematch,
   parseFipeMonth,
   pickFipeTable,
-  pickProvisionalPrices,
   settleFipeValue,
   versionTokens,
 } from "./fipe-match";
@@ -283,37 +282,5 @@ describe("correlação (D-49)", () => {
     expect(needsRematch({ origin: "auto", matcherVersion: MATCHER_VERSION - 1 })).toBe(true);
     expect(needsRematch({ origin: "auto", matcherVersion: MATCHER_VERSION })).toBe(false);
     expect(needsRematch({ origin: "manual", matcherVersion: 0 })).toBe(false);
-  });
-});
-
-describe("pickProvisionalPrices", () => {
-  const price = (table: number, month: string, code: string, reais: number) => ({
-    referenceTable: table,
-    referenceMonth: new Date(month),
-    modelCode: code,
-    fuelCode: 1,
-    value: cents(reais * 100),
-    fipeCode: `00000${code}-0`,
-  });
-  const models = [
-    { code: "a", fuel: 1 },
-    { code: "b", fuel: 1 },
-  ];
-
-  it("tabela anterior mais recente com todas as versões", () => {
-    const prices = [
-      price(337, "2026-09-01", "a", 20_000),
-      price(337, "2026-09-01", "b", 21_000),
-      price(338, "2026-10-01", "a", 20_500),
-    ];
-    const picked = pickProvisionalPrices(prices, models, new Date("2026-11-01"));
-    expect(picked?.referenceMonth).toEqual(new Date("2026-09-01"));
-    expect(picked?.values.get("b")?.value).toBe(cents(2_100_000));
-  });
-
-  it("nada do próprio mês nem de depois; sem tabela completa, nada", () => {
-    const prices = [price(338, "2026-10-01", "a", 20_500), price(338, "2026-10-01", "b", 21_000)];
-    expect(pickProvisionalPrices(prices, models, new Date("2026-10-01"))).toBeNull();
-    expect(pickProvisionalPrices([price(337, "2026-09-01", "a", 1)], models, new Date("2026-11-01"))).toBeNull();
   });
 });

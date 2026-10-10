@@ -306,8 +306,9 @@ export function marketValueOnSave(
 /**
  * Versão da regra de escolha (D-49). Suba sempre que `chooseFipeModels`, `matchFipeBrand`, os tipos ou os combustíveis
  * mudarem: as correlações automáticas de versão anterior são refeitas e os anúncios ligados a elas, recalculados.
+ * 2: catálogo do dataset (D-51), com a marca pelo nome e a versão pelo código FIPE.
  */
-export const MATCHER_VERSION = 1;
+export const MATCHER_VERSION = 2;
 
 export type FipeVehicle = {
   brand: string | null;
@@ -352,43 +353,4 @@ export type FipeMatchModel = { code: string; fuel: number; label: string };
 /** Correlação automática de regra antiga é refeita; a manual nunca. */
 export function needsRematch(match: { origin: "auto" | "manual"; matcherVersion: number }): boolean {
   return match.origin === "auto" && match.matcherVersion < MATCHER_VERSION;
-}
-
-/** Preço guardado de uma versão numa tabela do mês. */
-export type StoredFipePrice = {
-  referenceTable: number;
-  referenceMonth: Date;
-  modelCode: string;
-  fuelCode: number;
-  value: Cents;
-  fipeCode: string;
-};
-
-/**
- * Valor provisório (D-49, PLANO-FIPE-TABELAS §5): enquanto a tabela do mês não pode ser pedida, um anúncio aberto
- * usa a tabela mais recente **anterior** em que todas as versões escolhidas já têm preço guardado. Um mês só: as
- * versões de uma família vêm da mesma tabela, para a mediana não misturar meses.
- */
-export function pickProvisionalPrices(
-  prices: readonly StoredFipePrice[],
-  models: readonly Pick<FipeMatchModel, "code" | "fuel">[],
-  before: Date,
-): { referenceMonth: Date; values: Map<string, FipeValue> } | null {
-  if (models.length === 0) return null;
-  const tables = [...new Set(prices.map((price) => price.referenceTable))]
-    .map((table) => prices.find((price) => price.referenceTable === table))
-    .filter((price): price is StoredFipePrice => price !== undefined && price.referenceMonth < before)
-    .sort((a, b) => b.referenceMonth.getTime() - a.referenceMonth.getTime());
-  for (const { referenceTable, referenceMonth } of tables) {
-    const values = new Map<string, FipeValue>();
-    for (const model of models) {
-      const price = prices.find(
-        (item) =>
-          item.referenceTable === referenceTable && item.modelCode === model.code && item.fuelCode === model.fuel,
-      );
-      if (price) values.set(model.code, { value: price.value, fipeCode: price.fipeCode });
-    }
-    if (values.size === models.length) return { referenceMonth, values };
-  }
-  return null;
 }

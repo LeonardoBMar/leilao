@@ -25,7 +25,7 @@
     "db:reparse": "node --conditions=react-server --import tsx scripts/reparse.ts",
     "db:seed": "node --conditions=react-server --import tsx scripts/seed-municipalities.ts",
     "db:market-values": "node --conditions=react-server --import tsx scripts/market-values.ts",
-    "db:fipe-tables": "node --conditions=react-server --import tsx scripts/fipe-tables.ts",
+    "db:fipe-import": "node --conditions=react-server --import tsx scripts/fipe-import.ts",
     "db:fipe-match": "node --conditions=react-server --import tsx scripts/fipe-match.ts",
     "test:e2e": "playwright test",
     "test:e2e:public": "playwright test --project=public",

@@ -5,7 +5,7 @@ import { z } from "zod";
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   DATABASE_URL: z.url(),
-  /** Casamento do valor de mercado na FIPE (D-47). "off" desliga sem deploy de código, se a FIPE pedir ou bloquear. */
+  /** Importação da tabela FIPE e casamento do valor de mercado (D-47, D-51). "off" desliga sem deploy de código. */
   FIPE_LOOKUP: z.preprocess((value) => (value === "" ? undefined : value), z.enum(["on", "off"]).default("on")),
 });
 

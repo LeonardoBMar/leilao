@@ -1,6 +1,6 @@
 # Plano: valor de mercado para anúncios sem FIPE, e quarta fonte (Detran-MG)
 
-Status: **aprovado em 2026-10-09** (opção B, valor casado usado em estimativas, filtro e Pesquisa com rótulo). Muda D-28 e D-30 (ver §7). Catálogo de preços e correlações: `PLANO-FIPE-TABELAS.md` (D-49).
+Status: **aprovado em 2026-10-09** (opção B, valor casado usado em estimativas, filtro e Pesquisa com rótulo). Muda D-28 e D-30 (ver §7). Catálogo de preços e correlações: `PLANO-FIPE-TABELAS.md` (D-49). Desde D-51 a tabela vem do dataset fipeX, não da API.
 
 ## 1. Problema
 

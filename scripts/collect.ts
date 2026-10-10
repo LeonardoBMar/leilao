@@ -32,6 +32,16 @@ async function main() {
     `Lotes ligados: ${summary.lotsUpdated} com lance novo · ${summary.resultsRecorded} resultados · ` +
       `${summary.alertsCreated} alertas · ${summary.marketValuesMatched} valores de mercado da FIPE\n`,
   );
+  for (const item of summary.fipeImports) {
+    if (item.kind === "imported") {
+      process.stdout.write(
+        `Tabela FIPE ${item.month}: ${item.prices} preços importados · ${item.requeued} anúncios de volta à fila\n`,
+      );
+    } else if (item.kind === "unpublished") {
+      process.stdout.write(`Tabela FIPE ${item.month}: ainda não publicada no dataset\n`);
+    }
+  }
+  for (const warning of summary.warnings) process.stdout.write(`  aviso: ${warning}\n`);
   if (summary.status === "failed") process.exitCode = 1;
 }
 

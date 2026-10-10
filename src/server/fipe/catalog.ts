@@ -1,116 +1,87 @@
 import "server-only";
 
-import { z } from "zod";
-
-import {
-  type FipeMatchModel,
-  type FipeVehicleType,
-  parseFipeMonth,
-  type StoredFipePrice,
-} from "@/domain/listings/fipe-match";
-import { cents, parseBRL } from "@/domain/money";
-import type { Prisma } from "@/generated/prisma/client";
+import type { FipeOption, FipeTable, FipeValue, FipeVehicleType } from "@/domain/listings/fipe-match";
+import { cents } from "@/domain/money";
 
 import { db } from "../db";
 
 /**
- * Catálogo de preços da FIPE (D-49): a resposta de cada valor pedido vira uma linha consultável de `fipe_prices`. Sai
- * das mesmas respostas guardadas em `fipe_responses`, sem pedido a mais, e pode ser reconstruído a partir delas.
+ * Catálogo de preços da FIPE no banco (D-49, D-51): a tabela de cada mês, importada do dataset fipeX
+ * (`./dataset.ts`). Dá ao casamento as mesmas listas que a API da FIPE dava (tabelas, marcas, versões por ano e
+ * combustível, valor), sem pedido a site nenhum. A marca é identificada pelo nome da FIPE e a versão pelo código FIPE.
  */
+export type FipeCatalog = {
+  tables: () => Promise<FipeTable[]>;
+  brands: (table: FipeTable, type: FipeVehicleType) => Promise<FipeOption[]>;
+  modelsByYear: (
+    table: FipeTable,
+    type: FipeVehicleType,
+    brand: string,
+    year: number,
+    fuel: number,
+  ) => Promise<FipeOption[]>;
+  /** Valores das versões no ano, numa consulta; a versão sem preço na tabela fica de fora. */
+  values: (
+    table: FipeTable,
+    year: number,
+    models: readonly { code: string; fuel: number }[],
+  ) => Promise<Map<string, FipeValue>>;
+};
 
-/** "valor:{tabela}:{tipo}:{marca}:{modelo}:{ano}-{combustível}", a chave do pedido de valor no cache. */
-const VALUE_KEY = /^valor:(\d+):([123]):([^:]+):([^:]+):(\d{4})-([1-6])$/;
+/** Código da tabela do mês no catálogo: "2026-10". */
+export function fipeTableCode(month: Date): string {
+  return month.toISOString().slice(0, 7);
+}
 
-const valuePayloadSchema = z.object({
-  Valor: z.string(),
-  CodigoFipe: z.string().min(1),
-  Marca: z.string().min(1),
-  Modelo: z.string().min(1),
-  MesReferencia: z.string(),
-});
-
-type FipePriceRow = Prisma.FipePriceCreateManyInput;
-
-/** Linha do catálogo a partir de um pedido de valor guardado; nula se não for valor ou não tiver o formato. */
-export function fipePriceFromResponse(key: string, payload: unknown): FipePriceRow | null {
-  const keyParts = VALUE_KEY.exec(key);
-  const parsed = valuePayloadSchema.safeParse(payload);
-  if (!keyParts || !parsed.success) return null;
-  const [, table, type, brandCode, modelCode, year, fuel] = keyParts;
-  const value = parseBRL(parsed.data.Valor);
-  const month = parseFipeMonth(parsed.data.MesReferencia);
-  if (!table || !type || !brandCode || !modelCode || !year || !fuel || value === null || value <= 0 || !month) {
-    return null;
-  }
-  return {
-    referenceTable: Number(table),
-    referenceMonth: month,
-    vehicleType: Number(type),
-    brandCode,
-    brandName: parsed.data.Marca.trim(),
-    modelCode,
-    modelName: parsed.data.Modelo.trim(),
-    modelYear: Number(year),
-    fuelCode: Number(fuel),
-    fipeCode: parsed.data.CodigoFipe.trim(),
-    valueCents: value,
+/** Catálogo com memória: as listas lidas valem por toda a execução (a tabela de um mês não muda depois de importada). */
+export function createFipeCatalog(): FipeCatalog {
+  const memo = new Map<string, Promise<FipeOption[]>>();
+  const remember = (key: string, load: () => Promise<FipeOption[]>) => {
+    const known = memo.get(key);
+    if (known) return known;
+    const loading = load();
+    memo.set(key, loading);
+    // Falha não fica guardada: a próxima chamada tenta de novo.
+    loading.catch(() => memo.delete(key));
+    return loading;
   };
-}
 
-/** Grava os preços que ainda não estão no catálogo (o preço de uma tabela não muda). */
-export async function recordFipePrices(rows: readonly FipePriceRow[]): Promise<number> {
-  if (rows.length === 0) return 0;
-  const { count } = await db.fipePrice.createMany({ data: [...rows], skipDuplicates: true });
-  return count;
-}
-
-/** Reconstrói o catálogo a partir do cache de respostas. Idempotente; não pede nada à FIPE. */
-export async function rebuildFipePrices(): Promise<{ read: number; added: number; skipped: number }> {
-  const summary = { read: 0, added: 0, skipped: 0 };
-  let cursor: string | undefined;
-  for (;;) {
-    const batch = await db.fipeResponse.findMany({
-      where: { key: { startsWith: "valor:" } },
-      orderBy: { key: "asc" },
-      take: 500,
-      ...(cursor === undefined ? {} : { cursor: { key: cursor }, skip: 1 }),
-      select: { key: true, payload: true },
-    });
-    if (batch.length === 0) return summary;
-    cursor = batch.at(-1)?.key;
-    const rows = batch.flatMap((item) => {
-      const row = fipePriceFromResponse(item.key, item.payload);
-      return row ? [row] : [];
-    });
-    summary.read += batch.length;
-    summary.skipped += batch.length - rows.length;
-    summary.added += await recordFipePrices(rows);
-  }
-}
-
-/** Preços guardados das versões escolhidas, de todas as tabelas, para o valor provisório (`pickProvisionalPrices`). */
-export async function findStoredPrices(input: {
-  type: FipeVehicleType;
-  brandCode: string;
-  modelYear: number;
-  models: readonly Pick<FipeMatchModel, "code" | "fuel">[];
-}): Promise<StoredFipePrice[]> {
-  if (input.models.length === 0) return [];
-  const rows = await db.fipePrice.findMany({
-    where: {
-      vehicleType: input.type,
-      brandCode: input.brandCode,
-      modelYear: input.modelYear,
-      OR: input.models.map((model) => ({ modelCode: model.code, fuelCode: model.fuel })),
+  return {
+    async tables() {
+      const rows = await db.fipePrice.groupBy({ by: ["referenceMonth"], orderBy: { referenceMonth: "desc" } });
+      return rows.map(({ referenceMonth }) => ({ code: fipeTableCode(referenceMonth), month: referenceMonth }));
     },
-    select: {
-      referenceTable: true,
-      referenceMonth: true,
-      modelCode: true,
-      fuelCode: true,
-      valueCents: true,
-      fipeCode: true,
+    brands(table, type) {
+      return remember(`marcas:${table.code}:${type}`, async () => {
+        const rows = await db.fipePrice.groupBy({
+          by: ["brandName"],
+          where: { referenceMonth: table.month, vehicleType: type },
+          orderBy: { brandName: "asc" },
+        });
+        return rows.map(({ brandName }) => ({ code: brandName, label: brandName }));
+      });
     },
-  });
-  return rows.map(({ valueCents, ...row }) => ({ ...row, value: cents(valueCents) }));
+    modelsByYear(table, type, brand, year, fuel) {
+      return remember(`modelos:${table.code}:${type}:${brand}:${year}-${fuel}`, async () => {
+        const rows = await db.fipePrice.groupBy({
+          by: ["fipeCode", "modelName"],
+          where: { referenceMonth: table.month, vehicleType: type, brandName: brand, modelYear: year, fuelCode: fuel },
+          orderBy: { modelName: "asc" },
+        });
+        return rows.map(({ fipeCode, modelName }) => ({ code: fipeCode, label: modelName }));
+      });
+    },
+    async values(table, year, models) {
+      if (models.length === 0) return new Map();
+      const rows = await db.fipePrice.findMany({
+        where: {
+          referenceMonth: table.month,
+          modelYear: year,
+          OR: models.map((model) => ({ fipeCode: model.code, fuelCode: model.fuel })),
+        },
+        select: { valueCents: true, fipeCode: true },
+      });
+      return new Map(rows.map((row) => [row.fipeCode, { value: cents(row.valueCents), fipeCode: row.fipeCode }]));
+    },
+  };
 }

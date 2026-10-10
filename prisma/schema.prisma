@@ -494,8 +494,8 @@ model ListingObservation {
   @@map("listing_observations")
 }
 
-/// Respostas da API da FIPE guardadas (D-47): tabela de mês passado não muda, então cada pedido é feito uma vez. Global,
-/// como o catálogo (D-25).
+/// Respostas da API da FIPE guardadas (D-47). Sem uso desde D-51 (o catálogo vem do dataset mensal); sai numa
+/// migration de contração.
 model FipeResponse {
   /// Pedido: método e parâmetros (ex.: "valor:338:1:59:2370:2008-1").
   key       String   @id
@@ -505,30 +505,26 @@ model FipeResponse {
   @@map("fipe_responses")
 }
 
-/// Catálogo de preços da FIPE (D-49): um valor por tabela do mês, versão, ano e combustível, a partir das respostas
-/// pedidas (nenhum pedido a mais). Global e só do servidor.
+/// Catálogo de preços da FIPE (D-49, D-51): a tabela do mês inteira, importada do dataset fipeX (espelho da tabela
+/// oficial). Um valor por mês, versão (código FIPE), ano-modelo e combustível. Global e só do servidor.
 model FipePrice {
-  id             String   @id @default(uuid()) @db.Uuid
-  /// Código da tabela de referência da FIPE (ex.: 338 = outubro de 2026).
-  referenceTable Int      @map("reference_table")
   /// Primeiro dia do mês da tabela.
   referenceMonth DateTime @map("reference_month") @db.Date
+  /// Código FIPE da versão ("005205-1"): é o código da versão também nas correlações.
+  fipeCode       String   @map("fipe_code")
+  modelYear      Int      @map("model_year") @db.SmallInt
+  /// 1 gasolina, 2 álcool, 3 diesel, 4 elétrico, 5 flex, 6 híbrido, 7 gás natural.
+  fuelCode       Int      @map("fuel_code") @db.SmallInt
   /// 1 carros, 2 motos, 3 caminhões.
   vehicleType    Int      @map("vehicle_type") @db.SmallInt
-  brandCode      String   @map("brand_code")
+  /// Marca como a FIPE escreve ("VW - VolksWagen"); é o código da marca nas correlações.
   brandName      String   @map("brand_name")
-  modelCode      String   @map("model_code")
   modelName      String   @map("model_name")
-  modelYear      Int      @map("model_year") @db.SmallInt
-  /// 1 gasolina, 2 álcool, 3 diesel, 4 elétrico, 5 flex, 6 híbrido.
-  fuelCode       Int      @map("fuel_code") @db.SmallInt
-  fipeCode       String   @map("fipe_code")
   valueCents     Int      @map("value_cents")
-  fetchedAt      DateTime @default(now()) @map("fetched_at") @db.Timestamptz(3)
+  importedAt     DateTime @default(now()) @map("imported_at") @db.Timestamptz(3)
 
-  @@unique([referenceTable, vehicleType, brandCode, modelCode, modelYear, fuelCode])
-  @@index([fipeCode, referenceMonth])
-  @@index([vehicleType, brandCode, modelCode, modelYear, fuelCode, referenceMonth])
+  @@id([referenceMonth, fipeCode, modelYear, fuelCode])
+  @@index([referenceMonth, vehicleType, brandName, modelYear, fuelCode])
   @@map("fipe_prices")
 }
 

@@ -2,6 +2,8 @@
 
 Status: **aprovado em 2026-10-09**, com o valor provisório do mês anterior (§5) e a correção por script (§4). Implementado; decisão D-49. Código da versão conferido estável entre as tabelas 320, 337 e 338.
 
+> **Atualização (D-51, 10/10/2026):** a API da FIPE passou a recusar o GitHub Actions (HTTP 403). `fipe_prices` agora guarda a tabela inteira de cada mês, importada do dataset fipeX; a marca é o nome da FIPE e a versão é o código FIPE. Saem o cache como fonte do catálogo (`db:fipe-tables`), o ritmo de pedidos e o valor provisório (§5): sem tabela do mês, vale a anterior, e o anúncio volta à fila quando ela chega. A correlação (§4) continua igual.
+
 ## 1. Problema
 
 O casamento do valor de mercado (D-47) guarda as respostas da FIPE em `fipe_responses`: um JSON por pedido, indexado pelo texto do pedido (`valor:338:1:59:2370:2008-1`). Isso basta para não repetir pedidos, mas tem três limites:

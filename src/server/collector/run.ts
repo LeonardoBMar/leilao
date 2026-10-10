@@ -7,7 +7,8 @@ import type { SourceAdapter } from "@/sources/types";
 
 import { db } from "../db";
 import { env } from "../env";
-import { createFipeAccess, createFipeClient, FIPE_REQUESTS_PER_RUN, type FipeClient } from "../fipe/client";
+import { createFipeCatalog, type FipeCatalog } from "../fipe/catalog";
+import { ensureFipeCatalog, type FipeImportResult } from "../fipe/dataset";
 import { enrichMarketValues } from "../fipe/enrich";
 import { createAlerts } from "./alerts";
 import { createPoliteFetcher, DEADLINE_ERROR, type PoliteFetcher } from "./http";
@@ -39,7 +40,7 @@ const DEFAULT_BUDGET_MS = 12 * 60_000;
 const MAX_CONSECUTIVE_FAILURES = 10;
 /** Execução ainda "running" depois disto foi morta antes de fechar o registro (o job passa de 20 min). */
 const STALE_RUN_MS = 30 * 60_000;
-/** Depois das fontes, tempo para casar na FIPE os anúncios gravados no fim da coleta (D-47). */
+/** Depois das fontes, tempo para casar na FIPE os anúncios gravados no fim da coleta (D-47, D-51). */
 const FIPE_TAIL_MS = 2 * 60_000;
 
 type RunError = { url: string; error: string };
@@ -67,7 +68,14 @@ export type CollectionSummary = {
   alertsCreated: number;
   /** Anúncios que ganharam valor de mercado casado na FIPE nesta execução (D-47). */
   marketValuesMatched: number;
-  /** Falhas dos passos comuns a todas as fontes (lotes ligados, valor de mercado, alertas). */
+  /** Meses da tabela FIPE baixados (ou tentados) do dataset nesta execução (D-51); vazio se nada faltava. */
+  fipeImports: FipeImportResult[];
+  /**
+   * Problemas do valor de mercado (importação da tabela, casamento). Só aviso no log: não marcam a coleta como falha,
+   * porque o anúncio fica pendente e a próxima execução tenta de novo.
+   */
+  warnings: string[];
+  /** Falhas dos passos comuns a todas as fontes (lotes ligados, alertas). */
   errors: RunError[];
 };
 
@@ -82,8 +90,11 @@ type RunOptions = {
   createFetcher?: (source: SourceAdapter, deadline: number) => PoliteFetcher;
   /** Tempo das fontes nesta execução; depois dele as fontes param e os passos comuns rodam. */
   budgetMs?: number;
-  /** Casamento do valor de mercado na FIPE. Padrão: a API oficial, se `FIPE_LOOKUP` não for "off"; `null` desliga. */
-  fipe?: FipeClient | null;
+  /**
+   * Catálogo da FIPE para o casamento do valor de mercado. Padrão: o do banco, com a importação do mês que faltar,
+   * se `FIPE_LOOKUP` não for "off"; `null` desliga.
+   */
+  fipe?: FipeCatalog | null;
   now?: () => Date;
 };
 
@@ -102,15 +113,7 @@ export async function runCollection({
 }: RunOptions): Promise<CollectionSummary> {
   const startedAt = now();
   const deadline = startedAt.getTime() + budgetMs;
-  const fipeClient =
-    fipe !== undefined
-      ? fipe
-      : env.FIPE_LOOKUP === "on"
-        ? createFipeClient(
-            createFipeAccess({ deadline: deadline + FIPE_TAIL_MS, maxRequests: FIPE_REQUESTS_PER_RUN }).post,
-            now,
-          )
-        : null;
+  const catalog = fipe !== undefined ? fipe : env.FIPE_LOOKUP === "on" ? createFipeCatalog() : null;
   await closeStaleRuns(startedAt);
   // Uma leitura dos municípios para todas as fontes; se falhar, cada fonte registra a falha na sua execução.
   const place = loadPlaceLookup().then(
@@ -118,28 +121,40 @@ export async function runCollection({
     (error: unknown): PlaceLoad => ({ ok: false, error }),
   );
   const errors: RunError[] = [];
-  // A FIPE é outro site: o valor de mercado é casado junto com as fontes (o que já estava pendente) e, depois delas,
-  // por pouco tempo, para os anúncios gravados no fim. Tudo antes dos alertas, que olham o % do mercado.
-  // Se a FIPE falhar ou o limite de pedidos acabar, a segunda passada não tenta: o resto fica para a próxima execução.
+  const warnings: string[] = [];
+  const warn = (message: string) => {
+    warnings.push(message);
+    console.warn(`aviso: ${message}`);
+  };
+  // Valor de mercado (D-51): primeiro a tabela do mês que faltar no catálogo (baixada do dataset), depois o casamento,
+  // junto com as fontes (o que já estava pendente) e, depois delas, por pouco tempo, para os anúncios gravados no fim.
+  // Tudo antes dos alertas, que olham o % do mercado. Problema aqui é aviso: o resto fica para a próxima execução.
+  const imports = (catalog && fipe === undefined ? ensureFipeCatalog({ now: startedAt }) : Promise.resolve([])).then(
+    (results: FipeImportResult[]) => {
+      for (const result of results) {
+        if (result.kind === "failed") warn(`tabela FIPE ${result.month}: ${result.error}`);
+      }
+      return results;
+    },
+  );
   let fipeStopped = false;
   const enrich = async (until: number) => {
-    if (!fipeClient || fipeStopped) return 0;
-    let matched = 0;
-    let problem: string | null;
+    await imports;
+    if (!catalog || fipeStopped) return 0;
     try {
-      const summary = await enrichMarketValues({ client: fipeClient, now, deadline: until });
-      matched = summary.matched.version + summary.matched.family;
-      if (summary.stoppedBy?.kind === "budget") fipeStopped = true;
-      problem = summary.stoppedBy?.kind === "unavailable" ? summary.stoppedBy.message : null;
+      const summary = await enrichMarketValues({ catalog, now, deadline: until });
+      if (summary.stoppedBy?.kind === "no_catalog") {
+        fipeStopped = true;
+        warn(`valor de mercado: ${summary.stoppedBy.message}`);
+      }
+      return summary.matched.version + summary.matched.family;
     } catch (error) {
-      problem = describeError(error);
-    }
-    if (problem !== null) {
       fipeStopped = true;
-      errors.push({ url: "(valor de mercado)", error: problem });
+      warn(`valor de mercado: ${describeError(error)}`);
+      return 0;
     }
-    return matched;
   };
+
   const [runs, matchedDuring] = await Promise.all([
     Promise.all(
       sources.map((source) =>
@@ -149,6 +164,7 @@ export async function runCollection({
     enrich(deadline),
   ]);
   const marketValuesMatched = matchedDuring + (await enrich(now().getTime() + FIPE_TAIL_MS));
+  const fipeImports = await imports;
 
   // Lance e resultado dos lotes ligados, com o que foi lido. Falha aqui não impede os alertas.
   let lotsUpdated = 0;
@@ -183,6 +199,8 @@ export async function runCollection({
     resultsRecorded,
     alertsCreated,
     marketValuesMatched,
+    fipeImports,
+    warnings,
     errors: errors.slice(0, MAX_ERROR_SAMPLES),
   };
 }

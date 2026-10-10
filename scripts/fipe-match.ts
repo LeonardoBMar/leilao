@@ -4,7 +4,8 @@
 //
 //   npm run db:fipe-match -- list [--kind version|family|none] [--origin auto|manual] [--search GOL] [--limit 30]
 //   npm run db:fipe-match -- show <id>                     correlação e as versões da FIPE para escolher
-//   npm run db:fipe-match -- set <id> --models 2370,2371   versão (um código) ou família (vários) [--type 1 --brand-code 59]
+//   npm run db:fipe-match -- set <id> --models 005205-1,005206-0   versão (um código FIPE) ou família (vários)
+//                                                          [--type 1 --brand "VW - VolksWagen"]
 //   npm run db:fipe-match -- set <id> --none               sem valor para esse veículo
 //   npm run db:fipe-match -- auto <id>                     desfaz a correção: a regra escolhe de novo
 //
@@ -18,7 +19,7 @@ async function main() {
   // As variáveis precisam existir antes de importar o banco (src/server/env.ts valida ao carregar).
   loadEnvConfig(process.cwd(), false, { info: () => undefined, error: console.error });
   const matches = await import("@/server/fipe/matches");
-  const { createFipeAccess, createFipeClient } = await import("@/server/fipe/client");
+  const { createFipeCatalog } = await import("@/server/fipe/catalog");
   const { fipeFuelCodes, pickFipeTable } = await import("@/domain/listings/fipe-match");
 
   const [command, id] = process.argv.slice(2);
@@ -46,7 +47,7 @@ async function main() {
   const match = await matches.getFipeMatch(id);
   if (!match) throw new Error(`Correlação ${id} não encontrada.`);
 
-  // Versões da FIPE para o veículo, na tabela mais recente (guardadas ou pedidas, até 10 pedidos).
+  // Versões da FIPE para o veículo, na tabela mais recente do catálogo.
   const candidates = async (): Promise<{
     type: FipeVehicleType;
     brandCode: string;
@@ -54,16 +55,16 @@ async function main() {
   }> => {
     const typeNumber = Number(readFlag("--type") ?? match.vehicleType);
     const type = typeNumber === 1 || typeNumber === 2 || typeNumber === 3 ? typeNumber : null;
-    const brandCode = readFlag("--brand-code") ?? match.brandCode;
+    const brandCode = readFlag("--brand") ?? match.brandCode;
     if (type === null || !brandCode) {
-      throw new Error("Correlação sem marca da FIPE: informe --type (1 carros, 2 motos, 3 caminhões) e --brand-code.");
+      throw new Error("Correlação sem marca da FIPE: informe --type (1 carros, 2 motos, 3 caminhões) e --brand.");
     }
-    const client = createFipeClient(createFipeAccess({ maxRequests: 10 }).post);
-    const table = pickFipeTable(new Date(), await client.tables());
-    if (!table) throw new Error("FIPE sem tabelas de referência.");
+    const catalog = createFipeCatalog();
+    const table = pickFipeTable(new Date(), await catalog.tables());
+    if (!table) throw new Error("Catálogo da FIPE vazio: rode `npm run db:fipe-import`.");
     const found: { code: string; fuel: number; label: string }[] = [];
     for (const fuel of fipeFuelCodes(type, match.fuel)) {
-      for (const model of await client.modelsByYear(table, type, brandCode, match.modelYear, fuel)) {
+      for (const model of await catalog.modelsByYear(table, type, brandCode, match.modelYear, fuel)) {
         if (!found.some((item) => item.code === model.code)) found.push({ code: model.code, fuel, label: model.label });
       }
     }
@@ -73,7 +74,7 @@ async function main() {
   if (command === "show") {
     process.stdout.write(`${describe(match)}\n`);
     if (match.vehicleType === null) {
-      process.stdout.write("Sem marca da FIPE casada; para escolher, use `set` com --type e --brand-code.\n");
+      process.stdout.write("Sem marca da FIPE casada; para escolher, use `set` com --type e --brand.\n");
       return;
     }
     const { found } = await candidates();
