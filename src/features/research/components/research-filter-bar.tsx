@@ -50,7 +50,11 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
   }
 
   return (
-    <section aria-label="Filtros" className="grid gap-4 border-b border-border pb-5">
+    // Fixa abaixo do cabeçalho do celular (3.5rem) a partir de `md`; no celular a barra é alta demais para ficar presa.
+    <section
+      aria-label="Filtros"
+      className="grid gap-4 border-b border-border bg-surface pb-5 md:sticky md:top-14 md:z-30 md:pt-3 lg:top-0"
+    >
       <div className="grid gap-3 md:flex md:flex-wrap md:items-center">
         <ModelPicker
           value={filters.vehicle === null ? null : vehicleLabel(filters.vehicle)}
@@ -148,8 +152,32 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
             Limpar tudo
           </Button>
         )}
+        <SectionIndex hasModel={filters.vehicle !== null} />
       </div>
     </section>
+  );
+}
+
+/** Âncoras dos blocos (DESIGN.md §15.8): a página é longa e cada bloco tem o seu `id`. */
+function SectionIndex({ hasModel }: { hasModel: boolean }) {
+  const sections = [
+    { id: "pesquisa-condicao", label: "Condição" },
+    { id: "pesquisa-estado", label: "Estado" },
+    hasModel ? { id: "pesquisa-vendas", label: "Vendas do modelo" } : { id: "pesquisa-modelos", label: "Modelos" },
+    { id: "pesquisa-lance", label: "Lance" },
+  ];
+  return (
+    <nav aria-label="Seções da página" className="flex flex-wrap gap-x-4 gap-y-1 md:ml-auto">
+      {sections.map(({ id, label }) => (
+        <a
+          key={id}
+          href={`#${id}`}
+          className="inline-flex h-10 items-center rounded-sm text-label text-muted outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent"
+        >
+          {label}
+        </a>
+      ))}
+    </nav>
   );
 }
 
