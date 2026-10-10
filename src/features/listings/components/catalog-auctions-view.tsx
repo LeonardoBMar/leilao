@@ -78,7 +78,7 @@ export async function CatalogAuctionsView({ searchParams }: { searchParams: Sear
 }
 
 /** Cartão de leilão (DESIGN.md §15.3.1): o cartão inteiro leva ao leilão, com os filtros atuais. */
-function CatalogAuctionCard({
+export function CatalogAuctionCard({
   item,
   params,
 }: {

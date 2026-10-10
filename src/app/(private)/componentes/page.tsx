@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/layout/page-header";
 
 import { ChartShowcase } from "./chart-showcase";
 import { ComponentShowcase } from "./component-showcase";
+import { DomainShowcase } from "./domain-showcase";
 
 export const metadata: Metadata = { title: "Componentes · Leilão Tracker" };
 
@@ -17,6 +18,7 @@ export default function ComponentsPage() {
         description="Primitivas de @/components/ui com seus estados, alinhadas ao DESIGN.md."
       />
       <ComponentShowcase />
+      <DomainShowcase />
       <ChartShowcase />
     </div>
   );
