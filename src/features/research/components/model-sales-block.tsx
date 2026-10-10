@@ -62,7 +62,7 @@ export async function ModelSalesBlock({
     <ResearchBlock
       id="pesquisa-vendas"
       title={title}
-      description={`Lance final de cada venda (${CONDITION_LABELS[filters.condition].toLowerCase()}) por ano-modelo; o traço é a mediana do ano, com 5 vendas ou mais. Passe o mouse num ponto para ver a venda; todas estão na tabela.`}
+      description={`Lance final de cada venda (${CONDITION_LABELS[filters.condition].toLowerCase()}) por ano-modelo; o traço é a mediana do ano, com 5 vendas ou mais. Passe o mouse ou toque num ponto para ver a venda; todas estão na tabela.`}
     >
       {xValues.length > 0 ? (
         <ScatterPlot
@@ -80,6 +80,7 @@ export async function ModelSalesBlock({
             x: sale.modelYear,
             y: sale.finalBid,
             title: saleTitle(sale),
+            href: sale.url,
           }))}
           medians={medians}
         />

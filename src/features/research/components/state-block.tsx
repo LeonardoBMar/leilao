@@ -30,8 +30,8 @@ export async function StateBlock({ filters, noSales }: { filters: ResearchFilter
   const subject = filters.vehicle === null ? "" : ` do ${vehicleLabel(filters.vehicle)}`;
   const description =
     map.metric === "ratio"
-      ? `Mediana do lance final${subject} em % do valor de mercado, por estado. Passe o mouse para ver os números e clique num estado para comparar com o Brasil.`
-      : `Mediana do lance final${subject} em R$, por estado. Passe o mouse para ver os números e clique num estado para comparar com o Brasil.`;
+      ? `Mediana do lance final${subject} em % do valor de mercado, por estado. Passe o mouse ou toque num estado para ver os números e clique nele para comparar com o Brasil.`
+      : `Mediana do lance final${subject} em R$, por estado. Passe o mouse ou toque num estado para ver os números e clique nele para comparar com o Brasil.`;
   const withSales = map.states.filter(({ summary }) => summary.kind !== "none");
 
   return (

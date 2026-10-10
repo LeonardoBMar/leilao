@@ -181,6 +181,20 @@ describe("ScatterPlot", () => {
     expect(html).toContain("left:75%;bottom:50%");
     expect(html).toContain("bg-foreground");
   });
+
+  it("escreve a dica de uso sob o gráfico, sem depender do mouse", () => {
+    const html = renderToStaticMarkup(
+      <ScatterPlot
+        ariaLabel="Lance final por ano"
+        xValues={[2019]}
+        yDomain={[0, 100]}
+        yTicks={[0, 100]}
+        formatY={String}
+        points={[{ key: "a", x: 2019, y: 40, title: "a" }]}
+      />,
+    );
+    expect(html).toContain("Passe o mouse ou toque num ponto para ver a venda.");
+  });
 });
 
 describe("LineBand", () => {
