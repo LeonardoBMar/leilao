@@ -70,16 +70,16 @@ lance máximo = maior lance em que  lance + custos + comissão + reserva + marge
 
 ## 6. Registrar o resultado
 
-Depois do leilão, na ficha do lote, **Registrar resultado**.
+Depois do leilão, na ficha do lote (ou em *Registros pendentes* no Dashboard), **Registrar resultado** abre um modal curto:
 
-- **Desfecho:** arrematado, sem arrematação, retirado, cancelado ou desconhecido. Preço final só para arrematado.
-- **Data e hora do desfecho:** informe se souber. Sem ela, marque *Confirmo que esta análise foi feita antes do desfecho* se for verdade.
-- **Análise usada na comparação:** por padrão, a última fixada que não é retrospectiva. A comparação fica presa a essa versão, mesmo que você crie outras depois.
-- **Minha participação:** apenas observei, participei e não arrematei, ou arrematei. É separado do desfecho: "dentro do limite" não quer dizer que você comprou.
+- **Desfecho:** já vem em *Arrematado*; troque para sem venda, retirado, cancelado ou "não sei". Preço final só para arrematado, já preenchido com o lance atual.
+- **Data:** já vem com hoje. O horário é o do fim do lote ou do leilão quando eles caem nesse dia; assim uma análise fixada de manhã continua contando como anterior a um leilão à tarde.
+- **Minha participação:** só observei, dei lance ou arrematei. É separado do desfecho: "dentro do limite" não quer dizer que você comprou.
+- **Comparar com a análise** (recolhido): por padrão, a última fixada que não é retrospectiva. A comparação fica presa a essa versão, mesmo que você crie outras depois.
 
 O resultado mostra a diferença entre o preço final e seu limite (ex.: *R$ 2.300,00 acima do seu limite*). Não é prejuízo: é só a distância entre o que o mercado pagou e o que você decidiu pagar.
 
-**Errou algo?** **Corrigir resultado** exige um motivo. A revisão anterior continua visível em *Histórico de correções*.
+**Errou algo?** **Corrigir resultado** abre o mesmo modal; o motivo é opcional. A revisão anterior continua visível em *Histórico de correções*.
 
 ## 7. Dashboard
 

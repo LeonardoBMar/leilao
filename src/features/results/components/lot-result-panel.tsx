@@ -1,11 +1,10 @@
-import { ExternalLink, FilePen, Trophy } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 
 import {
   Alert,
   AlertDescription,
   Badge,
-  ButtonLink,
   EmptyState,
   Money,
   Section,
@@ -15,10 +14,12 @@ import {
 } from "@/components/ui";
 import { formatDateTime } from "@/lib/format";
 
+import { recordResultAction } from "../actions";
 import { OUTCOME_LABELS, PERSONAL_OUTCOME_LABELS, TIMING_LABELS } from "../labels";
 import { getLotResultContext } from "../queries";
 import type { ResultRevision, ResultTracking } from "../types";
 import { ResultComparison } from "./result-comparison";
+import { ResultDialog } from "./result-dialog";
 
 /** Bloco de resultado da ficha do lote: revisão vigente, comparação e histórico de correções (RF-06). */
 export async function LotResultPanel({ lotId }: { lotId: string }) {
@@ -27,11 +28,9 @@ export async function LotResultPanel({ lotId }: { lotId: string }) {
   const { current, revisions, tracking } = context;
   const toConfirm = !current && tracking?.outcome.kind === "to_confirm";
 
+  // A ficha fica preservada entre navegações (D-24): cada revisão nova recomeça o formulário.
   const action = (
-    <ButtonLink href={`/lotes/${lotId}/resultado`} variant="secondary">
-      {current ? <FilePen aria-hidden="true" /> : <Trophy aria-hidden="true" />}
-      {current ? "Corrigir resultado" : toConfirm ? "Confirmar resultado" : "Registrar resultado"}
-    </ButtonLink>
+    <ResultDialog key={current?.revision ?? 0} action={recordResultAction.bind(null, lotId)} context={context} />
   );
 
   return (

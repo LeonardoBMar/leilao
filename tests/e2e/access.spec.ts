@@ -15,7 +15,6 @@ for (const path of [
   "/leiloes/leilo/leilao-que-nao-existe",
   "/leiloes/fonte%20invalida/1",
   `/lotes/${UNKNOWN}`,
-  `/lotes/${UNKNOWN}/resultado`,
   `/analise/${UNKNOWN}`,
   "/lotes/nao-e-um-uuid",
 ]) {

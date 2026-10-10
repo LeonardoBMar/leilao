@@ -5,31 +5,62 @@ import { err, ok, type Result } from "@/lib/result";
 import { requireUser } from "@/server/auth";
 import { db, isUniqueViolation } from "@/server/db";
 
+import { resolveEventAt } from "./event-time";
 import type { ResultInput } from "./schemas";
 
-export type RecordResultError = "lot_not_found" | "analysis_not_found" | "stale";
+export type RecordResultError = "lot_not_found" | "analysis_not_found" | "stale" | "invalid_date";
+
+/** CHECK do banco: correção sempre tem motivo. O modal não pede; fica registrado que não foi informado. */
+const DEFAULT_CORRECTION_REASON = "Corrigido pela ficha do lote (motivo não informado).";
 
 /**
  * Registra o resultado do lote ou uma correção (RF-06). Sempre insere uma nova revisão: a anterior e o motivo
  * são preservados (CA-14). A temporalidade da análise vinculada é calculada aqui (SPEC §10), nunca pelo cliente.
+ * Fonte, motivo da decisão e observações repetem os da revisão anterior; sem ela, a fonte é o anúncio ligado.
  */
 export async function recordResult(lotId: string, input: ResultInput): Promise<Result<null, RecordResultError>> {
   const user = await requireUser();
 
   try {
     return await db.$transaction(async (tx) => {
-      const lot = await tx.lot.findFirst({ where: { id: lotId, ownerId: user.id }, select: { id: true } });
+      const lot = await tx.lot.findFirst({
+        where: { id: lotId, ownerId: user.id },
+        select: { auction: { select: { startsAt: true } }, listing: { select: { url: true, endsAt: true } } },
+      });
       if (!lot) return err("lot_not_found");
 
       const revisions = await tx.result.findMany({
         where: { lotId, ownerId: user.id },
         orderBy: { revision: "desc" },
-        select: { id: true, revision: true, recordedAt: true },
+        select: {
+          id: true,
+          revision: true,
+          recordedAt: true,
+          eventAt: true,
+          priorDeclared: true,
+          sourceUrl: true,
+          sourceNotes: true,
+          decisionReason: true,
+          notes: true,
+        },
       });
       const latest = revisions[0];
       const first = revisions.at(-1);
       // O formulário foi aberto sobre outra revisão (ex.: correção salva em outra aba).
       if ((latest?.revision ?? 0) !== input.baseRevision) return err("stale");
+
+      const now = new Date();
+      let eventAt: Date | null = null;
+      if (input.eventDate) {
+        eventAt = resolveEventAt(
+          input.eventDate,
+          [latest?.eventAt ?? null, lot.listing?.endsAt ?? null, lot.auction.startsAt],
+          now,
+        );
+        if (!eventAt) return err("invalid_date");
+      }
+      // Declaração antiga ("análise anterior ao desfecho") só vale enquanto o horário segue desconhecido.
+      const priorDeclared = Boolean(input.analysisId) && eventAt === null && (latest?.priorDeclared ?? false);
 
       let analysisTiming: "prior" | "retrospective" | "unknown" = "unknown";
       if (input.analysisId) {
@@ -42,9 +73,9 @@ export async function recordResult(lotId: string, input: ResultInput): Promise<R
         analysisTiming = classifyAnalysisTiming({
           analysisFixedAt: analysis.fixedAt,
           knownResultAtCreation: analysis.knownResultAtCreation,
-          firstResultRecordedAt: first?.recordedAt ?? new Date(),
-          eventAt: input.eventAt ?? null,
-          priorDeclared: input.priorDeclared,
+          firstResultRecordedAt: first?.recordedAt ?? now,
+          eventAt,
+          priorDeclared,
         });
       }
 
@@ -57,16 +88,16 @@ export async function recordResult(lotId: string, input: ResultInput): Promise<R
           supersedesResultId: latest?.id ?? null,
           outcome: input.outcome,
           finalBidCents: input.outcome === "sold" ? (input.finalBid ?? null) : null,
-          eventAt: input.eventAt ?? null,
-          sourceUrl: input.sourceUrl ?? null,
-          sourceNotes: input.sourceNotes ?? null,
+          eventAt,
+          sourceUrl: latest ? latest.sourceUrl : (lot.listing?.url ?? null),
+          sourceNotes: latest?.sourceNotes ?? null,
           personalOutcome: input.personalOutcome,
-          decisionReason: input.decisionReason ?? null,
-          notes: input.notes ?? null,
+          decisionReason: latest?.decisionReason ?? null,
+          notes: latest?.notes ?? null,
           analysisId: input.analysisId ?? null,
           analysisTiming,
-          priorDeclared: input.analysisId && !input.eventAt ? input.priorDeclared : false,
-          correctionReason: isCorrection ? (input.correctionReason ?? null) : null,
+          priorDeclared,
+          correctionReason: isCorrection ? (input.correctionReason ?? DEFAULT_CORRECTION_REASON) : null,
         },
       });
       return ok(null);

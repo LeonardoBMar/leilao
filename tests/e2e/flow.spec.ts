@@ -133,24 +133,24 @@ test("revisar premissas cria nova versão e preserva a fixada (CA-08)", async ({
 });
 
 test("resultado acima do limite e correção preservando a revisão anterior (CA-10, CA-11, CA-14)", async ({ page }) => {
-  await page.goto(`/lotes/${lotId}/resultado`);
-  await choose(page, "Desfecho", "Arrematado");
-  await fillFields(page, { "Preço final": "35.500", "Data e hora do desfecho": "2030-10-02T15:00" });
+  // Modal da ficha (D-54): desfecho já em "Arrematado" e data de hoje.
+  await page.goto(`/lotes/${lotId}`);
   await page.getByRole("button", { name: "Registrar resultado" }).click();
+  const dialog = page.getByRole("dialog");
+  await field(dialog, "Preço final").fill("35.500");
+  await dialog.getByRole("button", { name: "Registrar", exact: true }).click();
 
-  await expect(page).toHaveURL(`/lotes/${lotId}`);
-  await expect(page.getByText(/Preço final R\$\s2\.300,00 acima do seu limite\./)).toBeVisible();
+  await expectToast(page, "Resultado registrado.");
+  await expect(page.getByText(/Preço final R$s2.300,00 acima do seu limite./)).toBeVisible();
   await expect(page.getByText("Análise anterior ao resultado")).toBeVisible();
 
-  await page.getByRole("link", { name: "Corrigir resultado" }).click();
-  await field(page, "Preço final").fill("33.000");
-  await page.getByRole("button", { name: "Salvar correção" }).click();
-  await expect(page.getByText("Informe o motivo da correção.")).toBeVisible();
-  await page.getByLabel("Motivo da correção").fill("Preço conferido no site do leiloeiro");
-  await page.getByRole("button", { name: "Salvar correção" }).click();
+  await page.getByRole("button", { name: "Corrigir resultado" }).click();
+  await field(dialog, "Preço final").fill("33.000");
+  await dialog.getByLabel("Motivo da correção (opcional)").fill("Preço conferido no site do leiloeiro");
+  await dialog.getByRole("button", { name: "Salvar correção" }).click();
 
-  await expect(page).toHaveURL(`/lotes/${lotId}`);
-  await expect(page.getByText(/Preço final R\$\s200,00 abaixo do seu limite\./)).toBeVisible();
+  await expectToast(page, "Resultado corrigido.");
+  await expect(page.getByText(/Preço final R$s200,00 abaixo do seu limite./)).toBeVisible();
   await expect(page.getByText("Dentro do limite")).toBeVisible();
   await expect(page.getByText("Histórico de correções (1)")).toBeVisible();
 });
@@ -206,16 +206,18 @@ test("duas correções simultâneas do resultado: só uma revisão nova (CA-19)"
   const other = await context.newPage();
   const tabs = [page, other];
   for (const tab of tabs) {
-    await tab.goto(`/lotes/${lotId}/resultado`);
-    await field(tab, "Preço final").fill("34.000");
-    await tab.getByLabel("Motivo da correção").fill("Correção simultânea (E2E)");
+    await tab.goto(`/lotes/${lotId}`);
+    await tab.getByRole("button", { name: "Corrigir resultado" }).click();
+    await field(tab.getByRole("dialog"), "Preço final").fill("34.000");
   }
-  await Promise.all(tabs.map((tab) => tab.getByRole("button", { name: "Salvar correção" }).click()));
+  await Promise.all(
+    tabs.map((tab) => tab.getByRole("dialog").getByRole("button", { name: "Salvar correção" }).click()),
+  );
 
   const outcomes = await Promise.all(
     tabs.map((tab) =>
       settle(
-        async () => new URL(tab.url()).pathname === `/lotes/${lotId}`,
+        () => tab.getByText("Resultado corrigido.").isVisible(),
         () => tab.getByText("O resultado deste lote foi alterado depois", { exact: false }).isVisible(),
       ),
     ),

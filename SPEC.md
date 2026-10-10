@@ -275,6 +275,8 @@ Campos:
 - Motivo/observações, incluindo eventual decisão de não comprar.
 - Indicação de que o usuário já conhecia o resultado ao fazer a análise, quando aplicável.
 
+Na interface, o registro pede só desfecho, preço final e dia; fonte, motivo e observações são opcionais e herdados da revisão anterior (ARCHITECTURE D-54).
+
 Regras:
 
 - “Arrematado” descreve o lote, mesmo quando a compra foi feita por outra pessoa.

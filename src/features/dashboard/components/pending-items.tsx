@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Badge, cardVariants } from "@/components/ui";
+import { RecordResultButton } from "@/features/results/components/record-result-button";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -29,19 +30,22 @@ export async function PendingItems() {
       {awaitingResult.length > 0 ? (
         <Group id="pending-results" title="Aguardando resultado">
           {awaitingResult.map((item) => (
-            <li key={item.lotId} className="grid gap-0.5">
-              <span className="flex flex-wrap items-center gap-2">
-                <Link
-                  href={`/lotes/${item.lotId}/resultado`}
-                  className="min-w-0 truncate font-semibold text-foreground hover:underline"
-                >
-                  {item.lotLabel}
-                </Link>
-                {item.toConfirm ? <Badge variant="warning">A confirmar</Badge> : null}
+            <li key={item.lotId} className="flex items-center justify-between gap-3">
+              <span className="grid min-w-0 gap-0.5">
+                <span className="flex flex-wrap items-center gap-2">
+                  <Link
+                    href={`/lotes/${item.lotId}`}
+                    className="min-w-0 truncate font-semibold text-foreground hover:underline"
+                  >
+                    {item.lotLabel}
+                  </Link>
+                  {item.toConfirm ? <Badge variant="warning">A confirmar</Badge> : null}
+                </span>
+                <span className="truncate text-caption text-muted">
+                  {item.auctionName} · {formatDate(item.startsAt)}
+                </span>
               </span>
-              <span className="truncate text-caption text-muted">
-                {item.auctionName} · {formatDate(item.startsAt)}
-              </span>
+              <RecordResultButton lotId={item.lotId} label="Registrar" size="sm" />
             </li>
           ))}
         </Group>

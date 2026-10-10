@@ -45,7 +45,14 @@ export type ResultPrefill = {
 export type ResultTracking = { sourceName: string; url: string; outcome: ListingOutcome };
 
 export type LotResultContext = {
-  lot: { id: string; lotNumber: string; title: string; auction: { id: string; name: string; startsAt: Date } };
+  lot: {
+    id: string;
+    lotNumber: string;
+    title: string;
+    /** Lance atual do lote (ou do anúncio ligado): sugestão de preço final. */
+    currentBid: Cents | null;
+    auction: { id: string; name: string; startsAt: Date };
+  };
   /** Revisão vigente: a de maior número (RF-06). */
   current: ResultRevision | null;
   /** Todas as revisões, da mais recente para a mais antiga. */

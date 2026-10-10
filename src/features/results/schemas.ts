@@ -1,29 +1,33 @@
 import { z } from "zod";
 
 import { LOT_OUTCOMES, PERSONAL_OUTCOMES } from "@/domain/results/results";
-import { checkbox, entityId, optionalPositiveBrlAmount, optionalText, optionalUrl, zonedDateTime } from "@/lib/schemas";
+import { zonedStartOfDay } from "@/lib/dates";
+import { entityId, optionalPositiveBrlAmount, optionalText } from "@/lib/schemas";
 
 export const lotIdSchema = entityId();
 
 const emptyToUndefined = (value: unknown) =>
   typeof value === "string" && (value.trim() === "" || value === "none") ? undefined : value;
 
-const longText = (max: number) => optionalText().pipe(z.string().max(max, `Use até ${max} caracteres.`).optional());
-
-/** Registro ou correção de resultado (SPEC RF-06). Cada envio cria uma revisão; nada é sobrescrito. */
+/**
+ * Registro ou correção de resultado (SPEC RF-06), no modal da ficha (D-54). Cada envio cria uma revisão; nada é
+ * sobrescrito. Fonte, motivo e observações não são pedidos: a mutation repete os da revisão anterior.
+ */
 export const resultInputSchema = z
   .object({
     outcome: z.enum(LOT_OUTCOMES, "Selecione o desfecho do lote."),
     finalBid: optionalPositiveBrlAmount(),
-    eventAt: z.preprocess(emptyToUndefined, zonedDateTime("Informe data e hora válidas.").optional()),
-    sourceUrl: optionalUrl(),
-    sourceNotes: longText(2_000),
+    /** Dia do desfecho ("YYYY-MM-DD"); o horário vem de `resolveEventAt`. */
+    eventDate: z.preprocess(
+      emptyToUndefined,
+      z
+        .string()
+        .refine((value) => zonedStartOfDay(value) !== null, "Informe uma data válida.")
+        .optional(),
+    ),
     analysisId: z.preprocess(emptyToUndefined, entityId().optional()),
-    priorDeclared: checkbox(),
     personalOutcome: z.enum(PERSONAL_OUTCOMES, "Selecione sua participação."),
-    decisionReason: longText(5_000),
-    notes: longText(5_000),
-    correctionReason: longText(2_000),
+    correctionReason: optionalText().pipe(z.string().max(2_000, "Use até 2000 caracteres.").optional()),
     /** Revisão vigente quando o formulário foi aberto (0 = primeiro registro). Evita sobrescrever outra aba. */
     baseRevision: z.coerce.number().int().min(0).catch(0),
   })
@@ -38,9 +42,6 @@ export const resultInputSchema = z
         path: ["personalOutcome"],
         message: "“Arrematei” exige desfecho arrematado e preço final informado.",
       });
-    }
-    if (Number.isInteger(result.baseRevision) && result.baseRevision > 0 && !result.correctionReason) {
-      ctx.addIssue({ code: "custom", path: ["correctionReason"], message: "Informe o motivo da correção." });
     }
   });
 export type ResultInput = z.infer<typeof resultInputSchema>;

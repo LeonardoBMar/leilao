@@ -97,3 +97,8 @@ export function toCalendarDateInput(date: Date): string {
 export function toMonthInput(date: Date): string {
   return date.toISOString().slice(0, 7);
 }
+
+/** Instante UTC → "YYYY-MM-DD" do dia no fuso do app, para `<input type="date">`. */
+export function toZonedDateInput(date: Date): string {
+  return toZonedDateTimeInput(date).slice(0, 10);
+}

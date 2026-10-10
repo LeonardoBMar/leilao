@@ -6,13 +6,9 @@ import { resultInputSchema } from "./schemas";
 const soldForm = {
   outcome: "sold",
   finalBid: "35.500",
-  eventAt: "2026-10-02T15:30",
-  sourceUrl: "",
-  sourceNotes: "Resultado publicado no site do leiloeiro",
+  eventDate: "2026-10-02",
   analysisId: "0199a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5b",
   personalOutcome: "observed",
-  decisionReason: "",
-  notes: "",
   correctionReason: "",
   baseRevision: "0",
 };
@@ -27,18 +23,21 @@ describe("resultInputSchema — RF-06", () => {
     expect(resultInputSchema.parse(soldForm)).toMatchObject({
       outcome: "sold",
       finalBid: 3_550_000,
-      eventAt: new Date("2026-10-02T18:30:00.000Z"),
+      eventDate: "2026-10-02",
       analysisId: "0199a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5b",
-      priorDeclared: false,
       baseRevision: 0,
     });
   });
 
   it("“nenhuma” análise e data vazia viram ausentes", () => {
-    expect(resultInputSchema.parse({ ...soldForm, analysisId: "none", eventAt: "" })).toMatchObject({
+    expect(resultInputSchema.parse({ ...soldForm, analysisId: "none", eventDate: "" })).toMatchObject({
       analysisId: undefined,
-      eventAt: undefined,
+      eventDate: undefined,
     });
+  });
+
+  it("data inválida", () => {
+    expect(errors({ ...soldForm, eventDate: "2026-02-31" })).toEqual({ eventDate: ["Informe uma data válida."] });
   });
 
   it("arrematado com preço desconhecido é válido (sem comparação)", () => {
@@ -58,11 +57,8 @@ describe("resultInputSchema — RF-06", () => {
     expect(resultInputSchema.safeParse({ ...soldForm, personalOutcome: "won" }).success).toBe(true);
   });
 
-  it("correção exige motivo (CA-14)", () => {
-    expect(errors({ ...soldForm, baseRevision: "1" })).toEqual({ correctionReason: ["Informe o motivo da correção."] });
-    expect(
-      resultInputSchema.safeParse({ ...soldForm, baseRevision: "1", correctionReason: "Preço corrigido" }).success,
-    ).toBe(true);
+  it("correção sem motivo é aceita (a mutation registra um motivo padrão)", () => {
+    expect(resultInputSchema.parse({ ...soldForm, baseRevision: "1" }).correctionReason).toBeUndefined();
   });
 
   it("desfecho obrigatório e preço positivo", () => {
