@@ -24,10 +24,10 @@ export async function FollowedLots() {
       <EmptyState
         variant="inline"
         title="Nenhum lote acompanhado"
-        description="Marque um lote para acompanhar seu lance e limite aqui."
+        description="Adicione um lote de Leilões à análise (ele já entra acompanhado) para ver lance e limite aqui."
         action={
-          <ButtonLink href="/minhas-analises" variant="secondary">
-            Ver minhas análises
+          <ButtonLink href="/leiloes" variant="secondary">
+            Ver leilões
           </ButtonLink>
         }
       />

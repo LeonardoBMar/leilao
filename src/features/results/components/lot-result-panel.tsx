@@ -61,10 +61,12 @@ export async function LotResultPanel({ lotId }: { lotId: string }) {
 function CurrentResult({ result }: { result: ResultRevision }) {
   return (
     <div className="grid gap-4">
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Badge>{OUTCOME_LABELS[result.outcome]}</Badge>
-        <Badge variant="outline">{PERSONAL_OUTCOME_LABELS[result.personalOutcome]}</Badge>
-        {result.source === "collector" ? <Badge variant="outline">Registrado pelo coletor</Badge> : null}
+        <span className="text-caption text-muted">
+          {PERSONAL_OUTCOME_LABELS[result.personalOutcome]}
+          {result.source === "collector" ? " · registrado pelo coletor" : ""}
+        </span>
         {result.analysis ? (
           <Badge variant={result.analysisTiming === "prior" ? "success" : "warning"}>
             {TIMING_LABELS[result.analysisTiming]}

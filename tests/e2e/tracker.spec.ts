@@ -37,7 +37,7 @@ test("adiciona um anúncio à análise, não duplica e leva ao lote acompanhado"
   // Etapa 4: a ficha diz de onde virá o resultado. O estado depende do anúncio escolhido (ainda revisitado, desfecho
   // definitivo, a confirmar ou já gravado); cada um tem teste em src/domain/listings/outcome.test.ts.
   await expect(
-    page.getByText(/registrado sozinho|já informou o desfecho|Resultado a confirmar|Registrado pelo coletor/).first(),
+    page.getByText(/registrado sozinho|já informou o desfecho|Resultado a confirmar|registrado pelo coletor/i).first(),
   ).toBeVisible();
 
   // Limpeza: o lote só tem rascunho, então pode ser excluído.

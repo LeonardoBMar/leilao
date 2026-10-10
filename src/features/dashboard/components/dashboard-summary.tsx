@@ -79,15 +79,14 @@ export async function DecisionIndicator() {
         <p className="text-body text-foreground-secondary">Ainda sem resultados comparáveis.</p>
       ) : (
         <p className="grid gap-1 text-body text-foreground-secondary">
-          <span className="text-display text-foreground tabular-nums">
+          <span className="text-heading-1 text-foreground tabular-nums">
             {indicator.withinLimit} <span className="font-medium text-muted-subtle">de {indicator.comparable}</span>
           </span>{" "}
           resultados comparáveis ficaram dentro do limite
         </p>
       )}
       <p className="border-t border-border pt-3 text-caption text-muted">
-        Considera lotes ativos arrematados, com preço final conhecido e análise fixada antes do desfecho. Estar dentro
-        do limite não significa que seria possível arrematar por esse preço.
+        Arrematados com preço final e análise fixada antes do desfecho.
       </p>
     </section>
   );
