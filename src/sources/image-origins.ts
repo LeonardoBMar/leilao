@@ -8,6 +8,8 @@ export const PATIO_IMAGE_ORIGIN = "https://patioestadualsc.org";
 export const FREITAS_IMAGE_ORIGIN = "https://cdn3.freitasleiloeiro.com.br";
 export const DETRAN_MG_IMAGE_ORIGIN = "https://leilao.detran.mg.gov.br";
 export const LEILAO_ONLINE_IMAGE_ORIGIN = "https://d1y4blh5egbvru.cloudfront.net";
+/** Bucket da plataforma Astavero (Detran-SC). A origem é da Oracle Cloud; o adaptador só aceita fotos do bucket dela. */
+export const ASTAVERO_IMAGE_ORIGIN = "https://objectstorage.sa-saopaulo-1.oraclecloud.com";
 
 export const LISTING_IMAGE_ORIGINS = [
   LEILO_IMAGE_ORIGIN,
@@ -15,4 +17,5 @@ export const LISTING_IMAGE_ORIGINS = [
   FREITAS_IMAGE_ORIGIN,
   DETRAN_MG_IMAGE_ORIGIN,
   LEILAO_ONLINE_IMAGE_ORIGIN,
+  ASTAVERO_IMAGE_ORIGIN,
 ] as const;

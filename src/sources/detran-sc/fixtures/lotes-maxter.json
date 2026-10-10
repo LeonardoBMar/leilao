@@ -1,0 +1,348 @@
+{
+ "erro": false,
+ "lotes": [
+  {
+   "valor": 32026,
+   "avaliacao": 47700,
+   "nome": "TERRENO NA PRAIA DO ERVINO",
+   "local": "São Francisco do Sul - SC",
+   "leilao": "6a97256e53274814f0587bd8",
+   "id": "6a97264853274814f0587cf2",
+   "lote": "001",
+   "status": "Aberto",
+   "praca": 0,
+   "data": "2026-10-13T17:00:00.000Z",
+   "vara": "2ª VARA CÍVEL DO FÓRUM DE SÃO FRANCISCO DO SUL/SC.",
+   "origem": "Estadual",
+   "image": "https://objectstorage.sa-saopaulo-1.oraclecloud.com/n/grlkbn1ggqso/b/astavero/o/anexos/maxter/6a97256e53274814f0587bd8/6a97264853274814f0587cf2/leil_o_judicial_de_terreno_em_s_o_francisco_do_sul-1791312801000.png",
+   "inicial": "2026-09-01T20:00:00.000Z",
+   "url": "https://maxterleiloes.com.br/pregao/6a97256e53274814f0587bd8/6a97264853274814f0587cf2"
+  },
+  {
+   "valor": 75000,
+   "avaliacao": 75000,
+   "nome": "MOTORHOME/MOTOR-CASA",
+   "local": "São Francisco do Sul - SC",
+   "leilao": "6aad827fbcddc31a7f3f33a2",
+   "id": "6aad8374bcddc31a7f3f3551",
+   "lote": "001",
+   "status": "Aberto",
+   "praca": 0,
+   "data": "2026-10-22T18:00:00.000Z",
+   "vara": "TRANSKAH TRANSPORTE DE CARGAS E LOGÍSTICA",
+   "origem": "Extra",
+   "image": "https://objectstorage.sa-saopaulo-1.oraclecloud.com/n/grlkbn1ggqso/b/astavero/o/anexos/maxter/6aad827fbcddc31a7f3f33a2/6aad8374bcddc31a7f3f3551/06_traseira_chamada_leilao-1789756979000.png",
+   "inicial": "2026-09-18T20:00:00.000Z",
+   "url": "https://maxterleiloes.com.br/pregao/6aad827fbcddc31a7f3f33a2/6aad8374bcddc31a7f3f3551"
+  },
+  {
+   "valor": 2770,
+   "avaliacao": 2770,
+   "nome": "AUTOMOVEL RENAULT/SCENIC RT1.6 16V Ano: 2002/2002",
+   "local": "Lages - SC",
+   "leilao": "6aa1e41d859ddd3983188e07",
+   "id": "6ab01aa1ad7cdf02559c8397",
+   "lote": "8408",
+   "status": "Aberto",
+   "praca": 0,
+   "data": "2026-10-19T12:00:00.000Z",
+   "vara": "DEPARTAMENTO ESTADUAL DE TRÂNSITO",
+   "origem": "Extra",
+   "image": "https://objectstorage.sa-saopaulo-1.oraclecloud.com/n/grlkbn1ggqso/b/astavero/o/anexos/maxter/6aa1e41d859ddd3983188e07/6ab01aa1ad7cdf02559c8397/8408.jpg",
+   "inicial": "2026-10-07T12:00:00.000Z",
+   "url": "https://maxterleiloes.com.br/pregao/6aa1e41d859ddd3983188e07/6ab01aa1ad7cdf02559c8397"
+  },
+  {
+   "valor": 2540,
+   "avaliacao": 1940,
+   "nome": "SEMI-REBOQUE SR/RANDON Ano: 1980/1980",
+   "local": "Lages - SC",
+   "leilao": "6aa1e41d859ddd3983188e07",
+   "id": "6ab01aa0ad7cdf02559c8358",
+   "lote": "8415",
+   "status": "Aberto",
+   "praca": 0,
+   "data": "2026-10-19T12:00:00.000Z",
+   "vara": "DEPARTAMENTO ESTADUAL DE TRÂNSITO",
+   "origem": "Extra",
+   "image": "https://objectstorage.sa-saopaulo-1.oraclecloud.com/n/grlkbn1ggqso/b/astavero/o/anexos/maxter/6aa1e41d859ddd3983188e07/6ab01aa0ad7cdf02559c8358/8415.jpg",
+   "inicial": "2026-10-07T12:00:00.000Z",
+   "url": "https://maxterleiloes.com.br/pregao/6aa1e41d859ddd3983188e07/6ab01aa0ad7cdf02559c8358"
+  },
+  {
+   "valor": 5220,
+   "avaliacao": 4920,
+   "nome": "CAMINHAO IMP/M.BENZ MB 180D Ano: 1995/1995",
+   "local": "Joinville - SC",
+   "leilao": "6aa1e41d859ddd3983188e07",
+   "id": "6ab01993aa240a8a2e3e1f6e",
+   "lote": "8433",
+   "status": "Aberto",
+   "praca": 0,
+   "data": "2026-10-19T12:00:00.000Z",
+   "vara": "DEPARTAMENTO ESTADUAL DE TRÂNSITO",
+   "origem": "Extra",
+   "image": "https://objectstorage.sa-saopaulo-1.oraclecloud.com/n/grlkbn1ggqso/b/astavero/o/anexos/maxter/6aa1e41d859ddd3983188e07/6ab01993aa240a8a2e3e1f6e/8433.jpg",
+   "inicial": "2026-10-07T12:00:00.000Z",
+   "url": "https://maxterleiloes.com.br/pregao/6aa1e41d859ddd3983188e07/6ab01993aa240a8a2e3e1f6e"
+  },
+  {
+   "valor": 2360,
+   "avaliacao": 460,
+   "nome": "REBOQUE R/DACLA CG 1E Ano: 2024/2024",
+   "local": "São José - SC",
+   "leilao": "6aa1e41d859ddd3983188e07",
+   "id": "6ab05522ad7cdf02559cdb4e",
+   "lote": "8441",
+   "status": "Aberto",
+   "praca": 0,
+   "data": "2026-10-19T12:00:00.000Z",
+   "vara": "DEPARTAMENTO ESTADUAL DE TRÂNSITO",
+   "origem": "Extra",
+   "image": "https://objectstorage.sa-saopaulo-1.oraclecloud.com/n/grlkbn1ggqso/b/astavero/o/anexos/maxter/6aa1e41d859ddd3983188e07/6ab05522ad7cdf02559cdb4e/8441.jpg",
+   "inicial": "2026-10-07T12:00:00.000Z",
+   "url": "https://maxterleiloes.com.br/pregao/6aa1e41d859ddd3983188e07/6ab05522ad7cdf02559cdb4e"
+  },
+  {
+   "valor": 4730,
+   "avaliacao": 4530,
+   "nome": "CAMINHONETE FIAT/STRADA FIRE FLEX Ano: 2005/2006",
+   "local": "São José - SC",
+   "leilao": "6aa1e41d859ddd3983188e07",
+   "id": "6ab0114aaa240a8a2e3e0bb6",
+   "lote": "8449",
+   "status": "Aberto",
+   "praca": 0,
+   "data": "2026-10-19T12:00:00.000Z",
+   "vara": "DEPARTAMENTO ESTADUAL DE TRÂNSITO",
+   "origem": "Extra",
+   "image": "https://objectstorage.sa-saopaulo-1.oraclecloud.com/n/grlkbn1ggqso/b/astavero/o/anexos/maxter/6aa1e41d859ddd3983188e07/6ab0114aaa240a8a2e3e0bb6/8449.jpg",
+   "inicial": "2026-10-07T12:00:00.000Z",
+   "url": "https://maxterleiloes.com.br/pregao/6aa1e41d859ddd3983188e07/6ab0114aaa240a8a2e3e0bb6"
+  },
+  {
+   "valor": 850,
+   "avaliacao": 750,
+   "nome": "MOTONETA HONDA/C100 BIZ ES Ano: 2004/2004",
+   "local": "Lages - SC",
+   "leilao": "6aa1e41d859ddd3983188e07",
+   "id": "6ab083ddad7cdf02559d0e41",
+   "lote": "8533",
+   "status": "Aberto",
+   "praca": 0,
+   "data": "2026-10-19T12:00:00.000Z",
+   "vara": "DEPARTAMENTO ESTADUAL DE TRÂNSITO",
+   "origem": "Extra",
+   "image": "https://objectstorage.sa-saopaulo-1.oraclecloud.com/n/grlkbn1ggqso/b/astavero/o/anexos/maxter/6aa1e41d859ddd3983188e07/6ab083ddad7cdf02559d0e41/8533.jpg",
+   "inicial": "2026-10-07T12:00:00.000Z",
+   "url": "https://maxterleiloes.com.br/pregao/6aa1e41d859ddd3983188e07/6ab083ddad7cdf02559d0e41"
+  },
+  {
+   "valor": 1440,
+   "avaliacao": 1440,
+   "nome": "MOTOCICLETA HONDA/CG 125 FAN Ano: 2005/2005",
+   "local": "Lages - SC",
+   "leilao": "6aa1e41d859ddd3983188e07",
+   "id": "6ab083ddad7cdf02559d0e62",
+   "lote": "8534",
+   "status": "Aberto",
+   "praca": 0,
+   "data": "2026-10-19T12:00:00.000Z",
+   "vara": "DEPARTAMENTO ESTADUAL DE TRÂNSITO",
+   "origem": "Extra",
+   "image": "https://objectstorage.sa-saopaulo-1.oraclecloud.com/n/grlkbn1ggqso/b/astavero/o/anexos/maxter/6aa1e41d859ddd3983188e07/6ab083ddad7cdf02559d0e62/8534.jpg",
+   "inicial": "2026-10-07T12:00:00.000Z",
+   "url": "https://maxterleiloes.com.br/pregao/6aa1e41d859ddd3983188e07/6ab083ddad7cdf02559d0e62"
+  },
+  {
+   "valor": 300,
+   "avaliacao": 300,
+   "nome": "SUCATA GM/CORSA WIND Ano: 1999/1999",
+   "local": "Lages - SC",
+   "leilao": "6aa1e41d859ddd3983188e07",
+   "id": "6ab1c4c54cf1962c528a3fe3",
+   "lote": "8737",
+   "status": "Aberto",
+   "praca": 0,
+   "data": "2026-10-19T12:00:00.000Z",
+   "vara": "DEPARTAMENTO ESTADUAL DE TRÂNSITO",
+   "origem": "Extra",
+   "image": "https://objectstorage.sa-saopaulo-1.oraclecloud.com/n/grlkbn1ggqso/b/astavero/o/anexos/maxter/6aa1e41d859ddd3983188e07/6ab1c4c54cf1962c528a3fe3/8737.jpg",
+   "inicial": "2026-10-07T12:00:00.000Z",
+   "url": "https://maxterleiloes.com.br/pregao/6aa1e41d859ddd3983188e07/6ab1c4c54cf1962c528a3fe3"
+  }
+ ],
+ "pag": {
+  "varacomitente": null,
+  "count": 10,
+  "pages": null,
+  "page": 1,
+  "skip": null
+ },
+ "categorias": [
+  {
+   "cat": "Imóveis",
+   "sub": [
+    {
+     "sub": " Terreno",
+     "sum": 1
+    }
+   ],
+   "total": 1
+  },
+  {
+   "cat": "Veículos",
+   "sub": [
+    {
+     "sub": "AUTOMOVEL",
+     "sum": 118
+    },
+    {
+     "sub": "CAMINHAO",
+     "sum": 1
+    },
+    {
+     "sub": "CAMINHONETE",
+     "sum": 4
+    },
+    {
+     "sub": "MOTOCICLETA",
+     "sum": 167
+    },
+    {
+     "sub": "MOTONETA",
+     "sum": 37
+    },
+    {
+     "sub": "ÔNIBUS",
+     "sum": 1
+    },
+    {
+     "sub": "REBOQUE",
+     "sum": 2
+    },
+    {
+     "sub": "SEMI-REBOQUE",
+     "sum": 1
+    }
+   ],
+   "total": 331
+  },
+  {
+   "cat": "Materiais",
+   "sub": [
+    {
+     "sub": "CALDEIRA",
+     "sum": 1
+    },
+    {
+     "sub": "DIVERSOS",
+     "sum": 1
+    }
+   ],
+   "total": 2
+  },
+  {
+   "cat": "Sucatas",
+   "sub": [
+    {
+     "sub": "SUCATA",
+     "sum": 411
+    }
+   ],
+   "total": 411
+  },
+  {
+   "cat": "Semoventes",
+   "sub": [],
+   "total": 0
+  }
+ ],
+ "cidades": [
+  {
+   "cidade": "ITAJAí",
+   "uf": "",
+   "count": 24
+  },
+  {
+   "cidade": "ALFREDO WAGNER",
+   "uf": "SC",
+   "count": 24
+  },
+  {
+   "cidade": "BRUSQUE",
+   "uf": "SC",
+   "count": 15
+  },
+  {
+   "cidade": "GAROPABA",
+   "uf": "SC",
+   "count": 15
+  },
+  {
+   "cidade": "IMBITUBA",
+   "uf": "SC",
+   "count": 53
+  },
+  {
+   "cidade": "IMBITUBA/",
+   "uf": "SC",
+   "count": 12
+  },
+  {
+   "cidade": "ITAJAí",
+   "uf": "SC",
+   "count": 23
+  },
+  {
+   "cidade": "JOINVILLE",
+   "uf": "SC",
+   "count": 7
+  },
+  {
+   "cidade": "LAGES",
+   "uf": "SC",
+   "count": 99
+  },
+  {
+   "cidade": "NAVEGANTES",
+   "uf": "SC",
+   "count": 1
+  },
+  {
+   "cidade": "PALHOçA",
+   "uf": "SC",
+   "count": 85
+  },
+  {
+   "cidade": "SALETE",
+   "uf": "SC",
+   "count": 1
+  },
+  {
+   "cidade": "SÃO JOSÉ",
+   "uf": "SC",
+   "count": 5
+  },
+  {
+   "cidade": "SãO FRANCISCO DO SUL",
+   "uf": "SC",
+   "count": 2
+  },
+  {
+   "cidade": "SãO JOAQUIM",
+   "uf": "SC",
+   "count": 72
+  },
+  {
+   "cidade": "SãO JOSé",
+   "uf": "SC",
+   "count": 221
+  },
+  {
+   "cidade": "SãO JOãO BATISTA",
+   "uf": "SC",
+   "count": 86
+  }
+ ]
+}

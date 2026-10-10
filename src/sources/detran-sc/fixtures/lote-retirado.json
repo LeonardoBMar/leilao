@@ -1,0 +1,68 @@
+{
+ "lote": {
+  "datas": {
+   "entrada": "2026-08-25T03:24:33.706Z",
+   "avaliacao": null,
+   "destake": "2026-08-25T03:24:33.706Z",
+   "correcao": null,
+   "leilao": "2026-09-21T12:00:00.000Z",
+   "pregao": null,
+   "encerrado": null,
+   "start": null,
+   "inicial": "2026-09-14T12:00:00.000Z",
+   "saida": null
+  },
+  "v": {
+   "avaliacao": 17470,
+   "corrigido": 0,
+   "incremento": 300,
+   "comissao": 5,
+   "calculo": 51,
+   "primeira": 17470,
+   "segunda": 0,
+   "terceira": 0,
+   "quarta": 0,
+   "vendadir": 0,
+   "inicio": 0,
+   "diaria": 0,
+   "custas": 0,
+   "qtdade": 1,
+   "reserva": 0,
+   "aprazo": false
+  },
+  "p": {
+   "vara": "DEPARTAMENTO ESTADUAL DE TRÂNSITO DE SANTA CATARINA - DETRAN SC"
+  },
+  "q": {
+   "msg": "7. DO PAGAMENTO DOS LOTES ARREMATADOS:  7.1. Os pagamentos dos lotes arrematados deverão ser quitados à vista em sua totalidade, através de depósito identificado, transferência bancária ou ainda por PIX, na conta corrente da Leiloeira, tendo como código identificador o CPF do arrematante. A agência e a conta corrente para pagamento serão informadas pelo leiloeiro no ato da efetivação da compra. Não serão aceitos depósitos em caixas eletrônicos.  7.2. O pagamento deverá ser realizado preferencialmente no dia do Leilão, ou em até 24 (vinte e quatro) horas após.  7.3. Sobre o valor do arremate deverá ser acrescido o percentual de 5% (cinco por cento) à título de comissão à Leiloeira, nos termos do § 1º Art. 31 da Lei nº 14.133/2021.  7.4. O lote arrematado somente será liberado após a compensação do pagamento em nome da Leiloeira.  7.5. Em caso de inadimplência por falta de pagamento, o arrematante poderá ficar impedido de contratar com o Poder Público por até 03 (três) anos a contar da data do Leilão, além de eventuais cobranças judiciais de lance e comissão do leiloeiro e inscrição em cadastro de devedores.  7.6. A Leiloeira está autorizada a utilizar dos meios legais para efetuar a cobrança dos valores devidos pelo arrematante.  7.7. Havendo a desistência do arrematante haverá o pagamento de multa no valor de 20% (vinte por cento) sobre o valor arrematado, destinado ao Fundo do Departamento Estadual de Trânsito de Santa Catarina, a ser paga à leiloeira por depósito, transferência bancária entre contas correntes ou através de PIX. Na multa será acrescido ainda o percentual de 5% (cinco por cento) sobre o valor arrematado destinado à Leiloeira."
+  },
+  "d": {
+   "nome": "PORTO UNIÃO - W. Bahr Guincho*",
+   "cep": "",
+   "uf": "SC",
+   "cidade": "Porto União",
+   "bairro": "Industrial",
+   "endereco": "Rua Walfrido Soares dos Santos - Nº 480",
+   "contato": "Telefone (42) 999510204 / 35223432 / 35229497",
+   "visita": "5. DO PERÍODO DE VISITA AOS LOTES:  5.1. Os veículos estarão à disposição para visitação pelos interessados de forma presencial, mediante agendamento junto aos Pátios Conveniados no período de 14 a 18 de setembro 2026 no horário das 09:00h às 12:00h e das 13:00h às 17:00h, endereços dos Pátios no Anexo I deste Edital.",
+   "retirada": "8. DA ENTREGA DOS VEÍCULOS DA BASE DE DADOS DO DETRAN/SC  8.1. A retirada do bem arrematado deverá ser realizada pelo arrematante a partir do dia 28 de setembro de 2026, para veículos conservados, e a partir do dia 01 de outubro de 2026 para as sucatas.  8.2. A retirada do bem poderá ser realizada por representante legal mediante procuração simples registrada em cartório, contendo a identificação dos bens arrematados, marca/modelo e placas dos veículos, veículos conservados deverão obrigatoriamente sair do Pátio de Custódia em guincho (ver item 8.12 deste Edital).  8.3. Para a retirada do bem o arrematante deverá realizar agendamento prévio junto aos Pátios de Custódia, relacionados no anexo I deste Edital.  8.4. No ato da retirada do bem o arrematante deverá ter em mãos a Comprovação do Depósito Bancário em favor do Leiloeiro e a Nota de Arrematação (Nota Fiscal fornecida pelo Leiloeiro). Os Pátios de Custódia não serão obrigados a imprimir documentos para o arrematante ou seu representante legal, por isso deverão trazer consigo os documentos necessários a liberação.  8.5. O arrematante terá o prazo de 30 (trinta) dias úteis, contados a partir da data da Sessão Pública do Leilão para a retirada do bem, podendo ser prorrogado este prazo, mediante motivação junto à CEL, passando este prazo será cobrada taxa de estadia em vigor no município origem do Pátio de Custódia, local de depósito do veículo.  8.6. Observadas as razões apresentadas ou circunstâncias o DETRAN/CEL poderá prorrogar o prazo da retirada do bem arrematado por igual prazo. (Art.39 da Resolução 623/2016 CONTRAN), esta solicitação de prorrogação deverá ser realizada através do e-mail: leilaoedital@detran.sc.gov.br.  8.7. Ultrapassando o prazo inicial estabelecido neste Edital, e o da prorrogação se houver, será cobrada o valor da taxa diária de armazenagem prevista no Convênio de Concessão Municipal dos Pátios de Custódia, ou ainda, no Decreto Estadual de Taxas, até a data da efetiva retirada do veículo.  8.8. Não havendo a retirada do bem nos prazos, o DETRAN/CEL poderá dar ao bem o destino que lhe for conveniente.  8.9. O arrematante é o responsável por quaisquer acidentes que porventura venham a ocorrer com o seu pessoal e/ou prepostos durante a retirada dos respectivos lotes, isentando o DETRAN, o Leiloeiro e o Pátio de Custódia de qualquer responsabilidade civil ou criminal, bem como, de outros ônus decorrentes.  8.10. Toda e qualquer despesa decorrente da logística dos bens arrematados serão por conta do arrematante (guincho, mecânicos e outros).  8.11. Os bens arrematados deverão ser retirados na sua totalidade, não sendo permitido ao arrematante o direito à retirada parcial deles.  8.12. O arrematante não poderá circular com o veículo arrematado em via pública sem antes transferi-lo para o seu nome.  8.13. Os veículos avaliados como CONSERVADOS receberão do Leiloeiro a Nota de Arremate e a Certidão de Número do CRV (Certificado de Registro de Veículo).  8.14. Os arrematantes dos veículos pertencentes à base de dados do Sistema DETRANNET de Santa Catarina, receberão estes documentos tão logo seja efetuada a prestação de contas do leiloeiro para com a Comissão de Leilões confirmado o pagamento dos lotes arrematados.  8.15. O arrematante não deverá realizar nenhuma manutenção, conserto, reforma, reparos ou qualquer ação no bem adquirido para circular, que modifique o veículo da condição em que foi adquirido, até que seja finalizado o processo de pagamento, desvinculação dos débitos, baixa de GRAVAMES, baixa e comunicação de venda e outros que constam no dossiê do veículo, para que assim possa efetivamente dar início ao processo de transferência.  8.16. Os veículos avaliados como Sucata receberão do Leiloeiro somente a Nota de Arremate. Após a conclusão da etapa de descaracterização, e da desvinculação dos débitos relativos ao veículo e de estar a baixa definitiva registrada no sistema RENAVAN pelo DETRAN, onde o veículo esteja devidamente registrado e que será fornecida a Certidão de Baixa. 6   8.17. Os débitos dos veículos conservados e sucatas que tenham vencimento até a data da Sessão Pública do Leilão serão quitados ou desvinculados pelo DETRAN/SC, após esta data será de responsabilidade do arrematante.  8.18. No ato da retirada do veículo do Pátio de Custódia, pelo arrematante ou por seu representante legal, o veículo deverá ser novamente inspecionado. A posse poderá ser rejeita se houver alguma desconformidade em relação, ao que foi constatado quando da visita presencial; e neste caso somente quando a visita presencial aos lotes tiver sido efetuada. Ocorrendo isto, o fato deverá de imediato ser comunicado ao DETRAN/CEL, através do e-mail: leilaogestora@detran.sc.gov.br para as devidas providências.  8.19. O DETRAN/SC e o Leiloeiro não se responsabilizam pela retirada do veículo em desconformidades conforme enunciado no item anterior, ocorrendo a retirada nestes termos, todo o ônus será imputado ao arrematante.  8.20. Se por algum motivo o veículo arrematado não for entregue pelo Pátio de Custódia ao arrematante ou ao seu representante legal, no período a isto destinado, esta irregularidade deverá ser comunicada de imediato ao DETRAN/CEL através do e-mail: leilaoedital@detran.sc.gov.br , para a adoção de providências.  ATENÇÃO!! LEIA O EDITAL DO LEILÃO!",
+   "gmap": "",
+   "snome": "",
+   "lat": 0,
+   "lng": 0
+  },
+  "_id": "6a8d0e5fb1f2547fec859f17",
+  "visitas": 3619,
+  "status": "Retirado",
+  "lote": "8004",
+  "nome": "AUTOMÓVEL CHEV/ONIX PLUS 10MT LT2 Ano: 2021/2022",
+  "detalhada": "AUTOMÓVEL CHEV/ONIX PLUS 10MT LT2<br>Ano: 2021/2022<br>Placa: AAA0A00<br> Motor: MOTOR0000000<br>Chassi: 9AAAA00AA0A000000<br>Rem: 000000",
+  "motivo": "Determinação de Retirada Pelo Detran Em 15/09/2026.",
+  "sucata": false,
+  "countdown": 180,
+  "anexos": [],
+  "l": []
+ },
+ "prog": null,
+ "pregao": null
+}

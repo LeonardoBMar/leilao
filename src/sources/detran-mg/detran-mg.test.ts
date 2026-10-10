@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { listingContractProblems } from "../shared/contract";
+import { splitDetranVehicle } from "../shared/detran-vehicle";
 import type { FetchOutcome, SourceHttp } from "../types";
 import { detranMgSource } from ".";
 import {
@@ -21,7 +22,6 @@ import {
   parseDetranLotPage,
   redactPersonalIds,
   snapshotLive,
-  splitDetranVehicle,
 } from "./parse";
 
 const fixture = (name: string) => readFileSync(join(import.meta.dirname, "fixtures", name), "utf8");

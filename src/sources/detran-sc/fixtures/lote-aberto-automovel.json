@@ -1,0 +1,181 @@
+{
+ "lote": {
+  "datas": {
+   "entrada": "2026-10-06T22:02:57.515Z",
+   "avaliacao": null,
+   "destake": "2026-10-06T22:02:57.515Z",
+   "correcao": null,
+   "leilao": "2026-10-19T12:00:00.000Z",
+   "pregao": null,
+   "encerrado": null,
+   "start": null,
+   "inicial": "2026-10-07T12:00:00.000Z",
+   "saida": null
+  },
+  "v": {
+   "segunda": 0,
+   "avaliacao": 2770,
+   "corrigido": 0,
+   "incremento": 100,
+   "comissao": 5,
+   "calculo": 51,
+   "primeira": 2770,
+   "terceira": 0,
+   "quarta": 0,
+   "vendadir": 0,
+   "inicio": 0,
+   "diaria": 0,
+   "custas": 0,
+   "qtdade": 1,
+   "reserva": 0,
+   "aprazo": false
+  },
+  "p": {
+   "vara": "DEPARTAMENTO ESTADUAL DE TRÂNSITO"
+  },
+  "q": {
+   "msg": "à vista em sua totalidade, através de depósito identificado, transferência bancária ou PIX"
+  },
+  "d": {
+   "nome": "LAGES - Júlio Cesar Fernandes Trans Me. A.C",
+   "snome": "",
+   "cep": "",
+   "uf": "SC",
+   "cidade": "Lages",
+   "bairro": "Jardim das Camélias",
+   "endereco": "Avenida Juscelino Kubitschesc de Oliveira - Nº 4441",
+   "contato": "(49) 32251682 / 999963777 / 999183526.",
+   "visita": "Conforme Edital: 07, 08, 09, 13 e 14 de outubro 2026 no horário das 09:00h às 12:00h e das 13:00h às 17:00h, endereços dos Pátios no Anexo I deste Edital.",
+   "retirada": "Conforme Edital: a partir do dia 26 de outubro de 2026, para veículos conservados, e a partir do dia 28 de outubro de 2026 para as sucatas.",
+   "lat": 0,
+   "lng": 0,
+   "gmap": ""
+  },
+  "_id": "6ab01aa1ad7cdf02559c8397",
+  "visitas": 3519,
+  "status": "Aberto",
+  "lote": "8408",
+  "nome": "AUTOMOVEL RENAULT/SCENIC RT1.6 16V Ano: 2002/2002",
+  "detalhada": "AUTOMOVEL RENAULT/SCENIC RT1.6 16V<br>Ano: 2002/2002<br>Placa: AAA0A00<br> Motor: MOTOR0000000<br>Chassi: 9AAAA00AA0A000000<br>Rem: 000000",
+  "motivo": "",
+  "sucata": false,
+  "countdown": 15,
+  "anexos": [
+   {
+    "arquivo": "8408.jpg",
+    "private": false,
+    "ilustra": false,
+    "path": "anexos/maxter/6aa1e41d859ddd3983188e07/6ab01aa1ad7cdf02559c8397/",
+    "url": "https://objectstorage.sa-saopaulo-1.oraclecloud.com/n/grlkbn1ggqso/b/astavero/o/anexos/maxter/6aa1e41d859ddd3983188e07/6ab01aa1ad7cdf02559c8397/8408.jpg",
+    "type": "image/jpeg",
+    "size": 0.15123653411865234,
+    "_id": "6ab31cf3796d5965a09c25dd"
+   },
+   {
+    "arquivo": "8408-o.jpg",
+    "private": false,
+    "ilustra": false,
+    "path": "anexos/maxter/6aa1e41d859ddd3983188e07/6ab01aa1ad7cdf02559c8397/",
+    "url": "https://objectstorage.sa-saopaulo-1.oraclecloud.com/n/grlkbn1ggqso/b/astavero/o/anexos/maxter/6aa1e41d859ddd3983188e07/6ab01aa1ad7cdf02559c8397/8408-o.jpg",
+    "type": "image/jpeg",
+    "size": 0.14631366729736328,
+    "_id": "6ab31cf3796d5965a09c25c9"
+   },
+   {
+    "arquivo": "8408-n.jpg",
+    "private": false,
+    "ilustra": false,
+    "path": "anexos/maxter/6aa1e41d859ddd3983188e07/6ab01aa1ad7cdf02559c8397/",
+    "url": "https://objectstorage.sa-saopaulo-1.oraclecloud.com/n/grlkbn1ggqso/b/astavero/o/anexos/maxter/6aa1e41d859ddd3983188e07/6ab01aa1ad7cdf02559c8397/8408-n.jpg",
+    "type": "image/jpeg",
+    "size": 0.1184701919555664,
+    "_id": "6ab31cf3796d5965a09c25b6"
+   },
+   {
+    "arquivo": "8408-m.jpg",
+    "private": false,
+    "ilustra": false,
+    "path": "anexos/maxter/6aa1e41d859ddd3983188e07/6ab01aa1ad7cdf02559c8397/",
+    "url": "https://objectstorage.sa-saopaulo-1.oraclecloud.com/n/grlkbn1ggqso/b/astavero/o/anexos/maxter/6aa1e41d859ddd3983188e07/6ab01aa1ad7cdf02559c8397/8408-m.jpg",
+    "type": "image/jpeg",
+    "size": 0.15378379821777344,
+    "_id": "6ab31cf3796d5965a09c25a4"
+   },
+   {
+    "arquivo": "8408-l.jpg",
+    "private": false,
+    "ilustra": false,
+    "path": "anexos/maxter/6aa1e41d859ddd3983188e07/6ab01aa1ad7cdf02559c8397/",
+    "url": "https://objectstorage.sa-saopaulo-1.oraclecloud.com/n/grlkbn1ggqso/b/astavero/o/anexos/maxter/6aa1e41d859ddd3983188e07/6ab01aa1ad7cdf02559c8397/8408-l.jpg",
+    "type": "image/jpeg",
+    "size": 0.14525794982910156,
+    "_id": "6ab31cf2796d5965a09c2593"
+   },
+   {
+    "arquivo": "8408-h.jpg",
+    "private": false,
+    "ilustra": false,
+    "path": "anexos/maxter/6aa1e41d859ddd3983188e07/6ab01aa1ad7cdf02559c8397/",
+    "url": "https://objectstorage.sa-saopaulo-1.oraclecloud.com/n/grlkbn1ggqso/b/astavero/o/anexos/maxter/6aa1e41d859ddd3983188e07/6ab01aa1ad7cdf02559c8397/8408-h.jpg",
+    "type": "image/jpeg",
+    "size": 0.07586669921875,
+    "_id": "6ab31cf2796d5965a09c2583"
+   },
+   {
+    "arquivo": "8408-g.jpg",
+    "private": false,
+    "ilustra": false,
+    "path": "anexos/maxter/6aa1e41d859ddd3983188e07/6ab01aa1ad7cdf02559c8397/",
+    "url": "https://objectstorage.sa-saopaulo-1.oraclecloud.com/n/grlkbn1ggqso/b/astavero/o/anexos/maxter/6aa1e41d859ddd3983188e07/6ab01aa1ad7cdf02559c8397/8408-g.jpg",
+    "type": "image/jpeg",
+    "size": 0.13430213928222656,
+    "_id": "6ab31cf2796d5965a09c2574"
+   },
+   {
+    "arquivo": "8408-f.jpg",
+    "private": false,
+    "ilustra": false,
+    "path": "anexos/maxter/6aa1e41d859ddd3983188e07/6ab01aa1ad7cdf02559c8397/",
+    "url": "https://objectstorage.sa-saopaulo-1.oraclecloud.com/n/grlkbn1ggqso/b/astavero/o/anexos/maxter/6aa1e41d859ddd3983188e07/6ab01aa1ad7cdf02559c8397/8408-f.jpg",
+    "type": "image/jpeg",
+    "size": 0.12192249298095703,
+    "_id": "6ab31cf1796d5965a09c2566"
+   },
+   {
+    "arquivo": "8408-b.jpg",
+    "private": false,
+    "ilustra": false,
+    "path": "anexos/maxter/6aa1e41d859ddd3983188e07/6ab01aa1ad7cdf02559c8397/",
+    "url": "https://objectstorage.sa-saopaulo-1.oraclecloud.com/n/grlkbn1ggqso/b/astavero/o/anexos/maxter/6aa1e41d859ddd3983188e07/6ab01aa1ad7cdf02559c8397/8408-b.jpg",
+    "type": "image/jpeg",
+    "size": 0.1378641128540039,
+    "_id": "6ab31cf1796d5965a09c2559"
+   },
+   {
+    "arquivo": "8408-a.jpg",
+    "private": false,
+    "ilustra": false,
+    "path": "anexos/maxter/6aa1e41d859ddd3983188e07/6ab01aa1ad7cdf02559c8397/",
+    "url": "https://objectstorage.sa-saopaulo-1.oraclecloud.com/n/grlkbn1ggqso/b/astavero/o/anexos/maxter/6aa1e41d859ddd3983188e07/6ab01aa1ad7cdf02559c8397/8408-a.jpg",
+    "type": "image/jpeg",
+    "size": 0.11418342590332031,
+    "_id": "6ab31cf1796d5965a09c254d"
+   }
+  ],
+  "l": [
+   {
+    "data": "2026-10-08T23:40:34.256Z",
+    "valor": 2770,
+    "aprazo": false,
+    "credor": false,
+    "nome": "[removido]",
+    "alias": "[removido]",
+    "rf": "[removido]",
+    "ip": "[removido]",
+    "key": "[removido]"
+   }
+  ]
+ },
+ "prog": null,
+ "pregao": null
+}

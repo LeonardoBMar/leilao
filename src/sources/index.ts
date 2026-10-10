@@ -1,4 +1,5 @@
 import { detranMgSource } from "./detran-mg";
+import { detranScSource } from "./detran-sc";
 import { freitasSource } from "./freitas";
 import { leilaoOnlineSource } from "./leilao-online";
 import { leiloSource } from "./leilo";
@@ -15,4 +16,5 @@ export const SOURCES: readonly SourceAdapter[] = [
   freitasSource,
   detranMgSource,
   leilaoOnlineSource,
+  detranScSource,
 ];
