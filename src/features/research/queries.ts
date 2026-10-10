@@ -24,6 +24,7 @@ import {
   bidCurve,
   fillHistogram,
   type GroupStats,
+  type GroupSummary,
   HISTOGRAM_STEP,
   MIN_SAMPLE,
   rankModels,
@@ -207,7 +208,7 @@ async function ratioDistribution(
 }
 
 /** "Quanto se paga por condição": todas as condições, com o resto dos filtros (D-45). */
-export async function getConditionDistribution(filters: ResearchFilters): Promise<ConditionDistribution> {
+export const getConditionDistribution = cache(async (filters: ResearchFilters): Promise<ConditionDistribution> => {
   await requireUser();
   const where = salesWhere(filters, { condition: false, ratio: true });
   const level = sql`coalesce(l.damage_level::text, 'unclassified')`;
@@ -234,7 +235,7 @@ export async function getConditionDistribution(filters: ResearchFilters): Promis
     axisMax,
     looksMixed: unclassifiedLooksMixed(Object.fromEntries(conditionRows.map((row) => [row.condition, row.summary]))),
   };
-}
+});
 
 /** Mapa: um resumo por estado, em % do valor de mercado ou, com modelo, em lance final (centavos). */
 export async function getStateMap(filters: ResearchFilters): Promise<StateMapView> {
@@ -348,7 +349,7 @@ export async function getModelRanking(filters: ResearchFilters): Promise<ModelRa
 }
 
 /** Vendas do modelo escolhido: as mais recentes uma a uma e o lance final por ano-modelo. */
-export async function getModelSales(filters: ResearchFilters): Promise<ModelSales | null> {
+export const getModelSales = cache(async (filters: ResearchFilters): Promise<ModelSales | null> => {
   await requireUser();
   if (filters.vehicle === null) return null;
   const where = salesWhere(filters, {});
@@ -365,13 +366,24 @@ export async function getModelSales(filters: ResearchFilters): Promise<ModelSale
     sales,
     byYear: byYear.flatMap(({ year, ...row }) => (year === null ? [] : [{ year, summary: summarize(toStats(row)) }])),
   };
-}
+});
+
+/** Lance final (centavos) de todas as vendas do filtro, para a leitura de um modelo em R$. */
+export const getPriceSummary = cache(async (filters: ResearchFilters): Promise<GroupSummary> => {
+  await requireUser();
+  const [row] = await rows(
+    z.object(statsShape),
+    sql`SELECT ${statsColumns(sql`l.final_bid_cents::float8`)} FROM listings l
+      WHERE ${salesWhere(filters, {})} HAVING count(*) > 0`,
+  );
+  return summarize(row && toStats(row));
+});
 
 /**
  * "Como o lance sobe": para cada venda e marca (horas antes do fim), a última observação com lance nas
  * `BID_CURVE_LOOKBACK_HOURS` anteriores à marca, como proporção do lance final.
  */
-export async function getBidCurve(filters: ResearchFilters): Promise<BidCurveView> {
+export const getBidCurve = cache(async (filters: ResearchFilters): Promise<BidCurveView> => {
   await requireUser();
   const marks = Prisma.join(BID_CURVE_HOURS.map((hours) => sql`(${hours}::int)`));
   const marksRows = await rows(
@@ -397,4 +409,4 @@ export async function getBidCurve(filters: ResearchFilters): Promise<BidCurveVie
       }),
     ),
   };
-}
+});

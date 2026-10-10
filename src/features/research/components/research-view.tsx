@@ -14,6 +14,7 @@ import { ModelSalesBlock, modelSalesTitle } from "./model-sales-block";
 import { RANKING_BLOCK_TITLE, RankingBlock } from "./ranking-block";
 import { ResearchBlockSkeleton } from "./research-block";
 import { ResearchFilterBar } from "./research-filter-bar";
+import { ResearchSummary, ResearchSummarySkeleton } from "./research-summary";
 import { STATE_BLOCK_TITLE, StateBlock } from "./state-block";
 
 const HEADER_TITLE = "Pesquisa";
@@ -49,6 +50,9 @@ export async function ResearchView({ searchParams }: { searchParams: SearchParam
   return (
     <div className="grid gap-6">
       <ResearchFilterBar params={researchParams(filters)} facets={facets} />
+      <Suspense fallback={<ResearchSummarySkeleton />}>
+        <ResearchSummary filters={filters} />
+      </Suspense>
       <Suspense fallback={<ResearchBlockSkeleton title={CONDITION_BLOCK_TITLE} />}>
         <ConditionBlock filters={filters} total={facets.conditions[filters.condition]} since={since} />
       </Suspense>
