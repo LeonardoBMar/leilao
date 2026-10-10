@@ -15,6 +15,7 @@ import { ModelSalesBlock, modelSalesTitle } from "./model-sales-block";
 import { RANKING_BLOCK_TITLE, RankingBlock } from "./ranking-block";
 import { NoSales, ResearchBlockSkeleton } from "./research-block";
 import { ResearchFilterBar } from "./research-filter-bar";
+import { ResearchShell } from "./research-shell";
 import { ResearchSummary, ResearchSummarySkeleton } from "./research-summary";
 import { STATE_BLOCK_TITLE, StateBlock } from "./state-block";
 
@@ -51,8 +52,7 @@ export async function ResearchView({ searchParams }: { searchParams: SearchParam
   const noSales = <NoSales since={since} suggestions={noSalesSuggestions(filters, facets)} />;
 
   return (
-    <div className="grid gap-6">
-      <ResearchFilterBar params={researchParams(filters)} facets={facets} />
+    <ResearchShell filterBar={<ResearchFilterBar params={researchParams(filters)} facets={facets} />}>
       <Suspense fallback={<ResearchSummarySkeleton />}>
         <ResearchSummary filters={filters} />
       </Suspense>
@@ -74,7 +74,7 @@ export async function ResearchView({ searchParams }: { searchParams: SearchParam
       <Suspense fallback={<ResearchBlockSkeleton title={BID_CURVE_BLOCK_TITLE} />}>
         <BidCurveBlock filters={filters} />
       </Suspense>
-    </div>
+    </ResearchShell>
   );
 }
 

@@ -2,7 +2,7 @@
 
 import { LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useId, useOptimistic, useRef, useTransition } from "react";
+import { useId, useOptimistic, useRef } from "react";
 
 import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import {
@@ -20,6 +20,7 @@ import { parseResearchParams } from "../schemas";
 import { researchHref } from "../search";
 import type { ResearchFacets } from "../types";
 import { ModelPicker } from "./model-picker";
+import { useResearchTransition } from "./research-shell";
 
 /** Valor do item "Todo o Brasil": o `Select` não aceita valor vazio. */
 const ALL_STATES = "todos";
@@ -46,7 +47,7 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
   const stateLabelId = useId();
   // "Limpar tudo" some ao aplicar: o foco vai para o total, que anuncia o resultado.
   const statusRef = useRef<HTMLParagraphElement>(null);
-  const [isPending, startTransition] = useTransition();
+  const { isPending, startTransition } = useResearchTransition();
   const [filters, setOptimisticFilters] = useOptimistic(parseResearchParams(params));
   const total = facets.conditions[filters.condition];
   const isDefault = Object.keys(params).length === 0;
