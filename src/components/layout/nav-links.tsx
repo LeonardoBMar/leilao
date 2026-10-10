@@ -3,10 +3,12 @@
 import { BellRing, Calculator, ChartColumn, Gavel, LayoutDashboard, type LucideIcon, ScanSearch } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { type ReactNode, Suspense } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { type ReactNode, Suspense, useEffect, useSyncExternalStore } from "react";
 
 import { cn } from "@/lib/utils";
+
+import { lastFiltersServerSnapshot, lastFiltersSnapshot, rememberFilters, subscribeLastFilters } from "./last-filters";
 
 /** `sections`: outras rotas que pertencem ao item (a ficha do lote e a análise ficam em "Minhas análises"). */
 type NavItem = { href: Route; label: string; icon: LucideIcon; sections?: readonly string[] };
@@ -41,11 +43,25 @@ export function NavLinks({ onNavigate, badges }: NavLinksProps) {
   );
 }
 
+/** Também lembra os filtros de cada lista: o item do menu volta à última busca (D-55). */
 function ActiveNavList({ onNavigate, badges }: NavLinksProps) {
-  return <NavList pathname={usePathname()} onNavigate={onNavigate} badges={badges} />;
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const saved = useSyncExternalStore(subscribeLastFilters, lastFiltersSnapshot, lastFiltersServerSnapshot);
+
+  useEffect(() => {
+    rememberFilters(pathname, searchParams);
+  }, [pathname, searchParams]);
+
+  return <NavList pathname={pathname} onNavigate={onNavigate} badges={badges} saved={saved} />;
 }
 
-function NavList({ pathname, onNavigate, badges }: NavLinksProps & { pathname: string | null }) {
+function NavList({
+  pathname,
+  onNavigate,
+  badges,
+  saved,
+}: NavLinksProps & { pathname: string | null; saved?: Readonly<Record<string, string>> }) {
   return (
     <ul className="grid gap-px">
       {NAV_ITEMS.map(({ href, label, icon: Icon, sections = [] }) => {
@@ -55,7 +71,7 @@ function NavList({ pathname, onNavigate, badges }: NavLinksProps & { pathname: s
         return (
           <li key={href}>
             <Link
-              href={href}
+              href={savedHref(saved?.[href], href)}
               onClick={onNavigate}
               aria-current={isActive ? "page" : undefined}
               className={cn(
@@ -78,4 +94,11 @@ function NavList({ pathname, onNavigate, badges }: NavLinksProps & { pathname: s
       })}
     </ul>
   );
+}
+
+/** Só aceita o que pertence ao próprio item do menu; qualquer outra coisa volta ao link padrão. */
+function savedHref(saved: string | undefined, href: Route): Route {
+  return saved !== undefined && (saved === href || saved.startsWith(`${href}/`) || saved.startsWith(`${href}?`))
+    ? (saved as Route)
+    : href;
 }
