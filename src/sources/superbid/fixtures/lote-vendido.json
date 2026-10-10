@@ -1,0 +1,274 @@
+{
+ "total": 1,
+ "start": 0,
+ "limit": 0,
+ "seoTitle": null,
+ "seoProductTypeId": null,
+ "seoBreadcrumb": null,
+ "seoLinksByCity": null,
+ "statsFields": null,
+ "facetFields": null,
+ "query": {
+  "portalId": "[2,15]",
+  "locale": "pt_BR",
+  "timeZoneId": "America/Sao_Paulo"
+ },
+ "offers": [
+  {
+   "id": 5044378,
+   "indexationDate": "2026-10-10 14:57:09",
+   "lotNumber": 140654,
+   "quantityInLot": 1,
+   "quantitySold": 0,
+   "quantityReserved": 0,
+   "totalReceivedProposals": 0,
+   "hasReceivedProposals": false,
+   "visits": 2431,
+   "totalBidders": 16,
+   "totalBids": 20,
+   "totalReceivedBidsOrProposals": 20,
+   "hasBids": true,
+   "hasReceivedBidsOrProposals": true,
+   "hidePrices": true,
+   "endDate": "2026-10-08 14:14:30",
+   "endDateTime": 1791479670000,
+   "offerTypeId": 1,
+   "createAt": "2026-10-02 10:57:04",
+   "updateAt": "2026-10-09 10:58:18",
+   "publishedAt": "2026-10-02 10:57:41",
+   "statusId": 3,
+   "price": 155000,
+   "priceFormatted": "R$ 155.000,00",
+   "offerStatus": {
+    "statusCode": 3,
+    "removed": false,
+    "stabbed": false,
+    "subjudice": false,
+    "closed": false,
+    "wantToKnowThePrice": true,
+    "giveYourBid": false,
+    "sold": false,
+    "reserved": false,
+    "available": false,
+    "makeYourProposal": false,
+    "closedToBids": false
+   },
+   "store": {
+    "id": 1161,
+    "name": "SOLD",
+    "highlight": true,
+    "storeVisibleOnPortal": true,
+    "logoUri": "https://s.superbid.net/image/6a/67/6a670d93-0619-4cf2-9418-777f52aa84f5.png"
+   },
+   "stores": [
+    {
+     "id": 1161,
+     "name": "SOLD",
+     "highlight": true,
+     "storeVisibleOnPortal": true,
+     "logoUri": "https://s.superbid.net/image/6a/67/6a670d93-0619-4cf2-9418-777f52aa84f5.png"
+    },
+    {
+     "id": 1101,
+     "name": "Chevrolet",
+     "highlight": true,
+     "storeVisibleOnPortal": true,
+     "logoUri": "https://static.s4bdigital.net/logos_empresas/new_logo_chevrolet.png"
+    }
+   ],
+   "offerDetail": {
+    "id": 5044378,
+    "initialBidValue": 120000,
+    "initialBidValueFormatted": "R$ 120.000,00",
+    "currentMinBid": 155000,
+    "currentMinBidFormatted": "R$ 155.000,00",
+    "currentMaxBid": 155000,
+    "currentMaxBidFormatted": "R$ 155.000,00",
+    "reservedPrice": 155000,
+    "reservedPriceFormatted": "R$ 155.000,00"
+   },
+   "manager": {
+    "id": 9,
+    "name": "Sold Maisativo"
+   },
+   "currentTimestamp": "2026-10-10 18:46:18",
+   "auction": {
+    "id": 797383,
+    "desc": "Chevrolet",
+    "slugDesc": null,
+    "localeId": "pt_BR",
+    "currencyIso": "BRL",
+    "statusId": 13,
+    "permissionTypeId": 1,
+    "portalId": 2,
+    "modalityId": 1,
+    "modalityDesc": "Leilão",
+    "businessAreaId": 1,
+    "allOffersOfThisAuctionIsClosed": true,
+    "beginDate": "2026-10-02 10:58:00",
+    "endDate": "2026-10-08 14:10:00",
+    "maxEnddateOffer": "2026-10-08 14:56:16",
+    "subMarketplaces": [
+     {
+      "subMarketplaceId": 1,
+      "subMarketplaceDesc": "Corporativo"
+     }
+    ],
+    "judicialPraca": null,
+    "judicialPracaDescription": "Praça Única",
+    "judicialControlNumber": null,
+    "auctioneer": "Renato Schlobach Moyses",
+    "registry": "654",
+    "address": {
+     "id": 27029,
+     "streetType": "Alameda",
+     "street": "Alameda Lorena",
+     "number": "800",
+     "complement": "2º andar",
+     "district": "Jardins",
+     "city": "São Paulo",
+     "stateCode": "SP",
+     "countryName": "Brasil",
+     "regionName": "Sudeste",
+     "type": 5
+    },
+    "crier": false,
+    "eventPipeline": null,
+    "lotAuctionTypeId": 1,
+    "isAfterMarket": null,
+    "internalParameters": {
+     "highlightUrlLink": null,
+     "hasAdvisorIntermediation": false
+    }
+   },
+   "winnerBid": {
+    "currentWinner": 0,
+    "currentWinnerLogin": "[removido]"
+   },
+   "currentBidIncrement": {
+    "currentBidIncrement": 2500,
+    "currentBidIncrementFormatted": "R$ 2.500,00"
+   },
+   "offerDescription": {
+    "offerDescription": "CHEVROLET S10 LTZ DD4A, 2024/2024, Placa FINAL 3 (SP), CH.:  (Ref.: 53136) <p>Referência Local: 53136<br>Marca: CHEVROLET<br>Modelo: S10 LTZ DD4A<br>Ano Fab/Modelo: 2024/2024<br>Placa FINAL 3 (SP)<br>Cor: PRATA<br>Combustível: DIESEL<br>Chassi: <br><br>Observações: <br><br></p><p>Quilometragem acima de: 41002</p><p><br></p><p>Acessórios</p><p><br></p><p>N° de Portas: 4</p><p>Câmbio: Automático</p><p>Direção: Hidráulica</p><p>Ar Condicionado: Sim</p><p>Vidros: Elétricos</p><p>Rodas: Liga-Leve</p><p>Bancos: Couro</p><p>Aparelho de Som: Sim</p><p><br></p><p>Condições Gerais</p><p>Motor: Funcionando</p><p>Pintura: Regular</p><p>Lataria: Regular</p><p>Tapeçaria: Regular</p><p>Pneus: Regulares</p><p><br></p><p>Observações</p><p><br></p><p>Chave Principal: Sim</p><p>Chave Reserva: Sim</p><p>Manual: Sim</p><p><br></p><p>Comando no Volante: Sim</p><p>Câmera de Ré: Sim</p><p>Banco Elétrico do motorista: Sim</p><p>Retrovisores elétricos: Sim</p><p>Air Bag: Sim</p><p>ABS: Sim</p><p>Tração 4X4: Sim</p><p>7 Lugares: Não</p><p>Protetor de Caçamba: Sim</p><p>Lona Marítima: Sim</p><p>Parabrisa: Trincado</p><p>Capô: Piques de pedra</p><p>Parachoque Dianteiro: Piques de pedra</p><p>Teto: Piques de pedra</p><p><br></p><p><br></p><p>Pneu estepe, Macaco, Chave de roda, Triângulo</p><p><br></p><p><br></p><p>Podendo apresentar riscos, mossas e amassados</p><p><br></p><p><br></p><p><br></p><p><br><br>IPVA 2026 Pago<br><br><br><br>Será de responsabilidade do comprador o pagamento dos débitos de eventuais multas de trânsito, licenciamento e DPVAT (seguro obrigatório) relativos ao(s) veículo(s) vendido(s) ainda que anteriores à data do evento.<br><br>Débitos em aberto: R$265,73 <strong>Sujeito a alterações de acordo com os cadastros dos órgãos públicos até a data da transferência do veículo<br><br>Além das comissões, o comprador deverá pagar encargos de administração, conforme estipulado nas Condições de Venda e Pagamento, previamente aceitas para participar do evento<br><br></strong></p> 202601056 Chevrolet"
+   },
+   "groupOffer": {
+    "acceptProposal": true,
+    "commissionPercent": 5,
+    "id": 362557
+   },
+   "product": {
+    "productId": 3823602,
+    "shortDesc": "CHEVROLET S10 LTZ DD4A, 2024/2024, Placa FINAL 3 (SP),  (Ref.: 53136)",
+    "galleryJson": [
+     {
+      "originalFileName": "ENC_cjbaAH40MG7tWebaXGAQxg.jpeg",
+      "highlight": false,
+      "fileName": "f0e5dfdf-2a6d-4283-99cc-b50ab023ac8d.jpg",
+      "link": "https://ms.sbwebservices.net/photos/f0e5dfdf-2a6d-4283-99cc-b50ab023ac8d.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/f0e5dfdf-2a6d-4283-99cc-b50ab023ac8d.jpg"
+     },
+     {
+      "originalFileName": "ENC_BSc12c8tu1xUyFhT34Jv8A.jpeg",
+      "highlight": false,
+      "fileName": "d9c49bc5-e1d5-4665-9784-9aa47c78018d.jpg",
+      "link": "https://ms.sbwebservices.net/photos/d9c49bc5-e1d5-4665-9784-9aa47c78018d.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/d9c49bc5-e1d5-4665-9784-9aa47c78018d.jpg"
+     },
+     {
+      "originalFileName": "ENC_bBU-QHt5_HqdH_WrImvfjw.jpeg",
+      "highlight": false,
+      "fileName": "ec502a15-cf45-48cf-a80f-0991b0ce5509.jpg",
+      "link": "https://ms.sbwebservices.net/photos/ec502a15-cf45-48cf-a80f-0991b0ce5509.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/ec502a15-cf45-48cf-a80f-0991b0ce5509.jpg"
+     }
+    ],
+    "photoCount": 27,
+    "galleryVideoJson": [
+     {
+      "originalFileName": "https://www.youtube.com/watch?v=RAL3owaleNo?feature=share",
+      "highlight": false,
+      "fileName": "https://www.youtube.com/watch?v=RAL3owaleNo?feature=share",
+      "link": "https://www.youtube.com/watch?v=RAL3owaleNo?feature=share",
+      "type": "video_url",
+      "contentType": "video/youtube",
+      "thumbnailUrl": "https://img.youtube.com/vi/RAL3owaleNo?feature=share/0.jpg"
+     }
+    ],
+    "videoUrlCount": 1,
+    "thumbnailUrl": "https://ms.sbwebservices.net/photos/e1211166-a833-4011-9381-5d275679ed9b.jpg",
+    "detailedDescription": "<p>Referência Local: 53136<br>Marca: CHEVROLET<br>Modelo: S10 LTZ DD4A<br>Ano Fab/Modelo: 2024/2024<br>Placa FINAL 3 (SP)<br>Cor: PRATA<br>Combustível: DIESEL<br>Chassi: <br><br>Observações: <br><br></p><p>Quilometragem acima de: 41002</p><p><br></p><p>Acessórios</p><p><br></p><p>N° de Portas: 4</p><p>Câmbio: Automático</p><p>Direção: Hidráulica</p><p>Ar Condicionado: Sim</p><p>Vidros: Elétricos</p><p>Rodas: Liga-Leve</p><p>Bancos: Couro</p><p>Aparelho de Som: Sim</p><p><br></p><p>Condições Gerais</p><p>Motor: Funcionando</p><p>Pintura: Regular</p><p>Lataria: Regular</p><p>Tapeçaria: Regular</p><p>Pneus: Regulares</p><p><br></p><p>Observações</p><p><br></p><p>Chave Principal: Sim</p><p>Chave Reserva: Sim</p><p>Manual: Sim</p><p><br></p><p>Comando no Volante: Sim</p><p>Câmera de Ré: Sim</p><p>Banco Elétrico do motorista: Sim</p><p>Retrovisores elétricos: Sim</p><p>Air Bag: Sim</p><p>ABS: Sim</p><p>Tração 4X4: Sim</p><p>7 Lugares: Não</p><p>Protetor de Caçamba: Sim</p><p>Lona Marítima: Sim</p><p>Parabrisa: Trincado</p><p>Capô: Piques de pedra</p><p>Parachoque Dianteiro: Piques de pedra</p><p>Teto: Piques de pedra</p><p><br></p><p><br></p><p>Pneu estepe, Macaco, Chave de roda, Triângulo</p><p><br></p><p><br></p><p>Podendo apresentar riscos, mossas e amassados</p><p><br></p><p><br></p><p><br></p><p><br><br>IPVA 2026 Pago<br><br><br><br>Será de responsabilidade do comprador o pagamento dos débitos de eventuais multas de trânsito, licenciamento e DPVAT (seguro obrigatório) relativos ao(s) veículo(s) vendido(s) ainda que anteriores à data do evento.<br><br>Débitos em aberto: R$265,73 <strong>Sujeito a alterações de acordo com os cadastros dos órgãos públicos até a data da transferência do veículo<br><br>Além das comissões, o comprador deverá pagar encargos de administração, conforme estipulado nas Condições de Venda e Pagamento, previamente aceitas para participar do evento<br><br></strong></p>",
+    "subCategory": {
+     "id": 10005,
+     "description": "Picapes",
+     "evidence": "F",
+     "subGrupo": 0,
+     "grupo": 0,
+     "position": 5,
+     "category": {
+      "id": 10000,
+      "description": "Carros",
+      "evidence": "F",
+      "subGrupo": 0,
+      "grupo": 0,
+      "position": 1
+     }
+    },
+    "model": {},
+    "brand": {},
+    "productYourRef": "202601056",
+    "location": {
+     "displayOnMap": false,
+     "city": "Suzano - SP",
+     "state": "São Paulo",
+     "country": "Brasil",
+     "locationGeo": {
+      "lat": -23.537527,
+      "lon": -46.309244
+     }
+    },
+    "productType": {
+     "id": 10,
+     "description": "Carros & Motos",
+     "showBrand": true,
+     "showModel": true
+    },
+    "judicial": {}
+   },
+   "seller": {
+    "id": 397421,
+    "name": "General Motors do Brasil Ltda",
+    "city": "São Caetano do Sul",
+    "phone": [],
+    "company": [
+     {
+      "fantasyName": "GM"
+     }
+    ]
+   },
+   "systemMetric": "un",
+   "commercialCondition": {
+    "auctioneerCommissionPercent": null,
+    "minAdvanceRate": 0,
+    "maxInstallments": 0,
+    "allowsCreditCard": false,
+    "scheduleType": null,
+    "allowCreditCardCommission": false,
+    "allowCreditCardTotalValue": false,
+    "transactionLimit": null
+   },
+   "installmentPaymentTerms": {},
+   "isFavorite": false,
+   "isShopping": false,
+   "shoppingOfferType": false
+  }
+ ],
+ "favoritedOffers": null,
+ "placeData": null
+}

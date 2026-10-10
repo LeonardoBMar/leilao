@@ -1,0 +1,255 @@
+{
+ "total": 1,
+ "start": 0,
+ "limit": 0,
+ "seoTitle": null,
+ "seoProductTypeId": null,
+ "seoBreadcrumb": null,
+ "seoLinksByCity": null,
+ "statsFields": null,
+ "facetFields": null,
+ "query": {
+  "portalId": "[2,15]",
+  "locale": "pt_BR",
+  "timeZoneId": "America/Sao_Paulo"
+ },
+ "offers": [
+  {
+   "id": 5050334,
+   "indexationDate": "2026-10-10 17:07:13",
+   "lotNumber": 764,
+   "quantityInLot": 1,
+   "quantitySold": 0,
+   "quantityReserved": 0,
+   "totalReceivedProposals": 0,
+   "hasReceivedProposals": false,
+   "visits": 379,
+   "totalBidders": 8,
+   "totalBids": 14,
+   "totalReceivedBidsOrProposals": 14,
+   "hasBids": true,
+   "hasReceivedBidsOrProposals": true,
+   "hidePrices": true,
+   "endDate": "2026-10-08 09:56:49",
+   "endDateTime": 1791464209000,
+   "offerTypeId": 1,
+   "createAt": "2026-10-06 16:11:27",
+   "updateAt": "2026-10-08 10:43:32",
+   "publishedAt": "2026-10-06 16:11:44",
+   "statusId": 3,
+   "price": 33728.76,
+   "priceFormatted": "R$ 33.728,76",
+   "offerStatus": {
+    "statusCode": 3,
+    "removed": false,
+    "stabbed": false,
+    "subjudice": false,
+    "giveYourBid": false,
+    "wantToKnowThePrice": true,
+    "makeYourProposal": false,
+    "closedToBids": false,
+    "sold": false,
+    "reserved": false,
+    "available": false,
+    "closed": false
+   },
+   "store": {
+    "id": 16146,
+    "name": "HASTA SP",
+    "highlight": true,
+    "storeVisibleOnPortal": true,
+    "logoUri": "https://static.s4bdigital.net/logos_empresas/logo_topo_hasta.png"
+   },
+   "stores": [
+    {
+     "id": 16146,
+     "name": "HASTA SP",
+     "highlight": true,
+     "storeVisibleOnPortal": true,
+     "logoUri": "https://static.s4bdigital.net/logos_empresas/logo_topo_hasta.png"
+    }
+   ],
+   "offerDetail": {
+    "id": 5050334,
+    "initialBidValue": 21664.76,
+    "initialBidValueFormatted": "R$ 21.664,76",
+    "currentMinBid": 33728.76,
+    "currentMinBidFormatted": "R$ 33.728,76",
+    "currentMaxBid": 33728.76,
+    "currentMaxBidFormatted": "R$ 33.728,76",
+    "reservedPrice": 30949,
+    "reservedPriceFormatted": "R$ 30.949,00"
+   },
+   "manager": {
+    "id": 230,
+    "name": "Hasta SP"
+   },
+   "currentTimestamp": "2026-10-10 18:46:02",
+   "auction": {
+    "id": 791701,
+    "desc": "LEILÃO DE VEÍCULOS CONSERVADOS 04/2026 GUARULHOS",
+    "slugDesc": null,
+    "localeId": "pt_BR",
+    "currencyIso": "BRL",
+    "statusId": 13,
+    "permissionTypeId": 1,
+    "portalId": 2,
+    "modalityId": 1,
+    "modalityDesc": "Leilão",
+    "businessAreaId": 1,
+    "allOffersOfThisAuctionIsClosed": true,
+    "beginDate": "2026-09-16 09:00:00",
+    "endDate": "2026-10-08 09:00:00",
+    "maxEnddateOffer": "2026-10-08 10:04:39",
+    "subMarketplaces": [
+     {
+      "subMarketplaceId": 5,
+      "subMarketplaceDesc": "GOV"
+     }
+    ],
+    "judicialPraca": null,
+    "judicialPracaDescription": "Praça Única",
+    "judicialControlNumber": null,
+    "auctioneer": "Marcia Anny Mardirosian Nazar",
+    "registry": null,
+    "address": {
+     "id": 27029,
+     "streetType": "Alameda",
+     "street": "Alameda Lorena",
+     "number": "800",
+     "complement": "2º andar",
+     "district": "Jardins",
+     "city": "São Paulo",
+     "stateCode": "SP",
+     "countryName": "Brasil",
+     "regionName": "Sudeste",
+     "type": 5
+    },
+    "crier": false,
+    "eventPipeline": null,
+    "lotAuctionTypeId": 1,
+    "isAfterMarket": null,
+    "internalParameters": {
+     "highlightUrlLink": null,
+     "hasAdvisorIntermediation": false
+    }
+   },
+   "winnerBid": {
+    "currentWinner": 0,
+    "currentWinnerLogin": "[removido]"
+   },
+   "currentBidIncrement": {
+    "currentBidIncrement": 928,
+    "currentBidIncrementFormatted": "R$ 928,00"
+   },
+   "offerDescription": {
+    "offerDescription": "HYUNDAI IX35 B 2013 2014 PRETA <span>HYUNDAI IX35 B 2013 2014 PRETA<br>Agendamento e Retirada de Veículos<br><br>Os veículos leiloados \"com direito a documento\" serão liberados para retirada pelo arrematante em até 3 (três) dias úteis, contados a partir da confirmação do pagamento integral do valor da arrematação.<br><br>Após a liberação do veículo, o arrematante deverá acessar o site www.agendamentoentregas.com.br para enviar os documentos pertinentes à arrematação, os quais serão submetidos à análise e aprovação da HASTA SP.<br><br>Com a aprovação da documentação, o arrematante poderá selecionar a data e o horário disponíveis para a retirada do veículo, realizando o agendamento diretamente no site.<br><br>O sistema enviará confirmação automática por e-mail, devendo o arrematante comparecer ao pátio na data e horário agendados, munido da documentação necessária.<br><br>Transferência e Desvinculação de Débitos dos Veículos<br><br>Uma vez confirmado o pagamento do arremate, a HASTA SP realiza o recolhimento dos débitos incidentes sobre o veículo, se houver saldo, e envia a prestação de contas do leilão para o Município em até 15 (quinze) dias úteis.<br>No prazo de até 15 (quinze) dias úteis, contados do recebimento da prestação de contas, o Município realizará o protocolo do processo de desvinculação de débitos e inserção do comunicado de venda ao arrematante junto ao DETRAN, através do Sistema Eletrônico de Informações (SEI).<br>A partir desse momento, o DETRAN deverá proceder com o comunicado de venda e a desvinculação dos débitos e demais ônus incidentes sobre o prontuário do veículo leiloado existentes até a data do leilão e não quitados com os recursos obtidos na alienação, no prazo máximo de 10 (dez)valor inicial dias, conforme parágrafo primeiro do artigo 25 da Resolução CONTRAN nº 623/2016.<br>Uma vez concluído o protocolo no Sistema Eletrônico de Informações (SEI), a HASTA SP enviará o protocolo ao arrematante no prazo de até 30 dias, para controle e acompanhamento junto ao DETRAN.<br>Nem a Superbid Exchange, nem a Hasta SP possuem ingerência ou acesso interno aos sistemas do Município ou do DETRAN, de modo que não podem intervir nos prazos de análise e conclusão adotados por tais órgãos públicos.<br>Eventuais atrasos na efetivação da desvinculação de débitos, retirada de bloqueios e/ou comunicação de venda decorrem de fluxos internos do DETRAN e do Município, não podendo ser imputada à Superbid ou à Hasta SP a responsabilidade pelo prazo de conclusão destes atos, que são de competência exclusiva dos órgãos públicos.<br>Concluída a etapa anterior pelo DETRAN, compete ao arrematante o cumprimento das providências necessárias à regularização e transferência do veículo no prazo de 30 dias, conforme parágrafo quinto do artigo 25 da Resolução CONTRAN nº 623/2016.<br>Até que tenham sido concluídos todos os atos administrativos de desvinculação de débitos, inserção da comunicação de venda e transferência efetiva do veículo para o nome do arrematante, fica expressamente vedada a circulação do bem em via pública.<br>A confirmação da efetivação da comunicação de venda será disponibilizada pelo DETRAN, podendo o arrematante ser notificado por meio do aplicativo CDT (Carteira Digital de Trânsito), desde que previamente instalado em seu dispositivo móvel.<br>Enquanto não houver a baixa dos débitos e o lançamento da comunicação de venda no sistema do DETRAN, não constará qualquer informação no aplicativo CDT.<br>O arrematante será obrigado, nos termos da legislação de trânsito vigente, a promover a transferência do veículo arrematado após a inserção do comunicado de venda em até 30 dias corridos, conforme legislação vigente (art. 123 da Lei Federal nº 9.503 de 23 de setembro de 1997), obedecido o prazo de 30 (trinta) dias contados da comunicação de venda, atendidas às demais exigências legais.</span> LEILAO 04 2026 MUNICIPAL DE GUARULHOS LEILÃO DE VEÍCULOS CONSERVADOS 04/2026 GUARULHOS"
+   },
+   "groupOffer": {
+    "acceptProposal": false,
+    "id": 358953
+   },
+   "product": {
+    "productId": 3830263,
+    "shortDesc": "HYUNDAI IX35 B 2013 2014 PRETA",
+    "galleryJson": [
+     {
+      "originalFileName": "ENC__fxBl3p3vbSwomYDFH0DJ5BudTWQJk3FhMDVr_wOrCI.JPG",
+      "highlight": false,
+      "fileName": "ca877bf7-ca61-4e5f-b54d-5dd248cfa5ea.jpg",
+      "link": "https://ms.sbwebservices.net/photos/ca877bf7-ca61-4e5f-b54d-5dd248cfa5ea.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/ca877bf7-ca61-4e5f-b54d-5dd248cfa5ea.jpg"
+     },
+     {
+      "originalFileName": "ENC_0jDoilaOk63AOYKjJlE8-A.jpg",
+      "highlight": false,
+      "fileName": "204597e2-e5e5-4788-82d1-9fb5e687c92e.jpg",
+      "link": "https://ms.sbwebservices.net/photos/204597e2-e5e5-4788-82d1-9fb5e687c92e.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/204597e2-e5e5-4788-82d1-9fb5e687c92e.jpg"
+     },
+     {
+      "originalFileName": "ENC_liVNkWLfT8e0jlXj7AOmBcb5DkRbfSlrpuwsxAtLpn4.jpg",
+      "highlight": false,
+      "fileName": "86c9b9a2-fb22-47e2-8fb4-86de4fae20a6.jpg",
+      "link": "https://ms.sbwebservices.net/photos/86c9b9a2-fb22-47e2-8fb4-86de4fae20a6.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/86c9b9a2-fb22-47e2-8fb4-86de4fae20a6.jpg"
+     }
+    ],
+    "photoCount": 6,
+    "videoUrlCount": 0,
+    "thumbnailUrl": "https://ms.sbwebservices.net/photos/da28f888-94d6-4a4c-8dd0-445f7369e798.jpg",
+    "detailedDescription": "<span>HYUNDAI IX35 B 2013 2014 PRETA<br>Agendamento e Retirada de Veículos<br><br>Os veículos leiloados \"com direito a documento\" serão liberados para retirada pelo arrematante em até 3 (três) dias úteis, contados a partir da confirmação do pagamento integral do valor da arrematação.<br><br>Após a liberação do veículo, o arrematante deverá acessar o site www.agendamentoentregas.com.br para enviar os documentos pertinentes à arrematação, os quais serão submetidos à análise e aprovação da HASTA SP.<br><br>Com a aprovação da documentação, o arrematante poderá selecionar a data e o horário disponíveis para a retirada do veículo, realizando o agendamento diretamente no site.<br><br>O sistema enviará confirmação automática por e-mail, devendo o arrematante comparecer ao pátio na data e horário agendados, munido da documentação necessária.<br><br>Transferência e Desvinculação de Débitos dos Veículos<br><br>Uma vez confirmado o pagamento do arremate, a HASTA SP realiza o recolhimento dos débitos incidentes sobre o veículo, se houver saldo, e envia a prestação de contas do leilão para o Município em até 15 (quinze) dias úteis.<br>No prazo de até 15 (quinze) dias úteis, contados do recebimento da prestação de contas, o Município realizará o protocolo do processo de desvinculação de débitos e inserção do comunicado de venda ao arrematante junto ao DETRAN, através do Sistema Eletrônico de Informações (SEI).<br>A partir desse momento, o DETRAN deverá proceder com o comunicado de venda e a desvinculação dos débitos e demais ônus incidentes sobre o prontuário do veículo leiloado existentes até a data do leilão e não quitados com os recursos obtidos na alienação, no prazo máximo de 10 (dez)valor inicial dias, conforme parágrafo primeiro do artigo 25 da Resolução CONTRAN nº 623/2016.<br>Uma vez concluído o protocolo no Sistema Eletrônico de Informações (SEI), a HASTA SP enviará o protocolo ao arrematante no prazo de até 30 dias, para controle e acompanhamento junto ao DETRAN.<br>Nem a Superbid Exchange, nem a Hasta SP possuem ingerência ou acesso interno aos sistemas do Município ou do DETRAN, de modo que não podem intervir nos prazos de análise e conclusão adotados por tais órgãos públicos.<br>Eventuais atrasos na efetivação da desvinculação de débitos, retirada de bloqueios e/ou comunicação de venda decorrem de fluxos internos do DETRAN e do Município, não podendo ser imputada à Superbid ou à Hasta SP a responsabilidade pelo prazo de conclusão destes atos, que são de competência exclusiva dos órgãos públicos.<br>Concluída a etapa anterior pelo DETRAN, compete ao arrematante o cumprimento das providências necessárias à regularização e transferência do veículo no prazo de 30 dias, conforme parágrafo quinto do artigo 25 da Resolução CONTRAN nº 623/2016.<br>Até que tenham sido concluídos todos os atos administrativos de desvinculação de débitos, inserção da comunicação de venda e transferência efetiva do veículo para o nome do arrematante, fica expressamente vedada a circulação do bem em via pública.<br>A confirmação da efetivação da comunicação de venda será disponibilizada pelo DETRAN, podendo o arrematante ser notificado por meio do aplicativo CDT (Carteira Digital de Trânsito), desde que previamente instalado em seu dispositivo móvel.<br>Enquanto não houver a baixa dos débitos e o lançamento da comunicação de venda no sistema do DETRAN, não constará qualquer informação no aplicativo CDT.<br>O arrematante será obrigado, nos termos da legislação de trânsito vigente, a promover a transferência do veículo arrematado após a inserção do comunicado de venda em até 30 dias corridos, conforme legislação vigente (art. 123 da Lei Federal nº 9.503 de 23 de setembro de 1997), obedecido o prazo de 30 (trinta) dias contados da comunicação de venda, atendidas às demais exigências legais.</span>",
+    "subCategory": {
+     "id": 10004,
+     "description": "Hatches",
+     "evidence": "F",
+     "subGrupo": 0,
+     "grupo": 0,
+     "position": 4,
+     "category": {
+      "id": 10000,
+      "description": "Carros",
+      "evidence": "F",
+      "subGrupo": 0,
+      "grupo": 0,
+      "position": 1
+     }
+    },
+    "model": {},
+    "brand": {},
+    "productYourRef": "LEILAO 04 2026 MUNICIPAL DE GUARULHOS",
+    "location": {
+     "displayOnMap": false,
+     "city": "Casa Branca - SP",
+     "state": "São Paulo",
+     "country": "Brasil",
+     "locationGeo": {
+      "lat": -21.772035,
+      "lon": -47.08708
+     }
+    },
+    "productType": {
+     "id": 10,
+     "description": "Carros & Motos",
+     "showBrand": true,
+     "showModel": true
+    },
+    "judicial": {}
+   },
+   "seller": {
+    "id": 2072602,
+    "name": "PREFEITURA MUNICIPAL DE GUARULHOS",
+    "city": "Guarulhos",
+    "phone": [],
+    "company": [
+     {
+      "fantasyName": "PREFEITURA MUNICIPAL DE GUARULHOS"
+     }
+    ]
+   },
+   "systemMetric": "un",
+   "commercialCondition": {
+    "auctioneerCommissionPercent": null,
+    "minAdvanceRate": null,
+    "maxInstallments": null,
+    "allowsCreditCard": false,
+    "scheduleType": null,
+    "allowCreditCardCommission": false,
+    "allowCreditCardTotalValue": false,
+    "transactionLimit": null
+   },
+   "installmentPaymentTerms": {},
+   "isFavorite": false,
+   "isShopping": false,
+   "shoppingOfferType": false
+  }
+ ],
+ "favoritedOffers": null,
+ "placeData": null
+}

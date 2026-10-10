@@ -1,0 +1,304 @@
+{
+ "total": 1,
+ "start": 0,
+ "limit": 0,
+ "seoTitle": null,
+ "seoProductTypeId": null,
+ "seoBreadcrumb": null,
+ "seoLinksByCity": null,
+ "statsFields": null,
+ "facetFields": null,
+ "query": {
+  "portalId": "[2,15]",
+  "locale": "pt_BR",
+  "timeZoneId": "America/Sao_Paulo"
+ },
+ "offers": [
+  {
+   "id": 5042734,
+   "indexationDate": "2026-10-10 13:30:29",
+   "lotNumber": 3,
+   "quantityInLot": 1,
+   "quantitySold": 0,
+   "quantityReserved": 0,
+   "totalReceivedProposals": 0,
+   "hasReceivedProposals": false,
+   "visits": 86,
+   "totalBidders": 0,
+   "totalBids": 0,
+   "totalReceivedBidsOrProposals": 0,
+   "hasBids": false,
+   "hasReceivedBidsOrProposals": false,
+   "hidePrices": true,
+   "endDate": "2026-10-07 17:15:14",
+   "endDateTime": 1791404114000,
+   "offerTypeId": 1,
+   "createAt": "2026-10-02 16:25:46",
+   "updateAt": "2026-10-07 17:16:00",
+   "publishedAt": "2026-10-02 16:28:52",
+   "statusId": 6,
+   "price": 5100,
+   "priceFormatted": "R$ 5.100,00",
+   "offerStatus": {
+    "statusCode": 6,
+    "removed": true,
+    "stabbed": false,
+    "subjudice": false,
+    "closed": false,
+    "wantToKnowThePrice": false,
+    "giveYourBid": false,
+    "sold": false,
+    "reserved": false,
+    "available": false,
+    "makeYourProposal": false,
+    "closedToBids": false
+   },
+   "store": {
+    "id": 16253,
+    "name": "DILSON MOREIRA LEILÕES",
+    "highlight": true,
+    "storeVisibleOnPortal": true,
+    "logoUri": "https://static.s4bdigital.net/logos_empresas/logo-dilson-moreira.png"
+   },
+   "stores": [
+    {
+     "id": 16253,
+     "name": "DILSON MOREIRA LEILÕES",
+     "highlight": true,
+     "storeVisibleOnPortal": true,
+     "logoUri": "https://static.s4bdigital.net/logos_empresas/logo-dilson-moreira.png"
+    },
+    {
+     "id": 16274,
+     "name": "CASA LEILOEIRA LEILÕES",
+     "highlight": true,
+     "storeVisibleOnPortal": true,
+     "logoUri": "https://static.s4bdigital.net/logos_empresas/logo_casa_leiloeira.png"
+    },
+    {
+     "id": 16515,
+     "name": "DAVISON MOREIRA",
+     "highlight": true,
+     "storeVisibleOnPortal": true,
+     "logoUri": "https://static.s4bdigital.net/logos_empresas/daviconLogo.jpeg"
+    }
+   ],
+   "offerDetail": {
+    "id": 5042734,
+    "initialBidValue": 5100,
+    "initialBidValueFormatted": "R$ 5.100,00",
+    "currentMinBid": 5100,
+    "currentMinBidFormatted": "R$ 5.100,00",
+    "currentMaxBid": 5100,
+    "currentMaxBidFormatted": "R$ 5.100,00",
+    "reservedPrice": 8500,
+    "reservedPriceFormatted": "R$ 8.500,00"
+   },
+   "manager": {
+    "id": 359,
+    "name": "Casa Leiloeira Leilões"
+   },
+   "currentTimestamp": "2026-10-10 18:46:16",
+   "auction": {
+    "id": 797407,
+    "desc": "VEICULOS SINISTRADOS RECUPERÁVEIS",
+    "slugDesc": null,
+    "localeId": "pt_BR",
+    "currencyIso": "BRL",
+    "statusId": 1,
+    "permissionTypeId": 1,
+    "portalId": 2,
+    "modalityId": 1,
+    "modalityDesc": "Leilão",
+    "businessAreaId": 1,
+    "allOffersOfThisAuctionIsClosed": false,
+    "beginDate": "2026-10-02 16:12:00",
+    "endDate": "2026-10-23 10:00:00",
+    "maxEnddateOffer": "2026-10-23 10:00:00",
+    "subMarketplaces": [
+     {
+      "subMarketplaceId": 4,
+      "subMarketplaceDesc": "PME"
+     }
+    ],
+    "judicialPraca": null,
+    "judicialPracaDescription": "Praça Única",
+    "judicialControlNumber": null,
+    "auctioneer": "Dilson Marcos Moreira",
+    "registry": "267",
+    "address": {
+     "id": 27029,
+     "streetType": "Alameda",
+     "street": "Alameda Lorena",
+     "number": "800",
+     "complement": "2º andar",
+     "district": "Jardins",
+     "city": "São Paulo",
+     "stateCode": "SP",
+     "countryName": "Brasil",
+     "regionName": "Sudeste",
+     "type": 5
+    },
+    "crier": false,
+    "eventPipeline": null,
+    "lotAuctionTypeId": 1,
+    "isAfterMarket": null,
+    "internalParameters": {
+     "highlightUrlLink": null,
+     "hasAdvisorIntermediation": false
+    }
+   },
+   "winnerBid": {},
+   "currentBidIncrement": {
+    "currentBidIncrement": 300,
+    "currentBidIncrementFormatted": "R$ 300,00"
+   },
+   "offerDescription": {
+    "offerDescription": "VW/VOYAGE 1.6 Volkswagen Voyage <p><strong style=\"color: black;\">VEÍCULO: </strong>VW/VOYAGE 1.6L</p><p><strong style=\"color: black;\">ANO:</strong><span style=\"color: black;\"> 2021</span></p><p><strong style=\"color: black;\">MODELO</strong><span style=\"color: black;\">: 2022</span></p><p><strong style=\"color: black;\">COMBUSTÍVEL</strong><span style=\"color: black;\">: Alcool/&nbsp;</span>Gasolina</p><p><strong style=\"color: black;\">COR</strong><span style=\"color: black;\">: Cinza</span></p><p><strong style=\"color: black;\">PLACA</strong><span style=\"color: black;\">: ***4H86</span></p><p><strong style=\"color: black;\">EMPLACADO</strong><span style=\"color: black;\">: SP</span></p><p><strong style=\"color: black;\">CLASSIFICAÇÃO DE DANO</strong><span style=\"color: black;\">: </span></p><p><strong style=\"color: black;\">CBV:</strong><span style=\"color: black;\"> </span></p><p><strong style=\"color: black;\">LICENCIAMENTO PAGO</strong><span style=\"color: black;\">: 2026</span></p><p><strong style=\"color: black;\">IPVA PAGO</strong><span style=\"color: black;\">: 2026</span></p><p><strong style=\"color: black;\">TX ADM-REMOÇÃO</strong><span style=\"color: black;\">: R$ 5.500,00</span></p><p><strong style=\"color: black;\">OUTRAS DESPESAS</strong><span style=\"color: black;\">:</span></p><p><strong style=\"color: black;\">DOCUMENTAÇÃO:</strong><span style=\"color: black;\">&nbsp;Entregue com aproximadamente 60 dias úteis.</span></p><p><strong style=\"color: black;\">VISITAÇÃO</strong><span style=\"color: black;\">: Centro de Apoio da Casa Leiloeira - Rua Campo Mourão, n.1070 - bairro Bonsucesso - BH/MG.</span></p><p><strong style=\"color: black;\">OBS</strong><span style=\"color: black;\">: </span>Não é de responsabilidade do Leiloeiro e nem do Comitente se houver reclassificação de monta por parte dos Órgãos de Trânsito, conforme Resolução do CONTRAN nº 544, de 19 de agosto de 2015 c/c artigo 7º da Portaria nº 360/2019 do DETRAN-MG.</p> VEICULOS SINISTRADOS RECUPERÁVEIS"
+   },
+   "groupOffer": {
+    "acceptProposal": false,
+    "restrictions": [
+     {
+      "id": 1401590,
+      "restrictionType": "BY_ENTITY_TYPE",
+      "values": [
+       "F",
+       "J"
+      ]
+     },
+     {
+      "id": 1401591,
+      "restrictionType": "BY_FISCAL_DOCUMENT",
+      "values": [
+       "comprovante_endereco",
+       "rg",
+       "contrato_social",
+       "rg_socio"
+      ]
+     }
+    ],
+    "id": 362650
+   },
+   "product": {
+    "productId": 3573380,
+    "shortDesc": "VW/VOYAGE 1.6",
+    "galleryJson": [
+     {
+      "originalFileName": "ENC_AKXbyfiBX3qxxQXq603lvg.jpg",
+      "highlight": false,
+      "fileName": "d4bd9b00-511f-4295-9379-2dbb4ca1f1e6.jpg",
+      "link": "https://ms.sbwebservices.net/photos/d4bd9b00-511f-4295-9379-2dbb4ca1f1e6.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/d4bd9b00-511f-4295-9379-2dbb4ca1f1e6.jpg"
+     },
+     {
+      "originalFileName": "ENC_G5pKyKYK43SY-RYNxJxjbw.jpg",
+      "fileName": "4ff8c111-b6b5-4be1-a61b-0b8cc3368670.jpg",
+      "link": "https://ms.sbwebservices.net/photos/4ff8c111-b6b5-4be1-a61b-0b8cc3368670.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/4ff8c111-b6b5-4be1-a61b-0b8cc3368670.jpg"
+     },
+     {
+      "originalFileName": "ENC_gveLDU_j_St3lFEN0EGd8A.jpg",
+      "fileName": "940c4589-8e2e-4ceb-90da-d2580772d8b6.jpg",
+      "link": "https://ms.sbwebservices.net/photos/940c4589-8e2e-4ceb-90da-d2580772d8b6.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/940c4589-8e2e-4ceb-90da-d2580772d8b6.jpg"
+     }
+    ],
+    "photoCount": 6,
+    "videoUrlCount": 0,
+    "thumbnailUrl": "https://ms.sbwebservices.net/photos/0594e298-2692-4491-82ec-d46f7854921d.jpg",
+    "detailedDescription": "<p><strong style=\"color: black;\">VEÍCULO: </strong>VW/VOYAGE 1.6L</p><p><strong style=\"color: black;\">ANO:</strong><span style=\"color: black;\"> 2021</span></p><p><strong style=\"color: black;\">MODELO</strong><span style=\"color: black;\">: 2022</span></p><p><strong style=\"color: black;\">COMBUSTÍVEL</strong><span style=\"color: black;\">: Alcool/&nbsp;</span>Gasolina</p><p><strong style=\"color: black;\">COR</strong><span style=\"color: black;\">: Cinza</span></p><p><strong style=\"color: black;\">PLACA</strong><span style=\"color: black;\">: ***4H86</span></p><p><strong style=\"color: black;\">EMPLACADO</strong><span style=\"color: black;\">: SP</span></p><p><strong style=\"color: black;\">CLASSIFICAÇÃO DE DANO</strong><span style=\"color: black;\">: </span></p><p><strong style=\"color: black;\">CBV:</strong><span style=\"color: black;\"> </span></p><p><strong style=\"color: black;\">LICENCIAMENTO PAGO</strong><span style=\"color: black;\">: 2026</span></p><p><strong style=\"color: black;\">IPVA PAGO</strong><span style=\"color: black;\">: 2026</span></p><p><strong style=\"color: black;\">TX ADM-REMOÇÃO</strong><span style=\"color: black;\">: R$ 5.500,00</span></p><p><strong style=\"color: black;\">OUTRAS DESPESAS</strong><span style=\"color: black;\">:</span></p><p><strong style=\"color: black;\">DOCUMENTAÇÃO:</strong><span style=\"color: black;\">&nbsp;Entregue com aproximadamente 60 dias úteis.</span></p><p><strong style=\"color: black;\">VISITAÇÃO</strong><span style=\"color: black;\">: Centro de Apoio da Casa Leiloeira - Rua Campo Mourão, n.1070 - bairro Bonsucesso - BH/MG.</span></p><p><strong style=\"color: black;\">OBS</strong><span style=\"color: black;\">: </span>Não é de responsabilidade do Leiloeiro e nem do Comitente se houver reclassificação de monta por parte dos Órgãos de Trânsito, conforme Resolução do CONTRAN nº 544, de 19 de agosto de 2015 c/c artigo 7º da Portaria nº 360/2019 do DETRAN-MG.</p>",
+    "subCategory": {
+     "id": 11103,
+     "description": "Veículos Sinistrados",
+     "evidence": "F",
+     "subGrupo": 0,
+     "grupo": 0,
+     "position": 99,
+     "category": {
+      "id": 10000,
+      "description": "Carros",
+      "evidence": "F",
+      "subGrupo": 0,
+      "grupo": 0,
+      "position": 1
+     }
+    },
+    "model": {
+     "id": 801,
+     "description": "Voyage"
+    },
+    "brand": {
+     "id": 16,
+     "description": "Volkswagen"
+    },
+    "location": {
+     "displayOnMap": false,
+     "city": "Belo Horizonte - MG",
+     "state": "Minas Gerais",
+     "country": "Brasil",
+     "locationGeo": {
+      "lat": -19.919052,
+      "lon": -43.938669
+     }
+    },
+    "productType": {
+     "id": 10,
+     "description": "Carros & Motos",
+     "showBrand": true,
+     "showModel": true
+    },
+    "judicial": {}
+   },
+   "seller": {
+    "id": 2094803,
+    "name": "Plus Auto",
+    "city": "São Paulo",
+    "phone": [],
+    "company": [
+     {
+      "fantasyName": "PLUS AUTO"
+     }
+    ]
+   },
+   "systemMetric": "un",
+   "paymentItems": [
+    {
+     "paymentTypeId": 1,
+     "value": 5500,
+     "mapDescriptionTranslator": {
+      "es_PE": "Estadia",
+      "es_AR": "Estadia",
+      "es_MX": "Estadia",
+      "es_CO": "Estadia",
+      "pt_BR": "Estadia",
+      "es_ES": "Estadia",
+      "es_CL": "Estadia"
+     }
+    }
+   ],
+   "commercialCondition": {
+    "auctioneerCommissionPercent": null,
+    "minAdvanceRate": null,
+    "maxInstallments": null,
+    "allowsCreditCard": false,
+    "scheduleType": null,
+    "allowCreditCardCommission": false,
+    "allowCreditCardTotalValue": false,
+    "transactionLimit": null
+   },
+   "installmentPaymentTerms": {},
+   "isFavorite": false,
+   "isShopping": false,
+   "shoppingOfferType": false
+  }
+ ],
+ "favoritedOffers": null,
+ "placeData": null
+}

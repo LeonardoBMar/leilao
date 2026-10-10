@@ -1,0 +1,273 @@
+{
+ "total": 1,
+ "start": 0,
+ "limit": 0,
+ "seoTitle": null,
+ "seoProductTypeId": null,
+ "seoBreadcrumb": null,
+ "seoLinksByCity": null,
+ "statsFields": null,
+ "facetFields": null,
+ "query": {
+  "portalId": "[2,15]",
+  "locale": "pt_BR",
+  "timeZoneId": "America/Sao_Paulo"
+ },
+ "offers": [
+  {
+   "id": 5040886,
+   "indexationDate": "2026-10-09 15:45:33",
+   "lotNumber": 5003,
+   "quantityInLot": 1,
+   "quantitySold": 0,
+   "quantityReserved": 0,
+   "totalReceivedProposals": 0,
+   "hasReceivedProposals": false,
+   "visits": 115,
+   "totalBidders": 0,
+   "totalBids": 0,
+   "totalReceivedBidsOrProposals": 0,
+   "hasBids": false,
+   "hasReceivedBidsOrProposals": false,
+   "hidePrices": true,
+   "endDate": "2026-10-06 15:44:30",
+   "endDateTime": 1791312270000,
+   "offerTypeId": 1,
+   "createAt": "2026-09-30 15:26:11",
+   "updateAt": "2026-10-07 11:42:11",
+   "publishedAt": "2026-09-30 15:33:18",
+   "statusId": 6,
+   "price": 42000,
+   "priceFormatted": "R$ 42.000,00",
+   "offerStatus": {
+    "statusCode": 6,
+    "removed": false,
+    "stabbed": false,
+    "subjudice": false,
+    "closed": false,
+    "giveYourBid": false,
+    "makeYourProposal": false,
+    "wantToKnowThePrice": true,
+    "closedToBids": false,
+    "sold": false,
+    "reserved": false,
+    "available": false
+   },
+   "store": {
+    "id": 16222,
+    "name": "AZ LEILÕES",
+    "highlight": true,
+    "storeVisibleOnPortal": true,
+    "logoUri": "https://static.s4bdigital.net/logos_empresas/AZ_leil%C3%B5es.png"
+   },
+   "stores": [
+    {
+     "id": 16222,
+     "name": "AZ LEILÕES",
+     "highlight": true,
+     "storeVisibleOnPortal": true,
+     "logoUri": "https://static.s4bdigital.net/logos_empresas/AZ_leil%C3%B5es.png"
+    },
+    {
+     "id": 16207,
+     "name": "CANAL DO CAMPO",
+     "highlight": true,
+     "storeVisibleOnPortal": true,
+     "logoUri": "https://static.s4bdigital.net/logos_empresas/canaldocampo.png"
+    }
+   ],
+   "offerDetail": {
+    "id": 5040886,
+    "initialBidValue": 42000,
+    "initialBidValueFormatted": "R$ 42.000,00",
+    "currentMinBid": 42000,
+    "currentMinBidFormatted": "R$ 42.000,00",
+    "currentMaxBid": 42000,
+    "currentMaxBidFormatted": "R$ 42.000,00",
+    "releaseValue": 0,
+    "releaseValueFormatted": "R$ 0,00",
+    "reservedPrice": 59542,
+    "reservedPriceFormatted": "R$ 59.542,00"
+   },
+   "manager": {
+    "id": 309,
+    "name": "AZ ASSESSORIA TÉCNICA E GERENCIAL LTDA"
+   },
+   "currentTimestamp": "2026-10-10 18:46:09",
+   "auction": {
+    "id": 797289,
+    "desc": "34° LEILÃO FORÇA MÁXIMA",
+    "slugDesc": null,
+    "localeId": "pt_BR",
+    "currencyIso": "BRL",
+    "statusId": 13,
+    "permissionTypeId": 1,
+    "portalId": 2,
+    "modalityId": 1,
+    "modalityDesc": "Leilão",
+    "businessAreaId": 1,
+    "allOffersOfThisAuctionIsClosed": true,
+    "beginDate": "2026-09-30 15:20:00",
+    "endDate": "2026-10-06 14:00:00",
+    "maxEnddateOffer": "2026-10-06 16:17:30",
+    "subMarketplaces": [
+     {
+      "subMarketplaceId": 4,
+      "subMarketplaceDesc": "PME"
+     },
+     {
+      "subMarketplaceId": 1,
+      "subMarketplaceDesc": "Corporativo"
+     }
+    ],
+    "judicialPraca": null,
+    "judicialPracaDescription": "Praça Única",
+    "judicialControlNumber": null,
+    "auctioneer": "Ricardo Macedo",
+    "registry": null,
+    "address": {
+     "id": 27029,
+     "streetType": "Alameda",
+     "street": "Alameda Lorena",
+     "number": "800",
+     "complement": "2º andar",
+     "district": "Jardins",
+     "city": "São Paulo",
+     "stateCode": "SP",
+     "countryName": "Brasil",
+     "regionName": "Sudeste",
+     "type": 5
+    },
+    "crier": false,
+    "eventPipeline": null,
+    "lotAuctionTypeId": 1,
+    "isAfterMarket": null,
+    "internalParameters": {
+     "highlightUrlLink": null,
+     "hasAdvisorIntermediation": false
+    }
+   },
+   "winnerBid": {},
+   "currentBidIncrement": {
+    "currentBidIncrement": 1000,
+    "currentBidIncrementFormatted": "R$ 1.000,00"
+   },
+   "offerDescription": {
+    "offerDescription": "LAND ROVER FREELANDER 2 SD4 S  AUTOMÁTICA  2013/2013 ID #3775779/EL <h2>ATENÇÃO  LEIA ANTES DE OFERTAR</h2><p> Os lances efetuados são irretratáveis e não poderão ser cancelados por erro, engano ou desistência do licitante.<br> Leia atentamente a descrição do lote e consulte todas as fotos, vídeos e demais informações disponibilizadas antes de ofertar.<br> Recomenda-se a leitura integral do edital/condições de venda e das informações complementares do lote.<br> Ao ofertar, o licitante declara estar ciente e de acordo com as condições do edital.</p><h1>LAND ROVER FREELANDER 2 SD4 S  AUTOMÁTICA  2013/2013</h1><p> <strong>Marca:</strong> Land Rover<br> <strong>Modelo:</strong> Freelander 2 SD4 S<br> <strong>Ano de fabricação/modelo:</strong> 2013/2013<br> <strong>Combustível:</strong> Diesel<br> <strong>Câmbio:</strong> Automático<br> Cor branca.<br> Bancos em couro claro.<br> Vidros escurecidos.<br> Comandos multifuncionais no volante.<br> Sistema de climatização e central de comandos no console.<br> Compartimento do motor visualmente completo nas fotografias.</p><h2>CONDIÇÕES IMPORTANTES</h2><p> Equipamento usado, vendido no estado em que se encontra.<br> Não há visitação presencial dos lotes. Antes de efetuar qualquer lance, o interessado deverá analisar atentamente a descrição, fotos, vídeos e demais informações disponibilizadas e poderá entrar em contato com a equipe da AZ Leilões para esclarecer eventuais dúvidas sobre o bem.<br> Retirada e transporte por conta do comprador.<br><strong> A documentação e demais condições específicas de cada lote devem ser observadas no edital e na descrição do lote.</strong></p> 34° LEILÃO FORÇA MÁXIMA"
+   },
+   "groupOffer": {
+    "acceptProposal": false,
+    "id": 362280
+   },
+   "product": {
+    "productId": 3775779,
+    "shortDesc": "LAND ROVER FREELANDER 2 SD4 S  AUTOMÁTICA  2013/2013 ID #3775779/EL",
+    "galleryJson": [
+     {
+      "originalFileName": "enc_vnpgzfgfvue7ujvbhf7wuznrmj9ksrvezw-5hh1wp309hfncgd9tbponjqydhjtq.jpeg",
+      "highlight": false,
+      "fileName": "6c327bca-8606-44ee-8664-fdcc801cb3f6.jpg",
+      "link": "https://ms.sbwebservices.net/photos/6c327bca-8606-44ee-8664-fdcc801cb3f6.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/6c327bca-8606-44ee-8664-fdcc801cb3f6.jpg"
+     },
+     {
+      "originalFileName": "enc_vnpgzfgfvue7ujvbhf7wuznrmj9ksrvezw-5hh1wp30csux17zdt4idht2h951s8.jpeg",
+      "highlight": false,
+      "fileName": "85f96ce3-5145-406f-abf2-f7aea6cad387.jpg",
+      "link": "https://ms.sbwebservices.net/photos/85f96ce3-5145-406f-abf2-f7aea6cad387.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/85f96ce3-5145-406f-abf2-f7aea6cad387.jpg"
+     },
+     {
+      "originalFileName": "enc_vnpgzfgfvue7ujvbhf7wuznrmj9ksrvezw-5hh1wp30o0lcqdrkpzw2cwa1d7-30.jpeg",
+      "highlight": false,
+      "fileName": "3d35311f-8d07-44c3-9add-323d0e1a9b57.jpg",
+      "link": "https://ms.sbwebservices.net/photos/3d35311f-8d07-44c3-9add-323d0e1a9b57.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/3d35311f-8d07-44c3-9add-323d0e1a9b57.jpg"
+     }
+    ],
+    "photoCount": 17,
+    "galleryVideoJson": [
+     {
+      "originalFileName": "https://www.youtube.com/watch?v=1KvrhlCM_Es",
+      "highlight": false,
+      "fileName": "https://www.youtube.com/watch?v=1KvrhlCM_Es",
+      "link": "https://www.youtube.com/watch?v=1KvrhlCM_Es",
+      "type": "video_url",
+      "contentType": "video/youtube",
+      "thumbnailUrl": "https://img.youtube.com/vi/1KvrhlCM_Es/0.jpg"
+     }
+    ],
+    "videoUrlCount": 1,
+    "thumbnailUrl": "https://ms.sbwebservices.net/photos/718dd2ed-0dcc-4fe3-8136-086abf33528c.jpg",
+    "detailedDescription": "<h2>ATENÇÃO  LEIA ANTES DE OFERTAR</h2><p> Os lances efetuados são irretratáveis e não poderão ser cancelados por erro, engano ou desistência do licitante.<br> Leia atentamente a descrição do lote e consulte todas as fotos, vídeos e demais informações disponibilizadas antes de ofertar.<br> Recomenda-se a leitura integral do edital/condições de venda e das informações complementares do lote.<br> Ao ofertar, o licitante declara estar ciente e de acordo com as condições do edital.</p><h1>LAND ROVER FREELANDER 2 SD4 S  AUTOMÁTICA  2013/2013</h1><p> <strong>Marca:</strong> Land Rover<br> <strong>Modelo:</strong> Freelander 2 SD4 S<br> <strong>Ano de fabricação/modelo:</strong> 2013/2013<br> <strong>Combustível:</strong> Diesel<br> <strong>Câmbio:</strong> Automático<br> Cor branca.<br> Bancos em couro claro.<br> Vidros escurecidos.<br> Comandos multifuncionais no volante.<br> Sistema de climatização e central de comandos no console.<br> Compartimento do motor visualmente completo nas fotografias.</p><h2>CONDIÇÕES IMPORTANTES</h2><p> Equipamento usado, vendido no estado em que se encontra.<br> Não há visitação presencial dos lotes. Antes de efetuar qualquer lance, o interessado deverá analisar atentamente a descrição, fotos, vídeos e demais informações disponibilizadas e poderá entrar em contato com a equipe da AZ Leilões para esclarecer eventuais dúvidas sobre o bem.<br> Retirada e transporte por conta do comprador.<br><strong> A documentação e demais condições específicas de cada lote devem ser observadas no edital e na descrição do lote.</strong></p>",
+    "subCategory": {
+     "id": 10007,
+     "description": "SUV",
+     "evidence": "F",
+     "subGrupo": 0,
+     "grupo": 0,
+     "position": 7,
+     "category": {
+      "id": 10000,
+      "description": "Carros",
+      "evidence": "F",
+      "subGrupo": 0,
+      "grupo": 0,
+      "position": 1
+     }
+    },
+    "model": {},
+    "brand": {},
+    "location": {
+     "displayOnMap": false,
+     "city": "Guaíra - SP",
+     "state": "São Paulo",
+     "country": "Brasil",
+     "locationGeo": {
+      "lat": -20.325371,
+      "lon": -48.310855
+     }
+    },
+    "productType": {
+     "id": 10,
+     "description": "Carros & Motos",
+     "showBrand": true,
+     "showModel": true
+    },
+    "judicial": {}
+   },
+   "seller": {
+    "id": 2297971,
+    "name": "LEONARDO DA SILVA ALVES NASCIMENTO",
+    "city": "Guaíra",
+    "phone": [],
+    "company": [
+     {}
+    ]
+   },
+   "systemMetric": "un",
+   "commercialCondition": {
+    "auctioneerCommissionPercent": null,
+    "minAdvanceRate": null,
+    "maxInstallments": null,
+    "allowsCreditCard": true,
+    "scheduleType": "AFTER_WITHDRAWAL",
+    "allowCreditCardCommission": false,
+    "allowCreditCardTotalValue": true,
+    "transactionLimit": 120000
+   },
+   "installmentPaymentTerms": {},
+   "isFavorite": false,
+   "isShopping": false,
+   "shoppingOfferType": false
+  }
+ ],
+ "favoritedOffers": null,
+ "placeData": null
+}

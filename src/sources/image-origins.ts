@@ -10,6 +10,8 @@ export const DETRAN_MG_IMAGE_ORIGIN = "https://leilao.detran.mg.gov.br";
 export const LEILAO_ONLINE_IMAGE_ORIGIN = "https://d1y4blh5egbvru.cloudfront.net";
 /** Bucket da plataforma Astavero (Detran-SC). A origem é da Oracle Cloud; o adaptador só aceita fotos do bucket dela. */
 export const ASTAVERO_IMAGE_ORIGIN = "https://objectstorage.sa-saopaulo-1.oraclecloud.com";
+/** Servidor de fotos do Superbid; o adaptador só aceita fotos da pasta `/photos/`. */
+export const SUPERBID_IMAGE_ORIGIN = "https://ms.sbwebservices.net";
 
 export const LISTING_IMAGE_ORIGINS = [
   LEILO_IMAGE_ORIGIN,
@@ -18,4 +20,5 @@ export const LISTING_IMAGE_ORIGINS = [
   DETRAN_MG_IMAGE_ORIGIN,
   LEILAO_ONLINE_IMAGE_ORIGIN,
   ASTAVERO_IMAGE_ORIGIN,
+  SUPERBID_IMAGE_ORIGIN,
 ] as const;

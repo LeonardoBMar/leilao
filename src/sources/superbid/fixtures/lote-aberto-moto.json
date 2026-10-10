@@ -1,0 +1,289 @@
+{
+ "total": 1,
+ "start": 0,
+ "limit": 0,
+ "seoTitle": null,
+ "seoProductTypeId": null,
+ "seoBreadcrumb": null,
+ "seoLinksByCity": null,
+ "statsFields": null,
+ "facetFields": null,
+ "query": {
+  "portalId": "[2,15]",
+  "locale": "pt_BR",
+  "timeZoneId": "America/Sao_Paulo"
+ },
+ "offers": [
+  {
+   "id": 5054677,
+   "indexationDate": "2026-10-10 18:36:12",
+   "lotNumber": 78,
+   "quantityInLot": 1,
+   "quantitySold": 0,
+   "quantityReserved": 0,
+   "totalReceivedProposals": 0,
+   "hasReceivedProposals": false,
+   "visits": 47,
+   "totalBidders": 0,
+   "totalBids": 0,
+   "totalReceivedBidsOrProposals": 0,
+   "hasBids": false,
+   "hasReceivedBidsOrProposals": false,
+   "endDate": "2026-10-20 15:47:00",
+   "endDateTime": 1792522020000,
+   "offerTypeId": 1,
+   "createAt": "2026-10-09 16:59:29",
+   "updateAt": "2026-10-09 17:06:37",
+   "publishedAt": "2026-10-09 17:06:37",
+   "statusId": 1,
+   "price": 5000,
+   "priceFormatted": "R$ 5.000,00",
+   "offerStatus": {
+    "statusCode": 1,
+    "removed": false,
+    "stabbed": false,
+    "subjudice": false,
+    "closed": false,
+    "wantToKnowThePrice": false,
+    "giveYourBid": true,
+    "sold": false,
+    "reserved": false,
+    "available": false,
+    "makeYourProposal": false,
+    "closedToBids": false
+   },
+   "store": {
+    "id": 32,
+    "name": "CPFL",
+    "highlight": true,
+    "storeVisibleOnPortal": true,
+    "position": 7,
+    "logoUri": "https://static.s4bdigital.net/logos_empresas/new_logo_cpfl.png"
+   },
+   "stores": [
+    {
+     "id": 32,
+     "name": "CPFL",
+     "highlight": true,
+     "storeVisibleOnPortal": true,
+     "position": 7,
+     "logoUri": "https://static.s4bdigital.net/logos_empresas/new_logo_cpfl.png"
+    },
+    {
+     "id": 1161,
+     "name": "SOLD",
+     "highlight": true,
+     "storeVisibleOnPortal": true,
+     "logoUri": "https://s.superbid.net/image/6a/67/6a670d93-0619-4cf2-9418-777f52aa84f5.png"
+    }
+   ],
+   "offerDetail": {
+    "id": 5054677,
+    "initialBidValue": 5000,
+    "initialBidValueFormatted": "R$ 5.000,00",
+    "currentMinBid": 5000,
+    "currentMinBidFormatted": "R$ 5.000,00",
+    "currentMaxBid": 5000,
+    "currentMaxBidFormatted": "R$ 5.000,00",
+    "reservedPrice": 8481.72,
+    "reservedPriceFormatted": "R$ 8.481,72"
+   },
+   "manager": {
+    "id": 9,
+    "name": "Sold Maisativo"
+   },
+   "currentTimestamp": "2026-10-10 18:46:00",
+   "auction": {
+    "id": 802506,
+    "desc": "CPFL",
+    "slugDesc": null,
+    "localeId": "pt_BR",
+    "currencyIso": "BRL",
+    "statusId": 1,
+    "permissionTypeId": 1,
+    "portalId": 2,
+    "modalityId": 1,
+    "modalityDesc": "Leilão",
+    "businessAreaId": 1,
+    "allOffersOfThisAuctionIsClosed": false,
+    "beginDate": "2026-10-09 16:54:00",
+    "endDate": "2026-10-20 15:30:00",
+    "maxEnddateOffer": "2026-10-20 15:48:30",
+    "subMarketplaces": [
+     {
+      "subMarketplaceId": 1,
+      "subMarketplaceDesc": "Corporativo"
+     }
+    ],
+    "judicialPraca": null,
+    "judicialPracaDescription": "Praça Única",
+    "judicialControlNumber": null,
+    "auctioneer": "Renato Schlobach Moyses",
+    "registry": "654",
+    "address": {
+     "id": 27029,
+     "streetType": "Alameda",
+     "street": "Alameda Lorena",
+     "number": "800",
+     "complement": "2º andar",
+     "district": "Jardins",
+     "city": "São Paulo",
+     "stateCode": "SP",
+     "countryName": "Brasil",
+     "regionName": "Sul",
+     "type": 5
+    },
+    "crier": false,
+    "eventPipeline": null,
+    "lotAuctionTypeId": 1,
+    "isAfterMarket": null,
+    "internalParameters": {
+     "highlightUrlLink": null,
+     "hasAdvisorIntermediation": false
+    }
+   },
+   "winnerBid": {},
+   "currentBidIncrement": {
+    "currentBidIncrement": 250,
+    "currentBidIncrementFormatted": "R$ 250,00"
+   },
+   "offerDescription": {
+    "offerDescription": "HONDA NXR160 BROS ESDD 2018/2018, Placa FINAL 5, CH.:  (ID.: 52149) <span><p>Marca: HONDA</p><p>Modelo: NXR160 BROS ESDD</p><p>Ano: 2018</p><p>Placa FINAL 5</p><p>Cor: BRANCA</p><p>Chassi.: </p><p>Direção: Sem teste</p><p><br></p><p>Condições Gerais</p><p>Motor: Sem teste</p><p><br></p><p><br></p><br><br><br>Será de responsabilidade da empresa vendedora o pagamento dos débitos de eventuais multas de trânsito e IPVA relativos<br>ao(s) veículo(s) vendido(s) e anteriores à data do evento (exceto parcelas vincendas do IPVA, quando houver, as quais serão<br>suportadas pelo(s) comprador(es)).</span> 202603049 CPFL"
+   },
+   "groupOffer": {
+    "acceptProposal": true,
+    "commissionPercent": 5,
+    "id": 363440
+   },
+   "product": {
+    "productId": 3829896,
+    "shortDesc": "HONDA NXR160 BROS ESDD 2018/2018, Placa FINAL 5,  (ID.: 52149)",
+    "galleryJson": [
+     {
+      "originalFileName": "ENC_7ZXjkO0pN-8u9pVpO5XOAQ.jpeg",
+      "highlight": false,
+      "fileName": "e95d9cca-0a7b-42f5-8d97-732083a864f0.jpg",
+      "link": "https://ms.sbwebservices.net/photos/e95d9cca-0a7b-42f5-8d97-732083a864f0.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/e95d9cca-0a7b-42f5-8d97-732083a864f0.jpg"
+     },
+     {
+      "originalFileName": "ENC_aG56Z5vQqjEglwuSk5uBaQ.jpeg",
+      "highlight": false,
+      "fileName": "0542a37f-675f-4a71-950b-4b0c0fcd818c.jpg",
+      "link": "https://ms.sbwebservices.net/photos/0542a37f-675f-4a71-950b-4b0c0fcd818c.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/0542a37f-675f-4a71-950b-4b0c0fcd818c.jpg"
+     },
+     {
+      "originalFileName": "ENC_bBU-QHt5_HqdH_WrImvfjw.jpeg",
+      "highlight": false,
+      "fileName": "2b9a5167-f744-49e1-9f5e-dddabb59cf87.jpg",
+      "link": "https://ms.sbwebservices.net/photos/2b9a5167-f744-49e1-9f5e-dddabb59cf87.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/2b9a5167-f744-49e1-9f5e-dddabb59cf87.jpg"
+     }
+    ],
+    "photoCount": 18,
+    "videoUrlCount": 0,
+    "thumbnailUrl": "https://ms.sbwebservices.net/photos/510c1af8-0f76-45f1-9019-2199c37f78bc.jpg",
+    "detailedDescription": "<span><p>Marca: HONDA</p><p>Modelo: NXR160 BROS ESDD</p><p>Ano: 2018</p><p>Placa FINAL 5</p><p>Cor: BRANCA</p><p>Chassi.: </p><p>Direção: Sem teste</p><p><br></p><p>Condições Gerais</p><p>Motor: Sem teste</p><p><br></p><p><br></p><br><br><br>Será de responsabilidade da empresa vendedora o pagamento dos débitos de eventuais multas de trânsito e IPVA relativos<br>ao(s) veículo(s) vendido(s) e anteriores à data do evento (exceto parcelas vincendas do IPVA, quando houver, as quais serão<br>suportadas pelo(s) comprador(es)).</span>",
+    "subCategory": {
+     "id": 11104,
+     "description": "Motos Sinistradas",
+     "evidence": "F",
+     "subGrupo": 0,
+     "grupo": 0,
+     "position": 99,
+     "category": {
+      "id": 10012,
+      "description": "Motos",
+      "evidence": "F",
+      "subGrupo": 0,
+      "grupo": 0,
+      "position": 2
+     }
+    },
+    "model": {},
+    "brand": {},
+    "productYourRef": "202603049",
+    "location": {
+     "displayOnMap": false,
+     "city": "Alvorada - RS",
+     "state": "Rio Grande do Sul",
+     "country": "Brasil",
+     "locationGeo": {
+      "lat": -29.999907,
+      "lon": -51.078487
+     }
+    },
+    "productType": {
+     "id": 10,
+     "description": "Carros & Motos",
+     "showBrand": true,
+     "showModel": true
+    },
+    "judicial": {}
+   },
+   "seller": {
+    "id": 768802,
+    "name": "Companhia Piratininga de Força e Luz",
+    "city": "Campinas",
+    "phone": [],
+    "company": [
+     {
+      "fantasyName": "CPFL"
+     }
+    ]
+   },
+   "systemMetric": "un",
+   "paymentItems": [
+    {
+     "paymentTypeId": 1,
+     "value": 377.16,
+     "mapDescriptionTranslator": {
+      "es_PE": "Estadia",
+      "es_AR": "Estadia",
+      "es_MX": "Estadia",
+      "es_CO": "Estadia",
+      "es_ES": "Estadia",
+      "pt_BR": "Estadia",
+      "es_CL": "Estadia"
+     }
+    },
+    {
+     "paymentTypeId": 2,
+     "value": 578.22,
+     "mapDescriptionTranslator": {
+      "es_PE": "Remoção",
+      "es_AR": "Remoção",
+      "es_MX": "Remoção",
+      "es_CO": "Remoção",
+      "es_ES": "Remoção",
+      "pt_BR": "Remoção",
+      "es_CL": "Remoção"
+     }
+    }
+   ],
+   "commercialCondition": {
+    "auctioneerCommissionPercent": null,
+    "minAdvanceRate": null,
+    "maxInstallments": null,
+    "allowsCreditCard": true,
+    "scheduleType": "AFTER_WITHDRAWAL",
+    "allowCreditCardCommission": false,
+    "allowCreditCardTotalValue": true,
+    "transactionLimit": 120000
+   },
+   "installmentPaymentTerms": {},
+   "isFavorite": false,
+   "isShopping": false,
+   "shoppingOfferType": false
+  }
+ ],
+ "favoritedOffers": null,
+ "placeData": null
+}

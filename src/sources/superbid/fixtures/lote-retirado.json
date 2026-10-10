@@ -1,0 +1,273 @@
+{
+ "total": 1,
+ "start": 0,
+ "limit": 0,
+ "seoTitle": null,
+ "seoProductTypeId": null,
+ "seoBreadcrumb": null,
+ "seoLinksByCity": null,
+ "statsFields": null,
+ "facetFields": null,
+ "query": {
+  "portalId": "[2,15]",
+  "locale": "pt_BR",
+  "timeZoneId": "America/Sao_Paulo"
+ },
+ "offers": [
+  {
+   "id": 5046765,
+   "indexationDate": "2026-10-10 15:18:29",
+   "lotNumber": 26,
+   "quantityInLot": 1,
+   "quantitySold": 0,
+   "quantityReserved": 0,
+   "totalReceivedProposals": 0,
+   "hasReceivedProposals": false,
+   "visits": 90,
+   "totalBidders": 0,
+   "totalBids": 0,
+   "totalReceivedBidsOrProposals": 0,
+   "hasBids": false,
+   "hasReceivedBidsOrProposals": false,
+   "hidePrices": true,
+   "endDate": "2026-10-09 15:51:32",
+   "endDateTime": 1791571892000,
+   "offerTypeId": 1,
+   "createAt": "2026-10-06 14:33:34",
+   "updateAt": "2026-10-09 15:52:00",
+   "publishedAt": "2026-10-06 14:43:47",
+   "statusId": 6,
+   "price": 8700,
+   "priceFormatted": "R$ 8.700,00",
+   "offerStatus": {
+    "statusCode": 6,
+    "removed": true,
+    "stabbed": false,
+    "subjudice": false,
+    "closed": false,
+    "giveYourBid": false,
+    "makeYourProposal": false,
+    "wantToKnowThePrice": false,
+    "closedToBids": false,
+    "sold": false,
+    "reserved": false,
+    "available": false
+   },
+   "store": {
+    "id": 16182,
+    "name": "SCHERER LEILÕES",
+    "highlight": true,
+    "storeVisibleOnPortal": true,
+    "logoUri": "https://static.s4bdigital.net/logos_empresas/logo-adalberto-sherer-195x65.png"
+   },
+   "stores": [
+    {
+     "id": 16182,
+     "name": "SCHERER LEILÕES",
+     "highlight": true,
+     "storeVisibleOnPortal": true,
+     "logoUri": "https://static.s4bdigital.net/logos_empresas/logo-adalberto-sherer-195x65.png"
+    }
+   ],
+   "offerDetail": {
+    "id": 5046765,
+    "initialBidValue": 8700,
+    "initialBidValueFormatted": "R$ 8.700,00",
+    "currentMinBid": 8700,
+    "currentMinBidFormatted": "R$ 8.700,00",
+    "currentMaxBid": 8700,
+    "currentMaxBidFormatted": "R$ 8.700,00",
+    "releaseValue": 0,
+    "releaseValueFormatted": "R$ 0,00",
+    "reservedPrice": 8700,
+    "reservedPriceFormatted": "R$ 8.700,00"
+   },
+   "manager": {
+    "id": 271,
+    "name": "ADALBERTO SCHERER FILHO"
+   },
+   "currentTimestamp": "2026-10-10 18:46:11",
+   "auction": {
+    "id": 802352,
+    "desc": "Município de Campina Grande do Sul/PR",
+    "slugDesc": null,
+    "localeId": "pt_BR",
+    "currencyIso": "BRL",
+    "statusId": 1,
+    "permissionTypeId": 1,
+    "portalId": 2,
+    "modalityId": 1,
+    "modalityDesc": "Leilão",
+    "businessAreaId": 1,
+    "allOffersOfThisAuctionIsClosed": false,
+    "beginDate": "2026-10-06 14:24:00",
+    "endDate": "2026-11-04 10:00:00",
+    "maxEnddateOffer": "2026-12-04 10:00:00",
+    "subMarketplaces": [
+     {
+      "subMarketplaceId": 5,
+      "subMarketplaceDesc": "GOV"
+     }
+    ],
+    "judicialPraca": null,
+    "judicialPracaDescription": "Praça Única",
+    "judicialControlNumber": null,
+    "auctioneer": "ADALBERTO SCHERER FILHO",
+    "registry": "329",
+    "address": {
+     "id": 27029,
+     "streetType": "Alameda",
+     "street": "Alameda Lorena",
+     "number": "800",
+     "complement": "2º andar",
+     "district": "Jardins",
+     "city": "São Paulo",
+     "stateCode": "SP",
+     "countryName": "Brasil",
+     "regionName": "Sul",
+     "type": 5
+    },
+    "crier": false,
+    "eventPipeline": null,
+    "lotAuctionTypeId": 3,
+    "isAfterMarket": null,
+    "internalParameters": {
+     "highlightUrlLink": null,
+     "hasAdvisorIntermediation": false
+    }
+   },
+   "winnerBid": {},
+   "currentBidIncrement": {
+    "currentBidIncrement": 500,
+    "currentBidIncrementFormatted": "R$ 500,00"
+   },
+   "offerDescription": {
+    "offerDescription": "Veículo Fiat Palio Fire Flex ano/modelo: 2008 <p>FIAT/ PALIO FIRE FLEX|Tipo:VEICULO|Cor:BRANCA|Ano/Modelo:2008/2008|Placa FINAL 5|UF:|Chassi:||Motor:|Status:CIRCULAÇÃO</p><p>Os bens, objeto do presente leilão, poderão ser vistoriados e examinados nos dias 27, 28, 29 de outubro</p><p>nos horários das 09:00hrs às 12:00hrs e às 14:00hrs às 17:00hrs. Tendo em vista que os itens objetos do</p><p>presente leilão encontram-se depositados sob a guarda do Município comitente, os interessados na vistoria</p><p>e exame dos referidos itens, devem entrar em contato com o Município para agendamento e posterior</p><p>acompanhamento dos servidores municipais responsáveis para a vistoria e exame, pelo telefone 41</p><p>900000000, com o Responsável: [removido] ou através do e-mail <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" class=\"text-primary underline\" href=\"mailto:contato@exemplo.gov.br\">contato@exemplo.gov.br</a>.</p><p>os lotes estão localizados nos endereços abaixo identificados, devendo o interessado informar o</p><p>lote de interesse, para que a administração pública promova a correta indicação do endereço e</p><p>agendamento:</p><p> Pátio Jardim Paulista  endereço: R. Leonardo Francischelli, n°1044</p><p> Central de Remoção  endereço: R. Telêmaco Crisôstomo da Silva, 240 - Jardim da Colina;</p><p> Barracão  endereço: Rodovia do Caqui, n° 265 - barracão n°03 - Araçatuba</p><p>É de responsabilidade dos interessados o deslocamento até o local onde estão depositados os bens</p><p>para vistoria.</p> Municipio de Campina Grande do Sul Município de Campina Grande do Sul/PR"
+   },
+   "groupOffer": {
+    "acceptProposal": false,
+    "restrictions": [
+     {
+      "id": 1406376,
+      "restrictionType": "BY_ENTITY_TYPE",
+      "values": [
+       "J",
+       "F"
+      ]
+     },
+     {
+      "id": 1406377,
+      "restrictionType": "BY_FISCAL_DOCUMENT",
+      "values": [
+       "contrato_social",
+       "cpf",
+       "cnpj"
+      ]
+     }
+    ],
+    "id": 362935
+   },
+   "product": {
+    "productId": 3829287,
+    "shortDesc": "Veículo Fiat Palio Fire Flex ano/modelo: 2008",
+    "galleryJson": [
+     {
+      "originalFileName": "ENC_VnpgzfGfVUE7ujvBhf7wuW8SSTcvyCGcMcalkLl-DJa1aEe3-oXa6vSg42ubJwch.jpeg",
+      "highlight": false,
+      "fileName": "2ed1e9ac-b8ad-42d2-9b2f-cac2fd02f8bc.jpg",
+      "link": "https://ms.sbwebservices.net/photos/2ed1e9ac-b8ad-42d2-9b2f-cac2fd02f8bc.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/2ed1e9ac-b8ad-42d2-9b2f-cac2fd02f8bc.jpg"
+     },
+     {
+      "originalFileName": "ENC_VnpgzfGfVUE7ujvBhf7wuW8SSTcvyCGcMcalkLl-DJa3wmMf62dEgEvEnYmNCzmvozeqJe4jyf3IrwVawI8pGQ.jpeg",
+      "highlight": false,
+      "fileName": "594aa705-cabe-416c-85ef-80e9944a41a4.jpg",
+      "link": "https://ms.sbwebservices.net/photos/594aa705-cabe-416c-85ef-80e9944a41a4.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/594aa705-cabe-416c-85ef-80e9944a41a4.jpg"
+     },
+     {
+      "originalFileName": "ENC_VnpgzfGfVUE7ujvBhf7wuW8SSTcvyCGcMcalkLl-DJaLTN4rAJsv9O97xgMAyLj1.jpeg",
+      "highlight": false,
+      "fileName": "501e4487-e94a-41c1-8f8f-634d109627d8.jpg",
+      "link": "https://ms.sbwebservices.net/photos/501e4487-e94a-41c1-8f8f-634d109627d8.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/501e4487-e94a-41c1-8f8f-634d109627d8.jpg"
+     }
+    ],
+    "photoCount": 15,
+    "videoUrlCount": 0,
+    "thumbnailUrl": "https://ms.sbwebservices.net/photos/ae8c666c-c589-4e52-aef8-6d7d5ce54360.jpg",
+    "detailedDescription": "<p>FIAT/ PALIO FIRE FLEX|Tipo:VEICULO|Cor:BRANCA|Ano/Modelo:2008/2008|Placa FINAL 5|UF:|Chassi:||Motor:|Status:CIRCULAÇÃO</p><p>Os bens, objeto do presente leilão, poderão ser vistoriados e examinados nos dias 27, 28, 29 de outubro</p><p>nos horários das 09:00hrs às 12:00hrs e às 14:00hrs às 17:00hrs. Tendo em vista que os itens objetos do</p><p>presente leilão encontram-se depositados sob a guarda do Município comitente, os interessados na vistoria</p><p>e exame dos referidos itens, devem entrar em contato com o Município para agendamento e posterior</p><p>acompanhamento dos servidores municipais responsáveis para a vistoria e exame, pelo telefone 41</p><p>900000000, com o Responsável: [removido] ou através do e-mail <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" class=\"text-primary underline\" href=\"mailto:contato@exemplo.gov.br\">contato@exemplo.gov.br</a>.</p><p>os lotes estão localizados nos endereços abaixo identificados, devendo o interessado informar o</p><p>lote de interesse, para que a administração pública promova a correta indicação do endereço e</p><p>agendamento:</p><p> Pátio Jardim Paulista  endereço: R. Leonardo Francischelli, n°1044</p><p> Central de Remoção  endereço: R. Telêmaco Crisôstomo da Silva, 240 - Jardim da Colina;</p><p> Barracão  endereço: Rodovia do Caqui, n° 265 - barracão n°03 - Araçatuba</p><p>É de responsabilidade dos interessados o deslocamento até o local onde estão depositados os bens</p><p>para vistoria.</p>",
+    "subCategory": {
+     "id": 10004,
+     "description": "Hatches",
+     "evidence": "F",
+     "subGrupo": 0,
+     "grupo": 0,
+     "position": 4,
+     "category": {
+      "id": 10000,
+      "description": "Carros",
+      "evidence": "F",
+      "subGrupo": 0,
+      "grupo": 0,
+      "position": 1
+     }
+    },
+    "model": {},
+    "brand": {},
+    "productYourRef": "Municipio de Campina Grande do Sul",
+    "location": {
+     "displayOnMap": false,
+     "city": "Campina Grande do Sul - PR",
+     "state": "Paraná",
+     "country": "Brasil",
+     "locationGeo": {
+      "lat": -25.364242,
+      "lon": -49.101878
+     }
+    },
+    "productType": {
+     "id": 10,
+     "description": "Carros & Motos",
+     "showBrand": true,
+     "showModel": true
+    },
+    "judicial": {}
+   },
+   "seller": {
+    "id": 2540387,
+    "name": "MUNICÍPIO DE CAMPINA GRANDE DO SUL/PR",
+    "city": "Curitiba",
+    "phone": [],
+    "company": [
+     {
+      "fantasyName": "MUNICÍPIO DE CAMPINA GRANDE DO SUL/PR"
+     }
+    ]
+   },
+   "systemMetric": "un",
+   "commercialCondition": {
+    "auctioneerCommissionPercent": null,
+    "minAdvanceRate": null,
+    "maxInstallments": null,
+    "allowsCreditCard": false,
+    "scheduleType": null,
+    "allowCreditCardCommission": false,
+    "allowCreditCardTotalValue": false,
+    "transactionLimit": null
+   },
+   "installmentPaymentTerms": {},
+   "isFavorite": false,
+   "isShopping": false,
+   "shoppingOfferType": false
+  }
+ ],
+ "favoritedOffers": null,
+ "placeData": null
+}

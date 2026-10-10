@@ -1,0 +1,265 @@
+{
+ "total": 1,
+ "start": 0,
+ "limit": 0,
+ "seoTitle": null,
+ "seoProductTypeId": null,
+ "seoBreadcrumb": null,
+ "seoLinksByCity": null,
+ "statsFields": null,
+ "facetFields": null,
+ "query": {
+  "portalId": "[2,15]",
+  "locale": "pt_BR",
+  "timeZoneId": "America/Sao_Paulo"
+ },
+ "offers": [
+  {
+   "id": 5051100,
+   "indexationDate": "2026-10-10 15:45:23",
+   "lotNumber": 41,
+   "quantityInLot": 1,
+   "quantitySold": 0,
+   "quantityReserved": 0,
+   "totalReceivedProposals": 0,
+   "hasReceivedProposals": false,
+   "visits": 64,
+   "totalBidders": 1,
+   "totalBids": 1,
+   "totalReceivedBidsOrProposals": 1,
+   "hasBids": true,
+   "hasReceivedBidsOrProposals": true,
+   "hidePrices": true,
+   "endDate": "2026-10-09 12:20:40",
+   "endDateTime": 1791559240000,
+   "offerTypeId": 1,
+   "createAt": "2026-10-07 14:07:40",
+   "updateAt": "2026-10-09 13:16:31",
+   "publishedAt": "2026-10-07 16:22:52",
+   "statusId": 7,
+   "price": 35250,
+   "priceFormatted": "R$ 35.250,00",
+   "offerStatus": {
+    "statusCode": 7,
+    "removed": false,
+    "stabbed": false,
+    "subjudice": false,
+    "wantToKnowThePrice": true,
+    "makeYourProposal": false,
+    "closedToBids": false,
+    "sold": false,
+    "reserved": false,
+    "giveYourBid": false,
+    "available": false,
+    "closed": false
+   },
+   "store": {
+    "id": 16367,
+    "name": "VICTOR LEILÕES",
+    "highlight": true,
+    "storeVisibleOnPortal": true,
+    "logoUri": "https://static.s4bdigital.net/logos_empresas/logo_victor.jpg"
+   },
+   "stores": [
+    {
+     "id": 16367,
+     "name": "VICTOR LEILÕES",
+     "highlight": true,
+     "storeVisibleOnPortal": true,
+     "logoUri": "https://static.s4bdigital.net/logos_empresas/logo_victor.jpg"
+    }
+   ],
+   "offerDetail": {
+    "id": 5051100,
+    "initialBidValue": 35000,
+    "initialBidValueFormatted": "R$ 35.000,00",
+    "currentMinBid": 35250,
+    "currentMinBidFormatted": "R$ 35.250,00",
+    "currentMaxBid": 35250,
+    "currentMaxBidFormatted": "R$ 35.250,00",
+    "reservedPrice": 54209,
+    "reservedPriceFormatted": "R$ 54.209,00"
+   },
+   "manager": {
+    "id": 1586,
+    "name": "LEILOES IDEAL ADM LTDA"
+   },
+   "currentTimestamp": "2026-10-10 18:46:07",
+   "auction": {
+    "id": 797562,
+    "desc": "Repasse veículos de leilão 09/10/26",
+    "slugDesc": null,
+    "localeId": "pt_BR",
+    "currencyIso": "BRL",
+    "statusId": 13,
+    "permissionTypeId": 1,
+    "portalId": 2,
+    "modalityId": 1,
+    "modalityDesc": "Leilão",
+    "businessAreaId": 1,
+    "allOffersOfThisAuctionIsClosed": true,
+    "beginDate": "2026-10-07 18:00:00",
+    "endDate": "2026-10-09 11:00:00",
+    "maxEnddateOffer": "2026-10-09 13:08:10",
+    "subMarketplaces": [
+     {
+      "subMarketplaceId": 4,
+      "subMarketplaceDesc": "PME"
+     }
+    ],
+    "judicialPraca": null,
+    "judicialPracaDescription": "Praça Única",
+    "judicialControlNumber": null,
+    "auctioneer": "Victor Pileggi Neto",
+    "registry": "1495",
+    "address": {
+     "id": 27029,
+     "streetType": "Alameda",
+     "street": "Alameda Lorena",
+     "number": "800",
+     "complement": "2º andar",
+     "district": "Jardins",
+     "city": "São Paulo",
+     "stateCode": "SP",
+     "countryName": "Brasil",
+     "regionName": "Sudeste",
+     "type": 5
+    },
+    "crier": false,
+    "eventPipeline": null,
+    "lotAuctionTypeId": 3,
+    "isAfterMarket": null,
+    "internalParameters": {
+     "highlightUrlLink": null,
+     "hasAdvisorIntermediation": false
+    }
+   },
+   "winnerBid": {
+    "currentWinner": 0,
+    "currentWinnerLogin": "[removido]"
+   },
+   "currentBidIncrement": {
+    "currentBidIncrement": 250,
+    "currentBidIncrementFormatted": "R$ 250,00"
+   },
+   "offerDescription": {
+    "offerDescription": "Honda CR-V LX 2.0 2011 <p><strong>IPVA 2026 PAGO</strong><br></p><p>O bem é vendido no estado em que se encontra, sem garantia de qualquer natureza, incluindo mecânica, elétrica, estrutural, funilaria, câmbio, suspensão, motor, componentes ou ausência/substituição de peças. Mecânica sem teste. <br></p><p><strong>VEÍCULO RECUPERADO MÉDIA MONTA.</strong><br></p><p>O veículo é vendido conforme fotos e informações disponibilizadas no lote, podendo apresentar avarias decorrentes de sinistro, incluindo, mas não se limitando a, danos estruturais, suspensão, funilaria, pintura, componentes internos e externos, ausência de peças, peças faltantes ou substituídas, componentes não originais, airbags acionados ou ausentes, falhas elétricas, eletrônicas e mecânicas, bem como outras condições decorrentes do histórico de utilização, colisão, reparação ou recuperação do bem. <br></p><p>O arrematante declara estar ciente de que o veículo não foi submetido a revisão, perícia mecânica ou avaliação técnica pelo comitente vendedor ou pelo leiloeiro, assumindo os riscos relacionados à necessidade de reparos, substituições, complementações, regularizações ou adequações eventualmente necessárias para utilização, transferência, licenciamento ou circulação do veículo.<br></p><p>As fotos disponibilizadas são reais e possuem caráter exclusivamente informativo, podendo não demonstrar integralmente todas as condições, avarias, reparos, componentes ou características do veículo. Recomenda-se a visitação prévia para análise do bem antes da realização do lance.<br></p><p>Visitação/Retirada: Av. Eng. Eusébio Stevaux, 1892 - Jurubatuba, São Paulo/SP, CEP 04696-000.</p><p>Informações Gerais</p><p>- Fotos reais dos produtos;</p><p>- 5% referente à comissão do leiloeiro, acrescido ao valor da arrematação;</p><p>- Despesas administrativas (Organização e Depósito) conforme abaixo:</p><p>a) Logística: R$ 100,00 por lote;</p><p>b) Motocicletas: R$ 650,00/unidade;</p><p>c) Veículos de passeio: R$ 1.550,00/unidade;</p><p>d) Pick-ups, caminhões, ônibus, semi-reboques, vans e similares: R$ 1.850,00/unidade;</p><p>e) Barcos, Lanchas, Jet Ski e similares: R$ 1.850,00/unidade.</p><p><span style=\"color: rgb(0, 0, 0);\">O arrematante declara estar ciente da Portaria DETRAN/SP nº 1218 de 25/07/2014, bem como das condições gerais de venda aplicáveis a veículos sinistrados e/ou recuperados.</span></p><p><span style=\"color: rgb(0, 0, 0);\">Eventuais regularizações, reparos, substituições, adequações ou procedimentos necessários para transferência, licenciamento, emplacamento padrão Mercosul, inspeção ambiental, Inmetro, recall, CSV, divergências de numeração (motor, câmbio, chassi), etiquetas, vidros, selos, identificação ou qualquer outro item solicitado pelos órgãos competentes serão de responsabilidade exclusiva do arrematante.</span></p><p><span style=\"color: rgb(0, 0, 0);\"><strong>Débitos anteriores ao leilão, até o limite de R$ 500,00, serão de responsabilidade do comprador; valores superiores serão assumidos pelo comitente vendedor.</strong></span></p><p><span style=\"color: rgb(0, 0, 0);\">Caso qualquer restrição administrativa ou judicial seja inserida após a data do leilão, não poderá ser atribuída ao comitente vendedor, considerando que o veículo estava regular no momento da disponibilização para venda.</span></p><p><span style=\"color: rgb(0, 0, 0);\"><strong>Seguro, licenciamento, IPVA e DPVAT 2026, caso não pagos, serão de responsabilidade do arrematante. Também serão de responsabilidade exclusiva do arrematante todos os custos, taxas, despesas e procedimentos necessários para a transferência de propriedade do veículo, regularização perante os órgãos competentes, emissão de documentos, vistoria, emplacamento e demais providências necessárias à utilização do bem.&nbsp;</strong></span></p><p><span style=\"color: rgb(0, 0, 0);\"><strong>A documentação será entregue em até 60 dias corridos</strong>, contados após a retirada do bem arrematado e entrega dos documentos necessários pelo arrematante.<br><br><strong>A documentação do veículo será disponibilizada pelo comitente vendedor devidamente assinada e com reconhecimento de firma realizado em cartório, conforme os procedimentos necessários para transferência do veículo. Após o recebimento da documentação pela IDEAL LEILÕES, o arrematante poderá optar por uma das seguintes modalidades para recebimento:</strong></span></p><ul><li><p><span style=\"color: rgb(0, 0, 0);\"><strong>Envio para endereço localizado no Estado de São Paulo:</strong> será cobrado o valor de R$ 75,00 referente aos custos de envio e procedimentos administrativos;</span></p></li><li><p><span style=\"color: rgb(0, 0, 0);\"><strong>Envio para demais Estados:</strong> será cobrado o valor de R$ 110,00 referente aos custos de envio e procedimentos administrativos;</span></p></li><li><p><span style=\"color: rgb(0, 0, 0);\"><strong>Retirada presencial no pátio:</strong> o arrematante poderá retirar a documentação diretamente no pátio indicado, sem cobrança de taxa de envio.</span></p></li></ul><p><span style=\"color: rgb(0, 0, 0);\">A concretização da arrematação, mediante emissão da Nota de Venda, será realizada somente em nome da mesma pessoa que efetuou o lance no leilão.</span></p><p><span style=\"color: rgb(0, 0, 0);\">A realização da visitação prévia é recomendada, sendo de responsabilidade do interessado verificar as condições do veículo antes da realização do lance.</span></p><p><br></p> Repasse veículos de leilão 09/10/26"
+   },
+   "groupOffer": {
+    "acceptProposal": false,
+    "id": 363119
+   },
+   "product": {
+    "productId": 3704629,
+    "shortDesc": "Honda CR-V LX 2.0 2011",
+    "galleryJson": [
+     {
+      "originalFileName": "ENC_dLct3mT_p7vzRDib2V6oPylIdyVBG6_IhNNjURb8B4nsAM0MH55S5nRrLRugqSfD.jpeg",
+      "highlight": true,
+      "fileName": "7eb65691-52dd-4613-802b-015896dd84df.jpg",
+      "link": "https://ms.sbwebservices.net/photos/7eb65691-52dd-4613-802b-015896dd84df.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/7eb65691-52dd-4613-802b-015896dd84df.jpg"
+     },
+     {
+      "originalFileName": "ENC_dLct3mT_p7vzRDib2V6oPylIdyVBG6_IhNNjURb8B4nwO3jNCYrv2fq64ir0_KTQ.jpeg",
+      "highlight": false,
+      "fileName": "26388782-b310-419b-9fe7-131f0e1e88a7.jpg",
+      "link": "https://ms.sbwebservices.net/photos/26388782-b310-419b-9fe7-131f0e1e88a7.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/26388782-b310-419b-9fe7-131f0e1e88a7.jpg"
+     },
+     {
+      "originalFileName": "ENC_dLct3mT_p7vzRDib2V6oPylIdyVBG6_IhNNjURb8B4m3e1j62BDSNK-rMTFrVl6N.jpeg",
+      "highlight": false,
+      "fileName": "3c81c396-54ec-48f7-8b19-c78aeb2e8685.jpg",
+      "link": "https://ms.sbwebservices.net/photos/3c81c396-54ec-48f7-8b19-c78aeb2e8685.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/3c81c396-54ec-48f7-8b19-c78aeb2e8685.jpg"
+     }
+    ],
+    "photoCount": 12,
+    "galleryVideoJson": [
+     {
+      "originalFileName": "https://www.youtube.com/watch?v=3Fd2nKLE_v8",
+      "highlight": false,
+      "fileName": "https://www.youtube.com/watch?v=3Fd2nKLE_v8",
+      "link": "https://www.youtube.com/watch?v=3Fd2nKLE_v8",
+      "type": "video_url",
+      "contentType": "video/youtube",
+      "thumbnailUrl": "https://img.youtube.com/vi/3Fd2nKLE_v8/0.jpg"
+     }
+    ],
+    "videoUrlCount": 1,
+    "thumbnailUrl": "https://ms.sbwebservices.net/photos/7eb65691-52dd-4613-802b-015896dd84df.jpg",
+    "detailedDescription": "<p><strong>IPVA 2026 PAGO</strong><br></p><p>O bem é vendido no estado em que se encontra, sem garantia de qualquer natureza, incluindo mecânica, elétrica, estrutural, funilaria, câmbio, suspensão, motor, componentes ou ausência/substituição de peças. Mecânica sem teste. <br></p><p><strong>VEÍCULO RECUPERADO MÉDIA MONTA.</strong><br></p><p>O veículo é vendido conforme fotos e informações disponibilizadas no lote, podendo apresentar avarias decorrentes de sinistro, incluindo, mas não se limitando a, danos estruturais, suspensão, funilaria, pintura, componentes internos e externos, ausência de peças, peças faltantes ou substituídas, componentes não originais, airbags acionados ou ausentes, falhas elétricas, eletrônicas e mecânicas, bem como outras condições decorrentes do histórico de utilização, colisão, reparação ou recuperação do bem. <br></p><p>O arrematante declara estar ciente de que o veículo não foi submetido a revisão, perícia mecânica ou avaliação técnica pelo comitente vendedor ou pelo leiloeiro, assumindo os riscos relacionados à necessidade de reparos, substituições, complementações, regularizações ou adequações eventualmente necessárias para utilização, transferência, licenciamento ou circulação do veículo.<br></p><p>As fotos disponibilizadas são reais e possuem caráter exclusivamente informativo, podendo não demonstrar integralmente todas as condições, avarias, reparos, componentes ou características do veículo. Recomenda-se a visitação prévia para análise do bem antes da realização do lance.<br></p><p>Visitação/Retirada: Av. Eng. Eusébio Stevaux, 1892 - Jurubatuba, São Paulo/SP, CEP 04696-000.</p><p>Informações Gerais</p><p>- Fotos reais dos produtos;</p><p>- 5% referente à comissão do leiloeiro, acrescido ao valor da arrematação;</p><p>- Despesas administrativas (Organização e Depósito) conforme abaixo:</p><p>a) Logística: R$ 100,00 por lote;</p><p>b) Motocicletas: R$ 650,00/unidade;</p><p>c) Veículos de passeio: R$ 1.550,00/unidade;</p><p>d) Pick-ups, caminhões, ônibus, semi-reboques, vans e similares: R$ 1.850,00/unidade;</p><p>e) Barcos, Lanchas, Jet Ski e similares: R$ 1.850,00/unidade.</p><p><span style=\"color: rgb(0, 0, 0);\">O arrematante declara estar ciente da Portaria DETRAN/SP nº 1218 de 25/07/2014, bem como das condições gerais de venda aplicáveis a veículos sinistrados e/ou recuperados.</span></p><p><span style=\"color: rgb(0, 0, 0);\">Eventuais regularizações, reparos, substituições, adequações ou procedimentos necessários para transferência, licenciamento, emplacamento padrão Mercosul, inspeção ambiental, Inmetro, recall, CSV, divergências de numeração (motor, câmbio, chassi), etiquetas, vidros, selos, identificação ou qualquer outro item solicitado pelos órgãos competentes serão de responsabilidade exclusiva do arrematante.</span></p><p><span style=\"color: rgb(0, 0, 0);\"><strong>Débitos anteriores ao leilão, até o limite de R$ 500,00, serão de responsabilidade do comprador; valores superiores serão assumidos pelo comitente vendedor.</strong></span></p><p><span style=\"color: rgb(0, 0, 0);\">Caso qualquer restrição administrativa ou judicial seja inserida após a data do leilão, não poderá ser atribuída ao comitente vendedor, considerando que o veículo estava regular no momento da disponibilização para venda.</span></p><p><span style=\"color: rgb(0, 0, 0);\"><strong>Seguro, licenciamento, IPVA e DPVAT 2026, caso não pagos, serão de responsabilidade do arrematante. Também serão de responsabilidade exclusiva do arrematante todos os custos, taxas, despesas e procedimentos necessários para a transferência de propriedade do veículo, regularização perante os órgãos competentes, emissão de documentos, vistoria, emplacamento e demais providências necessárias à utilização do bem.&nbsp;</strong></span></p><p><span style=\"color: rgb(0, 0, 0);\"><strong>A documentação será entregue em até 60 dias corridos</strong>, contados após a retirada do bem arrematado e entrega dos documentos necessários pelo arrematante.<br><br><strong>A documentação do veículo será disponibilizada pelo comitente vendedor devidamente assinada e com reconhecimento de firma realizado em cartório, conforme os procedimentos necessários para transferência do veículo. Após o recebimento da documentação pela IDEAL LEILÕES, o arrematante poderá optar por uma das seguintes modalidades para recebimento:</strong></span></p><ul><li><p><span style=\"color: rgb(0, 0, 0);\"><strong>Envio para endereço localizado no Estado de São Paulo:</strong> será cobrado o valor de R$ 75,00 referente aos custos de envio e procedimentos administrativos;</span></p></li><li><p><span style=\"color: rgb(0, 0, 0);\"><strong>Envio para demais Estados:</strong> será cobrado o valor de R$ 110,00 referente aos custos de envio e procedimentos administrativos;</span></p></li><li><p><span style=\"color: rgb(0, 0, 0);\"><strong>Retirada presencial no pátio:</strong> o arrematante poderá retirar a documentação diretamente no pátio indicado, sem cobrança de taxa de envio.</span></p></li></ul><p><span style=\"color: rgb(0, 0, 0);\">A concretização da arrematação, mediante emissão da Nota de Venda, será realizada somente em nome da mesma pessoa que efetuou o lance no leilão.</span></p><p><span style=\"color: rgb(0, 0, 0);\">A realização da visitação prévia é recomendada, sendo de responsabilidade do interessado verificar as condições do veículo antes da realização do lance.</span></p><p><br></p>",
+    "subCategory": {
+     "id": 10007,
+     "description": "SUV",
+     "evidence": "F",
+     "subGrupo": 0,
+     "grupo": 0,
+     "position": 7,
+     "category": {
+      "id": 10000,
+      "description": "Carros",
+      "evidence": "F",
+      "subGrupo": 0,
+      "grupo": 0,
+      "position": 1
+     }
+    },
+    "model": {},
+    "brand": {},
+    "location": {
+     "displayOnMap": false,
+     "city": "São Paulo - SP",
+     "state": "São Paulo",
+     "country": "Brasil",
+     "locationGeo": {
+      "lat": -23.555771,
+      "lon": -46.639557
+     }
+    },
+    "productType": {
+     "id": 10,
+     "description": "Carros & Motos",
+     "showBrand": true,
+     "showModel": true
+    },
+    "judicial": {}
+   },
+   "seller": {
+    "id": 2470143,
+    "name": "IDEAL CAR LEILOES LTDA",
+    "city": "São Paulo",
+    "phone": [],
+    "company": [
+     {
+      "fantasyName": "IDEAL LEILOES"
+     }
+    ]
+   },
+   "systemMetric": "un",
+   "commercialCondition": {
+    "auctioneerCommissionPercent": null,
+    "minAdvanceRate": 0,
+    "maxInstallments": 0,
+    "allowsCreditCard": false,
+    "scheduleType": null,
+    "allowCreditCardCommission": false,
+    "allowCreditCardTotalValue": false,
+    "transactionLimit": null
+   },
+   "installmentPaymentTerms": {},
+   "isFavorite": false,
+   "isShopping": false,
+   "shoppingOfferType": false
+  }
+ ],
+ "favoritedOffers": null,
+ "placeData": null
+}

@@ -1,0 +1,255 @@
+{
+ "total": 1,
+ "start": 0,
+ "limit": 0,
+ "seoTitle": null,
+ "seoProductTypeId": null,
+ "seoBreadcrumb": null,
+ "seoLinksByCity": null,
+ "statsFields": null,
+ "facetFields": null,
+ "query": {
+  "portalId": "[2,15]",
+  "locale": "pt_BR",
+  "timeZoneId": "America/Sao_Paulo"
+ },
+ "offers": [
+  {
+   "id": 5054700,
+   "indexationDate": "2026-10-10 18:45:14",
+   "lotNumber": 15,
+   "quantityInLot": 1,
+   "quantitySold": 0,
+   "quantityReserved": 0,
+   "totalReceivedProposals": 0,
+   "hasReceivedProposals": false,
+   "visits": 262,
+   "totalBidders": 5,
+   "totalBids": 8,
+   "totalReceivedBidsOrProposals": 8,
+   "hasBids": true,
+   "hasReceivedBidsOrProposals": true,
+   "endDate": "2026-10-15 11:05:30",
+   "endDateTime": 1792073130000,
+   "offerTypeId": 1,
+   "createAt": "2026-10-09 17:43:57",
+   "updateAt": "2026-10-10 18:07:56",
+   "publishedAt": "2026-10-09 17:44:05",
+   "statusId": 1,
+   "price": 72000,
+   "priceFormatted": "R$ 72.000,00",
+   "offerStatus": {
+    "statusCode": 1,
+    "removed": false,
+    "stabbed": false,
+    "subjudice": false,
+    "closed": false,
+    "giveYourBid": true,
+    "makeYourProposal": false,
+    "wantToKnowThePrice": false,
+    "closedToBids": false,
+    "sold": false,
+    "reserved": false,
+    "available": false
+   },
+   "store": {
+    "id": 1161,
+    "name": "SOLD",
+    "highlight": true,
+    "storeVisibleOnPortal": true,
+    "logoUri": "https://s.superbid.net/image/6a/67/6a670d93-0619-4cf2-9418-777f52aa84f5.png"
+   },
+   "stores": [
+    {
+     "id": 1161,
+     "name": "SOLD",
+     "highlight": true,
+     "storeVisibleOnPortal": true,
+     "logoUri": "https://s.superbid.net/image/6a/67/6a670d93-0619-4cf2-9418-777f52aa84f5.png"
+    }
+   ],
+   "offerDetail": {
+    "id": 5054700,
+    "initialBidValue": 65000,
+    "initialBidValueFormatted": "R$ 65.000,00",
+    "currentMinBid": 72000,
+    "currentMinBidFormatted": "R$ 72.000,00",
+    "currentMaxBid": 72000,
+    "currentMaxBidFormatted": "R$ 72.000,00",
+    "reservedPrice": 126892.8,
+    "reservedPriceFormatted": "R$ 126.892,80"
+   },
+   "manager": {
+    "id": 9,
+    "name": "Sold Maisativo"
+   },
+   "currentTimestamp": "2026-10-10 18:45:58",
+   "auction": {
+    "id": 797580,
+    "desc": "Motiva CCR",
+    "slugDesc": null,
+    "localeId": "pt_BR",
+    "currencyIso": "BRL",
+    "statusId": 1,
+    "permissionTypeId": 1,
+    "portalId": 2,
+    "modalityId": 1,
+    "modalityDesc": "Leilão",
+    "businessAreaId": 1,
+    "allOffersOfThisAuctionIsClosed": false,
+    "beginDate": "2026-10-07 18:30:00",
+    "endDate": "2026-10-15 11:00:00",
+    "maxEnddateOffer": "2026-10-15 11:11:00",
+    "subMarketplaces": [
+     {
+      "subMarketplaceId": 1,
+      "subMarketplaceDesc": "Corporativo"
+     }
+    ],
+    "judicialPraca": null,
+    "judicialPracaDescription": "Praça Única",
+    "judicialControlNumber": null,
+    "auctioneer": "Renato Schlobach Moyses",
+    "registry": "654",
+    "address": {
+     "id": 27029,
+     "streetType": "Alameda",
+     "street": "Alameda Lorena",
+     "number": "800",
+     "complement": "2º andar",
+     "district": "Jardins",
+     "city": "São Paulo",
+     "stateCode": "SP",
+     "countryName": "Brasil",
+     "regionName": "Sudeste",
+     "type": 5
+    },
+    "crier": false,
+    "eventPipeline": null,
+    "lotAuctionTypeId": 1,
+    "isAfterMarket": null,
+    "internalParameters": {
+     "highlightUrlLink": null,
+     "hasAdvisorIntermediation": false
+    }
+   },
+   "winnerBid": {
+    "currentWinner": 0,
+    "currentWinnerLogin": "[removido]"
+   },
+   "currentBidIncrement": {
+    "currentBidIncrement": 1000,
+    "currentBidIncrementFormatted": "R$ 1.000,00"
+   },
+   "offerDescription": {
+    "offerDescription": "HONDA HR-V EX HS, 2024/2025, Placa FINAL 3 (SP), CH.:  <br>Marca: HONDA<br>Modelo: HR-V EX HS<br>Ano Fab/Modelo: 2024/2025<br>Placa FINAL 3 (SP)<br>Quilometragem acima de: 18624<br>Cor: PRETA<br>Combustível: ALCOOL/GASOLINA<br>Chassi: <br><br>Condições Gerais<br><br>Motor: Não testado<br><br>Observações: <br><br>Funcionamento Geral: Perfeito funcionamento<br>Documentação & Chave: CRLV presente e documentação regularizada para transferência<br>Possui chave reserva<br>Chassi / Mecânica: Motor e câmbio originais (não substituídos)<br>Componentes Retirados: TAG e cartão de abastecimento foram retirados<br>Rastreador e GNV não/não aplicável<br>Estado Geral (Inspeção Visual): Tapeçaria, retrovisores, lataria, vidros e pneus em bom estado (OK)<br>Ferramental: Estepe, macaco, chave de roda e triângulo presentes (OK)<br>Danos / Reparos: O relatório aponta \"Veículo em perfeito estado\", sem necessidade de reparos   <br><br><br><br>Será de responsabilidade do comprador o pagamento dos débitos de eventuais multas de trânsito, licenciamento, DPVAT <br> (seguro obrigatório) e IPVA relativos ao(s) veículo(s) vendido(s) ainda que anteriores à data do evento.<br><br>Débitos em aberto:   R$00,00 <b>Sujeito a alterações de acordo com os cadastros dos órgãos públicos até a data da transferência do veículo<br> 202602698 Motiva CCR"
+   },
+   "groupOffer": {
+    "acceptProposal": true,
+    "commissionPercent": 5,
+    "id": 363456
+   },
+   "product": {
+    "productId": 3839043,
+    "shortDesc": "HONDA HR-V EX HS, 2024/2025, Placa FINAL 3 (SP),",
+    "galleryJson": [
+     {
+      "originalFileName": "ENC_Rzg8vzxXwFmz7wDmqM3SRw.jpg",
+      "highlight": false,
+      "fileName": "04fa93d3-28f8-4d7f-a307-bf4c53f4ba73.jpg",
+      "link": "https://ms.sbwebservices.net/photos/04fa93d3-28f8-4d7f-a307-bf4c53f4ba73.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/04fa93d3-28f8-4d7f-a307-bf4c53f4ba73.jpg"
+     },
+     {
+      "originalFileName": "ENC_YVsiY2QnDlUdiDeL41MTjg.jpg",
+      "highlight": false,
+      "fileName": "1146b420-9990-4572-84ae-b99f35b3de1e.jpg",
+      "link": "https://ms.sbwebservices.net/photos/1146b420-9990-4572-84ae-b99f35b3de1e.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/1146b420-9990-4572-84ae-b99f35b3de1e.jpg"
+     },
+     {
+      "originalFileName": "ENC_R-4-iSH4DOevbjH2-ZBzkg.jpg",
+      "highlight": false,
+      "fileName": "94024256-e589-42a2-b0fc-09a1e830d5bf.jpg",
+      "link": "https://ms.sbwebservices.net/photos/94024256-e589-42a2-b0fc-09a1e830d5bf.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/94024256-e589-42a2-b0fc-09a1e830d5bf.jpg"
+     }
+    ],
+    "photoCount": 11,
+    "videoUrlCount": 0,
+    "thumbnailUrl": "https://ms.sbwebservices.net/photos/04fa93d3-28f8-4d7f-a307-bf4c53f4ba73.jpg",
+    "detailedDescription": "<br>Marca: HONDA<br>Modelo: HR-V EX HS<br>Ano Fab/Modelo: 2024/2025<br>Placa FINAL 3 (SP)<br>Quilometragem acima de: 18624<br>Cor: PRETA<br>Combustível: ALCOOL/GASOLINA<br>Chassi: <br><br>Condições Gerais<br><br>Motor: Não testado<br><br>Observações: <br><br>Funcionamento Geral: Perfeito funcionamento<br>Documentação & Chave: CRLV presente e documentação regularizada para transferência<br>Possui chave reserva<br>Chassi / Mecânica: Motor e câmbio originais (não substituídos)<br>Componentes Retirados: TAG e cartão de abastecimento foram retirados<br>Rastreador e GNV não/não aplicável<br>Estado Geral (Inspeção Visual): Tapeçaria, retrovisores, lataria, vidros e pneus em bom estado (OK)<br>Ferramental: Estepe, macaco, chave de roda e triângulo presentes (OK)<br>Danos / Reparos: O relatório aponta \"Veículo em perfeito estado\", sem necessidade de reparos   <br><br><br><br>Será de responsabilidade do comprador o pagamento dos débitos de eventuais multas de trânsito, licenciamento, DPVAT <br> (seguro obrigatório) e IPVA relativos ao(s) veículo(s) vendido(s) ainda que anteriores à data do evento.<br><br>Débitos em aberto:   R$00,00 <b>Sujeito a alterações de acordo com os cadastros dos órgãos públicos até a data da transferência do veículo<br>",
+    "subCategory": {
+     "id": 10007,
+     "description": "SUV",
+     "evidence": "F",
+     "subGrupo": 0,
+     "grupo": 0,
+     "position": 7,
+     "category": {
+      "id": 10000,
+      "description": "Carros",
+      "evidence": "F",
+      "subGrupo": 0,
+      "grupo": 0,
+      "position": 1
+     }
+    },
+    "model": {},
+    "brand": {},
+    "productYourRef": "202602698",
+    "location": {
+     "displayOnMap": false,
+     "city": "Jundiaí - SP",
+     "state": "São Paulo",
+     "country": "Brasil",
+     "locationGeo": {
+      "lat": -23.185653,
+      "lon": -46.889222
+     }
+    },
+    "productType": {
+     "id": 10,
+     "description": "Carros & Motos",
+     "showBrand": true,
+     "showModel": true
+    },
+    "judicial": {}
+   },
+   "seller": {
+    "id": 1120596,
+    "name": "MOTIVA INFRAESTRUTURA DE MOBILIDADE S.A.",
+    "city": "São Paulo",
+    "phone": [],
+    "company": [
+     {
+      "fantasyName": "MOTIVA INFRAESTRUTURA DE MOBILIDADE S.A."
+     }
+    ]
+   },
+   "systemMetric": "un",
+   "commercialCondition": {
+    "auctioneerCommissionPercent": null,
+    "minAdvanceRate": null,
+    "maxInstallments": null,
+    "allowsCreditCard": true,
+    "scheduleType": "AFTER_PAYMENT",
+    "allowCreditCardCommission": false,
+    "allowCreditCardTotalValue": true,
+    "transactionLimit": 120000
+   },
+   "installmentPaymentTerms": {},
+   "isFavorite": false,
+   "isShopping": false,
+   "shoppingOfferType": false
+  }
+ ],
+ "favoritedOffers": null,
+ "placeData": null
+}

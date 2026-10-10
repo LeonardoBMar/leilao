@@ -1,0 +1,282 @@
+{
+ "total": 1,
+ "start": 0,
+ "limit": 0,
+ "seoTitle": null,
+ "seoProductTypeId": null,
+ "seoBreadcrumb": null,
+ "seoLinksByCity": null,
+ "statsFields": null,
+ "facetFields": null,
+ "query": {
+  "portalId": "[2,15]",
+  "locale": "pt_BR",
+  "timeZoneId": "America/Sao_Paulo"
+ },
+ "offers": [
+  {
+   "id": 5045979,
+   "indexationDate": "2026-10-10 18:12:58",
+   "lotNumber": 1,
+   "quantityInLot": 1,
+   "quantitySold": 0,
+   "quantityReserved": 0,
+   "totalReceivedProposals": 0,
+   "hasReceivedProposals": false,
+   "visits": 1327,
+   "totalBidders": 3,
+   "totalBids": 22,
+   "totalReceivedBidsOrProposals": 22,
+   "hasBids": true,
+   "hasReceivedBidsOrProposals": true,
+   "hidePrices": true,
+   "endDate": "2026-10-09 14:34:01",
+   "endDateTime": 1791567241000,
+   "offerTypeId": 1,
+   "createAt": "2026-10-05 15:25:40",
+   "updateAt": "2026-10-09 15:28:21",
+   "publishedAt": "2026-10-05 16:56:32",
+   "statusId": 11,
+   "price": 307500,
+   "priceFormatted": "R$ 307.500,00",
+   "offerStatus": {
+    "statusCode": 11,
+    "removed": false,
+    "stabbed": false,
+    "subjudice": false,
+    "wantToKnowThePrice": true,
+    "makeYourProposal": false,
+    "closedToBids": false,
+    "sold": false,
+    "reserved": false,
+    "giveYourBid": false,
+    "available": false,
+    "closed": false
+   },
+   "store": {
+    "id": 40,
+    "name": "Banco Mercedes - Benz",
+    "highlight": true,
+    "storeVisibleOnPortal": true,
+    "position": 15,
+    "logoUri": "https://static.s4bdigital.net/logos_empresas/new_logo_bancomercedes.png"
+   },
+   "stores": [
+    {
+     "id": 40,
+     "name": "Banco Mercedes - Benz",
+     "highlight": true,
+     "storeVisibleOnPortal": true,
+     "position": 15,
+     "logoUri": "https://static.s4bdigital.net/logos_empresas/new_logo_bancomercedes.png"
+    },
+    {
+     "id": 1161,
+     "name": "SOLD",
+     "highlight": true,
+     "storeVisibleOnPortal": true,
+     "logoUri": "https://s.superbid.net/image/6a/67/6a670d93-0619-4cf2-9418-777f52aa84f5.png"
+    }
+   ],
+   "offerDetail": {
+    "id": 5045979,
+    "initialBidValue": 255000,
+    "initialBidValueFormatted": "R$ 255.000,00",
+    "currentMinBid": 307500,
+    "currentMinBidFormatted": "R$ 307.500,00",
+    "currentMaxBid": 307500,
+    "currentMaxBidFormatted": "R$ 307.500,00",
+    "releaseValue": 0,
+    "releaseValueFormatted": "R$ 0,00",
+    "reservedPrice": 999999999999.99,
+    "reservedPriceFormatted": "R$ 999.999.999.999,99"
+   },
+   "manager": {
+    "id": 9,
+    "name": "Sold Maisativo"
+   },
+   "currentTimestamp": "2026-10-10 18:46:13",
+   "auction": {
+    "id": 797457,
+    "desc": "Banco Mercedes-Benz",
+    "slugDesc": null,
+    "localeId": "pt_BR",
+    "currencyIso": "BRL",
+    "statusId": 13,
+    "permissionTypeId": 1,
+    "portalId": 2,
+    "modalityId": 1,
+    "modalityDesc": "Leilão",
+    "businessAreaId": 1,
+    "allOffersOfThisAuctionIsClosed": true,
+    "beginDate": "2026-10-05 15:20:00",
+    "endDate": "2026-10-09 14:30:00",
+    "maxEnddateOffer": "2026-10-09 14:41:52",
+    "subMarketplaces": [
+     {
+      "subMarketplaceId": 1,
+      "subMarketplaceDesc": "Corporativo"
+     }
+    ],
+    "judicialPraca": null,
+    "judicialPracaDescription": "Praça Única",
+    "judicialControlNumber": null,
+    "auctioneer": "Renato Schlobach Moyses",
+    "registry": "654",
+    "address": {
+     "id": 27029,
+     "streetType": "Alameda",
+     "street": "Alameda Lorena",
+     "number": "800",
+     "complement": "2º andar",
+     "district": "Jardins",
+     "city": "São Paulo",
+     "stateCode": "SP",
+     "countryName": "Brasil",
+     "regionName": "Nordeste",
+     "type": 5
+    },
+    "crier": false,
+    "eventPipeline": null,
+    "lotAuctionTypeId": 1,
+    "isAfterMarket": null,
+    "internalParameters": {
+     "highlightUrlLink": null,
+     "hasAdvisorIntermediation": false
+    }
+   },
+   "winnerBid": {
+    "currentWinner": 0,
+    "currentWinnerLogin": "[removido]"
+   },
+   "currentBidIncrement": {
+    "currentBidIncrement": 2500,
+    "currentBidIncrementFormatted": "R$ 2.500,00"
+   },
+   "offerDescription": {
+    "offerDescription": "MERCEDES BENZ GLE450 D 4M 2023/2024, Placa FINAL 4, CH.:  (ID.: 51479) <p>Marca: M.BENZ</p><p>Modelo: GLE450 D 4M</p><p>Ano: 2024</p><p>Placa FINAL 4</p><p>Quilometragem acima de: 53422</p><p>Cor: Branca</p><p>Combustivel: Diesel</p><p>Chassi.: </p><p><br></p><p>Acessórios</p><p><br></p><p>N° de Portas: 5</p><p>Câmbio: Automático</p><p>Direção: Elétrica</p><p>Ar Condicionado: Sim</p><p>Vidros: Elétricos</p><p>Rodas: Liga Leve</p><p>Bancos: Couro</p><p>Aparelho de Som: Sim</p><p><br></p><p>Condições Gerais</p><p>Motor: Funcionando</p><p>Pintura: Regular</p><p>Lataria: Bom</p><p>Tapeçaria: Regular</p><p>Pneus: Regulares</p><p><br></p><p>Observações</p><p><br></p><p>Chave Principal: Sim</p><p>Chave Reserva: Não</p><p>Manual: Não</p><p><br></p><p>Comando no Volante: Sim</p><p>Câmera de Ré: Sim</p><p>Banco Elétrico do motorista: Sim</p><p>Retrovisores elétricos: Sim</p><p>Air Bag: Sim</p><p>ABS: Sim</p><p>Tração 4X4: Sim</p><p>7 Lugares: Sim</p><p>Protetor de Caçamba: Não</p><p>Lona Marítima: Não</p><p>Capô: Piques de pedra</p><p>Parachoque Dianteiro: Riscado</p><p>Paralama Dianteiro Direito: Riscado</p><p>Paralama Dianteiro Esquerdo: Ralado</p><p>Porta Dianteira Direita: Piques de pedra</p><p>Porta Traseira Direita: Piques de pedra</p><p>Porta Traseira Esquerda: Pintura descascando</p><p>Parachoque Traseiro: Riscado</p><p>Porta Dianteira Esquerda: Pintura descascando</p><p>Banco dianteiro esquerdo: Manchado</p><p>Banco traseiro: Rasgado</p><p>Lateral Traseira Direita: Piques de pedra</p><p>Lanterna Traseira Esquerda: Riscado</p><p>Roda dianteira direita: Riscada</p><p>Roda traseira direita: Riscada</p><p>Capô Traseiro: Piques de pedra</p><p>Roda traseira esquerda: Riscada</p><p></p><p>Multa de averbação, valor aproximado R$ 150,00, por conta do arrematante</p><p>A inspeção ambiental veicular se exigida para licenciamento ou transferência é de responsabilidade e encargos por conta do</p><p>comprador, de acordo com a portaria nº  208/2009 de 09 de fevereiro de 2009, caso incida sobre os veículos valores referêntes à</p><p>multa de averbação serão por conta do comprador</p><p></p><p>Será de responsabilidade do comprador o pagamento dos débitos de eventuais multas de trânsito, licenciamento, DPVAT</p><p>(seguro obrigatório) e IPVA relativos ao(s) veículo(s) vendido(s) ainda que anteriores à data do evento.</p><p>Débitos em aberto: R$00,00, sujeito a alterações de acordo com os cadastros dos órgãos públicos até a data da transferência do veículo.<br></p><p><br></p><p><br></p> 202602865 Banco Mercedes-Benz"
+   },
+   "groupOffer": {
+    "acceptProposal": true,
+    "commissionPercent": 5,
+    "id": 362809
+   },
+   "product": {
+    "productId": 3815919,
+    "shortDesc": "MERCEDES BENZ GLE450 D 4M 2023/2024, Placa FINAL 4,  (ID.: 51479)",
+    "galleryJson": [
+     {
+      "originalFileName": "ENC_7ZXjkO0pN-8u9pVpO5XOAQ.jpeg",
+      "highlight": false,
+      "fileName": "148d4a1a-f8ed-4e3a-b6d1-f394f2a7f564.jpg",
+      "link": "https://ms.sbwebservices.net/photos/148d4a1a-f8ed-4e3a-b6d1-f394f2a7f564.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/148d4a1a-f8ed-4e3a-b6d1-f394f2a7f564.jpg"
+     },
+     {
+      "originalFileName": "ENC_aG56Z5vQqjEglwuSk5uBaQ.jpeg",
+      "highlight": false,
+      "fileName": "4c9ca3ae-1e79-4649-8cea-31756770a61c.jpg",
+      "link": "https://ms.sbwebservices.net/photos/4c9ca3ae-1e79-4649-8cea-31756770a61c.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/4c9ca3ae-1e79-4649-8cea-31756770a61c.jpg"
+     },
+     {
+      "originalFileName": "ENC_bBU-QHt5_HqdH_WrImvfjw.jpeg",
+      "highlight": false,
+      "fileName": "a3639073-5ce9-4a76-bf4e-6e1938923823.jpg",
+      "link": "https://ms.sbwebservices.net/photos/a3639073-5ce9-4a76-bf4e-6e1938923823.jpg",
+      "type": "photo",
+      "contentType": "image/jpeg",
+      "thumbnailUrl": "https://ms.sbwebservices.net/photos/a3639073-5ce9-4a76-bf4e-6e1938923823.jpg"
+     }
+    ],
+    "photoCount": 22,
+    "videoUrlCount": 0,
+    "thumbnailUrl": "https://ms.sbwebservices.net/photos/ae5db0a6-4ff9-48ec-a5d6-066827be683d.jpg",
+    "detailedDescription": "<p>Marca: M.BENZ</p><p>Modelo: GLE450 D 4M</p><p>Ano: 2024</p><p>Placa FINAL 4</p><p>Quilometragem acima de: 53422</p><p>Cor: Branca</p><p>Combustivel: Diesel</p><p>Chassi.: </p><p><br></p><p>Acessórios</p><p><br></p><p>N° de Portas: 5</p><p>Câmbio: Automático</p><p>Direção: Elétrica</p><p>Ar Condicionado: Sim</p><p>Vidros: Elétricos</p><p>Rodas: Liga Leve</p><p>Bancos: Couro</p><p>Aparelho de Som: Sim</p><p><br></p><p>Condições Gerais</p><p>Motor: Funcionando</p><p>Pintura: Regular</p><p>Lataria: Bom</p><p>Tapeçaria: Regular</p><p>Pneus: Regulares</p><p><br></p><p>Observações</p><p><br></p><p>Chave Principal: Sim</p><p>Chave Reserva: Não</p><p>Manual: Não</p><p><br></p><p>Comando no Volante: Sim</p><p>Câmera de Ré: Sim</p><p>Banco Elétrico do motorista: Sim</p><p>Retrovisores elétricos: Sim</p><p>Air Bag: Sim</p><p>ABS: Sim</p><p>Tração 4X4: Sim</p><p>7 Lugares: Sim</p><p>Protetor de Caçamba: Não</p><p>Lona Marítima: Não</p><p>Capô: Piques de pedra</p><p>Parachoque Dianteiro: Riscado</p><p>Paralama Dianteiro Direito: Riscado</p><p>Paralama Dianteiro Esquerdo: Ralado</p><p>Porta Dianteira Direita: Piques de pedra</p><p>Porta Traseira Direita: Piques de pedra</p><p>Porta Traseira Esquerda: Pintura descascando</p><p>Parachoque Traseiro: Riscado</p><p>Porta Dianteira Esquerda: Pintura descascando</p><p>Banco dianteiro esquerdo: Manchado</p><p>Banco traseiro: Rasgado</p><p>Lateral Traseira Direita: Piques de pedra</p><p>Lanterna Traseira Esquerda: Riscado</p><p>Roda dianteira direita: Riscada</p><p>Roda traseira direita: Riscada</p><p>Capô Traseiro: Piques de pedra</p><p>Roda traseira esquerda: Riscada</p><p></p><p>Multa de averbação, valor aproximado R$ 150,00, por conta do arrematante</p><p>A inspeção ambiental veicular se exigida para licenciamento ou transferência é de responsabilidade e encargos por conta do</p><p>comprador, de acordo com a portaria nº  208/2009 de 09 de fevereiro de 2009, caso incida sobre os veículos valores referêntes à</p><p>multa de averbação serão por conta do comprador</p><p></p><p>Será de responsabilidade do comprador o pagamento dos débitos de eventuais multas de trânsito, licenciamento, DPVAT</p><p>(seguro obrigatório) e IPVA relativos ao(s) veículo(s) vendido(s) ainda que anteriores à data do evento.</p><p>Débitos em aberto: R$00,00, sujeito a alterações de acordo com os cadastros dos órgãos públicos até a data da transferência do veículo.<br></p><p><br></p><p><br></p>",
+    "subCategory": {
+     "id": 10009,
+     "description": "Utilitários & Furgões",
+     "evidence": "F",
+     "subGrupo": 0,
+     "grupo": 0,
+     "position": 9,
+     "category": {
+      "id": 10000,
+      "description": "Carros",
+      "evidence": "F",
+      "subGrupo": 0,
+      "grupo": 0,
+      "position": 1
+     }
+    },
+    "model": {},
+    "brand": {},
+    "productYourRef": "202602865",
+    "location": {
+     "displayOnMap": false,
+     "city": "Bayeux - PB",
+     "state": "Paraíba",
+     "country": "Brasil",
+     "locationGeo": {
+      "lat": -7.126165,
+      "lon": -34.929197
+     }
+    },
+    "productType": {
+     "id": 10,
+     "description": "Carros & Motos",
+     "showBrand": true,
+     "showModel": true
+    },
+    "judicial": {}
+   },
+   "seller": {
+    "id": 581929,
+    "name": "BANCO MERCEDES BENZ DO BRASIL SA",
+    "city": "São Bernardo do Campo",
+    "phone": [],
+    "company": [
+     {
+      "fantasyName": "BANCO MERCEDES BENZ "
+     }
+    ]
+   },
+   "systemMetric": "un",
+   "paymentItems": [
+    {
+     "paymentTypeId": 1,
+     "value": 360,
+     "mapDescriptionTranslator": {
+      "es_PE": "Estadia",
+      "es_AR": "Estadia",
+      "es_MX": "Estadia",
+      "es_CO": "Estadia",
+      "pt_BR": "Estadia",
+      "es_ES": "Estadia",
+      "es_CL": "Estadia"
+     }
+    }
+   ],
+   "commercialCondition": {
+    "auctioneerCommissionPercent": null,
+    "minAdvanceRate": null,
+    "maxInstallments": null,
+    "allowsCreditCard": false,
+    "scheduleType": null,
+    "allowCreditCardCommission": false,
+    "allowCreditCardTotalValue": false,
+    "transactionLimit": null
+   },
+   "installmentPaymentTerms": {},
+   "isFavorite": false,
+   "isShopping": false,
+   "shoppingOfferType": false
+  }
+ ],
+ "favoritedOffers": null,
+ "placeData": null
+}
