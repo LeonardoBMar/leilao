@@ -5,6 +5,7 @@ import { BrazilMap } from "@/components/charts/brazil-map";
 import { ChartDataTable } from "@/components/charts/chart-data-table";
 import { DistributionChart } from "@/components/charts/distribution-chart";
 import { MapLegend } from "@/components/charts/map-legend";
+import { RangeBars } from "@/components/charts/range-bars";
 import { LinkTabs, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui";
 import { effectiveMetric, type ResearchFilters, vehicleLabel } from "@/domain/research/filters";
 import { STATE_NAMES } from "@/domain/research/states";
@@ -14,7 +15,7 @@ import { formatBRL, formatDate, formatRatio } from "@/lib/format";
 import { formatMetric, METRIC_LABELS, salesLabel, summaryDetail } from "../labels";
 import { getStateDetail, getStateMap } from "../queries";
 import { researchHref } from "../search";
-import { stateMapRegions } from "../state-regions";
+import { stateMapRegions, stateRangeRows } from "../state-regions";
 import type { StateDetail } from "../types";
 import { ResearchBlock } from "./research-block";
 
@@ -33,6 +34,14 @@ export async function StateBlock({ filters, noSales }: { filters: ResearchFilter
       ? `Mediana do lance final${subject} em % do valor de mercado, por estado. Passe o mouse ou toque num estado para ver os números e clique nele para comparar com o Brasil.`
       : `Mediana do lance final${subject} em R$, por estado. Passe o mouse ou toque num estado para ver os números e clique nele para comparar com o Brasil.`;
   const withSales = map.states.filter(({ summary }) => summary.kind !== "none");
+  const list = stateRangeRows(map, filters);
+  const mapPanel = (
+    <>
+      <BrazilMap ariaLabel={`Mapa do Brasil: mediana ${METRIC_LABELS[map.metric]} por estado`} regions={regions} />
+      <MapLegend title={legendTitle} items={legend} />
+      <p className="text-caption text-muted-subtle">{BRAZIL_MAP_CREDIT}</p>
+    </>
+  );
 
   return (
     <ResearchBlock
@@ -57,13 +66,29 @@ export async function StateBlock({ filters, noSales }: { filters: ResearchFilter
       ) : (
         <>
           <div className="grid gap-8 lg:grid-cols-[minmax(0,32rem)_minmax(0,1fr)]">
-            <div className="grid w-full max-w-lg content-start gap-4">
-              <BrazilMap
-                ariaLabel={`Mapa do Brasil: mediana ${METRIC_LABELS[map.metric]} por estado`}
-                regions={regions}
-              />
-              <MapLegend title={legendTitle} items={legend} />
-              <p className="text-caption text-muted-subtle">{BRAZIL_MAP_CREDIT}</p>
+            {/* Mapa a partir de `md`; no celular, a lista de estados, com o mapa a um toque (siglas espremidas não se leem). */}
+            <div className="hidden w-full max-w-lg content-start gap-4 md:grid">{mapPanel}</div>
+            <div className="grid content-start gap-4 md:hidden">
+              <div className="grid gap-1">
+                <p className="text-caption text-muted">{legendTitle}</p>
+                <RangeBars
+                  ariaLabel={`Estados do menor para o maior valor: ${list.rows.map((row) => `${row.label} ${row.valueLabel}`).join(", ")}`}
+                  domain={list.domain}
+                  rows={list.rows}
+                />
+              </div>
+              {list.few.length > 0 ? (
+                <p className="text-label font-normal text-muted">
+                  Poucas vendas para uma mediana:{" "}
+                  {list.few.map(({ state, sales }) => `${STATE_NAMES[state]} (${sales})`).join(", ")}.
+                </p>
+              ) : null}
+              <details className="group">
+                <summary className="w-fit cursor-pointer text-label text-accent hover:text-accent-hover hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                  Ver o mapa
+                </summary>
+                <div className="mt-3 grid content-start gap-4">{mapPanel}</div>
+              </details>
             </div>
             <StateDetailPanel detail={detail} />
           </div>

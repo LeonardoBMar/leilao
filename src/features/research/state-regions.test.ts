@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_RESEARCH_FILTERS } from "@/domain/research/filters";
 import { buildStateSummaries } from "@/domain/research/states";
 
-import { stateMapRegions } from "./state-regions";
+import { stateMapRegions, stateRangeRows } from "./state-regions";
 
 const view = {
   metric: "ratio" as const,
@@ -59,5 +59,40 @@ describe("stateMapRegions", () => {
     expect(go?.value).toBe("38,9");
     expect(price.legendTitle).toBe("Mediana do lance final, em milhares de R$");
     expect(go?.ariaLabel.replace(/\s/g, " ")).toBe("Goiás: mediana R$ 38,9 mil de lance final, 15 vendas");
+  });
+});
+
+describe("stateRangeRows", () => {
+  const list = stateRangeRows(view, { ...DEFAULT_RESEARCH_FILTERS, state: "SP" });
+
+  it("ordena da menor para a maior mediana e escreve o valor de cada estado", () => {
+    expect(list.rows.map((row) => [row.key, row.valueLabel])).toEqual([
+      ["SP", "43%"],
+      ["GO", "56%"],
+    ]);
+  });
+
+  it("o link do estado escolhido volta ao Brasil e o dos outros escolhe a UF", () => {
+    expect(list.rows.map((row) => row.href)).toEqual(["/pesquisa", "/pesquisa?uf=GO"]);
+  });
+
+  it("estado com poucas vendas sai à parte, sem mediana", () => {
+    expect(list.few).toEqual([{ state: "MT", sales: 2 }]);
+  });
+
+  it("a escala comum vai de 0 até o fim do eixo do % do valor de mercado", () => {
+    expect(list.domain).toEqual([0, 1]);
+  });
+
+  it("em lance final, a escala acompanha a maior faixa e o valor é escrito em milhares", () => {
+    const price = stateRangeRows(
+      {
+        metric: "price",
+        states: buildStateSummaries({ SP: { n: 40, p25: 2_500_000, median: 3_890_000, p75: 5_000_000 } }),
+      },
+      { ...DEFAULT_RESEARCH_FILTERS, vehicle: { brand: "FIAT", model: "UNO" }, metric: "price" },
+    );
+    expect(price.rows[0]?.valueLabel).toBe("38,9");
+    expect(price.domain).toEqual([0, 5_000_000]);
   });
 });

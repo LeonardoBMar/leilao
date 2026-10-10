@@ -1,9 +1,10 @@
 import type { MapRegion } from "@/components/charts/brazil-map";
 import { toDataStep } from "@/components/charts/data-steps";
 import type { LegendItem } from "@/components/charts/map-legend";
+import type { RangeRow } from "@/components/charts/range-bars";
 import type { ResearchFilters } from "@/domain/research/filters";
-import { STATE_NAMES } from "@/domain/research/states";
-import { isSmallSample, MIN_SAMPLE, SMALL_SAMPLE } from "@/domain/research/summary";
+import { STATE_NAMES, type StateCode } from "@/domain/research/states";
+import { isSmallSample, MIN_SAMPLE, ratioAxisMax, SMALL_SAMPLE } from "@/domain/research/summary";
 import { sequentialScale } from "@/lib/charts";
 import { formatRatio } from "@/lib/format";
 
@@ -111,4 +112,45 @@ export function stateMapRegions(
   const legendTitle =
     view.metric === "ratio" ? "Mediana em % do valor de mercado" : "Mediana do lance final, em milhares de R$";
   return { regions, legend, legendTitle };
+}
+
+/** Estado com poucas vendas, que a lista cita sem mediana. */
+export type FewSalesState = { state: StateCode; sales: number };
+
+/**
+ * Os estados como lista (celular, no lugar do mapa): barras de faixa da menor para a maior mediana, na escala comum,
+ * com o link que escolhe a UF. Estados com poucas vendas ficam fora das barras e saem à parte.
+ */
+export function stateRangeRows(
+  view: StateMapView,
+  filters: ResearchFilters,
+): { rows: RangeRow[]; domain: readonly [number, number]; few: FewSalesState[] } {
+  const summaries = view.states.flatMap(({ state, summary }) =>
+    summary.kind === "summary" ? [{ state, summary }] : [],
+  );
+  const measure = view.metric === "ratio" ? "do valor de mercado" : "de lance final";
+  const rows = summaries
+    .toSorted((a, b) => a.summary.median - b.summary.median || b.summary.n - a.summary.n)
+    .map(({ state, summary }): RangeRow => {
+      const name = STATE_NAMES[state];
+      const selected = filters.state === state;
+      return {
+        key: state,
+        label: name,
+        low: summary.low,
+        median: summary.median,
+        high: summary.high,
+        valueLabel: mapValue(view.metric, summary.median),
+        detail: smallSampleLabel(summary.n),
+        faint: isSmallSample(summary.n),
+        href: researchHref({ ...filters, state: selected ? null : state }),
+        ariaLabel: `${name}: mediana ${formatMetric(view.metric, summary.median)} ${measure}, ${smallSampleLabel(summary.n)}`,
+      };
+    });
+  const highest = Math.max(0, ...rows.map((row) => row.high));
+  const domain = [0, view.metric === "ratio" ? ratioAxisMax(highest) : highest] as const;
+  const few = view.states.flatMap(({ state, summary }) =>
+    summary.kind === "few" ? [{ state, sales: summary.n }] : [],
+  );
+  return { rows, domain, few };
 }
