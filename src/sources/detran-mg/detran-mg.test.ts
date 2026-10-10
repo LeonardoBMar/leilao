@@ -151,7 +151,7 @@ describe("buildDetranListing", () => {
       externalId: "3599-325919",
       url: detranLotUrl("325919"),
       lotNumber: "2",
-      title: "HONDA/CG 125 FAN KS 2012",
+      title: "HONDA/CG 125 FAN KS",
       vehicle: { brand: "HONDA", model: "CG 125 FAN KS", modelYear: 2012, category: "Motos", fuel: "GASOLINA" },
       auction: { externalId: "3599", name: "Leilão 1875 - POCOS DE CALDAS" },
       location: { city: "POCOS DE CALDAS", state: "MG", yardName: "AUTO SOCORRO POCOS DE CALDAS LTDA" },
@@ -208,7 +208,10 @@ describe("splitDetranVehicle e categoryOfVehicle", () => {
     ["VW/SAVEIRO 1.6 CS", "VW", "SAVEIRO 1.6 CS", "Utilitarios"],
     ["VW/8.150 DELIVERY", "VW", "8.150 DELIVERY", "Pesados"],
     ["IROS/ONE 125", "IROS", "ONE 125", "Motos"],
+    ["I/HYOSUNG CRUISE 125", "HYOSUNG", "CRUISE 125", "Motos"],
+    ["I/HAFEI RUIYI PICKUP L", "HAFEI", "RUIYI PICKUP L", "Utilitarios"],
     ["ARTESANAL/REBOQUE", "ARTESANAL", "REBOQUE", null],
+    ["R/FEDERAL CA", "R", "FEDERAL CA", null],
   ])("%s → %s · %s · %s", (text, brand, model, category) => {
     expect(splitDetranVehicle(text)).toEqual({ brand, model });
     expect(categoryOfVehicle(brand, model)).toBe(category);

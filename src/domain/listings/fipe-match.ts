@@ -168,6 +168,9 @@ export function versionTokens(words: readonly string[]): string[] {
 function expandWord(word: string): string[] {
   if (/^\d\.\d$/.test(word) || /^\d{1,2}V$/.test(word)) return [word];
   if (/^(1000I?|MIL)$/.test(word)) return ["1.0"];
+  // Cilindrada colada nas válvulas: "1016V" é 1.0 16V, "148V" é 1.4 8V.
+  const withValves = /^(1\d|20)(8|12|16|20|24)V$/.exec(word);
+  if (withValves?.[1] && withValves[2]) return [displacement(withValves[1]), `${withValves[2]}V`];
   const bare = /^(1\d|20)$/.exec(word);
   if (bare?.[1]) return [displacement(bare[1])];
   const dotted = /^(\d\.\d)([A-Z]+)$/.exec(word);

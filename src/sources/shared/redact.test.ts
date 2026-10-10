@@ -18,4 +18,14 @@ describe("redactVehicleIds", () => {
       "I/BYD DOLPHIN MINI GS EV, 24/25, PLACA: E__-___2, ELETR/FONTE EXT, PRETA - R$ 2.350,00 - IVECO 30S13CS";
     expect(redactVehicleIds(text)).toBe(text);
   });
+
+  it("modelo com três letras e quatro números não é placa: I/RAM 2500", () => {
+    const text = "I/RAM 2500 LARAMIE, 20/21, DIESEL, PLACA: F__-___7, PRATA";
+    expect(redactVehicleIds(text)).toBe(text);
+  });
+
+  it("placa com espaço só some depois do rótulo", () => {
+    expect(redactVehicleIds("VW/GOL, placa CED 8398, branco")).toBe("VW/GOL, placa [removido], branco");
+    expect(redactVehicleIds("Placa nº: BRA 2E19")).toBe("Placa nº: [removido]");
+  });
 });

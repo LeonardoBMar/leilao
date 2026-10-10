@@ -244,7 +244,7 @@ export function buildDetranListing(raw: DetranRaw, now: Date): ListingInput {
     externalId: detranExternalId(auction.id, lotId),
     url: detranLotUrl(lotId),
     lotNumber: card?.lotNumber ?? null,
-    title: titleOf(vehicleText, modelYear, card?.lotNumber ?? null),
+    title: titleOf(vehicleText, card?.lotNumber ?? null),
     vehicle: {
       brand,
       model,
@@ -307,9 +307,9 @@ function conditionOf(text: string | null): ListingCondition {
   return text !== null && /SUCATA/i.test(text) ? { ...EMPTY_CONDITION, damageLevel: "salvage" } : EMPTY_CONDITION;
 }
 
-function titleOf(vehicle: string | null, year: number | null, lotNumber: string | null): string {
-  const name = vehicle ?? `Veículo sem marca e modelo informados${lotNumber ? ` (lote ${lotNumber})` : ""}`;
-  return year === null ? name : `${name} ${year}`;
+/** Sem o ano: o cartão já o mostra ao lado do título. */
+function titleOf(vehicle: string | null, lotNumber: string | null): string {
+  return vehicle ?? `Veículo sem marca e modelo informados${lotNumber ? ` (lote ${lotNumber})` : ""}`;
 }
 
 /**
@@ -372,6 +372,7 @@ const MOTO_BRANDS = new Set([
   "CICLOMOTOR",
   "MVK",
   "AMAZONAS",
+  "HYOSUNG",
 ]);
 const CAR_BRANDS = new Set([
   "VW",
@@ -403,13 +404,14 @@ const CAR_BRANDS = new Set([
   "TROLLER",
   "MERCEDES-BENZ",
   "BMW",
+  "HAFEI",
 ]);
 /** Modelos de carro das marcas que vendem mais motos (Honda, Suzuki). */
 const HONDA_CARS = /^(CIVIC|CITY|FIT|HR-?V|WR-?V|CR-?V|ACCORD|ODYSSEY|ZR-?V)\b/;
 const SUZUKI_CARS = /^(VITARA|GRAND|JIMNY|SWIFT|SX4|S-CROSS|BALENO|IGNIS|SAMURAI)\b/;
 const BMW_MOTOS = /^[GFRSK] ?\d{3,4}\b/;
 const UTILITY_MODELS =
-  /^(KOMBI|SAVEIRO|STRADA|MONTANA|S10|HILUX|RANGER|FIORINO|DOBLO|TORO|AMAROK|FRONTIER|L200|D ?10|D ?20|F ?1000|F ?250|COURIER|PAMPA|SPRINTER|MASTER|DUCATO|TRAFIC|EXPERT|JUMPER|BOXER|HR|BONGO|OROCH|MAVERICK|SILVERADO|C ?10|C ?20|A ?10|A ?20)\b/;
+  /^(KOMBI|SAVEIRO|STRADA|MONTANA|S10|HILUX|RANGER|FIORINO|DOBLO|TORO|AMAROK|FRONTIER|L200|D ?10|D ?20|F ?1000|F ?250|COURIER|PAMPA|SPRINTER|MASTER|DUCATO|TRAFIC|EXPERT|JUMPER|BOXER|HR|BONGO|OROCH|TOWNER|RUIYI|MAVERICK|SILVERADO|C ?10|C ?20|A ?10|A ?20)\b/;
 /** Caminhões e ônibus das marcas de carro: "CARGO", "F 4000", "D 60", "8.150", "L 1113", "ATEGO", "12000". */
 const HEAVY_MODELS =
   /^(CARGO|F ?[4-9]000|F ?1[1-4]000|D ?[4-9]0|\d{1,2}\.\d{3}|\d{4,5}|L ?\d{4}|LS ?\d{4}|LO|OF|ATEGO|ACCELO|AXOR|ACTROS)\b/;

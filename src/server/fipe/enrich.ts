@@ -18,7 +18,7 @@ import {
 import { type ListingStatus, toListingCategory } from "@/domain/listings/types";
 
 import { db } from "../db";
-import { type FipeClient, FipeUnavailableError } from "./client";
+import { FipeBudgetError, type FipeClient, FipeUnavailableError } from "./client";
 
 /**
  * Casa na tabela FIPE oficial o valor de mercado dos anúncios sem valor da fonte (D-47; docs/PLANO-VALOR-MERCADO.md
@@ -45,8 +45,11 @@ export type MatchSample = {
 export type EnrichSummary = {
   checked: number;
   matched: { version: number; family: number };
-  /** Motivo de parar antes de acabar os pendentes (tempo ou FIPE fora do ar); nulo se acabou. */
-  stoppedBy: string | null;
+  /**
+   * Por que parou antes de acabar os pendentes; nulo se acabou. Só `unavailable` é falha: tempo e limite de pedidos
+   * deixam o resto para a próxima execução.
+   */
+  stoppedBy: { kind: "time" | "budget" | "unavailable"; message: string } | null;
 };
 
 type PendingListing = {
@@ -113,7 +116,7 @@ export async function enrichMarketValues(input: {
 
     for (const listing of batch) {
       if (now().getTime() >= deadline) {
-        summary.stoppedBy = "tempo esgotado";
+        summary.stoppedBy = { kind: "time", message: "tempo esgotado" };
         return summary;
       }
       seen.add(listing.id);
@@ -124,7 +127,10 @@ export async function enrichMarketValues(input: {
       } catch (error) {
         // FIPE fora do ar: o anúncio fica pendente e a próxima execução tenta de novo.
         if (error instanceof FipeUnavailableError) {
-          summary.stoppedBy = error.message;
+          summary.stoppedBy = {
+            kind: error instanceof FipeBudgetError ? "budget" : "unavailable",
+            message: error.message,
+          };
           return summary;
         }
         throw error;

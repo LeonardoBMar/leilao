@@ -13,6 +13,7 @@ import { parseBRL } from "@/domain/money";
 import type { Prisma } from "@/generated/prisma/client";
 import type { FetchOutcome } from "@/sources/types";
 
+import { createPoliteFetcher, DEADLINE_ERROR } from "../collector/http";
 import { db } from "../db";
 
 /**
@@ -47,6 +48,38 @@ export type FipeClient = {
 
 /** A FIPE fora do ar ou respondendo fora do formato: a tentativa não conta e o anúncio fica pendente. */
 export class FipeUnavailableError extends Error {}
+
+/** Limite de pedidos ou de tempo desta execução atingido: não é falha, o resto fica para a próxima. */
+export class FipeBudgetError extends FipeUnavailableError {}
+
+/**
+ * Ritmo da FIPE: ela recusou com HTTP 429 depois de ~1.500 pedidos a 1 por segundo (09/10/2026). Um pedido a cada 3 s
+ * e no máximo 300 por coleta (~3.600 por dia em 12 coletas); as respostas guardadas não contam.
+ */
+export const FIPE_MIN_INTERVAL_MS = 3_000;
+export const FIPE_REQUESTS_PER_RUN = 300;
+
+/** Acesso educado à FIPE com limite de pedidos e de tempo; passado um deles, `FipeBudgetError`. */
+export function createFipeAccess({
+  deadline = Number.POSITIVE_INFINITY,
+  maxRequests = Number.POSITIVE_INFINITY,
+}: { deadline?: number; maxRequests?: number } = {}) {
+  const fetcher = createPoliteFetcher({ minIntervalMs: FIPE_MIN_INTERVAL_MS, deadline });
+  const post: FipePost = async (url, form) => {
+    if (fetcher.requests >= maxRequests) {
+      throw new FipeBudgetError(`limite de ${maxRequests} pedidos à FIPE nesta execução`);
+    }
+    const outcome = await fetcher.post(url, form);
+    if (!outcome.ok && outcome.error === DEADLINE_ERROR) throw new FipeBudgetError(DEADLINE_ERROR);
+    return outcome;
+  };
+  return {
+    post,
+    get requests() {
+      return fetcher.requests;
+    },
+  };
+}
 
 const optionsSchema = z.array(z.object({ Label: z.string(), Value: z.coerce.string() }));
 const tablesSchema = z.array(z.object({ Codigo: z.coerce.string(), Mes: z.string() }));

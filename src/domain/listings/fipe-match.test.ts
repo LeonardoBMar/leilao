@@ -76,6 +76,8 @@ describe("versionTokens", () => {
     expect(versionTokens(["16SE", "AT"])).toEqual(["1.6", "SE", "AUT"]);
     expect(versionTokens(["1.4AT", "LTZ"])).toEqual(["1.4", "AUT", "LTZ"]);
     expect(versionTokens(["10MT", "1000I", "14", "16V"])).toEqual(["1.0", "MEC", "1.0", "1.4", "16V"]);
+    expect(versionTokens(["EXPR", "1016V"])).toEqual(["EXPR", "1.0", "16V"]);
+    expect(versionTokens(["148V"])).toEqual(["1.4", "8V"]);
   });
 });
 
@@ -104,6 +106,19 @@ describe("chooseFipeModels", () => {
       "Gol CLi / CL 1.8",
       "Gol GLi / GL/ Atlanta 1.8",
     ]);
+  });
+
+  it("cilindrada colada nas válvulas não mistura 1.0 com 1.6: LOGAN EXPR 1016V", () => {
+    const logan = options([
+      "LOGAN Authentique Hi-Flex 1.0 16V 4p",
+      "LOGAN Dynamique Hi-Flex 1.6 8V 4p",
+      "LOGAN Expression Hi-Flex 1.6 8V 4p",
+      "LOGAN Expres./Exp. UP Hi-Flex 1.0 16V 4p",
+    ]);
+    const choice = chooseFipeModels("LOGAN EXPR 1016V", logan);
+    const codes = choice.kind === "version" ? [choice.code] : choice.kind === "family" ? choice.codes : [];
+    expect(codes.length).toBeGreaterThan(0);
+    expect(codes.map((code) => labelOf(logan, code)).every((label) => label?.includes("1.0 16V"))).toBe(true);
   });
 
   it("'GOL 1000' casa com 'Gol 1000 (modelo antigo)' pela cilindrada", () => {

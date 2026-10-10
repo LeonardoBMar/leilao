@@ -7,7 +7,7 @@ import type { SourceAdapter } from "@/sources/types";
 
 import { db } from "../db";
 import { env } from "../env";
-import { createFipeClient, type FipeClient } from "../fipe/client";
+import { createFipeAccess, createFipeClient, FIPE_REQUESTS_PER_RUN, type FipeClient } from "../fipe/client";
 import { enrichMarketValues } from "../fipe/enrich";
 import { createAlerts } from "./alerts";
 import { createPoliteFetcher, DEADLINE_ERROR, type PoliteFetcher } from "./http";
@@ -106,7 +106,10 @@ export async function runCollection({
     fipe !== undefined
       ? fipe
       : env.FIPE_LOOKUP === "on"
-        ? createFipeClient(createPoliteFetcher({ deadline: deadline + FIPE_TAIL_MS }).post, now)
+        ? createFipeClient(
+            createFipeAccess({ deadline: deadline + FIPE_TAIL_MS, maxRequests: FIPE_REQUESTS_PER_RUN }).post,
+            now,
+          )
         : null;
   await closeStaleRuns(startedAt);
   // Uma leitura dos municípios para todas as fontes; se falhar, cada fonte registra a falha na sua execução.
@@ -117,21 +120,22 @@ export async function runCollection({
   const errors: RunError[] = [];
   // A FIPE é outro site: o valor de mercado é casado junto com as fontes (o que já estava pendente) e, depois delas,
   // por pouco tempo, para os anúncios gravados no fim. Tudo antes dos alertas, que olham o % do mercado.
-  // Se a FIPE falhar, a segunda passada não tenta de novo: os anúncios ficam pendentes para a próxima execução.
-  let fipeFailed = false;
+  // Se a FIPE falhar ou o limite de pedidos acabar, a segunda passada não tenta: o resto fica para a próxima execução.
+  let fipeStopped = false;
   const enrich = async (until: number) => {
-    if (!fipeClient || fipeFailed) return 0;
+    if (!fipeClient || fipeStopped) return 0;
     let matched = 0;
     let problem: string | null;
     try {
       const summary = await enrichMarketValues({ client: fipeClient, now, deadline: until });
       matched = summary.matched.version + summary.matched.family;
-      problem = summary.stoppedBy === "tempo esgotado" ? null : summary.stoppedBy;
+      if (summary.stoppedBy?.kind === "budget") fipeStopped = true;
+      problem = summary.stoppedBy?.kind === "unavailable" ? summary.stoppedBy.message : null;
     } catch (error) {
       problem = describeError(error);
     }
     if (problem !== null) {
-      fipeFailed = true;
+      fipeStopped = true;
       errors.push({ url: "(valor de mercado)", error: problem });
     }
     return matched;
