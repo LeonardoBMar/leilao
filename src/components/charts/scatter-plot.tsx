@@ -15,14 +15,21 @@ export type ScatterPoint = {
   title: string;
   /** Link da venda, oferecido sob o gráfico junto do texto. */
   href?: string;
+  /** Pertence ao grupo em destaque: com algum ponto em destaque, os outros ficam claros. */
+  highlighted?: boolean;
 };
+
+/** Eixo x contínuo (km): domínio e marcas escolhidos por quem chama. */
+export type ContinuousAxis = { domain: readonly [number, number]; ticks: readonly { value: number; label: string }[] };
 
 type ScatterPlotProps = {
   points: readonly ScatterPoint[];
   /** Mediana de cada valor de x, desenhada como traço em tinta. */
   medians?: readonly { x: number; y: number }[];
-  /** Valores inteiros de x (anos), um rótulo para cada. */
-  xValues: readonly number[];
+  /** Valores inteiros de x (anos), um rótulo para cada; os pontos do mesmo valor se espalham. */
+  xValues?: readonly number[];
+  /** Eixo x contínuo, no lugar de `xValues`: os pontos ficam onde caem. */
+  xAxis?: ContinuousAxis;
   yDomain: readonly [number, number];
   yTicks: readonly number[];
   formatY: (value: number) => string;
@@ -40,16 +47,27 @@ const SPREAD = 0.3;
  * para não se esconderem; cada ponto tem anel de `surface` para separar sobreposições. Passar o mouse ou tocar num ponto
  * escreve a venda sob o gráfico (sem depender do hover); para teclado e leitor de tela vale a tabela das vendas.
  */
-export function ScatterPlot({ points, medians = [], xValues, yDomain, yTicks, formatY, ariaLabel }: ScatterPlotProps) {
+export function ScatterPlot({
+  points,
+  medians = [],
+  xValues = [],
+  xAxis,
+  yDomain,
+  yTicks,
+  formatY,
+  ariaLabel,
+}: ScatterPlotProps) {
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const active = points.find((point) => point.key === activeKey);
   const first = Math.min(...xValues);
   const last = Math.max(...xValues);
-  const xDomain = [first - 0.5, last + 0.5] as const;
+  const xDomain = xAxis?.domain ?? ([first - 0.5, last + 0.5] as const);
   const labelEvery = Math.ceil(xValues.length / MOBILE_X_LABELS);
+  const anyHighlighted = points.some((point) => point.highlighted);
   const byX = Map.groupBy(points, (point) => point.x);
   const spread = (point: ScatterPoint) => {
     const group = byX.get(point.x) ?? [point];
+    if (xAxis) return point.x;
     if (group.length === 1) return point.x;
     return point.x - SPREAD + (2 * SPREAD * group.indexOf(point)) / (group.length - 1);
   };
@@ -59,13 +77,17 @@ export function ScatterPlot({ points, medians = [], xValues, yDomain, yTicks, fo
         ariaLabel={ariaLabel}
         yDomain={yDomain}
         yTicks={yTicks.map((value) => ({ value, label: formatY(value) }))}
-        xTicks={xValues.map((value, index) => ({
-          key: String(value),
-          at: percentOf(value, xDomain),
-          label: String(value),
-          // No celular cabem uns 7 anos: os outros rótulos somem, contando do último (o mais novo fica).
-          minor: (xValues.length - 1 - index) % labelEvery !== 0,
-        }))}
+        xTicks={
+          xAxis
+            ? xAxis.ticks.map(({ value, label }) => ({ key: String(value), at: percentOf(value, xDomain), label }))
+            : xValues.map((value, index) => ({
+                key: String(value),
+                at: percentOf(value, xDomain),
+                label: String(value),
+                // No celular cabem uns 7 anos: os outros rótulos somem, contando do último (o mais novo fica).
+                minor: (xValues.length - 1 - index) % labelEvery !== 0,
+              }))
+        }
       >
         {points.map((point) => (
           // Área de toque maior que o ponto; fora da ordem de tabulação, porque o gráfico é só para ver (a tabela serve ao teclado).
@@ -82,7 +104,13 @@ export function ScatterPlot({ points, medians = [], xValues, yDomain, yTicks, fo
             <span
               className={cn(
                 "size-2 rounded-full ring-2 ring-surface",
-                point.key === activeKey ? "size-3 bg-accent" : "bg-data-3",
+                point.key === activeKey
+                  ? "size-3 bg-accent"
+                  : anyHighlighted
+                    ? point.highlighted
+                      ? "size-3 bg-data-5"
+                      : "bg-data-1"
+                    : "bg-data-3",
               )}
             />
           </button>

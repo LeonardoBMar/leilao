@@ -1,17 +1,16 @@
 import type { ReactNode } from "react";
 
 import { ChartDataTable } from "@/components/charts/chart-data-table";
-import { ScatterPlot } from "@/components/charts/scatter-plot";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui";
 import type { MarketValueOrigin } from "@/domain/listings/fipe-match";
 import { cents } from "@/domain/money";
 import { type ResearchFilters, type ResearchVehicle, vehicleLabel } from "@/domain/research/filters";
-import { niceTicks } from "@/lib/charts";
-import { formatBRL, formatCompactBRL, formatDate, formatKm, formatRatio } from "@/lib/format";
+import { formatBRL, formatDate, formatKm, formatRatio } from "@/lib/format";
 
 import { CONDITION_LABELS, salesLabel } from "../labels";
 import { getModelSales, MODEL_SALES_LIMIT } from "../queries";
 import type { ResearchSale } from "../types";
+import { ModelSalesScatter } from "./model-sales-scatter";
 import { ResearchBlock } from "./research-block";
 
 /** Vendas na tabela aberta; as outras ficam em "Ver todas". */
@@ -45,47 +44,39 @@ export async function ModelSalesBlock({
   }
 
   const { total, sales, byYear } = data;
-  const dated = sales.flatMap((sale) => (sale.modelYear === null ? [] : [{ ...sale, modelYear: sale.modelYear }]));
-  const years = dated.map((sale) => sale.modelYear);
-  const [firstYear, lastYear] = [Math.min(...years), Math.max(...years)];
-  const xValues = dated.length === 0 ? [] : Array.from({ length: lastYear - firstYear + 1 }, (_, i) => firstYear + i);
-  const yTicks = niceTicks(Math.max(...dated.map((sale) => sale.finalBid)));
   const medians = byYear.flatMap(({ year, summary }) =>
     summary.kind === "summary" ? [{ x: year, y: summary.median }] : [],
   );
-  const notes = [
-    total > sales.length ? `Mostrando as ${MODEL_SALES_LIMIT} mais recentes de ${salesLabel(total)}.` : null,
-    dated.length < sales.length ? `${salesLabel(sales.length - dated.length)} sem ano-modelo fora do gráfico.` : null,
-  ].filter((note) => note !== null);
+  const scatterSales = sales.map((sale) => ({
+    id: sale.id,
+    url: sale.url,
+    label: saleTitle(sale),
+    year: sale.modelYear,
+    km: sale.mileageKm,
+    state: sale.state,
+    source: sale.source,
+    finalBid: sale.finalBid,
+  }));
+  const yearSummary = `Lance final do ${vehicleLabel(vehicle)} por ano-modelo: ${byYear
+    .flatMap(({ year, summary }) =>
+      summary.kind === "summary" ? [`${year}, mediana ${formatBRL(cents(Math.round(summary.median)))}`] : [],
+    )
+    .join("; ")}`;
+  const note = total > sales.length ? `Mostrando as ${MODEL_SALES_LIMIT} mais recentes de ${salesLabel(total)}.` : null;
 
   return (
     <ResearchBlock
       id="pesquisa-vendas"
       title={title}
-      description={`Lance final de cada venda (${CONDITION_LABELS[filters.condition].toLowerCase()}) por ano-modelo; o traço é a mediana do ano, com 5 vendas ou mais. Passe o mouse ou toque num ponto para ver a venda; todas estão na tabela.`}
+      description={`Lance final de cada venda (${CONDITION_LABELS[filters.condition].toLowerCase()}) por ano-modelo ou quilometragem; o traço é a mediana do ano, com 5 vendas ou mais. Destaque um estado ou uma fonte para ver onde ele cai. Passe o mouse ou toque num ponto para ver a venda; todas estão na tabela.`}
     >
-      {xValues.length > 0 ? (
-        <ScatterPlot
-          ariaLabel={`Lance final do ${vehicleLabel(vehicle)} por ano-modelo: ${byYear
-            .flatMap(({ year, summary }) =>
-              summary.kind === "summary" ? [`${year}, mediana ${formatBRL(cents(Math.round(summary.median)))}`] : [],
-            )
-            .join("; ")}`}
-          xValues={xValues}
-          yDomain={[0, yTicks.at(-1) ?? 1]}
-          yTicks={yTicks}
-          formatY={(value) => formatCompactBRL(cents(value))}
-          points={dated.map((sale) => ({
-            key: sale.id,
-            x: sale.modelYear,
-            y: sale.finalBid,
-            title: saleTitle(sale),
-            href: sale.url,
-          }))}
-          medians={medians}
-        />
-      ) : null}
-      {notes.length > 0 ? <p className="text-label font-normal text-muted">{notes.join(" ")}</p> : null}
+      <ModelSalesScatter
+        sales={scatterSales}
+        medians={medians}
+        subject={vehicleLabel(vehicle)}
+        yearSummary={yearSummary}
+      />
+      {note ? <p className="text-label font-normal text-muted">{note}</p> : null}
       <SalesTable sales={sales.slice(0, VISIBLE_SALES)} />
       {sales.length > VISIBLE_SALES ? (
         <ChartDataTable
@@ -100,7 +91,8 @@ export async function ModelSalesBlock({
 
 function saleTitle(sale: ResearchSale): string {
   const ratio = sale.ratio === null ? "" : ` (${formatRatio(sale.ratio)} do mercado)`;
-  return `${formatDate(sale.endsAt)} · ${sale.state ?? "UF?"} · ${sale.modelYear ?? "ano?"} · ${formatBRL(sale.finalBid)}${ratio}`;
+  const km = sale.mileageKm === null ? "" : ` · ${formatKm(sale.mileageKm)}`;
+  return `${formatDate(sale.endsAt)} · ${sale.state ?? "UF?"} · ${sale.modelYear ?? "ano?"}${km} · ${formatBRL(sale.finalBid)}${ratio}`;
 }
 
 /** O lance e o % logo depois do anúncio: no celular, a tabela rola para o lado e eles ficam à vista. */

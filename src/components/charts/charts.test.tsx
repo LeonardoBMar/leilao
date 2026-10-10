@@ -237,6 +237,43 @@ describe("ChartDataTable", () => {
   });
 });
 
+describe("ScatterPlot com eixo contínuo e destaque", () => {
+  const html = renderToStaticMarkup(
+    <ScatterPlot
+      ariaLabel="Lance final por km"
+      xAxis={{
+        domain: [0, 100],
+        ticks: [
+          { value: 0, label: "0" },
+          { value: 100, label: "100 mil" },
+        ],
+      }}
+      yDomain={[0, 100]}
+      yTicks={[0, 100]}
+      formatY={String}
+      points={[
+        { key: "a", x: 25, y: 40, title: "a", highlighted: true },
+        { key: "b", x: 25, y: 60, title: "b" },
+      ]}
+    />,
+  );
+
+  it("coloca o ponto onde o valor cai, sem espalhar os do mesmo x", () => {
+    expect(html).toContain("left:25%;bottom:40%");
+    expect(html).toContain("left:25%;bottom:60%");
+  });
+
+  it("escreve as marcas do eixo dadas por quem chama", () => {
+    expect(html).toContain("100 mil");
+  });
+
+  it("com um grupo em destaque, ele escurece e os outros clareiam", () => {
+    expect(html).toContain("bg-data-5");
+    expect(html).toContain("bg-data-1");
+    expect(html).not.toContain("bg-data-3");
+  });
+});
+
 describe("ScatterPlot no celular", () => {
   it("com muitos anos, metade dos rótulos some abaixo de sm, mantendo o mais novo", () => {
     const years = Array.from({ length: 14 }, (_, index) => 2013 + index);
