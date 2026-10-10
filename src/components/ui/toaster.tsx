@@ -21,6 +21,7 @@ function Toaster() {
           toast: "!rounded-lg !border-border !bg-surface-elevated !text-foreground !shadow-md",
           title: "!text-body !font-semibold",
           description: "!text-body !text-foreground-secondary",
+          actionButton: "!bg-primary !text-white !font-semibold hover:!bg-primary-hover",
           closeButton:
             "!border-border !bg-surface !text-foreground-secondary hover:!bg-surface-subtle focus:!ring-2 focus:!ring-accent",
         },

@@ -219,7 +219,7 @@ function TrackerAction({ item }: { item: ListingListItem }) {
     return (
       <ButtonLink href={`/lotes/${item.trackedLotId}`} variant="secondary" size="sm" className="w-fit">
         <ClipboardCheck aria-hidden="true" />
-        Ver no Tracker
+        Ver minha análise
       </ButtonLink>
     );
   }

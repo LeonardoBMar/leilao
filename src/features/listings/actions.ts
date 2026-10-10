@@ -1,8 +1,8 @@
 "use server";
 
-import { redirect } from "next/navigation";
+import type { Route } from "next";
+import { refresh } from "next/cache";
 
-import { type ActionState, failure } from "@/lib/action-state";
 import { entityId } from "@/lib/schemas";
 
 import { addListingToTracker, type AddToTrackerError } from "./mutations";
@@ -15,14 +15,25 @@ const ERRORS = {
 
 const listingIdSchema = entityId();
 
-/** "Adicionar à análise": leva ao rascunho novo ou, se o anúncio já estava no Tracker, à ficha do lote. */
-export async function addListingToTrackerAction(listingId: string): Promise<ActionState> {
+export type AddToTrackerState =
+  | { status: "error"; message: string }
+  /** `href`: rascunho novo ou, se o anúncio já estava no Tracker, a ficha do lote. */
+  | { status: "success"; message: string; href: Route };
+
+/**
+ * "Adicionar à análise" sem sair da lista (revisão de usabilidade): cria o rascunho, re-renderiza a tela (o cartão
+ * vira "Ver minha análise") e devolve o caminho para o toast oferecer "Abrir análise".
+ */
+export async function addListingToTrackerAction(listingId: string): Promise<AddToTrackerState> {
   const parsed = listingIdSchema.safeParse(listingId);
-  if (!parsed.success) return failure(ERRORS.not_found);
+  if (!parsed.success) return { status: "error", message: ERRORS.not_found };
 
   const result = await addListingToTracker(parsed.data);
-  if (!result.ok) return failure(ERRORS[result.error]);
+  if (!result.ok) return { status: "error", message: ERRORS[result.error] };
 
+  refresh();
   const outcome = result.value;
-  redirect(outcome.kind === "created" ? `/analise/${outcome.analysisId}` : `/lotes/${outcome.lotId}`);
+  return outcome.kind === "created"
+    ? { status: "success", message: "Adicionado à análise.", href: `/analise/${outcome.analysisId}` as Route }
+    : { status: "success", message: "Este anúncio já estava na análise.", href: `/lotes/${outcome.lotId}` as Route };
 }

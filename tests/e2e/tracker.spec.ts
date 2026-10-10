@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 /**
  * "Adicionar à análise" (docs/PLANO-COLETA.md, etapa 3): um clique leva o anúncio ao Tracker como leilão, lote e
- * rascunho preenchido, sem duplicar. O que vem de cada campo está em src/domain/listings/tracker.test.ts; a
+ * rascunho preenchido, sem sair do catálogo e sem duplicar. O que vem de cada campo está em src/domain/listings/tracker.test.ts; a
  * atualização do lance pelo coletor, em shouldSyncBid.
  */
 test.skip(!process.env.E2E_EMAIL, "Sem usuário de testes (E2E_EMAIL/E2E_PASSWORD).");
