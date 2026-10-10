@@ -21,11 +21,13 @@ type LotDetailViewProps = {
   analysis: React.ReactNode;
   result: React.ReactNode;
   photos: React.ReactNode;
+  /** Link para as vendas parecidas na Pesquisa, composto pela rota. */
+  research: React.ReactNode;
   /** Próximo passo (analisar, continuar o rascunho ou registrar o resultado), em destaque no cabeçalho. */
   nextAction: React.ReactNode;
 };
 
-export async function LotDetailView({ params, analysis, result, photos, nextAction }: LotDetailViewProps) {
+export async function LotDetailView({ params, analysis, result, photos, research, nextAction }: LotDetailViewProps) {
   const parsed = lotIdSchema.safeParse((await params).id);
   if (!parsed.success) notFound();
   const lot = await getLot(parsed.data);
@@ -111,6 +113,7 @@ export async function LotDetailView({ params, analysis, result, photos, nextActi
                 )}
               </Detail>
             </dl>
+            {research}
           </Section>
 
           <div className="border-t border-border pt-6">{photos}</div>

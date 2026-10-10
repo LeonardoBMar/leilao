@@ -175,6 +175,7 @@ Plano e decisões em `docs/PLANO-FILTROS.md` (D-43).
 - Resumo da última análise fixada e acesso às versões anteriores.
 - Ações para acompanhar, analisar e registrar resultado.
 - Bloco de resultado com preço final, comparação e participação do usuário.
+- Link **Ver vendas parecidas**, que abre a Pesquisa com o modelo do lote e, se ele vem de um anúncio coletado, a condição, a categoria e o estado do anúncio.
 
 ### `/analise/[id]` — Análise financeira
 
@@ -185,6 +186,7 @@ O parâmetro `id` representa uma análise, que sempre pertence a um lote. Uma no
 - Resumo com comissão, custos, custo total, margem e lance máximo.
 - Notas sobre premissas, danos, documentação e dúvidas.
 - Ações **Salvar rascunho** e **Fixar análise**.
+- Link **Ver vendas parecidas** no cabeçalho, para a Pesquisa filtrada pelo lote da análise.
 - Histórico das análises fixadas, com data e indicação da utilizada no resultado.
 - Versões fixadas em modo de leitura; revisões geram um novo rascunho.
 

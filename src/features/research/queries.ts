@@ -38,6 +38,7 @@ import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
 import { vehicleKeySql } from "@/server/vehicle-key-sql";
 
+import type { LotResearchContext } from "./lot-link";
 import type {
   BidCurveView,
   ConditionDistribution,
@@ -122,6 +123,26 @@ async function rows<T extends z.ZodType>(schema: T, query: Prisma.Sql): Promise<
 /** Só os campos do resumo (a linha pode trazer outros, como o estado ou o máximo). */
 function toStats({ n, p25, median, p75 }: GroupStats): GroupStats {
   return { n, p25, median, p75 };
+}
+
+/**
+ * O que a Pesquisa precisa saber de um lote do usuário para abrir nas vendas parecidas (marca, modelo e, com anúncio
+ * ligado, categoria, dano e estado). Lote de outro dono é `null`.
+ */
+export async function getLotResearchContext(lotId: string): Promise<LotResearchContext | null> {
+  const user = await requireUser();
+  const lot = await db.lot.findFirst({
+    where: { id: lotId, ownerId: user.id },
+    select: { brand: true, model: true, listing: { select: { category: true, damageLevel: true, state: true } } },
+  });
+  if (lot === null) return null;
+  return {
+    brand: lot.brand,
+    model: lot.model,
+    category: lot.listing?.category ?? null,
+    damageLevel: lot.listing?.damageLevel ?? null,
+    state: lot.listing?.state ?? null,
+  };
 }
 
 /** Uma vez por requisição (cabeçalho e blocos usam a mesma base). */

@@ -1,5 +1,6 @@
 import { ArrowLeft, FilePen, GitBranchPlus } from "lucide-react";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 import { BreadcrumbLink, BreadcrumbPage, Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { PageHeader } from "@/components/layout/page-header";
@@ -15,7 +16,14 @@ import { AnalysisReadonly } from "./analysis-readonly";
 import { CreateAnalysisButton } from "./create-analysis-button";
 
 /** Tela da análise (SPEC `/analise/[id]`): rascunho editável ou versão fixada em leitura, mais o histórico. */
-export async function AnalysisView({ params }: { params: Promise<{ id: string }> }) {
+export async function AnalysisView({
+  params,
+  research,
+}: {
+  params: Promise<{ id: string }>;
+  /** Link para as vendas parecidas na Pesquisa, composto pela rota a partir do lote da análise. */
+  research?: (lotId: string) => React.ReactNode;
+}) {
   const parsed = analysisIdSchema.safeParse((await params).id);
   if (!parsed.success) notFound();
   const analysis = await getAnalysis(parsed.data);
@@ -57,6 +65,7 @@ export async function AnalysisView({ params }: { params: Promise<{ id: string }>
               <ArrowLeft aria-hidden="true" />
               Ver lote
             </ButtonLink>
+            {research ? <Suspense fallback={null}>{research(lot.id)}</Suspense> : null}
             {isFixed ? (
               analysis.openDraftId ? (
                 <ButtonLink href={`/analise/${analysis.openDraftId}`}>

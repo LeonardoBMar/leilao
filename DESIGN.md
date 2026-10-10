@@ -780,6 +780,8 @@ Filtros ativos permanecem visíveis ou resumidos. O estado vazio por filtro ofer
 4. Conteúdo dividido em seções/cards.
 5. Histórico ou itens relacionados por último.
 
+No lote, o link “Ver vendas parecidas” (`ButtonLink` `link` com ícone de colunas) fica no fim da seção Veículo; na análise, é um botão `secondary` no cabeçalho, ao lado de “Ver lote”. Os dois abrem a Pesquisa filtrada pelo lote.
+
 No lote (direção A): logo abaixo do cabeçalho, o painel rebaixado "Lance e limite" com o número que decide (folga até o limite em `display`, `success`; ou "acima do seu limite em" em `error`), lance atual e meu limite em `heading-2`, a barra do lance até o limite e o formulário do novo lance. Depois, duas colunas (1,75 : 1): análise (tabela de versões) e resultado à esquerda; veículo (`dl` em duas colunas), fotos, "Acompanhar lote" e observações à direita, separados por linhas finas.
 
 No leilão do usuário: dados do evento numa faixa rebaixada (data, local, edital, plataforma) e a lista de lotes em largura total; se o leilão veio do catálogo, a faixa traz o link para todos os lotes dele.
