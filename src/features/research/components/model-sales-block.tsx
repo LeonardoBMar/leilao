@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { ChartDataTable } from "@/components/charts/chart-data-table";
 import { ScatterPlot } from "@/components/charts/scatter-plot";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui";
@@ -10,7 +12,7 @@ import { formatBRL, formatCompactBRL, formatDate, formatKm, formatRatio } from "
 import { CONDITION_LABELS, salesLabel } from "../labels";
 import { getModelSales, MODEL_SALES_LIMIT } from "../queries";
 import type { ResearchSale } from "../types";
-import { NoSales, ResearchBlock } from "./research-block";
+import { ResearchBlock } from "./research-block";
 
 /** Vendas na tabela aberta; as outras ficam em "Ver todas". */
 const VISIBLE_SALES = 10;
@@ -26,18 +28,18 @@ export function modelSalesTitle(vehicle: ResearchVehicle): string {
 export async function ModelSalesBlock({
   filters,
   vehicle,
-  since,
+  noSales,
 }: {
   filters: ResearchFilters;
   vehicle: ResearchVehicle;
-  since: Date | null;
+  noSales: ReactNode;
 }) {
   const data = await getModelSales(filters);
   const title = modelSalesTitle(vehicle);
   if (data === null || data.total === 0) {
     return (
       <ResearchBlock id="pesquisa-vendas" title={title}>
-        <NoSales since={since} />
+        {noSales}
       </ResearchBlock>
     );
   }

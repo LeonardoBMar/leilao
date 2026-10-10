@@ -1,8 +1,11 @@
 import type { ReactNode } from "react";
 
-import { Card, EmptyState, Skeleton } from "@/components/ui";
+import { ButtonLink, Card, EmptyState, Skeleton } from "@/components/ui";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
+
+import type { NoSalesSuggestion } from "../no-sales";
+import { researchHref } from "../search";
 
 type ResearchBlockProps = {
   id: string;
@@ -47,13 +50,24 @@ export function ResearchBlockSkeleton({ title, className }: { title: string; cla
   );
 }
 
-/** Sem vendas no filtro (DESIGN.md §15.8, item 4). */
-export function NoSales({ since }: { since: Date | null }) {
+/** Sem vendas no filtro (DESIGN.md §15.8, item 4): diz desde quando a base existe e oferece as saídas que têm venda. */
+export function NoSales({ since, suggestions }: { since: Date | null; suggestions: readonly NoSalesSuggestion[] }) {
   return (
     <EmptyState
       variant="inline"
       title={`Nenhuma venda com esses filtros${since === null ? "" : ` desde ${formatDate(since)}`}`}
-      description="Troque a condição, a categoria ou o modelo."
+      description={suggestions.length === 0 ? "Troque a condição, a categoria ou o modelo." : "Afrouxe um filtro:"}
+      action={
+        suggestions.length === 0 ? undefined : (
+          <div className="flex flex-wrap gap-2">
+            {suggestions.map(({ label, filters }) => (
+              <ButtonLink key={label} href={researchHref(filters)} scroll={false} variant="secondary" size="sm">
+                {label}
+              </ButtonLink>
+            ))}
+          </div>
+        )
+      }
     />
   );
 }

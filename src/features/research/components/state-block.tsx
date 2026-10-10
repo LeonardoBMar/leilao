@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { BRAZIL_MAP_CREDIT } from "@/components/charts/brazil-geometry";
 import { BrazilMap } from "@/components/charts/brazil-map";
 import { ChartDataTable } from "@/components/charts/chart-data-table";
@@ -14,7 +16,7 @@ import { getStateDetail, getStateMap } from "../queries";
 import { researchHref } from "../search";
 import { stateMapRegions } from "../state-regions";
 import type { StateDetail } from "../types";
-import { NoSales, ResearchBlock } from "./research-block";
+import { ResearchBlock } from "./research-block";
 
 export const STATE_BLOCK_TITLE = "Por estado";
 
@@ -22,7 +24,7 @@ export const STATE_BLOCK_TITLE = "Por estado";
  * "Por estado" (D-45): mapa do Brasil com a mediana de cada UF e, com um estado escolhido, o detalhe ao lado (abaixo
  * no celular). Com um modelo escolhido, a medida pode ser o lance final em R$.
  */
-export async function StateBlock({ filters, since }: { filters: ResearchFilters; since: Date | null }) {
+export async function StateBlock({ filters, noSales }: { filters: ResearchFilters; noSales: ReactNode }) {
   const [map, detail] = await Promise.all([getStateMap(filters), getStateDetail(filters)]);
   const { regions, legend, legendTitle } = stateMapRegions(map, filters);
   const subject = filters.vehicle === null ? "" : ` do ${vehicleLabel(filters.vehicle)}`;
@@ -51,7 +53,7 @@ export async function StateBlock({ filters, since }: { filters: ResearchFilters;
       }
     >
       {withSales.length === 0 ? (
-        <NoSales since={since} />
+        noSales
       ) : (
         <>
           <div className="grid gap-8 lg:grid-cols-[minmax(0,32rem)_minmax(0,1fr)]">

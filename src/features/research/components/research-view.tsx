@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui";
 import { formatDate } from "@/lib/format";
 
 import { salesLabel } from "../labels";
+import { noSalesSuggestions } from "../no-sales";
 import { getResearchFacets, getResearchOverview } from "../queries";
 import { parseResearchParams, researchParams } from "../schemas";
 import type { SearchParams } from "../search";
@@ -12,7 +13,7 @@ import { BID_CURVE_BLOCK_TITLE, BidCurveBlock } from "./bid-curve-block";
 import { CONDITION_BLOCK_TITLE, ConditionBlock } from "./condition-block";
 import { ModelSalesBlock, modelSalesTitle } from "./model-sales-block";
 import { RANKING_BLOCK_TITLE, RankingBlock } from "./ranking-block";
-import { ResearchBlockSkeleton } from "./research-block";
+import { NoSales, ResearchBlockSkeleton } from "./research-block";
 import { ResearchFilterBar } from "./research-filter-bar";
 import { ResearchSummary, ResearchSummarySkeleton } from "./research-summary";
 import { STATE_BLOCK_TITLE, StateBlock } from "./state-block";
@@ -47,6 +48,8 @@ export async function ResearchView({ searchParams }: { searchParams: SearchParam
   const filters = parseResearchParams(await searchParams);
   const [facets, { since }] = await Promise.all([getResearchFacets(filters), getResearchOverview()]);
 
+  const noSales = <NoSales since={since} suggestions={noSalesSuggestions(filters, facets)} />;
+
   return (
     <div className="grid gap-6">
       <ResearchFilterBar params={researchParams(filters)} facets={facets} />
@@ -54,10 +57,10 @@ export async function ResearchView({ searchParams }: { searchParams: SearchParam
         <ResearchSummary filters={filters} />
       </Suspense>
       <Suspense fallback={<ResearchBlockSkeleton title={CONDITION_BLOCK_TITLE} />}>
-        <ConditionBlock filters={filters} total={facets.conditions[filters.condition]} since={since} />
+        <ConditionBlock filters={filters} total={facets.conditions[filters.condition]} noSales={noSales} />
       </Suspense>
       <Suspense fallback={<ResearchBlockSkeleton title={STATE_BLOCK_TITLE} className="h-96" />}>
-        <StateBlock filters={filters} since={since} />
+        <StateBlock filters={filters} noSales={noSales} />
       </Suspense>
       {filters.vehicle === null ? (
         <Suspense fallback={<ResearchBlockSkeleton title={RANKING_BLOCK_TITLE} className="h-96" />}>
@@ -65,7 +68,7 @@ export async function ResearchView({ searchParams }: { searchParams: SearchParam
         </Suspense>
       ) : (
         <Suspense fallback={<ResearchBlockSkeleton title={modelSalesTitle(filters.vehicle)} className="h-96" />}>
-          <ModelSalesBlock filters={filters} vehicle={filters.vehicle} since={since} />
+          <ModelSalesBlock filters={filters} vehicle={filters.vehicle} noSales={noSales} />
         </Suspense>
       )}
       <Suspense fallback={<ResearchBlockSkeleton title={BID_CURVE_BLOCK_TITLE} />}>

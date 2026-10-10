@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { ChartDataTable } from "@/components/charts/chart-data-table";
 import { DistributionChart } from "@/components/charts/distribution-chart";
 import type { ResearchFilters } from "@/domain/research/filters";
@@ -6,7 +8,7 @@ import { formatRatio } from "@/lib/format";
 
 import { belowMarketLabel, CONDITION_LABELS, salesLabel, summaryDetail } from "../labels";
 import { getConditionDistribution } from "../queries";
-import { NoSales, ResearchBlock } from "./research-block";
+import { ResearchBlock } from "./research-block";
 
 export const CONDITION_BLOCK_TITLE = "Quanto se paga por condição";
 
@@ -18,11 +20,11 @@ export const CONDITION_BLOCK_TITLE = "Quanto se paga por condição";
 export async function ConditionBlock({
   filters,
   total,
-  since,
+  noSales,
 }: {
   filters: ResearchFilters;
   total: number;
-  since: Date | null;
+  noSales: ReactNode;
 }) {
   const { rows, axisMax, looksMixed } = await getConditionDistribution(filters);
   const selected = rows.find((row) => row.condition === filters.condition)?.summary;
@@ -39,7 +41,7 @@ export async function ConditionBlock({
       description="Lance final como % do valor de mercado (da fonte ou da tabela FIPE casado pelo sistema). A faixa clara reúne a metade do meio das vendas; o traço é a mediana."
     >
       {rows.every((row) => row.summary.kind === "none") ? (
-        <NoSales since={since} />
+        noSales
       ) : (
         <>
           {headline ? (
