@@ -28,14 +28,20 @@ import { estimateFromFipe } from "@/domain/finance/defaults";
 import { parseBRL } from "@/domain/money";
 import { fieldError, fieldValue, idleState } from "@/lib/action-state";
 import { toCalendarDateInput, toMonthInput } from "@/lib/dates";
-import { formatBps } from "@/lib/format";
+import { formatBps, formatTime } from "@/lib/format";
 
-import { discardDraftAction, saveAnalysisAction } from "../actions";
+import { autosaveDraftAction, discardDraftAction, saveAnalysisAction } from "../actions";
 import { FIXED_COST_LABELS } from "../labels";
 import { readAnalysisInputs } from "../read-inputs";
 import { liveSummary } from "../summary-model";
 import type { AnalysisDetail } from "../types";
 import { AnalysisSummary } from "./analysis-summary";
+
+/** Espera depois da última digitação antes de salvar sozinho. */
+const AUTOSAVE_DELAY_MS = 1500;
+
+type AutosaveStatus =
+  { kind: "idle" } | { kind: "saving" } | { kind: "saved"; at: Date } | { kind: "invalid" | "failed" };
 
 const centsToInput = (value: number | null) =>
   value === null ? undefined : (value / 100).toFixed(2).replace(".", ",");
@@ -59,16 +65,36 @@ export function AnalysisEditor({ analysis }: { analysis: AnalysisDetail }) {
   // "Estimar a partir da FIPE" remonta o formulário com os valores atuais mais os estimados (campos não controlados).
   const [prefill, setPrefill] = useState<Record<string, string> | null>(null);
   const [formKey, setFormKey] = useState(0);
+  const [autosave, setAutosave] = useState<AutosaveStatus>({ kind: "idle" });
+  const autosaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     if (state.status === "success" && state.message) toast.success(state.message);
   }, [state]);
+
+  useEffect(() => () => clearTimeout(autosaveTimer.current), []);
+
+  /** Rascunho salvo sozinho após uma pausa na digitação, com o status discreto no rodapé. */
+  function scheduleAutosave(overrides?: Record<string, string>) {
+    clearTimeout(autosaveTimer.current);
+    autosaveTimer.current = setTimeout(() => {
+      if (!formRef.current) return;
+      const formData = new FormData(formRef.current);
+      for (const [key, value] of Object.entries(overrides ?? {})) formData.set(key, value);
+      setAutosave({ kind: "saving" });
+      void autosaveDraftAction(analysis.id, formData).then(
+        (result) => setAutosave(result === "saved" ? { kind: "saved", at: new Date() } : { kind: result }),
+        () => setAutosave({ kind: "failed" }),
+      );
+    }, AUTOSAVE_DELAY_MS);
+  }
 
   function recompute(overrides?: Record<string, string>) {
     if (!formRef.current) return;
     const formData = new FormData(formRef.current);
     for (const [key, value] of Object.entries(overrides ?? {})) formData.set(key, value);
     setInputs(readAnalysisInputs(formData));
+    scheduleAutosave(overrides);
   }
 
   function estimateSaleAndRepairs() {
@@ -97,6 +123,7 @@ export function AnalysisEditor({ analysis }: { analysis: AnalysisDetail }) {
     setPrefill(next);
     setFormKey((key) => key + 1);
     setInputs(readAnalysisInputs(formData));
+    scheduleAutosave(next);
     toast.success("Valor de venda e reparos estimados a partir da FIPE.");
   }
 
@@ -133,6 +160,7 @@ export function AnalysisEditor({ analysis }: { analysis: AnalysisDetail }) {
         ref={formRef}
         action={formAction}
         onInput={() => recompute()}
+        onSubmit={() => clearTimeout(autosaveTimer.current)}
         noValidate
         className="grid content-start gap-8"
       >
@@ -311,6 +339,7 @@ export function AnalysisEditor({ analysis }: { analysis: AnalysisDetail }) {
 
         <div className="flex flex-col-reverse gap-3 border-t border-border pt-6 md:flex-row md:items-center">
           <DiscardDraftButton analysisId={analysis.id} />
+          <AutosaveText status={autosave} />
           <div className="flex flex-col-reverse gap-3 md:ml-auto md:flex-row">
             <Button
               type="submit"
@@ -342,6 +371,27 @@ export function AnalysisEditor({ analysis }: { analysis: AnalysisDetail }) {
 
       <AnalysisSummary model={liveSummary(inputs)} currentBid={analysis.lot.currentBid} />
     </div>
+  );
+}
+
+function AutosaveText({ status }: { status: AutosaveStatus }) {
+  const text = {
+    idle: null,
+    saving: "Salvando…",
+    saved: status.kind === "saved" ? `Salvo às ${formatTime(status.at)}` : null,
+    invalid: "Não salvo: revise os campos",
+    failed: "Não foi possível salvar sozinho",
+  }[status.kind];
+  if (!text) return null;
+  return (
+    <p
+      className={
+        status.kind === "invalid" || status.kind === "failed" ? "text-caption text-warning" : "text-caption text-muted"
+      }
+      aria-live="polite"
+    >
+      {text}
+    </p>
   );
 }
 

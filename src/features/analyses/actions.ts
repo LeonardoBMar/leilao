@@ -89,6 +89,22 @@ export async function saveAnalysisAction(id: string, _prev: ActionState, formDat
   return { status: "success", message: "Análise fixada. As premissas e o limite foram preservados." };
 }
 
+export type AutosaveResult = "saved" | "invalid" | "failed";
+
+/**
+ * Salvamento automático do rascunho enquanto o usuário digita. Silencioso: não revalida a tela (o formulário é a
+ * fonte do que está escrito) e, com campo inválido, não grava nada; o "Salvar rascunho" mostra os erros.
+ */
+export async function autosaveDraftAction(id: string, formData: FormData): Promise<AutosaveResult> {
+  const parsedId = analysisIdSchema.safeParse(id);
+  if (!parsedId.success) return "failed";
+  const parsed = analysisFormSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return "invalid";
+
+  const saved = await saveDraft(parsedId.data, parsed.data);
+  return saved.ok ? "saved" : "failed";
+}
+
 export async function discardDraftAction(id: string): Promise<ActionState> {
   const parsedId = analysisIdSchema.safeParse(id);
   if (!parsedId.success) return failure(NOT_FOUND);

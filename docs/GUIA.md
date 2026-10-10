@@ -59,7 +59,7 @@ lance máximo = maior lance em que  lance + custos + comissão + reserva + marge
 - **Campo em branco não vira zero.** Enquanto faltar algo, o painel lista o que falta. Se um custo não existe, digite 0.
 - **Lance simulado:** teste qualquer valor e veja custo total, margem e se ficou abaixo, no ou acima do limite. Não altera o lance do lote.
 - **Sem lance viável:** se os custos e a margem já consomem o valor de venda, o app avisa em vez de sugerir número negativo.
-- **Salvar rascunho** guarda sem compromisso. Rascunhos podem ter campos em branco.
+- O rascunho **salva sozinho** um instante depois que você para de digitar ("Salvo às hh:mm" no rodapé). Rascunhos podem ter campos em branco; com um campo inválido o salvamento automático espera a correção, e **Salvar rascunho** mostra o erro.
 
 ## 5. Fixar a análise
 
