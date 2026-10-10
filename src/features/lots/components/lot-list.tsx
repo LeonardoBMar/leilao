@@ -23,9 +23,9 @@ import { activeLotFilters, clearedLotFilters } from "../filter-labels";
 import { listLots } from "../queries";
 import { type LotFilters, lotParams, parseLotParams } from "../schemas";
 import type { LotListItem, LotPage } from "../types";
-import { LimitBadge } from "./limit-badge";
 import { LimitProgress } from "./limit-progress";
 import { LotFilters as LotFiltersBar } from "./lot-filters";
+import { LotRowMenu } from "./lot-row-menu";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -146,14 +146,17 @@ export function LotRows({ items, showAuction }: { items: readonly LotListItem[];
       <ul className="border-b border-border md:hidden">
         {items.map((lot) => (
           <li key={lot.id} className="grid gap-3 border-t border-border py-4">
-            <div className="min-w-0">
-              <Link href={`/lotes/${lot.id}`} className="text-body font-semibold text-foreground hover:underline">
-                {vehicleTitle(lot)}
-              </Link>
-              <p className="text-caption text-muted">
-                <span className="font-mono">Lote {lot.lotNumber}</span>
-                {showAuction ? ` · ${lot.auction.name}` : null} · {formatDate(lot.auction.startsAt)}
-              </p>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <Link href={`/lotes/${lot.id}`} className="text-body font-semibold text-foreground hover:underline">
+                  {vehicleTitle(lot)}
+                </Link>
+                <p className="text-caption text-muted">
+                  <span className="font-mono">Lote {lot.lotNumber}</span>
+                  {showAuction ? ` · ${lot.auction.name}` : null} · {formatDate(lot.auction.startsAt)}
+                </p>
+              </div>
+              <RowMenu lot={lot} />
             </div>
             <dl className="grid grid-cols-2 gap-3 text-body">
               <div>
@@ -185,7 +188,10 @@ export function LotRows({ items, showAuction }: { items: readonly LotListItem[];
               <TableHead className="text-right">Lance atual</TableHead>
               <TableHead className="text-right">Meu limite</TableHead>
               <TableHead className="w-56 pl-6">Posição</TableHead>
-              <TableHead>Situação</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead className="w-12">
+                <span className="sr-only">Ações</span>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -223,10 +229,10 @@ export function LotRows({ items, showAuction }: { items: readonly LotListItem[];
                   <LimitProgress limit={lot.limit} bid={lot.currentBid} />
                 </TableCell>
                 <TableCell>
-                  <div className="grid justify-items-start gap-1">
-                    <LimitBadge limit={lot.limit} bid={lot.currentBid} />
-                    <StateBadges lot={lot} />
-                  </div>
+                  <StateBadges lot={lot} />
+                </TableCell>
+                <TableCell className="text-right">
+                  <RowMenu lot={lot} />
                 </TableCell>
               </TableRow>
             ))}
@@ -234,6 +240,18 @@ export function LotRows({ items, showAuction }: { items: readonly LotListItem[];
         </Table>
       </div>
     </>
+  );
+}
+
+function RowMenu({ lot }: { lot: LotListItem }) {
+  return (
+    <LotRowMenu
+      lotId={lot.id}
+      lotLabel={`Lote ${lot.lotNumber} · ${vehicleTitle(lot)}`}
+      currentBid={lot.currentBid}
+      isFollowed={lot.isFollowed}
+      isArchived={lot.archivedAt !== null}
+    />
   );
 }
 
