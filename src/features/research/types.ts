@@ -23,6 +23,8 @@ export type ResearchSale = {
   /** Lance final ÷ valor de mercado; `null` sem valor de mercado. */
   ratio: number | null;
   source: string;
+  /** Primeira foto do anúncio, para a miniatura. */
+  photoUrl: string | null;
 };
 
 /** Base da Pesquisa inteira, para o cabeçalho. */

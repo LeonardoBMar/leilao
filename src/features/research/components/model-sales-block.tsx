@@ -1,8 +1,5 @@
 import type { ReactNode } from "react";
 
-import { ChartDataTable } from "@/components/charts/chart-data-table";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui";
-import type { MarketValueOrigin } from "@/domain/listings/fipe-match";
 import { cents } from "@/domain/money";
 import { type ResearchFilters, type ResearchVehicle, vehicleLabel } from "@/domain/research/filters";
 import { formatBRL, formatDate, formatKm, formatRatio } from "@/lib/format";
@@ -11,10 +8,8 @@ import { CONDITION_LABELS, salesLabel } from "../labels";
 import { getModelSales, MODEL_SALES_LIMIT } from "../queries";
 import type { ResearchSale } from "../types";
 import { ModelSalesScatter } from "./model-sales-scatter";
+import { ModelSalesTable } from "./model-sales-table";
 import { ResearchBlock } from "./research-block";
-
-/** Vendas na tabela aberta; as outras ficam em "Ver todas". */
-const VISIBLE_SALES = 10;
 
 export function modelSalesTitle(vehicle: ResearchVehicle): string {
   return `Vendas do ${vehicleLabel(vehicle)}`;
@@ -77,14 +72,7 @@ export async function ModelSalesBlock({
         yearSummary={yearSummary}
       />
       {note ? <p className="text-label font-normal text-muted">{note}</p> : null}
-      <SalesTable sales={sales.slice(0, VISIBLE_SALES)} />
-      {sales.length > VISIBLE_SALES ? (
-        <ChartDataTable
-          summary={`Ver todas as ${sales.length} vendas`}
-          columns={SALE_COLUMNS}
-          rows={sales.map(saleRow)}
-        />
-      ) : null}
+      <ModelSalesTable sales={sales} />
     </ResearchBlock>
   );
 }
@@ -93,89 +81,4 @@ function saleTitle(sale: ResearchSale): string {
   const ratio = sale.ratio === null ? "" : ` (${formatRatio(sale.ratio)} do mercado)`;
   const km = sale.mileageKm === null ? "" : ` · ${formatKm(sale.mileageKm)}`;
   return `${formatDate(sale.endsAt)} · ${sale.state ?? "UF?"} · ${sale.modelYear ?? "ano?"}${km} · ${formatBRL(sale.finalBid)}${ratio}`;
-}
-
-/** O lance e o % logo depois do anúncio: no celular, a tabela rola para o lado e eles ficam à vista. */
-/** Valor de mercado casado pelo sistema (D-47) é marcado na tabela; o da fonte fica sem marca. */
-const MARKET_ORIGIN_MARKS = {
-  source: "",
-  fipe_version: " · FIPE",
-  fipe_family: " · FIPE aprox.",
-} satisfies Record<MarketValueOrigin, string>;
-
-const SALE_COLUMNS = [
-  { key: "date", label: "Data", align: "left" },
-  { key: "sale", label: "Anúncio", align: "left" },
-  { key: "bid", label: "Lance final", align: "right" },
-  { key: "ratio", label: "% do mercado", align: "right" },
-  { key: "year", label: "Ano", align: "right" },
-  { key: "km", label: "Km", align: "right" },
-  { key: "market", label: "Valor de mercado", align: "right" },
-] as const;
-
-function SaleLink({ sale }: { sale: ResearchSale }) {
-  return (
-    <span className="grid min-w-48 gap-0.5">
-      <a
-        href={sale.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="line-clamp-2 text-accent hover:text-accent-hover hover:underline"
-      >
-        {sale.title}
-      </a>
-      <span className="text-caption text-muted">
-        {[sale.city && sale.state ? `${sale.city}/${sale.state}` : sale.state, sale.source].filter(Boolean).join(" · ")}
-      </span>
-    </span>
-  );
-}
-
-function saleRow(sale: ResearchSale) {
-  return {
-    key: sale.id,
-    date: formatDate(sale.endsAt),
-    sale: <SaleLink sale={sale} />,
-    year: sale.modelYear === null ? undefined : String(sale.modelYear),
-    km: sale.mileageKm === null ? undefined : formatKm(sale.mileageKm),
-    bid: formatBRL(sale.finalBid),
-    market:
-      sale.marketValue === null
-        ? undefined
-        : `${formatBRL(sale.marketValue)}${MARKET_ORIGIN_MARKS[sale.marketValueOrigin ?? "source"]}`,
-    ratio: sale.ratio === null ? undefined : formatRatio(sale.ratio),
-  };
-}
-
-function SalesTable({ sales }: { sales: readonly ResearchSale[] }) {
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          {SALE_COLUMNS.map((column) => (
-            <TableHead key={column.key} className={column.align === "right" ? "text-right" : undefined}>
-              {column.label}
-            </TableHead>
-          ))}
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {sales.map((sale) => {
-          const row = saleRow(sale);
-          return (
-            <TableRow key={sale.id}>
-              {SALE_COLUMNS.map((column) => (
-                <TableCell
-                  key={column.key}
-                  className={column.align === "right" ? "text-right whitespace-nowrap tabular-nums" : "tabular-nums"}
-                >
-                  {row[column.key] ?? "—"}
-                </TableCell>
-              ))}
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
-  );
 }

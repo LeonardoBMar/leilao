@@ -288,6 +288,7 @@ const saleRow = z.object({
   market_value_cents: z.number().int().nullable(),
   market_value_origin: z.enum(MARKET_VALUE_ORIGINS).nullable(),
   source: z.string(),
+  photo_url: z.string().nullable(),
 });
 
 function toSale(row: z.infer<typeof saleRow>): ResearchSale {
@@ -307,6 +308,7 @@ function toSale(row: z.infer<typeof saleRow>): ResearchSale {
     marketValueOrigin: marketValue === null ? null : row.market_value_origin,
     ratio: marketValue === null ? null : row.final_bid_cents / marketValue,
     source: row.source,
+    photoUrl: row.photo_url,
   };
 }
 
@@ -316,7 +318,7 @@ async function listSales(where: Prisma.Sql, limit: number): Promise<ResearchSale
     saleRow,
     sql`SELECT l.id::text AS id, l.url, l.title, l.ends_at, l.state::text AS state, l.city, l.model_year::int AS model_year,
         l.mileage_km, l.damage_level::text AS damage_level, l.final_bid_cents, l.market_value_cents,
-        l.market_value_origin::text AS market_value_origin, s.name AS source
+        l.market_value_origin::text AS market_value_origin, s.name AS source, l.photo_urls[1] AS photo_url
       FROM listings l JOIN sources s ON s.id = l.source_id
       WHERE ${where} ORDER BY l.ends_at DESC, l.id LIMIT ${limit}`,
   );
