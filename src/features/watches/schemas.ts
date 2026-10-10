@@ -43,6 +43,23 @@ const numberOption = (values: readonly number[]) =>
       return value && values.includes(number) ? number : null;
     });
 
+/** Regra dos monitores: sem critério de veículo, todo lote novo da região viraria alerta. */
+export function hasVehicleCriterion(criteria: ListingCriteria): boolean {
+  return (
+    criteria.search !== null ||
+    criteria.yearFrom !== null ||
+    criteria.yearTo !== null ||
+    criteria.minPrice !== null ||
+    criteria.maxPrice !== null ||
+    criteria.maxMarketPct !== null
+  );
+}
+
+/** "Salvar como monitor" em Leilões: só o nome; os critérios vêm da busca atual. */
+export const quickWatchSchema = z.object({
+  name: optionalText().pipe(z.string().max(80, "Use até 80 caracteres.").optional()),
+});
+
 /**
  * Cadastro e edição de monitor (docs/PLANO-COLETA.md, etapa 2; critérios de docs/PLANO-FILTROS.md). Mesmos critérios
  * de "Leilões". Pelo menos um critério de veículo é exigido: sem ele, todo lote novo da região viraria alerta.

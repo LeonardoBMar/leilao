@@ -1,16 +1,6 @@
 "use client";
 
-import {
-  BellPlus,
-  CalendarRange,
-  ChevronDown,
-  LoaderCircle,
-  MapPin,
-  Plus,
-  SlidersHorizontal,
-  Wallet,
-} from "lucide-react";
-import Link from "next/link";
+import { CalendarRange, ChevronDown, LoaderCircle, MapPin, Plus, SlidersHorizontal, Wallet } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useId, useOptimistic, useRef, useTransition } from "react";
 
@@ -38,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui";
 import type { ListingCriteria } from "@/domain/listings/criteria";
+import { SaveWatchButton } from "@/features/watches/components/save-watch-button";
 import { cn } from "@/lib/utils";
 
 import {
@@ -392,12 +383,7 @@ export function ListingFilterBar({
             </div>
           )}
           {scope === "auction" ? null : (
-            <Button asChild variant="ghost">
-              <Link href={withQuery("/monitores/novo", listingParams(filters))}>
-                <BellPlus aria-hidden="true" />
-                Salvar como monitor
-              </Link>
-            </Button>
+            <SaveWatchButton query={new URLSearchParams(listingParams(filters)).toString()} />
           )}
         </div>
       </div>

@@ -77,9 +77,10 @@ test("filtros aplicam na hora, vão para a URL, sobrevivem ao recarregar e passa
   await expect(search).toHaveValue("Onix");
 });
 
-test("Salvar como monitor leva os filtros para o novo monitor", async ({ page }) => {
+test("Salvar como monitor: ajustar critérios leva os filtros para o novo monitor", async ({ page }) => {
   await page.goto("/leiloes/veiculos?busca=Onix&anoDe=2015");
-  await page.getByRole("link", { name: "Salvar como monitor" }).click();
+  await page.getByRole("button", { name: "Salvar como monitor" }).click();
+  await page.getByRole("link", { name: "Ajustar critérios antes de salvar" }).click();
   await expect(page).toHaveURL(/\/monitores\/novo\?.*busca=Onix/);
   await expect(page.getByRole("textbox", { name: "Marca, modelo ou versão", exact: true })).toHaveValue("Onix");
   await expect(page.getByRole("textbox", { name: "Ano de", exact: true })).toHaveValue("2015");
