@@ -1,11 +1,17 @@
 "use client";
 
-import { Search, X } from "lucide-react";
-import { type KeyboardEvent, useId, useState } from "react";
+import { History, Search, X } from "lucide-react";
+import { type KeyboardEvent, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 
 import { cn } from "@/lib/utils";
 
 import { salesLabel } from "../labels";
+import {
+  recentModelsServerSnapshot,
+  recentModelsSnapshot,
+  rememberModel,
+  subscribeRecentModels,
+} from "../recent-models";
 import { matchModels } from "../search";
 import type { ResearchModelOption } from "../types";
 
@@ -17,13 +23,26 @@ type ModelPickerProps = {
   className?: string;
 };
 
+/** Mais sugestões que isso só atrapalham a lista; cabem os recentes e os mais vendidos. */
+const SUGGESTIONS = 8;
+
+/** A tecla `/` vale em qualquer lugar, menos onde a pessoa está digitando. */
+function isTypingTarget(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))
+  );
+}
+
 /**
  * Busca de modelo da Pesquisa (DESIGN.md §15.8): combobox que só aplica um modelo da lista, com as vendas de cada um.
- * Setas escolhem, Enter aplica o destacado (ou o primeiro), Escape fecha e devolve o texto do modelo atual.
+ * Com o campo vazio, sugere os modelos pesquisados por último e depois os mais vendidos. Setas escolhem, Enter aplica o
+ * destacado (ou o primeiro), Escape fecha e devolve o texto do modelo atual; `/` foca o campo.
  */
 export function ModelPicker({ value, options, onChange, className }: ModelPickerProps) {
   const inputId = useId();
   const listId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const recent = useSyncExternalStore(subscribeRecentModels, recentModelsSnapshot, recentModelsServerSnapshot);
   const [text, setText] = useState(value ?? "");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
@@ -34,7 +53,29 @@ export function ModelPicker({ value, options, onChange, className }: ModelPicker
     setText(value ?? "");
   }
 
-  const matches = open ? matchModels(options, text === value ? "" : text) : [];
+  useEffect(() => {
+    function focusOnSlash(event: globalThis.KeyboardEvent) {
+      if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey || isTypingTarget(event.target)) return;
+      event.preventDefault();
+      inputRef.current?.focus();
+    }
+    document.addEventListener("keydown", focusOnSlash);
+    return () => document.removeEventListener("keydown", focusOnSlash);
+  }, []);
+
+  const typed = text === value ? "" : text;
+  // Sem texto, os recentes vêm antes (com as vendas de hoje) e os mais vendidos completam a lista.
+  const recentOptions =
+    typed.trim() === ""
+      ? recent.flatMap((item) => options.find((o) => o.brand === item.brand && o.model === item.model) ?? [])
+      : [];
+  const isRecent = (option: ResearchModelOption) => recentOptions.includes(option);
+  const matches = open
+    ? [...recentOptions, ...matchModels(options, typed, SUGGESTIONS).filter((option) => !isRecent(option))].slice(
+        0,
+        SUGGESTIONS,
+      )
+    : [];
   const expanded = matches.length > 0;
 
   function close() {
@@ -47,6 +88,7 @@ export function ModelPicker({ value, options, onChange, className }: ModelPicker
     setOpen(false);
     setActive(-1);
     setText(option.label);
+    rememberModel({ brand: option.brand, model: option.model });
     onChange(option);
   }
 
@@ -78,6 +120,7 @@ export function ModelPicker({ value, options, onChange, className }: ModelPicker
           className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted"
         />
         <input
+          ref={inputRef}
           id={inputId}
           type="text"
           role="combobox"
@@ -102,6 +145,14 @@ export function ModelPicker({ value, options, onChange, className }: ModelPicker
           onBlur={close}
           className="h-10 w-full rounded-md border border-control-border bg-surface pr-10 pl-9 text-body text-foreground transition-[border-color,box-shadow] duration-120 outline-none placeholder:text-placeholder focus:border-accent focus:ring-2 focus:ring-accent/20"
         />
+        {value ? null : (
+          <kbd
+            aria-hidden="true"
+            className="pointer-events-none absolute top-1/2 right-3 hidden -translate-y-1/2 rounded-sm border border-border px-1.5 text-caption text-muted md:block"
+          >
+            /
+          </kbd>
+        )}
         {value ? (
           <button
             type="button"
@@ -139,7 +190,15 @@ export function ModelPicker({ value, options, onChange, className }: ModelPicker
               index === active ? "bg-surface-subtle text-foreground" : "text-foreground-secondary",
             )}
           >
-            <span className="truncate">{option.label}</span>
+            <span className="flex min-w-0 items-center gap-2">
+              {isRecent(option) ? (
+                <>
+                  <History aria-hidden="true" className="size-4 shrink-0 text-muted" />
+                  <span className="sr-only">Recente: </span>
+                </>
+              ) : null}
+              <span className="truncate">{option.label}</span>
+            </span>
             <span className="text-caption text-muted tabular-nums">{salesLabel(option.sales)}</span>
           </li>
         ))}
