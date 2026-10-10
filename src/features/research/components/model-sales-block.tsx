@@ -7,6 +7,7 @@ import { formatBRL, formatDate, formatKm, formatRatio } from "@/lib/format";
 import { CONDITION_LABELS, salesLabel } from "../labels";
 import { getModelSales, MODEL_SALES_LIMIT } from "../queries";
 import type { ResearchSale } from "../types";
+import { ModelCatalogActions } from "./model-catalog-actions";
 import { ModelSalesScatter } from "./model-sales-scatter";
 import { ModelSalesTable } from "./model-sales-table";
 import { ResearchBlock } from "./research-block";
@@ -32,7 +33,7 @@ export async function ModelSalesBlock({
   const title = modelSalesTitle(vehicle);
   if (data === null || data.total === 0) {
     return (
-      <ResearchBlock id="pesquisa-vendas" title={title}>
+      <ResearchBlock id="pesquisa-vendas" title={title} actions={<ModelCatalogActions filters={filters} />}>
         {noSales}
       </ResearchBlock>
     );
@@ -63,6 +64,7 @@ export async function ModelSalesBlock({
     <ResearchBlock
       id="pesquisa-vendas"
       title={title}
+      actions={<ModelCatalogActions filters={filters} />}
       description={`Lance final de cada venda (${CONDITION_LABELS[filters.condition].toLowerCase()}) por ano-modelo ou quilometragem; o traço é a mediana do ano, com 5 vendas ou mais. Destaque um estado ou uma fonte para ver onde ele cai. Passe o mouse ou toque num ponto para ver a venda; todas estão na tabela.`}
     >
       <ModelSalesScatter

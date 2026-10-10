@@ -15,14 +15,14 @@ import { createWatchFromSearchAction } from "../actions";
  * "Salvar como monitor" em Leilões: pede só o nome e grava a busca atual, sem sair da lista. Para ajustar critérios,
  * o link abre o formulário completo já preenchido.
  */
-export function SaveWatchButton({ query }: { query: string }) {
+export function SaveWatchButton({ query, label = "Salvar como monitor" }: { query: string; label?: string }) {
   const [open, setOpen] = useState(false);
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost">
           <BellPlus aria-hidden="true" />
-          Salvar como monitor
+          {label}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end">
