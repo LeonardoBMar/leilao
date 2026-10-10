@@ -52,7 +52,7 @@ function cacheOf(http: SourceHttp): RunCache {
 }
 
 /**
- * Leilão do Detran-MG (leilao.detran.mg.gov.br): quinta fonte (docs/PLANO-COLETA.md §2.8, D-48). O próprio Detran
+ * Leilão do Detran-MG (leilao.detran.mg.gov.br): quarta fonte (docs/PLANO-COLETA.md §2.8, D-48). O próprio Detran
  * vende, sem leiloeiro; HTML do servidor, sem anti-robô. A descoberta lê os leilões abertos da página inicial e a lista
  * de cada um; o lote junta o cartão da lista (leilão, município, pátio), a página do lote (ficha e fotos, lida uma
  * vez) e a consulta interna de situação, que responde por 100 lotes de uma vez e mantém o valor final depois do fim.
