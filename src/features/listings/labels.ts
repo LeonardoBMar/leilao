@@ -1,5 +1,5 @@
 import type { ConditionFlag, DamageLevel, InspectionResult } from "@/domain/listings/condition";
-import type { LimitFit } from "@/domain/listings/estimates";
+import type { ComparableLevel, EstimateConfidence, LimitFit, PriceEstimate } from "@/domain/listings/estimates";
 import type { MarketValueOrigin } from "@/domain/listings/fipe-match";
 import type { ListingStatus } from "@/domain/listings/types";
 import { formatShortMonth } from "@/lib/format";
@@ -71,6 +71,40 @@ export const LIMIT_FIT_VARIANTS = {
   tight: "warning",
   above: "destructive",
 } as const satisfies Record<LimitFit, "success" | "warning" | "destructive">;
+
+/** Confiança do preço provável (D-72): pelo número de vendas e pela largura da faixa. */
+export const CONFIDENCE_LABELS = {
+  high: "confiança alta",
+  medium: "confiança média",
+  low: "confiança baixa",
+} satisfies Record<EstimateConfidence, string>;
+
+/** De que grupo vieram os comparáveis (D-72). */
+export const COMPARABLE_LEVEL_LABELS = {
+  version: "da mesma versão",
+  family: "da mesma família",
+  model: "do mesmo modelo",
+} satisfies Record<ComparableLevel, string>;
+
+/**
+ * De onde veio o preço provável, curto, para ao lado do valor: "12 vendas, confiança alta" ou "pela categoria,
+ * confiança baixa". Sem base, `null` (quem chama diz o que falta).
+ */
+export function priceEvidenceLabel(price: PriceEstimate): string | null {
+  if (price.kind === "insufficient") return null;
+  const basis = price.kind === "comparables" ? `${price.n} ${price.n === 1 ? "venda" : "vendas"}` : "pela categoria";
+  return `${basis}, ${CONFIDENCE_LABELS[price.confidence]}`;
+}
+
+/** O mesmo, por extenso, para "Como foi estimado". */
+export function priceBasisLabel(price: PriceEstimate): string | null {
+  if (price.kind === "insufficient") return null;
+  if (price.kind === "market_ratio") {
+    return `proporção do valor de mercado em ${price.n} vendas da mesma categoria e condição`;
+  }
+  const origin = price.sameOrigin ? " e da mesma origem" : "";
+  return `${price.n} vendas ${COMPARABLE_LEVEL_LABELS[price.level]}${origin}, ano ±1 e mesma condição`;
+}
 
 /**
  * De onde veio o valor de mercado (D-47): o da fonte ou o casado pelo sistema na tabela FIPE do mês, com aviso quando

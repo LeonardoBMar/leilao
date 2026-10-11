@@ -16,6 +16,8 @@ import {
   LISTING_STATUS_LABELS,
   LISTING_STATUS_VARIANTS,
   marketValueOriginLabel,
+  priceBasisLabel,
+  priceEvidenceLabel,
 } from "../labels";
 import type { ListingEstimate, ListingListItem } from "../types";
 import { AddToTrackerButton } from "./add-to-tracker-button";
@@ -168,7 +170,7 @@ function EstimateLines({ estimate }: { estimate: ListingEstimate }) {
             ) : (
               <>
                 <Money value={price.median} className="font-semibold text-foreground" />{" "}
-                <span className="text-muted">(n={price.n})</span>
+                <span className="text-muted">({priceEvidenceLabel(price)})</span>
               </>
             )}
           </dd>
@@ -197,7 +199,8 @@ function EstimateLines({ estimate }: { estimate: ListingEstimate }) {
         <ul className="mt-1.5 grid gap-1 text-muted">
           {price.kind === "comparables" ? (
             <li>
-              Provável: {price.n} vendas parecidas, faixa <Money value={price.low} /> a <Money value={price.high} />.
+              Provável: {priceBasisLabel(price)}. Metade das próximas vendas deve ficar entre{" "}
+              <Money value={price.low} /> e <Money value={price.high} />.
             </li>
           ) : null}
           {price.kind === "market_ratio" ? (
@@ -288,7 +291,7 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
           </span>
           {price && price.kind !== "insufficient" ? (
             <span>
-              · provável <Money value={price.median} /> (n={price.n})
+              · provável <Money value={price.median} /> ({priceEvidenceLabel(price)})
             </span>
           ) : null}
           {fit === null ? null : <Badge variant={LIMIT_FIT_VARIANTS[fit]}>{LIMIT_FIT_LABELS[fit]}</Badge>}

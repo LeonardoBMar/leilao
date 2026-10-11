@@ -1,7 +1,12 @@
 import { Badge, Card, Money, Stat } from "@/components/ui";
 import { compareToFixedLimit } from "@/domain/finance/calculator";
 import { cents } from "@/domain/money";
-import { LIMIT_FIT_LABELS, LIMIT_FIT_VARIANTS, marketValueOriginLabel } from "@/features/listings/labels";
+import {
+  LIMIT_FIT_LABELS,
+  LIMIT_FIT_VARIANTS,
+  marketValueOriginLabel,
+  priceEvidenceLabel,
+} from "@/features/listings/labels";
 import { formatBRL, formatDate, formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -128,7 +133,7 @@ function ListingFacts({ tracking }: { tracking: Tracking }) {
           ) : (
             <span className="flex flex-wrap items-center gap-2">
               <Money value={price.median} />
-              <span className="text-caption text-muted">n={price.n}</span>
+              <span className="text-caption text-muted">{priceEvidenceLabel(price)}</span>
               {fit === null ? null : <Badge variant={LIMIT_FIT_VARIANTS[fit]}>{LIMIT_FIT_LABELS[fit]}</Badge>}
             </span>
           )}

@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { Badge, ButtonLink, EmptyState, Money, Skeleton } from "@/components/ui";
-import { LIMIT_FIT_LABELS, LIMIT_FIT_VARIANTS } from "@/features/listings/labels";
+import { LIMIT_FIT_LABELS, LIMIT_FIT_VARIANTS, priceEvidenceLabel } from "@/features/listings/labels";
 import { formatDate, formatShortDateTime } from "@/lib/format";
 
 import { getFollowedLotsOverview } from "../queries";
@@ -96,7 +96,8 @@ function ProbableLine({ lot }: { lot: FollowedLotItem }) {
   return (
     <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-muted">
       <span>
-        Provável <Money value={price.median} className="font-medium text-foreground-secondary" /> (n={price.n})
+        Provável <Money value={price.median} className="font-medium text-foreground-secondary" /> (
+        {priceEvidenceLabel(price)})
       </span>
       {fit === null ? null : <Badge variant={LIMIT_FIT_VARIANTS[fit]}>{LIMIT_FIT_LABELS[fit]}</Badge>}
     </p>
