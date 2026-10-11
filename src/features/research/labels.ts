@@ -1,4 +1,6 @@
+import type { ComparableLevel, SimilarityReason } from "@/domain/listings/estimates";
 import { cents } from "@/domain/money";
+import type { BandPosition, EvaluateLoosen } from "@/domain/research/evaluate";
 import type { ResearchCategory, ResearchCondition, ResearchMetric } from "@/domain/research/filters";
 import {
   type ExcludedSales,
@@ -97,4 +99,48 @@ export function riseLabel(ratioToFinal: number): string {
 export function belowMarketLabel(median: number): string {
   if (median >= 1) return `${formatRatio(median - 1)} acima do valor de mercado`;
   return `${formatRatio(1 - median)} abaixo do valor de mercado`;
+}
+
+/** De que grupo vêm as vendas do Avaliar (D-71, D-72). */
+export const EVALUATE_LEVEL_LABELS = {
+  version: "mesma versão FIPE",
+  family: "mesma família",
+  model: "mesmo modelo",
+} as const satisfies Record<ComparableLevel, string>;
+
+/** Por que uma venda é parecida com o lote alvo. */
+export const SIMILARITY_LABELS = {
+  same_version: "mesma versão",
+  same_family: "mesma família",
+  same_year: "mesmo ano",
+  year_apart: "outro ano",
+  same_origin: "mesma origem",
+  close_mileage: "km próximo",
+  same_condition: "mesma condição",
+} as const satisfies Record<SimilarityReason, string>;
+
+/** Lance atual de um lote aberto frente à faixa do recorte. */
+export const BAND_POSITION_LABELS = {
+  below: "Abaixo da faixa",
+  inside: "Dentro da faixa",
+  above: "Acima da faixa",
+} as const satisfies Record<BandPosition, string>;
+
+export const BAND_POSITION_VARIANTS = {
+  below: "success",
+  inside: "default",
+  above: "warning",
+} as const satisfies Record<BandPosition, "success" | "default" | "warning">;
+
+const LOOSEN_LABELS = {
+  years: "Ano ±1 a mais",
+  km: "Qualquer km",
+  origin: "Qualquer origem",
+  version: "Todas as versões",
+  family: "Todas as famílias",
+} as const satisfies Record<EvaluateLoosen["change"], string>;
+
+/** Botão que afrouxa um filtro: "Qualquer km (12 vendas)". */
+export function loosenLabel({ change, n }: EvaluateLoosen): string {
+  return `${LOOSEN_LABELS[change]} (${salesLabel(n)})`;
 }

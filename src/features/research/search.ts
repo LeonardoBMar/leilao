@@ -2,9 +2,10 @@ import type { Route } from "next";
 
 import { toSearchText } from "@/domain/listings/criteria";
 import { BRAND_ALIASES } from "@/domain/listings/vehicle-key";
+import type { EvaluateFilters } from "@/domain/research/evaluate";
 import type { ResearchFilters, ResearchVehicle } from "@/domain/research/filters";
 
-import { researchParams } from "./schemas";
+import { evaluateParams, researchParams } from "./schemas";
 
 /** Abas do Mercado (D-71): Avaliar um veículo, Panorama do catálogo (a antiga Pesquisa) e Calibração. */
 export const MARKET_PATH = "/mercado";
@@ -19,6 +20,12 @@ export type SearchParams = Promise<Record<string, string | string[] | undefined>
 export function researchHref(filters: ResearchFilters): Route {
   const query = new URLSearchParams(researchParams(filters)).toString();
   return (query ? `${RESEARCH_PATH}?${query}` : RESEARCH_PATH) as Route;
+}
+
+/** Endereço do Avaliar com este recorte (sem os padrões). */
+export function evaluateHref(filters: EvaluateFilters): Route {
+  const query = new URLSearchParams(evaluateParams(filters)).toString();
+  return (query ? `${MARKET_PATH}?${query}` : MARKET_PATH) as Route;
 }
 
 /**

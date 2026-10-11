@@ -122,6 +122,8 @@ describe("evaluate", () => {
     expect(result.families).toEqual([{ value: "CHEVROLET|ONIX|PLUS", n: 1 }]);
     expect(result.versions).toEqual([{ value: "004450-1", n: 1 }]);
     expect(result.origins).toMatchObject({ orgao_publico: 1, financiamento: 1 });
+    expect(result.conditions).toMatchObject({ "sem-monta": 1, media: 0 });
+    expect(result.years).toEqual([{ year: 2020, n: 1 }]);
   });
 
   it("com lote alvo, ordena pela semelhança e diz por quê", () => {

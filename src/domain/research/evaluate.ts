@@ -140,6 +140,9 @@ export type Evaluation<S> = {
   families: EvaluateOption[];
   versions: EvaluateOption[];
   origins: Record<VehicleOrigin, number>;
+  conditions: Record<ResearchCondition, number>;
+  /** Anos-modelo com venda, do mais novo ao mais antigo, sem o filtro de ano. */
+  years: { year: number; n: number }[];
 };
 
 const ROUND_TO_CENTS = 10_000;
@@ -207,8 +210,15 @@ export function evaluate<S extends EstimateSale>(
     orgao_publico: 0,
     outros: 0,
   };
+  const conditions: Record<ResearchCondition, number> = { "sem-monta": 0, pequena: 0, media: 0, grande: 0, sucata: 0 };
+  const years = new Map<number, number>();
   for (const sale of kept) {
     if (sale.origin !== null && inCut(sale, filters, "origin")) origins[sale.origin] += 1;
+    const condition = RESEARCH_CONDITIONS.find((key) => DAMAGE_OF_CONDITION[key] === sale.damageLevel);
+    if (condition !== undefined && inCut(sale, filters, "condition")) conditions[condition] += 1;
+    if (sale.modelYear !== null && inCut(sale, filters, "years")) {
+      years.set(sale.modelYear, (years.get(sale.modelYear) ?? 0) + 1);
+    }
   }
 
   return {
@@ -220,6 +230,8 @@ export function evaluate<S extends EstimateSale>(
     families: tally("family", (sale) => vehicleFamilyKey(sale.brand, sale.model, sale.category)),
     versions: tally("version", (sale) => sale.fipeCode),
     origins,
+    conditions,
+    years: [...years].map(([year, n]) => ({ year, n })).sort((a, b) => b.year - a.year),
   };
 }
 

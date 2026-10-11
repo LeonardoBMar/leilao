@@ -57,6 +57,7 @@ import type {
   ModelRanking,
   ModelSales,
   ResearchFacets,
+  ResearchModelOption,
   ResearchOverview,
   ResearchSale,
   SaleBids,
@@ -795,4 +796,20 @@ export const getOpenListingsFor = cache(async (filters: EvaluateFilters): Promis
     trackedLotId: lotOf.get(row.id) ?? null,
     trackable: row.brand !== null && row.model !== null && row.model_year !== null,
   }));
+});
+
+/** Modelos com venda no último ano, de qualquer categoria e condição, para a busca do Avaliar. */
+export const getEvaluateModels = cache(async (): Promise<ResearchModelOption[]> => {
+  await requireUser();
+  const models = await rows(
+    z.object({ key: z.string(), n: z.number().int() }),
+    sql`SELECT t.key, count(*)::int AS n
+      FROM (SELECT ${VEHICLE_KEY} AS key FROM listings l
+        WHERE l.status = 'sold' AND l.final_bid_cents > 0 AND l.ends_at >= ${salesSince()}) t
+      WHERE t.key IS NOT NULL GROUP BY t.key ORDER BY 2 DESC, 1 LIMIT ${MODEL_SUGGESTIONS_LIMIT}`,
+  );
+  return models.flatMap(({ key, n }) => {
+    const [brand = "", model = ""] = key.split("|");
+    return brand && model ? [{ brand, model, label: vehicleLabel({ brand, model }), sales: n }] : [];
+  });
 });
