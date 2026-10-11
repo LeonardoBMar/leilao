@@ -103,9 +103,9 @@ export function belowMarketLabel(median: number): string {
 
 /** De que grupo vêm as vendas do Avaliar (D-71, D-72). */
 export const EVALUATE_LEVEL_LABELS = {
-  version: "mesma versão FIPE",
-  family: "mesma família",
-  model: "mesmo modelo",
+  version: "da mesma versão FIPE",
+  family: "da mesma família",
+  model: "do mesmo modelo",
 } as const satisfies Record<ComparableLevel, string>;
 
 /** Por que uma venda é parecida com o lote alvo. */

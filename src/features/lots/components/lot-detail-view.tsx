@@ -14,20 +14,20 @@ import { EditLotDrawer } from "./edit-lot-drawer";
 import { FollowSwitch } from "./follow-switch";
 import { LotActions } from "./lot-actions";
 
-/** Ficha do lote (SPEC `/lotes/[id]`, DESIGN.md §15.3). Lance e limite primeiro; depois análise, resultado e veículo. */
+/** Ficha do lote (SPEC `/lotes/[id]`, DESIGN.md §15.3). Lance e limite primeiro; depois análise, mercado, resultado e veículo. */
 type LotDetailViewProps = {
   params: Promise<{ id: string }>;
   /** Blocos de análise e resultado, compostos pela rota (outras features não são importadas aqui). */
   analysis: React.ReactNode;
   result: React.ReactNode;
   photos: React.ReactNode;
-  /** Link para as vendas parecidas na Pesquisa, composto pela rota. */
-  research: React.ReactNode;
+  /** "Mercado deste lote": faixa de arremate e vendas parecidas, composto pela rota. */
+  market: React.ReactNode;
   /** Próximo passo (analisar, continuar o rascunho ou registrar o resultado), em destaque no cabeçalho. */
   nextAction: React.ReactNode;
 };
 
-export async function LotDetailView({ params, analysis, result, photos, research, nextAction }: LotDetailViewProps) {
+export async function LotDetailView({ params, analysis, result, photos, market, nextAction }: LotDetailViewProps) {
   const parsed = lotIdSchema.safeParse((await params).id);
   if (!parsed.success) notFound();
   const lot = await getLot(parsed.data);
@@ -79,6 +79,7 @@ export async function LotDetailView({ params, analysis, result, photos, research
       <div className="grid gap-9 xl:grid-cols-[minmax(0,1.75fr)_minmax(0,1fr)] xl:gap-14">
         <div className="grid content-start gap-9">
           {analysis}
+          {market}
           {result}
         </div>
 
@@ -113,7 +114,6 @@ export async function LotDetailView({ params, analysis, result, photos, research
                 )}
               </Detail>
             </dl>
-            {research}
           </Section>
 
           <div className="border-t border-border pt-6">{photos}</div>

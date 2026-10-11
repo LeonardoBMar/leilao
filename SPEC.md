@@ -177,7 +177,7 @@ Plano e decisões em `docs/PLANO-FILTROS.md` (D-43).
 - Resumo da última análise fixada e acesso às versões anteriores.
 - Ações para acompanhar, analisar e registrar resultado.
 - Bloco de resultado com preço final, comparação e participação do usuário.
-- Link **Ver vendas parecidas**, que abre a Pesquisa com o modelo do lote e, se ele vem de um anúncio coletado, a condição, a categoria e o estado do anúncio.
+- Painel **Mercado deste lote**: a faixa típica de arremate no recorte do preço provável (modelo, ano ±1 e condição), com mediana, número de vendas e confiança, e as 5 vendas mais parecidas. **Ver as N vendas** abre o Avaliar com o lote como alvo. Lote manual usa marca, modelo e ano; com anúncio ligado, a versão, a origem e o km entram na semelhança.
 
 ### `/analise/[id]` — Análise financeira
 

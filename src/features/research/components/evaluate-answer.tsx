@@ -96,7 +96,7 @@ export function EvaluateAnswer({
               <Fact label="Confiança">{CONFIDENCE_SHORT_LABELS[answer.confidence]}</Fact>
             </dl>
             <p className="text-caption text-muted">
-              Vendas da {EVALUATE_LEVEL_LABELS[level]}
+              Vendas {EVALUATE_LEVEL_LABELS[level]}
               {excluded > 0 ? `, sem as ${salesLabel(excluded)} que você tirou` : ""}.
             </p>
             {filters.yearFrom === null && filters.yearTo === null && evaluation.years.length > MIXED_YEARS ? (
