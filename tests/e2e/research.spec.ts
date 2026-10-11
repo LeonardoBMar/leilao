@@ -48,7 +48,7 @@ test("clicar num estado mostra o detalhe dele frente ao Brasil, e o chip volta a
   await expect(mapStates(page).and(page.locator('[aria-current="true"]'))).toHaveCount(1);
 
   await page
-    .getByRole("region", { name: "Filtros" })
+    .getByRole("list", { name: "Filtros ativos" })
     .getByRole("button", { name: `Remover filtro ${name}` })
     .click();
   await expect(page).not.toHaveURL(/uf=/);
@@ -83,9 +83,16 @@ test("escolher um modelo troca o ranking pelas vendas do modelo e libera o mapa 
   await expect(section(page, "Modelos que mais saem abaixo do valor de mercado")).toBeVisible();
 });
 
-test("a condição muda pela lista e vai para a URL", async ({ page }) => {
+/** Abre a gaveta "Mais filtros" (condição, estado, fonte, km e ano). */
+async function openMoreFilters(page: Page) {
+  await page.getByRole("button", { name: /^Mais filtros/ }).click();
+  return page.getByRole("dialog", { name: "Mais filtros" });
+}
+
+test("a condição muda pela gaveta, vai para a URL e vira chip", async ({ page }) => {
   await page.goto("/mercado/panorama");
-  const select = page.getByRole("combobox", { name: "Condição" });
+  const drawer = await openMoreFilters(page);
+  const select = drawer.getByRole("combobox", { name: "Condição" });
   await select.click();
   // A primeira condição com venda além do padrão (condição sem venda fica desabilitada).
   const others = { "Pequena monta": "pequena", "Média monta": "media", "Grande monta": "grande", Sucata: "sucata" };
@@ -101,14 +108,22 @@ test("a condição muda pela lista e vai para a URL", async ({ page }) => {
   await choice.option.click();
   await expect(page).toHaveURL(new RegExp(`condicao=${choice.key}`));
   await expect(select).toHaveText(new RegExp(choice.label));
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "Mais filtros (1)" })).toBeVisible();
+  await page
+    .getByRole("list", { name: "Filtros ativos" })
+    .getByRole("button", { name: `Remover filtro ${choice.label}` })
+    .click();
+  await expect(page).not.toHaveURL(/condicao=/);
 });
 
 test("filtro inválido na URL cai no padrão, sem erro", async ({ page }) => {
   await page.goto("/mercado?condicao=xyz&categoria=barcos&uf=ZZ&medida=price");
   await expect(page.getByRole("heading", { name: "Mercado", level: 1 })).toBeVisible();
-  await expect(page.getByRole("combobox", { name: "Condição" })).toHaveText(/Sem monta declarada/);
   await expect(page.getByRole("combobox", { name: "Categoria" })).toHaveText(/Carros/);
   await expect(page.getByRole("button", { name: /^Remover filtro/ })).toHaveCount(0);
+  const drawer = await openMoreFilters(page);
+  await expect(drawer.getByRole("combobox", { name: "Condição" })).toHaveText(/Sem monta declarada/);
   // Sem modelo, a medida é sempre o % do mercado.
   await expect(page.getByRole("navigation", { name: "Medida do mapa" })).toHaveCount(0);
 });
