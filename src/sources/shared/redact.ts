@@ -11,6 +11,11 @@ const PLATE = /\b[A-Z]{3}-?\d[A-Z0-9]\d{2}\b/gi;
 const LABELED_SPACED_PLATE = /\b(PLACA)(\s*(?:N[º°O.]*)?\s*:?\s*)[A-Z]{3} \d[A-Z0-9]\d{2}\b/gi;
 /** Chassi (VIN): 17 letras e números, sem I, O e Q, com pelo menos um de cada. */
 const CHASSIS = /\b(?=[A-HJ-NPR-Z0-9]*\d)(?=[A-HJ-NPR-Z0-9]*[A-HJ-NPR-Z])[A-HJ-NPR-Z0-9]{17}\b/gi;
+/**
+ * Chassi depois do rótulo, de qualquer tamanho: alguns leiloeiros digitam errado ("CHASSI 93Y4SRF84JJ9142204", com 18
+ * caracteres) e o padrão de 17 não pega.
+ */
+const LABELED_CHASSIS = /\b(CHASSIS?)(\s*(?:N[º°O.]*)?\s*:?\s*)(?=[A-Z0-9]*\d)[A-Z0-9]{8,20}\b/gi;
 const RENAVAM = /\b(RENAVAM)(\s*(?:N[º°O.]*)?\s*:?\s*)\d{9,11}\b/gi;
 
 export const REDACTED = "[removido]";
@@ -20,6 +25,7 @@ export function redactVehicleIds(text: string): string {
   return text
     .replace(RENAVAM, `$1$2${REDACTED}`)
     .replace(LABELED_SPACED_PLATE, `$1$2${REDACTED}`)
+    .replace(LABELED_CHASSIS, `$1$2${REDACTED}`)
     .replace(CHASSIS, REDACTED)
     .replace(PLATE, REDACTED);
 }

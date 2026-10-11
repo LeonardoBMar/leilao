@@ -3,6 +3,7 @@ import { detranScSource } from "./detran-sc";
 import { freitasSource } from "./freitas";
 import { leilaoOnlineSource } from "./leilao-online";
 import { leiloSource } from "./leilo";
+import { leiloesFreireSource } from "./leiloes-freire";
 import { leiloesPbSource } from "./leiloes-pb";
 import { patioSaoCarlosSource } from "./patio-sao-carlos";
 import { superbidSource } from "./superbid";
@@ -21,4 +22,5 @@ export const SOURCES: readonly SourceAdapter[] = [
   detranScSource,
   superbidSource,
   leiloesPbSource,
+  leiloesFreireSource,
 ];

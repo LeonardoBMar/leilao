@@ -24,6 +24,13 @@ describe("redactVehicleIds", () => {
     expect(redactVehicleIds(text)).toBe(text);
   });
 
+  it("chassi digitado com outro tamanho some depois do rótulo", () => {
+    expect(redactVehicleIds("RENAULT/LOGAN, CHASSI 93Y4SRF84JJ9142204, PLACA S/INFO")).toBe(
+      "RENAULT/LOGAN, CHASSI [removido], PLACA S/INFO",
+    );
+    expect(redactVehicleIds("TRATOR 650, CHASSI: MF489535M3.")).toBe("TRATOR 650, CHASSI: [removido].");
+  });
+
   it("placa com espaço só some depois do rótulo", () => {
     expect(redactVehicleIds("VW/GOL, placa CED 8398, branco")).toBe("VW/GOL, placa [removido], branco");
     expect(redactVehicleIds("Placa nº: BRA 2E19")).toBe("Placa nº: [removido]");

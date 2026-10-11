@@ -175,6 +175,20 @@ Marketplace nacional de leilões corporativos e judiciais (seguradoras, locadora
 | Resultado | O lote encerrado continua na API com `price` = maior lance; conferido no site em dois lotes (3773745: R$ 129.000; 3752797: R$ 26.500). O site mostra "Lance atual" e o selo "Encerrado" para quase tudo (o selo "Vendido" só vem com a flag `sold`, que não apareceu nos encerrados recentes), então o desfecho sai do **`statusCode`**. Nos 300 encerrados mais novos: **3** = vencedor e preço ≥ reserva (137 de 137); **7** = vencedor e preço abaixo da reserva (48 de 48), igual no histórico de 2025; **6** = sem lance (27 dos 70 com `removed`); **11** = misto (18 com vencedor, 4 acima da reserva), só nos encerrados recentes e nunca no histórico; **80** = 1 lance, sem vencedor, preço igual à reserva (raro) | `3` → vendido; `7` → condicional; `6` → retirado se `removed`, senão não vendido; `11` e `80` → **desconhecido** (nunca adivinhado), com revisita por `id` enquanto o lote estiver na janela. Se o `11` virar outro código, a revisita corrige |
 | Dados pessoais | `winnerBid` traz o id e o login mascarado do vencedor ("J\*\*\*\*\*00"); a descrição traz placa final e às vezes chassi | `winnerBid` só como "tem vencedor"; id e login não são gravados. Redação comum (D-40) na descrição |
 
+### 2.12 Nona fonte: Leilões Freire (`leiloesfreire.com.br`, levantamento de 2026-10-11)
+
+Leiloeiro de Maceió com leilões de prefeituras de **Alagoas, Pernambuco e Sergipe**, do **Detran-AL** (Maceió e Arapiraca) e alguns judiciais e de empresas. Buscada para cobrir o Nordeste depois da D-67: o sistema tinha só 1 lote em AL e nenhum aberto em SE. Implementada em 11/10/2026 (D-68), com carga avulsa dos leilões encerrados. **Passa na regra do preço final.**
+
+| Item | Achado | Consequência |
+| --- | --- | --- |
+| `robots.txt` e termos | Sem regras para as páginas lidas. Termos de uso não lidos | Mesmo regime das outras fontes: uso privado, coleta identificada, pausa em `sources.active` |
+| Acesso sem navegador | HTML do servidor (Laravel + Vue), sem anti-robô nem login | Cabe na `SourceHttp` atual |
+| Descoberta | `/leiloes` lista só os leilões abertos (4 em 11/10). A página `/leilao/{id}` tem os links dos lotes; a página de qualquer lote (`/leilao/lote/{id}`) traz **o leilão inteiro** no atributo `:data-leilao` (JSON com todos os lotes). Ids de leilão sequenciais (1140 a 1188 em agosto a outubro) | Três requisições por leilão; a página do lote fica em cache na execução e serve a todos os lotes. Encerrados entram pela carga avulsa por faixa de ids |
+| Dados do lote | Descrição no formato do registro ("VW/GOL 1.0, ANO/MOD 2009/2009, COR PRATA, COMBUS ALCO/GASOL, PLACA …, RENAVAM …"), situação, último lance, avaliação, lance mínimo, comissão, fotos em `/storage/lotes/`, título e local do leilão | Marca, modelo, anos, cor e combustível da descrição; cidade e UF do título ou do local; sem km, chave e monta |
+| Resultado | Depois do pregão o lote continua no ar com **"Vendido"** e o valor da venda (ex.: Barra de Santo Antônio/AL, 22/09: 8 de 8 vendidos, micro-ônibus 2012/2013 por R$ 26.400), "Retirado" ou "Aguardando Lance" (sem lance) | Situação 5 → vendido com preço final; 3 → retirado; sem lance em leilão encerrado → não vendido |
+| Dados pessoais | O JSON traz o apelido de quem deu o último lance, ids de arrematante e de usuário; descrições com placa, chassi (às vezes com tamanho errado) e Renavam | Nada de quem deu lance é lido; redação comum (D-40), que passa a apagar qualquer código depois de "CHASSI" |
+| Volume | Em ~80 leilões lidos: 1.060 veículos, 0 problemas de contrato; Maceió 351, Arapiraca 228, e prefeituras de AL, PE e SE. 29 lotes (judiciais e de empresa) sem local | Sergipe e Pernambuco aparecem a cada poucas semanas; entre um pregão e outro a fonte pode ter poucos abertos |
+
 ## 3. Arquitetura
 
 ```text

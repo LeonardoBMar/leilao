@@ -14,6 +14,8 @@ export const ASTAVERO_IMAGE_ORIGIN = "https://objectstorage.sa-saopaulo-1.oracle
 export const SUPERBID_IMAGE_ORIGIN = "https://ms.sbwebservices.net";
 /** Arquivos da plataforma Suporte Leilões (Leilões PB e outros sites); o adaptador só aceita a pasta de bens do site. */
 export const SUPORTE_LEILOES_IMAGE_ORIGIN = "https://static.suporteleiloes.com.br";
+/** Site da Leilões Freire; o adaptador só monta fotos da pasta `/storage/lotes/`. */
+export const LEILOES_FREIRE_IMAGE_ORIGIN = "https://www.leiloesfreire.com.br";
 
 export const LISTING_IMAGE_ORIGINS = [
   LEILO_IMAGE_ORIGIN,
@@ -24,4 +26,5 @@ export const LISTING_IMAGE_ORIGINS = [
   ASTAVERO_IMAGE_ORIGIN,
   SUPERBID_IMAGE_ORIGIN,
   SUPORTE_LEILOES_IMAGE_ORIGIN,
+  LEILOES_FREIRE_IMAGE_ORIGIN,
 ] as const;
