@@ -10,6 +10,7 @@ import {
   MIN_SAMPLE,
   rankModels,
   ratioAxisMax,
+  remainingRise,
   summarize,
   unclassifiedLooksMixed,
 } from "./summary";
@@ -135,6 +136,32 @@ describe("bidCurve", () => {
     ]);
     expect(points.map((point) => point.hours)).toEqual([48, 1]);
     expect(points[0]?.summary.median).toBe(0.9);
+  });
+});
+
+describe("remainingRise", () => {
+  const points = bidCurve([
+    { hours: 48, stats: stats(200, 0.8) },
+    { hours: 12, stats: stats(300, 0.9) },
+    { hours: 1, stats: stats(400, 0.99) },
+    { hours: 6, stats: stats(4, 0.95) },
+  ]);
+
+  it("usa a marca mais próxima do que falta", () => {
+    expect(remainingRise(points, 13)).toEqual({ hours: 12, rise: 1 / 0.9 - 1, n: 300 });
+    expect(remainingRise(points, 60)?.hours).toBe(48);
+    expect(remainingRise(points, 0.4)?.hours).toBe(1);
+    expect(remainingRise(points, 48)?.rise).toBeCloseTo(0.25);
+  });
+
+  it("sem amostra mínima na marca mais próxima, não diz nada", () => {
+    expect(remainingRise(points, 6)).toBeNull();
+    expect(remainingRise(points, 24)).toBeNull();
+  });
+
+  it("encerrado ou longe demais do fim, não diz nada", () => {
+    expect(remainingRise(points, 0)).toBeNull();
+    expect(remainingRise(points, 73)).toBeNull();
   });
 });
 

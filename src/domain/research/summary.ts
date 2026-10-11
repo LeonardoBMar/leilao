@@ -143,3 +143,24 @@ export function bidCurve(marks: readonly { hours: BidCurveHour; stats: GroupStat
     return summary.kind === "summary" ? [{ hours, summary }] : [];
   });
 }
+
+/** Além disto do fim, nenhuma marca da curva representa o lote (48 h + a janela de 24 h da observação). */
+const BID_CURVE_HORIZON_HOURS = BID_CURVE_HOURS[0] + BID_CURVE_LOOKBACK_HOURS;
+
+/**
+ * Quanto o lance ainda costuma subir até o fim (docs/PLANO-MERCADO.md T3.6): na marca de horas mais próxima do que
+ * falta, o lance final dividido pelo lance da marca, menos 1, na mediana. A marca precisa ter amostra mínima (a curva
+ * só traz essas); sem ela, ou com o lote encerrado ou longe demais do fim, `null`.
+ */
+export function remainingRise(
+  points: readonly BidCurvePoint[],
+  hoursLeft: number,
+): { hours: BidCurveHour; rise: number; n: number } | null {
+  if (hoursLeft <= 0 || hoursLeft > BID_CURVE_HORIZON_HOURS) return null;
+  const nearest = BID_CURVE_HOURS.reduce((best, hours) =>
+    Math.abs(hours - hoursLeft) < Math.abs(best - hoursLeft) ? hours : best,
+  );
+  const point = points.find((candidate) => candidate.hours === nearest);
+  if (point === undefined || point.summary.median <= 0) return null;
+  return { hours: nearest, rise: 1 / point.summary.median - 1, n: point.summary.n };
+}

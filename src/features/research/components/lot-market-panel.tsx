@@ -1,8 +1,9 @@
 import { ChartNoAxesColumn, ExternalLink } from "lucide-react";
-import type { ReactNode } from "react";
 
 import { ButtonLink, Section, SectionHeader, SectionTitle, Skeleton } from "@/components/ui";
 import { DEFAULT_EVALUATE_FILTERS, type EvaluateComparable, targetFilters } from "@/domain/research/evaluate";
+import { DEFAULT_RESEARCH_FILTERS } from "@/domain/research/filters";
+import { remainingRise } from "@/domain/research/summary";
 import { formatCompactBRL, formatDate, formatKm, formatRatio } from "@/lib/format";
 
 import {
@@ -12,19 +13,22 @@ import {
   salesLabel,
   SIMILARITY_LABELS,
 } from "../labels";
-import { getEvaluation, getLotTarget } from "../queries";
+import { getBidCurve, getEvaluation, getLotTarget } from "../queries";
 import { evaluateHref } from "../search";
 import type { EvaluateSaleView } from "../types";
 
 /** Comparáveis mostrados na ficha; o resto fica no Avaliar. */
 const SHOWN = 5;
 
+const HOUR_MS = 60 * 60 * 1000;
+
 /**
  * "Mercado deste lote" (docs/PLANO-MERCADO.md §6, T3.1): a faixa típica de arremate no mesmo recorte do preço provável
  * (modelo, ano ±1 e condição) e as 5 vendas mais parecidas, com "Ver todas" no Avaliar. Lote manual usa marca, modelo
- * e ano; com anúncio ligado, a versão, a origem e o km entram na semelhança. `extra` vem da rota (curva do lance).
+ * e ano; com anúncio ligado, a versão, a origem e o km entram na semelhança. Com o anúncio aberto, quanto o lance
+ * ainda costuma subir até o fim (T3.6).
  */
-export async function LotMarketPanel({ lotId, extra }: { lotId: string; extra?: ReactNode }) {
+export async function LotMarketPanel({ lotId }: { lotId: string }) {
   const lot = await getLotTarget(lotId);
   if (lot === null) return null;
   const filters = targetFilters(lot.target, lot.id, []);
@@ -67,7 +71,7 @@ export async function LotMarketPanel({ lotId, extra }: { lotId: string; extra?: 
                 : `Só ${salesLabel(evaluation.answer.n)} neste recorte: pouco para uma faixa. No Avaliar dá para afrouxar o ano ou a condição.`}
             </p>
           )}
-          {extra}
+          {lot.endsAt === null ? null : <RemainingRise endsAt={lot.endsAt} />}
           {evaluation.comparables.length === 0 ? null : (
             <div className="grid gap-2">
               <h3 className="text-label text-muted">As vendas mais parecidas</h3>
@@ -81,6 +85,22 @@ export async function LotMarketPanel({ lotId, extra }: { lotId: string; extra?: 
         </div>
       )}
     </Section>
+  );
+}
+
+/**
+ * "Com 12 h para o fim, o lance ainda sobe ~11%" (T3.6): a curva do lance de todo o catálogo (carros sem monta), que
+ * pouco muda com o filtro, na marca de horas mais próxima do que falta. Só com amostra mínima na marca.
+ */
+async function RemainingRise({ endsAt }: { endsAt: Date }) {
+  const { points } = await getBidCurve(DEFAULT_RESEARCH_FILTERS);
+  const rise = remainingRise(points, (endsAt.getTime() - new Date().getTime()) / HOUR_MS);
+  if (rise === null) return null;
+  return (
+    <p className="text-body text-foreground-secondary">
+      Com {rise.hours} h para o fim, o lance ainda sobe {formatRatio(rise.rise)} até o final, na mediana de{" "}
+      {salesLabel(rise.n)} do catálogo.
+    </p>
   );
 }
 

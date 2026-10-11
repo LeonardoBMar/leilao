@@ -135,7 +135,13 @@ export type EvaluationView = Evaluation<EvaluateSaleView> & {
 };
 
 /** Lote do usuário como alvo do Avaliar. */
-export type LotTarget = { id: string; label: string; target: EstimateTarget };
+export type LotTarget = {
+  id: string;
+  label: string;
+  target: EstimateTarget;
+  /** Fim do anúncio ligado ainda aberto; `null` sem anúncio ou já encerrado. */
+  endsAt: Date | null;
+};
 
 /**
  * Mercado do lote para a análise (docs/PLANO-MERCADO.md §8): as vendas do recorte do preço provável que entram na

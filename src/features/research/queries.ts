@@ -679,6 +679,8 @@ export const getLotTarget = cache(async (lotId: string): Promise<LotTarget | nul
           marketValueFipeCode: true,
           vehicleOrigin: true,
           marketValueCents: true,
+          status: true,
+          endsAt: true,
         },
       },
     },
@@ -688,6 +690,7 @@ export const getLotTarget = cache(async (lotId: string): Promise<LotTarget | nul
   return {
     id: lot.id,
     label: `Lote ${lot.lotNumber} · ${lot.brand} ${lot.model} ${lot.modelYear}`,
+    endsAt: listing?.status === "open" ? listing.endsAt : null,
     target: {
       brand: lot.brand,
       model: lot.model,
