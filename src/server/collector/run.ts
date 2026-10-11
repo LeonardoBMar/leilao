@@ -374,8 +374,11 @@ async function collectListings(input: {
   return !discovery.complete;
 }
 
-/** Baixa, lê, confere e grava um anúncio. Falha esperada volta como valor; erro inesperado lança. */
-async function visitListing(
+/**
+ * Baixa, lê, confere e grava um anúncio. Falha esperada volta como valor; erro inesperado lança. Também usada pela
+ * carga avulsa de encerrados (`backfill.ts`), para gravar pelo mesmo caminho da coleta.
+ */
+export async function visitListing(
   source: SourceAdapter,
   fetcher: PoliteFetcher,
   externalId: string,

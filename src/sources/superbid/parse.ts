@@ -65,24 +65,63 @@ export function parseSuperbidExternalId(externalId: string): string | null {
 }
 
 /**
- * Ofertas de uma página da descoberta que ainda vão encerrar. A API mantém como abertos (`statusId:1`) lotes que já
- * passaram do fim, alguns há meses, e o site não os mostra; leilões de teste também ficam de fora.
+ * Lotes encerrados (vendido, condicional, sem venda, retirado e os de desfecho desconhecido) de leilão de Carros e
+ * Motos, do mais novo para o mais antigo: a carga avulsa dos últimos dias (`scripts/superbid-backfill.ts`).
  */
-export function parseSuperbidList(
-  json: string,
-  now: Date,
-): Result<{ ids: string[]; total: number; count: number }, ParseError> {
+export const superbidClosedListUrl = (page: number) =>
+  apiUrl({
+    filter:
+      "product.productType.id:10;statusId:[3,6,7,11,80];auction.modalityId:1;" +
+      `product.subCategory.category.id:[${Object.values(SUPERBID_CATEGORY_IDS).join(",")}]`,
+    fieldList: "id;endDateTime;manager",
+    orderBy: "id:desc",
+    pageNumber: String(page),
+    pageSize: String(SUPERBID_PAGE_SIZE),
+  });
+
+/** Oferta de uma página de lista, com o fim em milissegundos (`null` se a API não informa). */
+export type SuperbidListedOffer = { id: string; endsAt: number | null };
+
+type ListPage = { offers: SuperbidListedOffer[]; total: number; count: number };
+
+/** Ofertas de uma página de lista, sem as dos leilões de teste. */
+function parseListPage(json: string): Result<ListPage, ParseError> {
   const list = superbidListSchema.safeParse(parseJson(json));
   if (!list.success) return err("missing_data");
-  const ids: string[] = [];
+  const offers: SuperbidListedOffer[] = [];
   for (const item of list.data.offers) {
     const offer = superbidListedOfferSchema.safeParse(item);
     if (!offer.success) return err("invalid_data");
     const { id, endDateTime, manager } = offer.data;
-    const ended = endDateTime != null && endDateTime <= now.getTime();
-    if (!ended && manager?.id !== TEST_MANAGER_ID) ids.push(String(id));
+    if (manager?.id !== TEST_MANAGER_ID) offers.push({ id: String(id), endsAt: endDateTime ?? null });
   }
-  return ok({ ids, total: list.data.total, count: list.data.offers.length });
+  return ok({ offers, total: list.data.total, count: list.data.offers.length });
+}
+
+/**
+ * Ofertas de uma página da descoberta que ainda vão encerrar. A API mantém como abertos (`statusId:1`) lotes que já
+ * passaram do fim, alguns há meses, e o site não os mostra; leilões de teste também ficam de fora.
+ */
+export function parseSuperbidList(json: string, now: Date): Result<ListPage, ParseError> {
+  const page = parseListPage(json);
+  if (!page.ok) return page;
+  const offers = page.value.offers.filter((offer) => offer.endsAt === null || offer.endsAt > now.getTime());
+  return ok({ ...page.value, offers });
+}
+
+/**
+ * Ofertas de uma página de encerrados que terminaram desde `since`. `older` diz que a página inteira terminou antes:
+ * a ordem é por id, não pelo fim, então a busca só para quando uma página toda fica fora da janela.
+ */
+export function parseSuperbidClosedList(
+  json: string,
+  since: Date,
+): Result<{ ids: string[]; total: number; count: number; older: boolean }, ParseError> {
+  const page = parseListPage(json);
+  if (!page.ok) return page;
+  const recent = (offer: SuperbidListedOffer) => offer.endsAt !== null && offer.endsAt >= since.getTime();
+  const ids = page.value.offers.filter(recent).map((offer) => offer.id);
+  return ok({ ids, total: page.value.total, count: page.value.count, older: ids.length === 0 });
 }
 
 /**

@@ -27,6 +27,7 @@
     "db:market-values": "node --conditions=react-server --import tsx scripts/market-values.ts",
     "db:fipe-import": "node --conditions=react-server --import tsx scripts/fipe-import.ts",
     "db:fipe-match": "node --conditions=react-server --import tsx scripts/fipe-match.ts",
+    "db:superbid-backfill": "node --conditions=react-server --import tsx scripts/superbid-backfill.ts",
     "test:e2e": "playwright test",
     "test:e2e:public": "playwright test --project=public",
     "db:release": "prisma migrate deploy && npm run db:storage",

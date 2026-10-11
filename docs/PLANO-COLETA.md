@@ -162,7 +162,7 @@ O Detran-SC faz uns **17 leilões por ano**, cada um com um leiloeiro credenciad
 
 ### 2.11 Sétima fonte: Superbid Exchange (`exchange.superbid.net`, levantamento de 2026-10-10)
 
-Marketplace nacional de leilões corporativos e judiciais (seguradoras, locadoras, bancos, empresas, prefeituras), com **7.461 lotes abertos** em Carros & Motos em 10/10 e 227 mil encerrados no histórico. Implementada em 10/10 (etapa 10, D-58). **Passa na regra do preço final.** Aprovada como fonte pelo usuário em 10/10, ciente do `robots.txt` abaixo.
+Marketplace nacional de leilões corporativos e judiciais (seguradoras, locadoras, bancos, empresas, prefeituras), com **7.461 lotes abertos** em Carros & Motos em 10/10 e 227 mil encerrados no histórico. Implementada em 10/10 (etapa 10, D-58), com carga avulsa dos encerrados dos últimos 30 dias e descoberta pelo fim mais próximo (D-60). **Passa na regra do preço final.** Aprovada como fonte pelo usuário em 10/10, ciente do `robots.txt` abaixo.
 
 | Item | Achado | Consequência |
 | --- | --- | --- |

@@ -5,14 +5,17 @@ import { describe, expect, it } from "vitest";
 
 import { listingContractProblems } from "../shared/contract";
 import type { FetchOutcome, SourceHttp } from "../types";
-import { superbidSource } from ".";
+import { discoverRecentlyClosed, superbidSource } from ".";
 import {
   buildSuperbidListing,
+  parseSuperbidClosedList,
   parseSuperbidList,
   parseSuperbidOffer,
   parseSuperbidTitle,
   SUPERBID_CATEGORY_IDS,
+  SUPERBID_MAX_PAGES,
   SUPERBID_PAGE_SIZE,
+  superbidClosedListUrl,
   superbidDetailsFromRaw,
   superbidListingUrl,
   superbidListUrl,
@@ -54,7 +57,15 @@ describe("parseSuperbidList", () => {
   it("lê os ids da página e o total da consulta", () => {
     expect(parseSuperbidList(fixture("lista-motos.json"), now)).toEqual({
       ok: true,
-      value: { ids: ["5054677", "5054676", "5054674"], total: 3331, count: 3 },
+      value: {
+        offers: [
+          { id: "5054677", endsAt: 1792522020000 },
+          { id: "5054676", endsAt: 1792521930000 },
+          { id: "5054674", endsAt: 1792522080000 },
+        ],
+        total: 3331,
+        count: 3,
+      },
     });
   });
 
@@ -68,12 +79,50 @@ describe("parseSuperbidList", () => {
         { id: 4, endDateTime: null },
       ],
     });
-    expect(parseSuperbidList(json, now)).toEqual({ ok: true, value: { ids: ["1", "4"], total: 4, count: 4 } });
+    expect(parseSuperbidList(json, now)).toEqual({
+      ok: true,
+      value: {
+        offers: [
+          { id: "1", endsAt: now.getTime() + 60_000 },
+          { id: "4", endsAt: null },
+        ],
+        total: 4,
+        count: 4,
+      },
+    });
   });
 
   it("resposta fora do formato é erro", () => {
     expect(parseSuperbidList("<html>", now)).toEqual({ ok: false, error: "missing_data" });
     expect(parseSuperbidList('{"total":1,"offers":[{"id":"x"}]}', now)).toEqual({ ok: false, error: "invalid_data" });
+  });
+});
+
+describe("parseSuperbidClosedList", () => {
+  const since = new Date(now.getTime() - 7 * 86_400_000);
+
+  it("fica com os encerrados dentro da janela, sem leilão de teste", () => {
+    const json = JSON.stringify({
+      total: 4,
+      offers: [
+        { id: 1, endDateTime: now.getTime() - 86_400_000, manager: { id: 9 } },
+        { id: 2, endDateTime: since.getTime() - 1, manager: { id: 9 } },
+        { id: 3, endDateTime: now.getTime() - 86_400_000, manager: { id: 114 } },
+        { id: 4, endDateTime: null },
+      ],
+    });
+    expect(parseSuperbidClosedList(json, since)).toEqual({
+      ok: true,
+      value: { ids: ["1"], total: 4, count: 4, older: false },
+    });
+  });
+
+  it("página toda fora da janela é a última", () => {
+    const json = JSON.stringify({ total: 9, offers: [{ id: 2, endDateTime: since.getTime() - 1 }] });
+    expect(parseSuperbidClosedList(json, since)).toEqual({
+      ok: true,
+      value: { ids: [], total: 9, count: 1, older: true },
+    });
   });
 });
 
@@ -326,6 +375,26 @@ describe("superbidSource", () => {
     });
   });
 
+  it("entrega os abertos do fim mais próximo para o mais distante, sem fim por último", async () => {
+    const at = (id: number, endDateTime: number | null) => ({ id, endDateTime });
+    const hour = 3_600_000;
+    const { http } = fakeHttp({
+      [superbidListUrl(SUPERBID_CATEGORY_IDS.cars, 1)]: {
+        ok: true,
+        text: JSON.stringify({
+          total: 3,
+          offers: [at(30, now.getTime() + 5 * hour), at(20, null), at(10, now.getTime() + hour)],
+        }),
+      },
+      [superbidListUrl(SUPERBID_CATEGORY_IDS.motorcycles, 1)]: {
+        ok: true,
+        text: JSON.stringify({ total: 1, offers: [at(40, now.getTime() + 2 * hour)] }),
+      },
+    });
+    const discovery = await superbidSource.discover(http, now);
+    expect(discovery.listings.map((item) => item.externalId)).toEqual(["10", "40", "30", "20"]);
+  });
+
   it("categoria que falha deixa a descoberta incompleta, sem perder a outra", async () => {
     const { http } = fakeHttp({
       [superbidListUrl(SUPERBID_CATEGORY_IDS.cars, 1)]: { ok: false, status: 503, error: "HTTP 503" },
@@ -373,5 +442,49 @@ describe("superbidSource", () => {
     expect(url.searchParams.get("orderBy")).toBe("id:desc");
     expect(url.searchParams.get("pageNumber")).toBe("3");
     expect(new URL(superbidOfferApiUrl("5044378")).searchParams.get("filter")).toBe("id:5044378");
+  });
+});
+
+describe("discoverRecentlyClosed", () => {
+  const since = new Date(now.getTime() - 30 * 86_400_000);
+  const closedPage = (ends: number[], total: number, firstId = 1): FetchOutcome => ({
+    ok: true,
+    text: JSON.stringify({ total, offers: ends.map((end, index) => ({ id: firstId + index, endDateTime: end })) }),
+  });
+
+  it("pagina até uma página inteira ficar fora da janela", async () => {
+    const recent = Array.from({ length: SUPERBID_PAGE_SIZE }, () => now.getTime() - 86_400_000);
+    const mixed = [...recent.slice(1), since.getTime() - 1];
+    const old = Array.from({ length: SUPERBID_PAGE_SIZE }, () => since.getTime() - 86_400_000);
+    const { http, calls } = fakeHttp({
+      [superbidClosedListUrl(1)]: closedPage(recent, 9_999),
+      [superbidClosedListUrl(2)]: closedPage(mixed, 9_999, 1_001),
+      [superbidClosedListUrl(3)]: closedPage(old, 9_999, 2_001),
+    });
+    const closed = await discoverRecentlyClosed(http, since);
+    expect(calls).toEqual([superbidClosedListUrl(1), superbidClosedListUrl(2), superbidClosedListUrl(3)]);
+    expect(closed.error).toBeNull();
+    expect(closed.ids).toHaveLength(2 * SUPERBID_PAGE_SIZE - 1);
+  });
+
+  it("falha na lista devolve o que já leu, com o erro", async () => {
+    const { http } = fakeHttp({ [superbidClosedListUrl(1)]: closedPage([now.getTime() - 1], 2) });
+    const ok = await discoverRecentlyClosed(http, since);
+    expect(ok).toEqual({ ids: ["1"], error: null });
+    const failing = fakeHttp({});
+    expect(await discoverRecentlyClosed(failing.http, since)).toEqual({
+      ids: [],
+      error: { url: superbidClosedListUrl(1), error: "HTTP 404" },
+    });
+  });
+
+  it("pede só encerrados de leilão de Carros e Motos, do id mais novo para o mais antigo", () => {
+    const url = new URL(superbidClosedListUrl(2));
+    expect(url.searchParams.get("filter")).toBe(
+      "product.productType.id:10;statusId:[3,6,7,11,80];auction.modalityId:1;product.subCategory.category.id:[10000,10012]",
+    );
+    expect(url.searchParams.get("orderBy")).toBe("id:desc");
+    expect(url.searchParams.get("pageNumber")).toBe("2");
+    expect(SUPERBID_MAX_PAGES).toBeGreaterThan(1);
   });
 });
