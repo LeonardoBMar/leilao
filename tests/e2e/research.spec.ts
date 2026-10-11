@@ -17,7 +17,7 @@ function mapStates(page: Page) {
 
 test("mostra o tamanho da base e os blocos (ou o estado vazio)", async ({ page }) => {
   await page.goto("/mercado");
-  await expect(page.getByRole("heading", { name: "Pesquisa", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Mercado", level: 1 })).toBeVisible();
   await expect(
     page.getByText(/Preços de arremate do catálogo: [\d.]+ vendas? desde \d{2}\/\d{2}\/\d{4}/),
   ).toBeVisible();
@@ -107,7 +107,7 @@ test("a condição muda pela lista e vai para a URL", async ({ page }) => {
 
 test("filtro inválido na URL cai no padrão, sem erro", async ({ page }) => {
   await page.goto("/mercado?condicao=xyz&categoria=barcos&uf=ZZ&medida=price");
-  await expect(page.getByRole("heading", { name: "Pesquisa", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Mercado", level: 1 })).toBeVisible();
   await expect(page.getByRole("combobox", { name: "Condição" })).toHaveText(/Sem monta declarada/);
   await expect(page.getByRole("combobox", { name: "Categoria" })).toHaveText(/Carros/);
   await expect(page.getByRole("button", { name: /^Remover filtro/ })).toHaveCount(0);

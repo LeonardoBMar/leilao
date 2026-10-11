@@ -20,7 +20,7 @@ const NAV_ITEMS: readonly NavItem[] = [
   { href: "/minhas-analises", label: "Minhas análises", icon: Calculator, sections: ["/lotes", "/analise"] },
   { href: "/monitores", label: "Monitores", icon: ScanSearch },
   { href: "/alertas", label: "Alertas", icon: BellRing },
-  { href: "/mercado", label: "Pesquisa", icon: ChartColumn },
+  { href: "/mercado", label: "Mercado", icon: ChartColumn },
 ];
 
 /** Conteúdo ao lado do item, renderizado no servidor (ex.: contador de alertas não lidos, DESIGN.md §9). */

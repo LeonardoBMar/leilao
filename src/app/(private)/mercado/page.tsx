@@ -10,7 +10,7 @@ import {
 
 import { ModelCatalogActions } from "./model-catalog-actions";
 
-export const metadata: Metadata = { title: "Pesquisa · Leilão Tracker" };
+export const metadata: Metadata = { title: "Mercado · Leilão Tracker" };
 
 export default function ResearchPage({ searchParams }: PageProps<"/mercado">) {
   return (

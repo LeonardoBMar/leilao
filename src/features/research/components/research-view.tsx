@@ -21,7 +21,7 @@ import { ResearchShell } from "./research-shell";
 import { ResearchSummary, ResearchSummarySkeleton } from "./research-summary";
 import { STATE_BLOCK_TITLE, StateBlock } from "./state-block";
 
-const HEADER_TITLE = "Pesquisa";
+const HEADER_TITLE = "Mercado";
 
 /** Cabeçalho com o tamanho da base: "1.506 vendas arrematadas no catálogo desde 28/09/2026 · 62% com FIPE casado…". */
 export async function ResearchHeader() {
