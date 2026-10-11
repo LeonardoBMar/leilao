@@ -1,7 +1,7 @@
 import type { Route } from "next";
 
 import { toSearchText } from "@/domain/listings/criteria";
-import { BRAND_ALIASES } from "@/domain/listings/estimates";
+import { BRAND_ALIASES } from "@/domain/listings/vehicle-key";
 import type { ResearchFilters, ResearchVehicle } from "@/domain/research/filters";
 
 import { researchParams } from "./schemas";

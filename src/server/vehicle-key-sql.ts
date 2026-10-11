@@ -1,6 +1,6 @@
 import "server-only";
 
-import { BRAND_ALIASES, MODEL_RENAMES } from "@/domain/listings/estimates";
+import { BRAND_ALIASES, MODEL_RENAMES } from "@/domain/listings/vehicle-key";
 import { Prisma } from "@/generated/prisma/client";
 
 /**

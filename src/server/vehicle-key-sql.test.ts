@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { vehicleKey } from "@/domain/listings/estimates";
+import { vehicleKey } from "@/domain/listings/vehicle-key";
 import { Prisma } from "@/generated/prisma/client";
 
 import { vehicleKeySql } from "./vehicle-key-sql";

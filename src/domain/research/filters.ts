@@ -1,6 +1,6 @@
 import type { DamageLevel } from "../listings/condition";
 import { type CategoryKey, MILEAGE_OPTIONS_KM } from "../listings/criteria";
-import { vehicleKey } from "../listings/estimates";
+import { vehicleKey } from "../listings/vehicle-key";
 import { STATE_NAMES, type StateCode } from "./states";
 
 /**

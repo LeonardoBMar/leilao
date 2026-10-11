@@ -1,8 +1,9 @@
 import { type Cents, cents } from "../money";
 import { type FuelKey, fuelOf } from "./criteria";
-import { baseModelOf, BRAND_ALIASES, percentile } from "./estimates";
+import { percentile } from "./estimates";
 import { normalizePlaceName } from "./place";
 import type { ListingCategory, ListingStatus } from "./types";
+import { baseModelOf, BRAND_ALIASES } from "./vehicle-key";
 
 /**
  * Valor de mercado casado na tabela FIPE oficial para anúncio cuja fonte não informa (D-47; plano em

@@ -1,5 +1,5 @@
-import { baseModelOf, vehicleKey } from "./estimates";
 import { normalizePlaceName } from "./place";
+import { baseModelOf, vehicleKey } from "./vehicle-key";
 
 /**
  * Família do veículo (docs/PLANO-MERCADO.md, T0.2): o nível entre a versão FIPE e o modelo base (`vehicleKey`). Puro.
