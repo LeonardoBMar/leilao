@@ -23,6 +23,12 @@ export type ScatterPoint = {
   selected?: boolean;
   /** Pertence ao grupo em destaque: com algum ponto em destaque, os outros ficam claros. */
   highlighted?: boolean;
+  /** Ponto vazado (ex.: lote aberto, que ainda não tem preço final). */
+  hollow?: boolean;
+  /** Fora da conta (ex.: venda excluída): mais claro. */
+  muted?: boolean;
+  /** Traço vertical tracejado do ponto até este y (ex.: do lance atual até a mediana do recorte). */
+  guideTo?: number;
 };
 
 /** Eixo x contínuo (km): domínio e marcas escolhidos por quem chama. */
@@ -41,6 +47,8 @@ type ScatterPlotProps = {
   yTicks: readonly { value: number; label: string }[];
   /** Linha horizontal tracejada de referência, com o rótulo à direita (ex.: 100% do valor de mercado). */
   reference?: { value: number; label: string };
+  /** Faixa horizontal sombreada atrás dos pontos (ex.: a faixa típica de arremate), com o rótulo à esquerda. */
+  band?: { low: number; high: number; label: string };
   ariaLabel: string;
 };
 
@@ -63,6 +71,7 @@ export function ScatterPlot({
   yDomain,
   yTicks,
   reference,
+  band,
   ariaLabel,
 }: ScatterPlotProps) {
   const [activeKey, setActiveKey] = useState<string | null>(null);
@@ -102,6 +111,33 @@ export function ScatterPlot({
               }))
         }
       >
+        {band ? (
+          <span
+            className="absolute inset-x-0 bg-data-1/60"
+            style={{
+              bottom: `${percentOf(band.low, yDomain)}%`,
+              height: `${percentOf(band.high, yDomain) - percentOf(band.low, yDomain)}%`,
+            }}
+          >
+            <span className="absolute top-1 left-1 text-caption leading-none text-muted">{band.label}</span>
+          </span>
+        ) : null}
+        {points.flatMap((point) =>
+          point.guideTo === undefined
+            ? []
+            : [
+                <span
+                  key={`guia-${point.key}`}
+                  aria-hidden="true"
+                  className="pointer-events-none absolute border-l border-dashed border-foreground/50"
+                  style={{
+                    left: `${percentOf(spread(point), xDomain)}%`,
+                    bottom: `${percentOf(Math.min(point.y, point.guideTo), yDomain)}%`,
+                    height: `${Math.abs(percentOf(point.guideTo, yDomain) - percentOf(point.y, yDomain))}%`,
+                  }}
+                />,
+              ],
+        )}
         {reference ? (
           <span
             className="absolute inset-x-0 border-t border-dashed border-border-strong"
@@ -146,13 +182,17 @@ export function ScatterPlot({
                 "size-2 rounded-full ring-2 ring-surface",
                 point.key === activeKey
                   ? "size-3 bg-accent"
-                  : point.selected
-                    ? "size-3 bg-data-5 ring-foreground"
-                    : anyHighlighted
-                      ? point.highlighted
-                        ? "size-3 bg-data-5"
-                        : "bg-data-1"
-                      : "bg-data-3",
+                  : point.hollow
+                    ? "size-3 bg-surface ring-foreground"
+                    : point.muted
+                      ? "bg-data-1 opacity-60"
+                      : point.selected
+                        ? "size-3 bg-data-5 ring-foreground"
+                        : anyHighlighted
+                          ? point.highlighted
+                            ? "size-3 bg-data-5"
+                            : "bg-data-1"
+                          : "bg-data-3",
               )}
             />
           </button>

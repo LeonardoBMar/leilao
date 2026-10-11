@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 import { Skeleton } from "@/components/ui";
 import { type EvaluateFilters, familyLabel, targetFilters } from "@/domain/research/evaluate";
 
@@ -6,7 +8,9 @@ import { evaluateParams, parseEvaluateParams } from "../schemas";
 import type { SearchParams } from "../search";
 import type { EvaluationView, LotTarget } from "../types";
 import { EvaluateAnswer } from "./evaluate-answer";
+import { EVALUATE_CHART_TITLE, EvaluateChartBlock } from "./evaluate-chart-block";
 import { type EvaluateFacets, EvaluateFilterBar } from "./evaluate-filter-bar";
+import { ResearchBlockSkeleton } from "./research-block";
 import { ResearchShell } from "./research-shell";
 
 /** Recorte em vigor: o da URL ou, com `?lote=<id>` e sem modelo, o do lote (o mesmo do preço provável). */
@@ -40,7 +44,16 @@ export async function EvaluateView({ searchParams }: { searchParams: SearchParam
         />
       }
     >
-      {evaluation === null ? null : <EvaluateAnswer filters={filters} evaluation={evaluation} />}
+      {evaluation === null ? null : (
+        <>
+          <EvaluateAnswer filters={filters} evaluation={evaluation} />
+          {evaluation.comparables.length === 0 ? null : (
+            <Suspense fallback={<ResearchBlockSkeleton title={EVALUATE_CHART_TITLE} />}>
+              <EvaluateChartBlock filters={filters} evaluation={evaluation} />
+            </Suspense>
+          )}
+        </>
+      )}
     </ResearchShell>
   );
 }

@@ -16,6 +16,9 @@ import {
 import { evaluateHref } from "../search";
 import type { EvaluationView } from "../types";
 
+/** Com mais anos-modelo que isto sem filtro de ano, a faixa avisa que mistura anos. */
+const MIXED_YEARS = 3;
+
 /** O recorte em palavras: "Chevrolet Onix · família ONIX PLUS · 2022 a 2024 · Sem monta declarada". */
 export function evaluateScopeLabel(filters: EvaluateFilters, versionLabels: Readonly<Record<string, string>>): string {
   return [
@@ -85,6 +88,12 @@ export function EvaluateAnswer({ filters, evaluation }: { filters: EvaluateFilte
               Vendas da {EVALUATE_LEVEL_LABELS[level]}
               {excluded > 0 ? `, sem as ${salesLabel(excluded)} que você tirou` : ""}.
             </p>
+            {filters.yearFrom === null && filters.yearTo === null && evaluation.years.length > MIXED_YEARS ? (
+              <p className="text-caption text-warning">
+                Sem filtro de ano, a faixa junta {evaluation.years.length} anos-modelo. Escolha o ano para uma faixa
+                mais justa.
+              </p>
+            ) : null}
             <details className="text-caption text-muted">
               <summary className="cursor-pointer hover:text-foreground">Como calculamos</summary>
               <div className="mt-2 grid max-w-3xl gap-1.5">
