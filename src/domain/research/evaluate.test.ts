@@ -10,6 +10,7 @@ import {
   evaluationLevel,
   familyLabel,
   inCut,
+  limitPosition,
   loosened,
   targetFilters,
 } from "./evaluate";
@@ -178,6 +179,28 @@ describe("bandPosition", () => {
     expect(bandPosition(100, band)).toBe("inside");
     expect(bandPosition(200, band)).toBe("inside");
     expect(bandPosition(201, band)).toBe("above");
+  });
+});
+
+describe("limitPosition", () => {
+  const bids = [100, 200, 300, 400];
+
+  it("abaixo de todos é P0 e acima de todos é P100", () => {
+    expect(limitPosition(50, bids)).toEqual({ n: 4, below: 0, above: 4, equal: 0, percentile: 0 });
+    expect(limitPosition(500, bids)).toEqual({ n: 4, below: 4, above: 0, equal: 0, percentile: 100 });
+  });
+
+  it("no meio, conta quem ficou de cada lado", () => {
+    expect(limitPosition(250, bids)).toMatchObject({ below: 2, above: 2, percentile: 50 });
+  });
+
+  it("empate conta pela metade", () => {
+    expect(limitPosition(200, bids)).toEqual({ n: 4, below: 1, above: 2, equal: 1, percentile: 38 });
+    expect(limitPosition(100, [100, 100])).toMatchObject({ equal: 2, percentile: 50 });
+  });
+
+  it("sem comparável não há posição", () => {
+    expect(limitPosition(100, [])).toBeNull();
   });
 });
 

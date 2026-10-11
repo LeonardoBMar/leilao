@@ -288,6 +288,38 @@ export function bandPosition(value: number, band: { low: number; high: number })
   return value > band.high ? "above" : "inside";
 }
 
+/** Posição de um valor (o limite da análise) entre os lances finais dos comparáveis. */
+export type LimitPosition = {
+  /** Comparáveis considerados. */
+  n: number;
+  /** Quantos saíram abaixo do valor. */
+  below: number;
+  /** Quantos saíram acima: o limite perderia para eles. */
+  above: number;
+  /** Quantos saíram exatamente no valor. */
+  equal: number;
+  /** Percentil do valor (0 a 100), com empates contados pela metade. */
+  percentile: number;
+};
+
+/**
+ * Onde o limite fica entre os lances finais das vendas parecidas (docs/PLANO-MERCADO.md §8): "fica abaixo de 14 dos 18
+ * comparáveis (P22)". Descritivo, sem juízo. Sem comparável, `null`.
+ */
+export function limitPosition(value: number, bids: readonly number[]): LimitPosition | null {
+  if (bids.length === 0) return null;
+  const below = bids.filter((bid) => bid < value).length;
+  const above = bids.filter((bid) => bid > value).length;
+  const equal = bids.length - below - above;
+  return {
+    n: bids.length,
+    below,
+    above,
+    equal,
+    percentile: Math.round(((below + equal / 2) / bids.length) * 100),
+  };
+}
+
 /** O recorte com um filtro afrouxado (`EvaluateLoosen`): ano ±1 a mais, ou sem km, origem, versão ou família. */
 export function loosened(filters: EvaluateFilters, change: EvaluateLoosen["change"]): EvaluateFilters {
   switch (change) {
