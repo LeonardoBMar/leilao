@@ -165,6 +165,12 @@ describe("chooseFipeModels", () => {
       expect(version("S1000 R", options(["S 1000 R", "S 1000 RR", "R 1250 GS"]))).toBe("S 1000 R");
     });
 
+    it("modelo do anúncio entre as palavras da FIPE com outra palavra em comum: CLASSIC LIFE", () => {
+      const gm = options(["Corsa Sed Classic Life 1.6 MPFI VHC 8V", "Corsa Sed Classic Spirit 1.6 MPFI VHC 8V"]);
+      expect(version("CLASSIC LIFE", gm)).toBe("Corsa Sed Classic Life 1.6 MPFI VHC 8V");
+      expect(chooseFipeModels("CLASSIC", gm)).toEqual({ kind: "none", reason: "no_candidates" });
+    });
+
     it("'NOVO VOYAGE' é Voyage", () => {
       const vw = options(["VOYAGE 1.6/1.6 City  Mi Total Flex 8V 4p", "VOYAGE 1.0/1.0 City Mi Total Flex 8V 4p"]);
       expect(version("NOVO VOYAGE 1.6 CITY", vw)).toBe("VOYAGE 1.6/1.6 City  Mi Total Flex 8V 4p");

@@ -5,11 +5,11 @@ import { describe, expect, it } from "vitest";
 
 import { listingContractProblems } from "../shared/contract";
 import { splitDetranVehicle } from "../shared/detran-vehicle";
+import { categoryOfVehicle } from "../shared/vehicle-category";
 import type { FetchOutcome, SourceHttp } from "../types";
 import { detranMgSource } from ".";
 import {
   buildDetranListing,
-  categoryOfVehicle,
   DETRAN_MG_BASE_URL,
   DETRAN_MG_LIVE_URL,
   detranAuctionUrl,

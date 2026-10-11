@@ -242,6 +242,24 @@ describe("buildSuperbidListing", () => {
     expect(listing("pending").vehicle).toMatchObject({ brand: "M.BENZ", modelYear: 2024, manufactureYear: 2023 });
   });
 
+  it("moto publicada em 'Carros > Hatches' entra como Motos", () => {
+    const moto = { ...raw("car"), brand: null, model: null, description: [], title: "YAMAHA/YBR 125K 2004/" };
+    expect(buildSuperbidListing(moto, now).vehicle).toMatchObject({ brand: "YAMAHA", category: "Motos" });
+  });
+
+  it("'MARCA DO VEÍCULO' é a marca; 'GM/CHEVROLET' é Chevrolet", () => {
+    const fiat = {
+      ...raw("car"),
+      brand: null,
+      model: null,
+      title: "FIAT UNO ECONOMY DE ANO 2014/2014 COM",
+      description: ["MARCA DO VEÍCULO: FIAT", "MODELO DO VEÍCULO: UNO ECONOMY", "COR DO VEÍCULO: BRANCO"],
+    };
+    expect(buildSuperbidListing(fiat, now).vehicle).toMatchObject({ brand: "FIAT", model: "UNO ECONOMY" });
+    const cruze = { ...fiat, description: ["MARCA: GM/CHEVROLET", "MODELO: CRUZE LT NB"] };
+    expect(buildSuperbidListing(cruze, now).vehicle).toMatchObject({ brand: "CHEVROLET", model: "CRUZE LT NB" });
+  });
+
   it("sem ficha rotulada, marca, modelo e anos saem do título", () => {
     expect(listing("soldTitleOnly").vehicle).toMatchObject({
       brand: "HYUNDAI",
@@ -316,6 +334,9 @@ describe("parseSuperbidTitle", () => {
       false,
     ],
     ["SUCATA PARA PRENSA:KIA/BOMGO (2015)", "KIA", "BOMGO", null, 2015, true],
+    // Modelo antes, marca depois.
+    ["KOMBI - VW, 2007/2008, BRANCA", "VW", "KOMBI", 2007, 2008, false],
+    ["COURIER 1.6 L - FORD, 2005/2005, PRATA", "FORD", "COURIER 1.6 L", 2005, 2005, false],
   ])("%s", (title, brand, model, manufactureYear, modelYear, salvage) => {
     expect(parseSuperbidTitle(title)).toEqual({
       brand,

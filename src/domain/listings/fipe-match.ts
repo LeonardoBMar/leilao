@@ -153,7 +153,7 @@ const LEADING_NOISE = new Set(["NOVO", "NOVA"]);
  * Segunda leitura, só quando a primeira não achou candidata. Palavras separadas nas letras coladas ao número
  * ("207PASSION" → 207 PASSION, "CB250F" → CB 250 F) e o modelo em qualquer posição: o da FIPE entre as palavras do
  * anúncio ("YBR" em "FACTOR YBR125 K") ou o do anúncio entre as da FIPE ("FAZER" em "YS 250 FAZER"), este só se
- * um número (cilindrada, versão) também bater. Modelo de uma letra também exige o número.
+ * um número (cilindrada, versão) ou outra palavra também bater. Modelo de uma letra também exige o número.
  */
 function looseCandidates(model: string, candidates: readonly FipeOption[]): Scored[] {
   const words = normalizePlaceName(model).split(/\s+/);
@@ -170,7 +170,15 @@ function looseCandidates(model: string, candidates: readonly FipeOption[]): Scor
     // Modelo de uma letra ("C 100", "F-250") só com um número em comum: senão o "F" de "13F" vira F-250.
     const anchor =
       listing.includes(labelBase) && !isNumber(labelBase) && (labelBase.length > 1 || sharesNumber) ? labelBase : null;
-    const reverse = anchor === null && !isNumber(listingBase) && labelSet.has(listingBase) && sharesNumber;
+    // Ou outra palavra do anúncio além do modelo: "CLASSIC LIFE" em "Corsa Sed Classic Life 1.6".
+    const sharesWord = listing.some(
+      (token) => token !== listingBase && token.length > 1 && !isNumber(token) && labelSet.has(token),
+    );
+    const reverse =
+      anchor === null &&
+      !isNumber(listingBase) &&
+      labelSet.has(listingBase) &&
+      (sharesNumber || (sharesWord && listingBase.length > 1));
     if (anchor === null && !reverse) continue;
     const signals = listing.filter((token) => token !== (anchor ?? listingBase));
     if (contradicts(signals, labelSet)) continue;
@@ -361,7 +369,7 @@ export function marketValueOnSave(
  * mudarem, e diga em `MATCHER_CHANGES` o que a versão nova pode mudar: as correlações automáticas afetadas são refeitas
  * e os anúncios ligados a elas, recalculados.
  */
-export const MATCHER_VERSION = 4;
+export const MATCHER_VERSION = 5;
 
 /**
  * O que cada versão da regra muda (D-53). `all`: a escolha de quem já casou pode mudar, e todas as automáticas de
@@ -376,6 +384,8 @@ export const MATCHER_CHANGES: Readonly<Record<number, "all" | "unmatched">> = {
   3: "unmatched",
   // Marcas "GMC" (Chevrolet) e "VOLKSWAGEM" (BRAND_ALIASES), que ficavam sem marca na FIPE.
   4: "unmatched",
+  // Segunda leitura aceita o modelo do anúncio entre as palavras da FIPE com outra palavra em comum, sem número.
+  5: "unmatched",
 };
 
 /** Correlação automática anterior a esta versão é refeita, qualquer que seja o tipo: a última versão `all`. */

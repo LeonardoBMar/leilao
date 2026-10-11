@@ -2,13 +2,14 @@ import { z } from "zod";
 
 import { EMPTY_CONDITION, type ListingCondition } from "@/domain/listings/condition";
 import { normalizePlaceName } from "@/domain/listings/place";
-import type { ListingCategory, ListingInput, ListingStatus } from "@/domain/listings/types";
+import type { ListingInput, ListingStatus } from "@/domain/listings/types";
 import { type Cents, parseBRL } from "@/domain/money";
 import { err, ok, type Result } from "@/lib/result";
 
 import { DETRAN_MG_IMAGE_ORIGIN } from "../image-origins";
 import { splitDetranVehicle } from "../shared/detran-vehicle";
 import { decodeHtmlEntities, htmlToLines } from "../shared/extract";
+import { categoryOfVehicle } from "../shared/vehicle-category";
 import type { ListingDetails, ParseError } from "../types";
 import { type DetranLiveLot, detranLiveLotSchema, detranLiveResponseSchema } from "./schema";
 
@@ -352,93 +353,6 @@ function conditionOf(text: string | null): ListingCondition {
 /** Sem o ano: o cartão já o mostra ao lado do título. */
 function titleOf(vehicle: string | null, lotNumber: string | null): string {
   return vehicle ?? `Veículo sem marca e modelo informados${lotNumber ? ` (lote ${lotNumber})` : ""}`;
-}
-
-/** Marcas só de motos (e ciclomotores) vistas no site e no mercado. */
-const MOTO_BRANDS = new Set([
-  "YAMAHA",
-  "DAFRA",
-  "SHINERAY",
-  "SUNDOWN",
-  "KASINSKI",
-  "TRAXX",
-  "HAOJUE",
-  "JTZ",
-  "IROS",
-  "FASPIDER",
-  "GARINNI",
-  "WUYANG",
-  "BRAVAX",
-  "CHARMING",
-  "KAWASAKI",
-  "HARLEY-DAVIDSON",
-  "TRIUMPH",
-  "DUCATI",
-  "KTM",
-  "MOTTU",
-  "AVELLOZ",
-  "CICLOMOTOR",
-  "MVK",
-  "AMAZONAS",
-  "HYOSUNG",
-]);
-const CAR_BRANDS = new Set([
-  "VW",
-  "VOLKSWAGEN",
-  "GM",
-  "CHEVROLET",
-  "FIAT",
-  "FORD",
-  "RENAULT",
-  "PEUGEOT",
-  "CITROEN",
-  "TOYOTA",
-  "HYUNDAI",
-  "KIA",
-  "NISSAN",
-  "MITSUBISHI",
-  "JEEP",
-  "CHERY",
-  "JAC",
-  "LR",
-  "LAND ROVER",
-  "AUDI",
-  "SSANGYONG",
-  "SUBARU",
-  "DODGE",
-  "BYD",
-  "GWM",
-  "MINI",
-  "TROLLER",
-  "MERCEDES-BENZ",
-  "BMW",
-  "HAFEI",
-]);
-/** Modelos de carro das marcas que vendem mais motos (Honda, Suzuki). */
-const HONDA_CARS = /^(CIVIC|CITY|FIT|HR-?V|WR-?V|CR-?V|ACCORD|ODYSSEY|ZR-?V)\b/;
-const SUZUKI_CARS = /^(VITARA|GRAND|JIMNY|SWIFT|SX4|S-CROSS|BALENO|IGNIS|SAMURAI)\b/;
-const BMW_MOTOS = /^[GFRSK] ?\d{3,4}\b/;
-const UTILITY_MODELS =
-  /^(KOMBI|SAVEIRO|STRADA|MONTANA|S10|HILUX|RANGER|FIORINO|DOBLO|TORO|AMAROK|FRONTIER|L200|D ?10|D ?20|F ?1000|F ?250|COURIER|PAMPA|SPRINTER|MASTER|DUCATO|TRAFIC|EXPERT|JUMPER|BOXER|HR|BONGO|OROCH|TOWNER|RUIYI|MAVERICK|SILVERADO|C ?10|C ?20|A ?10|A ?20)\b/;
-/** Caminhões e ônibus das marcas de carro: "CARGO", "F 4000", "D 60", "8.150", "L 1113", "ATEGO", "12000". */
-const HEAVY_MODELS =
-  /^(CARGO|F ?[4-9]000|F ?1[1-4]000|D ?[4-9]0|\d{1,2}\.\d{3}|\d{4,5}|L ?\d{4}|LS ?\d{4}|LO|OF|ATEGO|ACCELO|AXOR|ACTROS)\b/;
-
-/**
- * Categoria pela marca e modelo: o site só diz o tipo (automóvel, motocicleta…) num filtro que exige sessão. Na
- * dúvida fica `null`, nunca adivinhada (reboques, artesanais, marcas desconhecidas).
- */
-export function categoryOfVehicle(brand: string | null, model: string | null): ListingCategory | null {
-  if (brand === null) return null;
-  const name = model ?? "";
-  if (brand === "SCANIA" || brand === "IVECO") return "Pesados";
-  if (MOTO_BRANDS.has(brand)) return "Motos";
-  if (brand === "HONDA") return HONDA_CARS.test(name) ? "Carros" : "Motos";
-  if (brand === "SUZUKI") return SUZUKI_CARS.test(name) ? "Carros" : "Motos";
-  if (brand === "BMW" && BMW_MOTOS.test(name)) return "Motos";
-  if (!CAR_BRANDS.has(brand)) return null;
-  if (HEAVY_MODELS.test(name)) return "Pesados";
-  return UTILITY_MODELS.test(name) ? "Utilitarios" : "Carros";
 }
 
 const CPF_OR_CNPJ =

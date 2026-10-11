@@ -10,6 +10,7 @@ import { SUPERBID_IMAGE_ORIGIN } from "../image-origins";
 import { splitDetranVehicle } from "../shared/detran-vehicle";
 import { htmlToLines, reaisToCents } from "../shared/extract";
 import { redactVehicleIds } from "../shared/redact";
+import { categoryOfVehicle, isKnownVehicleBrand } from "../shared/vehicle-category";
 import type { ListingDetails, ParseError } from "../types";
 import { superbidListedOfferSchema, superbidListSchema, type SuperbidOffer, superbidOfferSchema } from "./schema";
 
@@ -267,8 +268,12 @@ type Labeled = {
 };
 type Years = { manufactureYear: number | null; modelYear: number | null };
 
-/** Rótulo e valor; o rótulo pode vir depois de texto na mesma linha ("… 2013/2013 Marca: Land Rover"). */
-const LABEL = /(?:^|\s)(ANO[A-Z ./]*|MARCA|MODELO|VEICULO|QUILOMETRAGEM[A-Z ]*|KM|COR|COMBUSTIVEL)\s*\.?:\s*(.*)$/;
+/**
+ * Rótulo e valor; o rótulo pode vir depois de texto na mesma linha ("… 2013/2013 Marca: Land Rover"). "MARCA DO
+ * VEÍCULO: FIAT" é a marca, não o veículo: o complemento fica fora do rótulo.
+ */
+const LABEL =
+  /(?:^|\s)(ANO[A-Z ./]*|MARCA|MODELO|VEICULO|QUILOMETRAGEM[A-Z ]*|KM|COR|COMBUSTIVEL)(?: D[OA] VEICULO)?\s*\.?:\s*(.*)$/;
 
 function labeledOf(lines: readonly string[]): Labeled {
   const found: Labeled = {
@@ -386,6 +391,12 @@ export function parseSuperbidTitle(title: string): TitleParts {
   const vehicle = nonEmpty(head.split(/,|\(|\bANO\b|\b(?:19|20)\d{2}\b/)[0]);
   if (vehicle === null || /^LOTE\b/.test(vehicle)) return { ...base, brand: null, model: null };
   if (/^\S+\s*\//.test(vehicle)) return { ...base, ...splitDetranVehicle(vehicle.replace(/\s*\/\s*/, "/")) };
+  // "KOMBI - VW", "COURIER 1.6 L - FORD": o modelo antes, a marca depois.
+  const brandLast = /^(.+?) - (\S+)$/.exec(vehicle);
+  const [, before = "", after = ""] = brandLast ?? [];
+  if (isKnownVehicleBrand(after) && !isKnownVehicleBrand(before.split(" ")[0] ?? "")) {
+    return { ...base, brand: after, model: nonEmpty(before) };
+  }
   const dashed = /^(\S+(?: \S+)?) - (.+)$/.exec(vehicle);
   if (dashed) return { ...base, brand: nonEmpty(dashed[1]), model: nonEmpty(dashed[2]) };
   const twoWords = TWO_WORD_BRANDS.find((brand) => vehicle === brand || vehicle.startsWith(`${brand} `));
@@ -405,7 +416,7 @@ function vehicleOf(raw: SuperbidRaw) {
   return {
     salvage: title.salvage || /\bSUCATA\b/.test(plainUpper(raw.subcategory ?? "")),
     heavy: title.heavy,
-    brand: upper(raw.brand) ?? labeled.brand ?? fromVehicle?.brand ?? title.brand,
+    brand: brandOf(upper(raw.brand) ?? labeled.brand ?? fromVehicle?.brand ?? title.brand),
     model: upper(raw.model) ?? labeled.model ?? fromVehicle?.model ?? title.model,
     years,
     mileageKm: labeled.mileageKm,
@@ -414,11 +425,21 @@ function vehicleOf(raw: SuperbidRaw) {
   };
 }
 
-function categoryOf(raw: SuperbidRaw, vehicle: { salvage: boolean; heavy: boolean }): ListingCategory | null {
+/** "GM/CHEVROLET", "I/GM", "IMP/HONDA": o prefixo da montadora ou de importado não é a marca. */
+function brandOf(brand: string | null): string | null {
+  return brand === null ? null : (/^(?:GM|I|IMP\.?)\s*\/\s*(.+)$/.exec(brand)?.[1] ?? brand);
+}
+
+function categoryOf(
+  raw: SuperbidRaw,
+  vehicle: { salvage: boolean; heavy: boolean; brand: string | null; model: string | null },
+): ListingCategory | null {
   if (vehicle.salvage) return "Sucatas";
   if (vehicle.heavy) return "Pesados";
   if (raw.categoryId === SUPERBID_CATEGORY_IDS.motorcycles) return "Motos";
   if (raw.categoryId !== SUPERBID_CATEGORY_IDS.cars) return null;
+  // Alguns vendedores publicam motos em "Carros > Hatches" ("HONDA/CG 150 TITAN KS", "YAMAHA/YBR 125K").
+  if (categoryOfVehicle(vehicle.brand, vehicle.model) === "Motos") return "Motos";
   return raw.subcategoryId !== null && UTILITY_SUBCATEGORY_IDS.has(raw.subcategoryId) ? "Utilitarios" : "Carros";
 }
 
