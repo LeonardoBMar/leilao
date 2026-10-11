@@ -47,7 +47,7 @@ function versusOverall(median: number, overall: number): string {
 
 /**
  * Ranking dos modelos explorável (D-45): busca pelo nome, ordem (menor ou maior mediana, mais vendas, nome), as amostras
- * pequenas sob demanda e "Mostrar todos". Cada linha é um link que escolhe o modelo: a faixa P25–P75 com a mediana numa
+ * pequenas sob demanda e "Mostrar todos". Cada linha é um link que abre o modelo no Avaliar: a faixa P25–P75 com a mediana numa
  * escala comum e a mediana geral tracejada; ao passar o mouse ou focar, a linha escreve as pontas da faixa e a distância
  * para o geral. A ordem e a busca são só desta tela.
  */
@@ -183,7 +183,7 @@ function RankingRowLink({
     <Link
       href={row.href}
       scroll={false}
-      aria-label={`${row.label}: mediana ${formatRatio(row.median)} do valor de mercado, metade das vendas entre ${formatRatio(row.low)} e ${formatRatio(row.high)}, ${salesLabel(row.n)}${versus ? `, ${versus}` : ""}. Ver as vendas do modelo.`}
+      aria-label={`${row.label}: mediana ${formatRatio(row.median)} do valor de mercado, metade das vendas entre ${formatRatio(row.low)} e ${formatRatio(row.high)}, ${salesLabel(row.n)}${versus ? `, ${versus}` : ""}. Avaliar o modelo.`}
       className={cn(
         ROW_GRID,
         "group rounded-md border-b border-border px-2 py-2.5 outline-none hover:bg-background focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-accent",

@@ -1,10 +1,11 @@
+import { DEFAULT_EVALUATE_FILTERS } from "@/domain/research/evaluate";
 import { type ResearchFilters, vehicleLabel } from "@/domain/research/filters";
 import { MIN_SAMPLE, ratioAxisMax } from "@/domain/research/summary";
 import { niceTicks } from "@/lib/charts";
 import { formatRatio } from "@/lib/format";
 
 import { getConditionDistribution, getModelRanking } from "../queries";
-import { researchHref } from "../search";
+import { evaluateHref } from "../search";
 import { RankingExplorer } from "./ranking-explorer";
 import { ResearchBlock } from "./research-block";
 
@@ -28,8 +29,8 @@ export async function RankingBlock({ filters }: { filters: ResearchFilters }) {
     low: summary.low,
     median: summary.median,
     high: summary.high,
-    // Outro modelo é outro recorte: a faixa de ano e a venda aberta não valem para ele.
-    href: researchHref({ ...filters, vehicle: { brand, model }, yearFrom: null, yearTo: null, sale: null }),
+    // O modelo abre no Avaliar (D-71), na mesma condição: lá estão a faixa em R$, as vendas e os lotes abertos.
+    href: evaluateHref({ ...DEFAULT_EVALUATE_FILTERS, vehicle: { brand, model }, condition: filters.condition }),
   }));
   const axisMax = ratioAxisMax(Math.max(0, ...rows.map((row) => row.high)));
 

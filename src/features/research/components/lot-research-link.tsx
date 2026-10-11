@@ -1,20 +1,25 @@
 import { ChartNoAxesColumn } from "lucide-react";
 
 import { ButtonLink } from "@/components/ui";
+import { DEFAULT_EVALUATE_FILTERS } from "@/domain/research/evaluate";
 
-import { lotResearchFilters } from "../lot-link";
-import { getLotResearchContext } from "../queries";
-import { researchHref } from "../search";
+import { getLotTarget } from "../queries";
+import { evaluateHref } from "../search";
 
 /**
- * "Ver vendas parecidas" (D-45): abre a Pesquisa já com o modelo do lote e, se o lote vem de um anúncio coletado, a
- * condição, a categoria e o estado dele. Some se o lote não é do usuário.
+ * "Ver vendas parecidas" (D-71): abre o Avaliar com o lote como alvo, no mesmo recorte do preço provável (modelo, ano
+ * ±1 e condição). Some se o lote não é do usuário.
  */
 export async function LotResearchLink({ lotId, variant = "link" }: { lotId: string; variant?: "link" | "secondary" }) {
-  const context = await getLotResearchContext(lotId);
-  if (context === null) return null;
+  const lot = await getLotTarget(lotId);
+  if (lot === null) return null;
   return (
-    <ButtonLink href={researchHref(lotResearchFilters(context))} variant={variant} size="sm" className="w-fit">
+    <ButtonLink
+      href={evaluateHref({ ...DEFAULT_EVALUATE_FILTERS, lot: lot.id })}
+      variant={variant}
+      size="sm"
+      className="w-fit"
+    >
       <ChartNoAxesColumn aria-hidden="true" />
       Ver vendas parecidas
     </ButtonLink>
