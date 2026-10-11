@@ -68,6 +68,8 @@ import type {
   LotTarget,
   ModelRanking,
   ModelSales,
+  OriginDistribution,
+  RatioDistribution,
   ResearchFacets,
   ResearchModelOption,
   ResearchOverview,
@@ -276,34 +278,68 @@ async function ratioDistribution(
   return { stats: stats ? toStats(stats) : null, bins, max: stats?.max ?? null };
 }
 
-/** "Quanto se paga por condição": todas as condições, com o resto dos filtros (D-45). */
-export const getConditionDistribution = cache(async (filters: ResearchFilters): Promise<ConditionDistribution> => {
-  await requireUser();
-  const where = salesWhere(filters, { condition: false, ratio: true });
-  const level = sql`coalesce(l.damage_level::text, 'unclassified')`;
+/**
+ * Resumo e histograma do % da FIPE de cada grupo de um recorte, num eixo comum (o fim vem da maior proporção). `group`
+ * é a expressão SQL do grupo, validada por `key`; grupo sem venda volta como `summarize(undefined)` e histograma vazio.
+ */
+async function groupedDistribution<K extends string>(
+  key: z.ZodType<K>,
+  group: Prisma.Sql,
+  where: Prisma.Sql,
+): Promise<{ axisMax: number; of: (value: K) => RatioDistribution }> {
   const [statsRows, binRows] = await Promise.all([
     rows(
-      z.object({ level: levelSchema, ...statsShape, max: z.number() }),
-      sql`SELECT ${level} AS level, ${statsColumns(RATIO)}, max(${RATIO}) AS max FROM listings l WHERE ${where} GROUP BY 1`,
+      z.object({ key, ...statsShape, max: z.number() }),
+      sql`SELECT ${group} AS key, ${statsColumns(RATIO)}, max(${RATIO}) AS max FROM listings l WHERE ${where} GROUP BY 1`,
     ),
     rows(
-      z.object({ level: levelSchema, bin: z.number().int(), n: z.number().int() }),
-      sql`SELECT ${level} AS level, floor(${RATIO} / ${HISTOGRAM_STEP}::float8 + 1e-9)::int AS bin, count(*)::int AS n
+      z.object({ key, bin: z.number().int(), n: z.number().int() }),
+      sql`SELECT ${group} AS key, floor(${RATIO} / ${HISTOGRAM_STEP}::float8 + 1e-9)::int AS bin, count(*)::int AS n
         FROM listings l WHERE ${where} GROUP BY 1, 2`,
     ),
   ]);
-  const levelOf = (condition: (typeof RESEARCH_CONDITIONS)[number]) => DAMAGE_OF_CONDITION[condition] ?? "unclassified";
   const axisMax = ratioAxisMax(statsRows.length === 0 ? null : Math.max(...statsRows.map((row) => row.max)));
-  const conditionRows = RESEARCH_CONDITIONS.map((condition) => {
-    const stats = statsRows.find((row) => row.level === levelOf(condition));
-    const bins = binRows.filter((row) => row.level === levelOf(condition));
-    return { condition, summary: summarize(stats && toStats(stats)), bins: fillHistogram(bins, axisMax) };
-  });
+  return {
+    axisMax,
+    of: (value) => {
+      const stats = statsRows.find((row) => row.key === value);
+      const bins = binRows.filter((row) => row.key === value);
+      return { summary: summarize(stats && toStats(stats)), bins: fillHistogram(bins, axisMax) };
+    },
+  };
+}
+
+/** "Quanto se paga por condição": todas as condições, com o resto dos filtros (D-45). */
+export const getConditionDistribution = cache(async (filters: ResearchFilters): Promise<ConditionDistribution> => {
+  await requireUser();
+  const { axisMax, of } = await groupedDistribution(
+    levelSchema,
+    sql`coalesce(l.damage_level::text, 'unclassified')`,
+    salesWhere(filters, { condition: false, ratio: true }),
+  );
+  const conditionRows = RESEARCH_CONDITIONS.map((condition) => ({
+    condition,
+    ...of(DAMAGE_OF_CONDITION[condition] ?? "unclassified"),
+  }));
   return {
     rows: conditionRows,
     axisMax,
     looksMixed: unclassifiedLooksMixed(Object.fromEntries(conditionRows.map((row) => [row.condition, row.summary]))),
   };
+});
+
+/**
+ * "De quem se compra" (docs/PLANO-MERCADO.md §6): o % da FIPE por origem inferida do veículo (D-73), com todos os
+ * filtros, inclusive a condição: banco e seguradora vendem carros diferentes, e a condição não pode se misturar.
+ */
+export const getOriginDistribution = cache(async (filters: ResearchFilters): Promise<OriginDistribution> => {
+  await requireUser();
+  const { axisMax, of } = await groupedDistribution(
+    z.enum(VEHICLE_ORIGINS),
+    sql`l.vehicle_origin::text`,
+    salesWhere(filters, { ratio: true }),
+  );
+  return { rows: VEHICLE_ORIGINS.map((origin) => ({ origin, ...of(origin) })), axisMax };
 });
 
 /** Vendas do filtro que ficam fora dos gráficos em %, por motivo. */

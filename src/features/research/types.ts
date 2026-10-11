@@ -3,6 +3,7 @@ import type { Route } from "next";
 import type { DamageLevel } from "@/domain/listings/condition";
 import type { ComparableLevel, EstimateConfidence, EstimateSale, EstimateTarget } from "@/domain/listings/estimates";
 import type { MarketValueOrigin } from "@/domain/listings/fipe-match";
+import type { VehicleOrigin } from "@/domain/listings/origin";
 import type { Cents } from "@/domain/money";
 import type { Evaluation } from "@/domain/research/evaluate";
 import type { ResearchCategory, ResearchCondition, ResearchMetric } from "@/domain/research/filters";
@@ -57,6 +58,12 @@ export type ResearchOverview = {
 
 /** Distribuição do % do valor de mercado: resumo e histograma (contagem por faixa de 2 pontos). */
 export type RatioDistribution = { summary: GroupSummary; bins: number[] };
+
+export type OriginDistribution = {
+  rows: (RatioDistribution & { origin: VehicleOrigin })[];
+  /** Fim do eixo comum a todas as faixas. */
+  axisMax: number;
+};
 
 export type ConditionDistribution = {
   rows: (RatioDistribution & { condition: ResearchCondition })[];

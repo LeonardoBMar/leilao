@@ -14,6 +14,7 @@ import { BID_CURVE_BLOCK_TITLE, BidCurveBlock } from "./bid-curve-block";
 import { COMPARISON_BLOCK_TITLE, ComparisonBlock } from "./comparison-block";
 import { CONDITION_BLOCK_TITLE, ConditionBlock } from "./condition-block";
 import { ModelSalesBlock, modelSalesTitle } from "./model-sales-block";
+import { ORIGIN_BLOCK_TITLE, OriginBlock } from "./origin-block";
 import { RANKING_BLOCK_TITLE, RankingBlock } from "./ranking-block";
 import { NoSales, ResearchBlockSkeleton } from "./research-block";
 import { ResearchFilterBar } from "./research-filter-bar";
@@ -82,17 +83,20 @@ export async function ResearchView({
           />
         </Suspense>
       )}
-      {/* Os dois blocos de leitura geral lado a lado na tela larga: a condição pede mais largura que a curva. */}
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      {/* De quem se compra e em que condição: duas distribuições do % da FIPE, lado a lado na tela larga. */}
+      <div className="grid gap-6 xl:grid-cols-2">
+        <Suspense fallback={<ResearchBlockSkeleton title={ORIGIN_BLOCK_TITLE} />}>
+          <OriginBlock filters={filters} />
+        </Suspense>
         <Suspense fallback={<ResearchBlockSkeleton title={CONDITION_BLOCK_TITLE} />}>
           <ConditionBlock filters={filters} noSales={noSales} />
-        </Suspense>
-        <Suspense fallback={<ResearchBlockSkeleton title={BID_CURVE_BLOCK_TITLE} />}>
-          <BidCurveBlock filters={filters} />
         </Suspense>
       </div>
       <Suspense fallback={<ResearchBlockSkeleton title={STATE_BLOCK_TITLE} className="h-96" />}>
         <StateBlock filters={filters} noSales={noSales} />
+      </Suspense>
+      <Suspense fallback={<ResearchBlockSkeleton title={BID_CURVE_BLOCK_TITLE} />}>
+        <BidCurveBlock filters={filters} />
       </Suspense>
     </ResearchShell>
   );

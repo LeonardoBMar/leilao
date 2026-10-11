@@ -40,6 +40,16 @@ describe.skipIf(process.env.DB_TESTS !== "1")("consultas da Pesquisa", () => {
     expect(conditions.rows.map((row) => row.condition)).toEqual(["sem-monta", "pequena", "media", "grande", "sucata"]);
     expect(conditions.rows[0]?.summary.kind).toBe("summary");
 
+    const origins = await queries.getOriginDistribution(DEFAULT_RESEARCH_FILTERS);
+    expect(origins.rows.map((row) => row.origin)).toEqual([
+      "financiamento",
+      "seguradora",
+      "frota",
+      "orgao_publico",
+      "outros",
+    ]);
+    expect(origins.rows.some((row) => row.summary.kind === "summary")).toBe(true);
+
     const map = await queries.getStateMap(DEFAULT_RESEARCH_FILTERS);
     expect(map.states).toHaveLength(27);
 

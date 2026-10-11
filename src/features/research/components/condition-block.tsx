@@ -14,8 +14,9 @@ import { ResearchBlock } from "./research-block";
 export const CONDITION_BLOCK_TITLE = "Quanto se paga por condição";
 
 /**
- * "Quanto se paga por condição" (D-45): o histograma do % da FIPE de cada condição, com o resto dos
- * filtros. A condição do filtro fica em destaque (a mediana dela está no resumo) e clicar noutra a aplica.
+ * "Quanto se paga por condição" (D-45): o histograma do % da FIPE de cada condição com base, com o resto dos
+ * filtros. A condição do filtro fica em destaque (a mediana dela está no resumo) e clicar noutra a aplica; as
+ * condições sem base ficam só na tabela.
  */
 export async function ConditionBlock({ filters, noSales }: { filters: ResearchFilters; noSales: ReactNode }) {
   const { rows, axisMax, looksMixed } = await getConditionDistribution(filters);
@@ -38,9 +39,9 @@ export async function ConditionBlock({ filters, noSales }: { filters: ResearchFi
             ticks={niceTicks(axisMax).filter((tick) => tick <= axisMax)}
             format="ratio"
             unit="da FIPE"
-            // Condição sem venda só aparece se é a do filtro; a tabela traz todas.
+            // Só as condições com base (a mediana) e a do filtro; as outras ficam na tabela.
             rows={rows
-              .filter((row) => row.summary.kind !== "none" || row.condition === filters.condition)
+              .filter((row) => row.summary.kind === "summary" || row.condition === filters.condition)
               .map((row) => ({
                 key: row.condition,
                 label: CONDITION_LABELS[row.condition],
