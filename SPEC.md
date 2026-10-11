@@ -461,6 +461,7 @@ Restrição de unicidade: `(auction_id, lot_number)` após remover espaços exte
 | Comissão | `commission_mode`, `commission_fixed_cents`, `commission_rate_bps` |
 | Estratégia | `risk_reserve_cents`, `desired_margin_cents`, `notes` |
 | Saídas fixadas | `max_bid_cents`, `is_viable`, `total_at_max_bid_cents`, `margin_at_max_bid_cents`, `formula_version` |
+| Mercado na fixação | `market_snapshot` (`jsonb`: faixa típica, vendas parecidas usadas com o lance final, recorte e data do cálculo; só em versão fixada, D-74) |
 | Temporalidade | `known_result_at_creation`, `fixed_at`, `created_at`, `updated_at` |
 
 As saídas ficam preservadas com as entradas em cada versão fixada. Novas versões da fórmula não recalculam silenciosamente análises históricas.

@@ -62,7 +62,8 @@ export const COMPARABLE_LEVELS = ["version", "family", "model"] as const;
 export type ComparableLevel = (typeof COMPARABLE_LEVELS)[number];
 
 /** Quanto a faixa merece confiança: pelo nível, pelo número de vendas e pela largura da faixa (`confidenceOf`). */
-export type EstimateConfidence = "high" | "medium" | "low";
+export const ESTIMATE_CONFIDENCES = ["high", "medium", "low"] as const;
+export type EstimateConfidence = (typeof ESTIMATE_CONFIDENCES)[number];
 
 export type PriceEstimate =
   | {

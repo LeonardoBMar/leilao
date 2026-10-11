@@ -3,6 +3,7 @@ import type { DefaultsInput } from "@/domain/finance/defaults";
 import type { Cents } from "@/domain/money";
 
 import type { ListingFipe } from "./fipe-fill";
+import type { MarketSnapshot } from "./market-snapshot";
 import type { AnalysisReferences } from "./schemas";
 
 export type AnalysisStatus = "draft" | "fixed";
@@ -33,6 +34,8 @@ export type AnalysisDetail = {
   references: AnalysisReferences;
   outputs: AnalysisOutputs | null;
   fixedAt: Date | null;
+  /** Mercado do lote na fixação (D-74); `null` em rascunhos e nas fixadas antes do registro. */
+  marketSnapshot: MarketSnapshot | null;
   createdAt: Date;
   updatedAt: Date;
   /** Condição do veículo (do anúncio ligado) para estimar venda e reparos a partir da FIPE (D-38). */

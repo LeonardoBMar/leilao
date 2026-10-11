@@ -12,9 +12,12 @@ import { AnalysisSummary } from "./analysis-summary";
 export function AnalysisReadonly({
   analysis,
   market,
+  marketNote,
 }: {
   analysis: AnalysisDetail;
+  /** Mercado da época (snapshot) ou, nas fixadas antes de D-74, o de hoje. */
   market: LotMarketReference | null;
+  marketNote: string;
 }) {
   const { inputs, references, outputs } = analysis;
   const complete = completeInputs(inputs);
@@ -107,7 +110,7 @@ export function AnalysisReadonly({
           model={fixedSummary(inputs, outputs)}
           currentBid={analysis.lot.currentBid}
           market={market}
-          marketNote="Vendas de hoje, não as da época da fixação."
+          marketNote={marketNote}
         />
       ) : null}
     </div>

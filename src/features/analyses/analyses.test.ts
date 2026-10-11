@@ -7,6 +7,7 @@ import { cents } from "@/domain/money";
 import { defaultsInputFromListing, draftDefaults, draftSourceOf, UNKNOWN_VEHICLE } from "./draft-defaults";
 import { fipeFill } from "./fipe-fill";
 import { FORM_FIELD, limitPositionText } from "./labels";
+import { readMarketSnapshot, snapshotOf } from "./market-snapshot";
 import { readAnalysisInputs } from "./read-inputs";
 import { analysisFormSchema, toAnalysisInputs } from "./schemas";
 import { fixedSummary, liveSummary } from "./summary-model";
@@ -307,5 +308,37 @@ describe("fipeFill (Usar FIPE do anúncio)", () => {
 
   it("sem mês no anúncio, o mês fica como está", () => {
     expect(fipeFill(empty, { ...fipe, refMonth: null })).not.toHaveProperty("fipeReferenceMonth");
+  });
+});
+
+describe("snapshot de mercado (D-74)", () => {
+  const market = {
+    level: "model" as const,
+    scope: "Chevrolet Onix · 2022 a 2024 · Sem monta declarada",
+    href: "/mercado?lote=x" as const,
+    sales: [
+      { id: "a", finalBid: cents(4_000_000) },
+      { id: "b", finalBid: cents(5_000_000) },
+    ],
+    band: { low: cents(4_100_000), median: cents(4_500_000), high: cents(4_900_000), confidence: "low" as const },
+  };
+
+  it("o que a fixação grava é lido de volta igual (passando por JSON)", () => {
+    const at = new Date(Date.UTC(2026, 9, 11, 20, 30));
+    const stored: unknown = JSON.parse(JSON.stringify(snapshotOf(market, at)));
+    expect(readMarketSnapshot(stored)).toEqual({
+      version: 1,
+      computedAt: at,
+      level: "model",
+      scope: market.scope,
+      sales: market.sales,
+      excludedIds: [],
+      band: market.band,
+    });
+  });
+
+  it("sem snapshot ou com formato desconhecido, `null`", () => {
+    expect(readMarketSnapshot(null)).toBeNull();
+    expect(readMarketSnapshot({ version: 2 })).toBeNull();
   });
 });

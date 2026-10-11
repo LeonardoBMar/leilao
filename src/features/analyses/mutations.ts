@@ -1,6 +1,7 @@
 import "server-only";
 
 import { calculateMaxBid, completeInputs, FORMULA_VERSION } from "@/domain/finance/calculator";
+import { getLotMarketReference } from "@/features/research/queries";
 import { err, ok, type Result } from "@/lib/result";
 import { requireUser } from "@/server/auth";
 import { db, isUniqueViolation } from "@/server/db";
@@ -12,6 +13,7 @@ import {
   listingForDefaultsSelect,
   UNKNOWN_VEHICLE,
 } from "./draft-defaults";
+import { snapshotOf } from "./market-snapshot";
 import { analysisColumns } from "./queries";
 import { type AnalysisForm, toAnalysisInputs, toAnalysisReferences } from "./schemas";
 
@@ -134,7 +136,8 @@ export type FixAnalysisError = SaveDraftError | "incomplete" | "market_value_not
 
 /**
  * Fixa o rascunho (RF-05). O servidor recalcula as saídas a partir das entradas, sem confiar em totais do
- * navegador (SPEC §7.6), e grava a versão da fórmula. Depois disso a linha é imutável (trigger do banco).
+ * navegador (SPEC §7.6), e grava a versão da fórmula e o mercado do lote (D-74). Depois disso a linha é imutável
+ * (trigger do banco).
  */
 export async function fixAnalysis(id: string, form: AnalysisForm): Promise<Result<null, FixAnalysisError>> {
   const user = await requireUser();
@@ -154,17 +157,27 @@ export async function fixAnalysis(id: string, form: AnalysisForm): Promise<Resul
         }
       : { isViable: false, maxBidCents: null, totalAtMaxBidCents: null, marginAtMaxBidCents: null };
 
+  // Mercado do lote no momento da fixação (D-74), gravado no mesmo UPDATE: depois dele a linha é imutável.
+  const draft = await db.analysis.findFirst({
+    where: { id, ownerId: user.id, status: "draft" },
+    select: { lotId: true },
+  });
+  if (!draft) return err(await whyNotDraft(id, user.id));
+  const market = await getLotMarketReference(draft.lotId);
+  const fixedAt = new Date();
+
   const { count } = await db.analysis.updateMany({
     where: { id, ownerId: user.id, status: "draft" },
     data: {
       ...toAnalysisData(form),
+      ...(market === null ? {} : { marketSnapshot: snapshotOf(market, fixedAt) }),
       // Reserva e margem em %: a versão fixada guarda também o valor aplicado em R$ (D-38).
       riskReserveCents: complete.value.riskReserve,
       desiredMarginCents: complete.value.desiredMargin,
       ...outputs,
       formulaVersion: FORMULA_VERSION,
       status: "fixed",
-      fixedAt: new Date(),
+      fixedAt,
     },
   });
   return count > 0 ? ok(null) : err(await whyNotDraft(id, user.id));

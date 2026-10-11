@@ -116,6 +116,7 @@ describe.skipIf(process.env.DB_TESTS !== "1")("consultas da Pesquisa", () => {
     });
     expect(open.every((listing) => listing.endsAt === null || listing.endsAt > new Date())).toBe(true);
     expect(await queries.getLotTarget("00000000-0000-7000-8000-000000000000")).toBeNull();
+    expect(await queries.getLotMarketReference("00000000-0000-7000-8000-000000000000")).toBeNull();
 
     await db.$disconnect();
   }, 60_000);

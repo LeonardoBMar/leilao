@@ -7,6 +7,7 @@ import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
 
 import { listingFipeOf } from "./draft-defaults";
+import { readMarketSnapshot } from "./market-snapshot";
 import type { AnalysisDetail, AnalysisVersion } from "./types";
 
 const money = (value: number | null) => (value === null ? null : cents(value));
@@ -73,6 +74,7 @@ export async function getAnalysis(id: string): Promise<AnalysisDetail | null> {
       marginAtMaxBidCents: true,
       formulaVersion: true,
       fixedAt: true,
+      marketSnapshot: true,
       createdAt: true,
       updatedAt: true,
       lot: {
@@ -129,6 +131,7 @@ export async function getAnalysis(id: string): Promise<AnalysisDetail | null> {
           }
         : null,
     fixedAt: row.fixedAt,
+    marketSnapshot: readMarketSnapshot(row.marketSnapshot),
     createdAt: row.createdAt,
     // Sem anúncio ligado, o botão "Estimar a partir da FIPE" supõe carro sem sinistro declarado.
     vehicle: {

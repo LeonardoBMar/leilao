@@ -6,10 +6,12 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Alert, AlertDescription, Badge, ButtonLink, Section, SectionTitle, Skeleton } from "@/components/ui";
 import { FORMULA_VERSION } from "@/domain/finance/calculator";
 import { getLotMarketReference } from "@/features/research/queries";
-import { formatDateTime } from "@/lib/format";
+import type { LotMarketReference } from "@/features/research/types";
+import { formatDate, formatDateTime } from "@/lib/format";
 
 import { getAnalysis, listLotAnalyses } from "../queries";
 import { analysisIdSchema } from "../schemas";
+import type { AnalysisDetail } from "../types";
 import { AnalysisEditor } from "./analysis-editor";
 import { AnalysisHistory } from "./analysis-history";
 import { AnalysisReadonly } from "./analysis-readonly";
@@ -97,7 +99,7 @@ export async function AnalysisView({ params }: { params: Promise<{ id: string }>
       ) : null}
 
       {isFixed ? (
-        <AnalysisReadonly analysis={analysis} market={market} />
+        <AnalysisReadonly analysis={analysis} {...fixedMarket(analysis, market)} />
       ) : (
         <AnalysisEditor analysis={analysis} market={market} />
       )}
@@ -108,6 +110,30 @@ export async function AnalysisView({ params }: { params: Promise<{ id: string }>
       </Section>
     </div>
   );
+}
+
+/**
+ * Concorrência da versão fixada: as vendas da época (snapshot, D-74) com o link de hoje para o Avaliar; nas fixadas
+ * antes do registro, as vendas de hoje, com o aviso.
+ */
+function fixedMarket(
+  analysis: AnalysisDetail,
+  current: LotMarketReference | null,
+): { market: LotMarketReference | null; marketNote: string } {
+  const snapshot = analysis.marketSnapshot;
+  if (snapshot === null) {
+    return { market: current, marketNote: "Vendas de hoje: esta versão foi fixada antes do registro do mercado." };
+  }
+  return {
+    market: {
+      level: snapshot.level,
+      scope: snapshot.scope,
+      href: current?.href ?? "/mercado",
+      sales: snapshot.sales,
+      band: snapshot.band,
+    },
+    marketNote: `Vendas até a fixação, em ${formatDate(snapshot.computedAt)}.`,
+  };
 }
 
 export function AnalysisViewSkeleton() {

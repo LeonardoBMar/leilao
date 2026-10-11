@@ -191,6 +191,9 @@ model Analysis {
   totalAtMaxBidCents     Int?            @map("total_at_max_bid_cents")
   marginAtMaxBidCents    Int?            @map("margin_at_max_bid_cents")
   formulaVersion         Int?            @map("formula_version")
+  /// Mercado do lote na fixação (D-74): faixa, vendas usadas e data do cálculo. Validado por Zod na leitura
+  /// (`features/analyses/market-snapshot.ts`); nulo em rascunhos e em análises fixadas antes de D-74.
+  marketSnapshot         Json?           @map("market_snapshot")
   // Temporalidade
   knownResultAtCreation  Boolean         @default(false) @map("known_result_at_creation")
   fixedAt                DateTime?       @map("fixed_at") @db.Timestamptz(3)
