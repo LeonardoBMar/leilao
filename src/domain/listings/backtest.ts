@@ -5,8 +5,8 @@ import type { EstimateSale, EstimateTarget, PriceEstimate } from "./estimates";
  *
  * Cada venda é estimada só com as vendas que encerraram **antes do dia dela** (e dentro da janela), como se o usuário
  * a visse na véspera. O estimador é montado uma vez por dia, porque o índice de vendas é caro e muda pouco num dia.
- * O resultado diz quantas vendas tiveram estimativa, quantas caíram dentro da faixa P25–P75 (o esperado é perto de
- * 50%) e o erro mediano da mediana estimada.
+ * O resultado diz quantas vendas tiveram estimativa, quantas caíram dentro da faixa (feita para conter metade delas,
+ * `bandOf`) e o erro mediano da mediana estimada.
  */
 
 export type BacktestSale = EstimateSale & EstimateTarget;
@@ -53,7 +53,7 @@ export type BacktestSummary = {
   total: number;
   /** Vendas com preço provável (comparáveis ou proporção). */
   estimated: number;
-  /** Parte das estimadas com o lance final dentro da faixa P25–P75. */
+  /** Parte das estimadas com o lance final dentro da faixa do preço provável. */
   hitRate: number | null;
   /** Mediana de |mediana estimada − lance final| ÷ lance final. */
   medianAbsError: number | null;

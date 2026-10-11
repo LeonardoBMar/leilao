@@ -106,7 +106,11 @@ export type EstimateOptions = {
   exclude?: ReadonlySet<string>;
 };
 
-/** O motor das telas, escolhido pelo backtest (T0.6). */
+/**
+ * O motor das telas, escolhido pelo backtest (T0.6, D-72): só o modelo base. Versão e família deixam os grupos menores
+ * sem baixar o erro (12,4% contra 11,8% nos alvos com versão; 21,2% contra 22,1% nos com família), e a preferência
+ * por origem piora a faixa. Versão, família e origem ficam como recortes que o usuário escolhe na tela Avaliar.
+ */
 export const DEFAULT_ESTIMATE_OPTIONS: EstimateOptions = { levels: ["model"], preferOrigin: false };
 
 const ratioKey = (vehicle: Pick<Vehicle, "category" | "damageLevel">) =>
@@ -192,18 +196,17 @@ export function estimatePrice(
 
   if (found !== null) {
     const bids = found.sales.map((sale) => sale.finalBid).sort((a, b) => a - b);
-    const band = {
-      n: bids.length,
-      median: rough(percentile(bids, 0.5)),
-      low: rough(percentile(bids, 0.25)),
-      high: rough(percentile(bids, 0.75)),
-    };
+    const band = bandOf(bids);
+    const quartiles = { low: percentile(bids, 0.25), median: percentile(bids, 0.5), high: percentile(bids, 0.75) };
     return {
       kind: "comparables",
       level: found.level,
       sameOrigin: found.sameOrigin,
-      confidence: confidenceOf({ level: found.level, ...band }),
-      ...band,
+      confidence: confidenceOf({ n: bids.length, spread: spreadOf(quartiles) }),
+      n: bids.length,
+      median: rough(band.median),
+      low: rough(band.low),
+      high: rough(band.high),
       saleIds: found.sales.map((sale) => sale.id),
     };
   }
@@ -211,7 +214,7 @@ export function estimatePrice(
   // Sem categoria não há grupo confiável para a proporção.
   const ratios = target.category === null ? [] : (index.ratios.get(ratioKey(target)) ?? []);
   if (target.marketValue !== null && target.marketValue > 0 && ratios.length >= MIN_RATIO_SAMPLE) {
-    const ratio = { median: percentile(ratios, 0.5), low: percentile(ratios, 0.25), high: percentile(ratios, 0.75) };
+    const ratio = bandOf(ratios);
     const apply = (value: number) => rough((target.marketValue ?? 0) * value);
     return {
       kind: "market_ratio",
@@ -227,25 +230,40 @@ export function estimatePrice(
   return { kind: "insufficient", comparables: largest, needed: MIN_COMPARABLES };
 }
 
-/** Faixa com até 35% de largura (P75 − P25 sobre a mediana) é estreita; até 60%, aceitável. Ajustado no backtest. */
-const NARROW_SPREAD = 0.35;
+/**
+ * Faixa onde cai metade das próximas vendas: os quantis `0,5 ± 0,25 × (n + 1) ÷ (n − 1)` das vendas ordenadas. Com
+ * poucas vendas, a P25–P75 da amostra é estreita demais (com 5 vendas, só 1 em 3 das seguintes cairia nela); a
+ * correção vem das estatísticas de ordem e some com amostras grandes (P12,5–P87,5 com 5; P24–P76 com 50). Lista
+ * ordenada com 2 itens ou mais.
+ */
+export function bandOf(sorted: readonly number[]): { low: number; median: number; high: number } {
+  const half = Math.min(0.5, (0.25 * (sorted.length + 1)) / Math.max(1, sorted.length - 1));
+  return {
+    low: percentile(sorted, 0.5 - half),
+    median: percentile(sorted, 0.5),
+    high: percentile(sorted, 0.5 + half),
+  };
+}
+
+/** Largura da P25–P75 sobre a mediana; infinita com mediana zero. */
+function spreadOf(quartiles: { low: number; median: number; high: number }): number {
+  return quartiles.median > 0 ? (quartiles.high - quartiles.low) / quartiles.median : Number.POSITIVE_INFINITY;
+}
+
+/** Limiares do backtest (T0.6): erro mediano de 12,6% na alta, 16–22% na média e 25% ou mais na baixa. */
+const HIGH_CONFIDENCE_SAMPLE = 20;
+const NARROW_SPREAD = 0.4;
 const WIDE_SPREAD = 0.6;
-const HIGH_CONFIDENCE_SAMPLE = 10;
 
 /**
- * Confiança da faixa por comparáveis: **alta** com versão ou família, 10 vendas ou mais e faixa estreita; **média**
- * com faixa aceitável; **baixa** no resto. A proporção da categoria é sempre baixa (não olha para o veículo).
+ * Confiança da faixa por comparáveis, pelo número de vendas e pela largura da P25–P75 (`spread`, sobre a mediana):
+ * **alta** com 20 vendas ou mais e até 40%; **média** com até 40%, ou com 20 vendas ou mais e até 60%; **baixa** no
+ * resto. O nível (versão, família, modelo) não entrou: no backtest ele não mudou o erro. A proporção da categoria é
+ * sempre baixa (não olha para o veículo).
  */
-export function confidenceOf(band: {
-  level: ComparableLevel;
-  n: number;
-  low: number;
-  median: number;
-  high: number;
-}): EstimateConfidence {
-  const spread = band.median > 0 ? (band.high - band.low) / band.median : Number.POSITIVE_INFINITY;
-  if (band.level !== "model" && band.n >= HIGH_CONFIDENCE_SAMPLE && spread <= NARROW_SPREAD) return "high";
-  if (spread <= WIDE_SPREAD) return "medium";
+export function confidenceOf({ n, spread }: { n: number; spread: number }): EstimateConfidence {
+  if (spread <= NARROW_SPREAD) return n >= HIGH_CONFIDENCE_SAMPLE ? "high" : "medium";
+  if (n >= HIGH_CONFIDENCE_SAMPLE && spread <= WIDE_SPREAD) return "medium";
   return "low";
 }
 
@@ -393,7 +411,7 @@ export function limitMaxBid(limit: LimitEstimate): Cents | null {
 }
 
 /**
- * Preço provável frente ao limite (D-44): **folga** quando até o P75 cabe; **no limite** quando só a mediana cabe;
+ * Preço provável frente ao limite (D-44): **folga** quando até o topo da faixa cabe; **no limite** quando só a mediana cabe;
  * **acima** quando nem a mediana cabe. Sem provável ou sem limite viável, não há comparação (`null`).
  */
 export type LimitFit = "comfortable" | "tight" | "above";

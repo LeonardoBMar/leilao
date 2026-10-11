@@ -6,6 +6,7 @@ import { bps, cents } from "../money";
 import {
   type AnalysisCandidate,
   type AnalysisSample,
+  bandOf,
   buildEstimateIndex,
   byAnalysisPriority,
   confidenceOf,
@@ -62,19 +63,19 @@ describe("isComparable", () => {
 });
 
 describe("estimatePrice", () => {
-  it("com 5 comparáveis: mediana e faixa P25–P75 dos lances finais", () => {
+  it("com 5 comparáveis: mediana e faixa de metade das próximas vendas (P12,5–P87,5 com 5)", () => {
     const bids = [2_000_000, 2_500_000, 3_000_000, 3_500_000, 4_000_000];
     const index = buildEstimateIndex(bids.map((bid, n) => sale({ id: `v${n}`, finalBid: cents(bid) })));
     expect(estimatePrice(target(), index)).toEqual({
       kind: "comparables",
       level: "model",
       sameOrigin: false,
-      // Faixa de R$ 10 mil sobre R$ 30 mil (33%), mas só 5 vendas e no nível do modelo.
+      // P25–P75 de R$ 10 mil sobre R$ 30 mil (33%), mas só 5 vendas.
       confidence: "medium",
       n: 5,
       median: 3_000_000,
-      low: 2_500_000,
-      high: 3_500_000,
+      low: 2_250_000,
+      high: 3_750_000,
       saleIds: ["v0", "v1", "v2", "v3", "v4"],
     });
   });
@@ -83,7 +84,7 @@ describe("estimatePrice", () => {
     const index = buildEstimateIndex(
       [2_012_345, 2_512_345, 3_012_345, 3_512_345, 4_012_345].map((bid) => sale({ finalBid: cents(bid) })),
     );
-    expect(estimatePrice(target(), index)).toMatchObject({ median: 3_010_000, low: 2_510_000, high: 3_510_000 });
+    expect(estimatePrice(target(), index)).toMatchObject({ median: 3_010_000, low: 2_260_000, high: 3_760_000 });
   });
 
   it("sem 5 comparáveis: proporção do valor de mercado na mesma categoria e condição", () => {
@@ -201,22 +202,34 @@ describe("comparáveis em níveis (D-72)", () => {
 });
 
 describe("confidenceOf", () => {
-  const band = { level: "family", n: 10, low: 850, median: 1_000, high: 1_150 } as const;
-
-  it("alta com versão ou família, 10 vendas e faixa estreita", () => {
-    expect(confidenceOf(band)).toBe("high");
-    expect(confidenceOf({ ...band, level: "version" })).toBe("high");
+  it("alta com 20 vendas ou mais e P25–P75 de até 40% da mediana", () => {
+    expect(confidenceOf({ n: 20, spread: 0.4 })).toBe("high");
   });
 
-  it("média no nível do modelo, com poucas vendas ou com faixa aceitável", () => {
-    expect(confidenceOf({ ...band, level: "model" })).toBe("medium");
-    expect(confidenceOf({ ...band, n: 9 })).toBe("medium");
-    expect(confidenceOf({ ...band, low: 750, high: 1_300 })).toBe("medium");
+  it("média com faixa estreita e menos vendas, ou com 20 vendas e faixa de até 60%", () => {
+    expect(confidenceOf({ n: 19, spread: 0.4 })).toBe("medium");
+    expect(confidenceOf({ n: 20, spread: 0.6 })).toBe("medium");
   });
 
-  it("baixa com faixa larga ou mediana zero", () => {
-    expect(confidenceOf({ ...band, low: 600, high: 1_400 })).toBe("low");
-    expect(confidenceOf({ ...band, low: 0, median: 0, high: 0 })).toBe("low");
+  it("baixa com faixa larga", () => {
+    expect(confidenceOf({ n: 19, spread: 0.41 })).toBe("low");
+    expect(confidenceOf({ n: 50, spread: 0.61 })).toBe("low");
+    expect(confidenceOf({ n: 50, spread: Number.POSITIVE_INFINITY })).toBe("low");
+  });
+});
+
+describe("bandOf", () => {
+  it("alarga a faixa com poucas vendas e converge para a P25–P75", () => {
+    expect(bandOf([1, 2, 3, 4, 5])).toEqual({ low: 1.5, median: 3, high: 4.5 });
+    const many = Array.from({ length: 101 }, (_, n) => n);
+    const band = bandOf(many);
+    expect(band.median).toBe(50);
+    expect(band.low).toBeCloseTo(24.5, 1);
+    expect(band.high).toBeCloseTo(75.5, 1);
+  });
+
+  it("nunca passa dos extremos", () => {
+    expect(bandOf([1, 3])).toEqual({ low: 1, median: 2, high: 3 });
   });
 });
 

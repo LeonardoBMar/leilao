@@ -63,7 +63,27 @@ O `originOf` atual lê só o `recovery_type` e põe toda a Superbid em "outros".
 
 **Origem inferida (T0.3):** com o comitente e a fonte, 96% das vendas ganham origem: órgão público 71,8%, financiamento 16,4%, frota 4,7%, seguradora 3,1% e outros 4,0% (leiloeiros, pessoa física e comitentes sem sinal).
 
-Os comparáveis acertam a faixa menos que o esperado (41% contra 50%): a faixa é estreita para grupos que misturam versões. Nos carros, a mediana erra um quarto do lance.
+Os comparáveis acertam a faixa menos que o esperado (41% contra 50%). Nos carros, a mediana erra um quarto do lance.
+
+### Portão do motor v2 (T0.6, 11/10/2026)
+
+`npm run db:estimate-backtest` compara as variantes nos mesmos 6.404 alvos:
+
+| Variante | Dentro da faixa | Erro mediano | Erro nos comparáveis |
+| --- | ---: | ---: | ---: |
+| v1: só o modelo base | 44,8% | 19,4% | 16,6% |
+| v2: versão → família → modelo | 42,0% | 19,3% | 16,6% |
+| v2 + preferência por origem | 41,3% | 19,3% | 16,6% |
+| Família → modelo | 43,6% | 19,1% | 16,2% |
+| **v1 com a faixa corrigida (adotado)** | **48,0%** | **19,4%** | **16,6%** |
+
+Lidos lado a lado, nos mesmos alvos: com a versão, o erro foi de 11,8% (v1, mediana de 55 vendas) para 12,4% (v2, 18 vendas); com a família, de 22,1% para 21,2%. Nos carros, a família piorou (24,0% → 24,9%); nas motos, ajudou pouco (13,4% → 13,1%). Também não ajudaram a proporção do valor de mercado por modelo nem por origem (erro igual ou maior).
+
+**Conclusão.** A hipótese do T0.1 estava errada: a faixa não errava por misturar versões, e sim por ser a P25–P75 de amostras pequenas, que com 5 vendas contém só 1 em 3 das próximas. Estreitar o grupo diminui a amostra sem tirar ruído; o que sobra de erro vem do estado de cada veículo, que o catálogo não descreve. Decisão (D-72):
+
+- O preço provável continua só com o modelo base. Versão, família e origem viram **recortes que o usuário escolhe** na tela Avaliar, com o nível dito na resposta.
+- A faixa passa a ser a de metade das próximas vendas (`bandOf`: quantis `0,5 ± 0,25 × (n + 1) ÷ (n − 1)`): 48% dentro, erro igual.
+- Confiança pelo número de vendas e pela largura da P25–P75, sem o nível: **alta** (20+ vendas, até 40%) erra 12,5% e acerta a faixa 50%; **média** erra 18,0%; **baixa** (inclui a proporção da categoria) erra 24,1%.
 
 ## 3. Princípios
 
@@ -222,8 +242,8 @@ Cada tarefa fecha com `npm run check`; as que mexem em rota, config ou fronteira
 | T0.3 | **Origem inferida.** `originOf` passa a receber `recoveryType`, comitente e fonte; classes: apreensão, financeira, seguradora, frota, montadora e desconhecida. Testes com os 30 comitentes mais frequentes | `domain/listings/criteria.ts` | Cobertura ≥ 90% nas vendas na medição; filtro de origem de Leilões continua passando nos testes | — | M |
 | T0.4 | **Persistir a origem.** Migration com `origin_kind` (enum) e índice; coletor grava; backfill por script, como `db:reparse` | `prisma`, `server`, `scripts` | Backfill idempotente; consulta de cobertura bate com T0.3 | T0.3 | M |
 | T0.5 | **Motor v2.** `estimatePrice` com nível (`fipe_version`, `family`, `model`, `category_ratio`), ids dos comparáveis, pontuação de semelhança e `confidenceOf` puro; mesma assinatura de saída mais os campos novos | `domain/listings/estimates.ts` | Testes por nível, fallback e confiança; sem quebra nos consumidores | T0.2 | G |
-| T0.6 | **Portão do backtest.** Rodar T0.1 com o v2 e comparar; ajustar tolerâncias e os limiares de confiança | `scripts` | v2 com taxa na faixa mais perto de 50% e erro mediano menor; senão, volta a T0.5 | T0.1, T0.5 | M |
-| T0.7 | **Trocar os consumidores.** `features/lots` e `features/listings` usam o v2; o preço provável mostra o nível ("mesma versão", "mesmo modelo") | `features`, `components` | Dashboard, lote e Leilões exibem o nível; E2E atuais passam | T0.6 | M |
+| T0.6 | **Portão do backtest.** Rodar T0.1 com o v2 e comparar; ajustar tolerâncias e os limiares de confiança | `scripts` | v2 com taxa na faixa mais perto de 50% e erro mediano menor; senão, volta a T0.5. **Feito:** o v2 não passou; adotada a faixa corrigida com o modelo base (§2) | T0.1, T0.5 | M |
+| T0.7 | **Trocar os consumidores.** `features/lots` e `features/listings` usam o motor escolhido no T0.6; o preço provável mostra a confiança e de onde veio ("mesmo modelo", "proporção da categoria") | `features`, `components` | Dashboard, lote e Leilões exibem a confiança e a origem do número; E2E atuais passam | T0.6 | M |
 | T0.8 | **Documentar** D-72 e D-73 no ARCHITECTURE e o motor no SPEC §10 | `docs` | Revisão do usuário | T0.7 | P |
 
 ### Fase 1 — Navegação
