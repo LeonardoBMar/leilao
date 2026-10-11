@@ -13,8 +13,6 @@ import { RangeBars } from "./range-bars";
 import { ScatterPlot } from "./scatter-plot";
 import { StepLine } from "./step-line";
 
-const pct = (value: number) => `${Math.round(value * 100)}%`;
-
 describe("percentOf e toDataStep", () => {
   it("posição em % presa às bordas", () => {
     expect(percentOf(0.5, [0, 1])).toBe(50);
@@ -222,7 +220,7 @@ describe("LineBand", () => {
         ariaLabel="Lance antes do fim"
         yDomain={[0.8, 1]}
         yTicks={[0.8, 0.9, 1]}
-        formatY={pct}
+        format="ratio"
         points={[
           { key: "48", label: "48 h", low: 0.85, median: 0.9, high: 0.95 },
           { key: "24", label: "24 h", low: 0.9, median: 0.94, high: 0.97 },

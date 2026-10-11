@@ -6,13 +6,14 @@ import { type ResearchFilters, type ResearchVehicle, vehicleLabel } from "@/doma
 import { MIN_SALE_BID_STEPS } from "@/domain/research/sale-bids";
 import { formatBRL, formatDate, formatKm, formatRatio } from "@/lib/format";
 
-import { CONDITION_LABELS, salesLabel } from "../labels";
-import { getModelSales, MODEL_SALES_LIMIT } from "../queries";
+import { salesLabel } from "../labels";
+import { getModelSales, getSaleBids, MODEL_SALES_LIMIT } from "../queries";
 import { researchHref } from "../search";
 import type { ResearchSale } from "../types";
 import { ModelSalesScatter } from "./model-sales-scatter";
 import { ModelSalesTable } from "./model-sales-table";
 import { ResearchBlock } from "./research-block";
+import { SaleBidsPanel } from "./sale-bids-panel";
 
 export function modelSalesTitle(vehicle: ResearchVehicle): string {
   return `Vendas do ${vehicleLabel(vehicle)}`;
@@ -20,7 +21,8 @@ export function modelSalesTitle(vehicle: ResearchVehicle): string {
 
 /**
  * "Vendas do <modelo>" (D-45), só com modelo escolhido: o lance final de cada venda por ano-modelo, com a mediana de
- * cada ano, e a tabela das vendas com link para o anúncio.
+ * cada ano, e a tabela das vendas com link para o anúncio. Com uma venda escolhida (`venda` na URL), os lances dela
+ * abrem entre o gráfico e a tabela.
  */
 export async function ModelSalesBlock({
   filters,
@@ -34,7 +36,10 @@ export async function ModelSalesBlock({
   /** Ações do modelo (lotes abertos, monitor), compostas pela rota. */
   actions: ReactNode;
 }) {
-  const data = await getModelSales(filters);
+  const [data, saleBids] = await Promise.all([
+    getModelSales(filters),
+    filters.sale === null ? Promise.resolve(null) : getSaleBids(filters.sale),
+  ]);
   const title = modelSalesTitle(vehicle);
   if (data === null || data.total === 0) {
     return (
@@ -45,7 +50,7 @@ export async function ModelSalesBlock({
   }
 
   const { total, sales, byYear } = data;
-  // Lances só quando o coletor viu a subida; o painel abre no bloco do lance, logo abaixo, e rola até si.
+  // Lances só quando o coletor viu a subida; o painel abre aqui mesmo, entre o gráfico e a tabela, e rola até si.
   const bidsHrefOf = (sale: ResearchSale): Route | null =>
     sale.bidSteps >= MIN_SALE_BID_STEPS ? researchHref({ ...filters, sale: sale.id }) : null;
   const medians = {
@@ -78,12 +83,7 @@ export async function ModelSalesBlock({
   const recortKey = researchHref({ ...filters, sale: null });
 
   return (
-    <ResearchBlock
-      id="pesquisa-vendas"
-      title={title}
-      actions={actions}
-      description={`Cada ponto é uma venda (${CONDITION_LABELS[filters.condition].toLowerCase()}); o traço é a mediana do ano, com 5 vendas ou mais.`}
-    >
+    <ResearchBlock id="pesquisa-vendas" title={title} actions={actions}>
       <ModelSalesScatter
         key={`dispersao:${recortKey}`}
         sales={scatterSales}
@@ -92,6 +92,9 @@ export async function ModelSalesBlock({
         yearSummary={yearSummary}
         selectedSale={filters.sale}
       />
+      {saleBids === null ? null : (
+        <SaleBidsPanel bids={saleBids} closeHref={researchHref({ ...filters, sale: null })} />
+      )}
       {note ? <p className="text-label font-normal text-muted">{note}</p> : null}
       <ModelSalesTable
         key={`tabela:${recortKey}`}

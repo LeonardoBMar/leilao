@@ -24,7 +24,7 @@ export async function ConditionBlock({ filters, noSales }: { filters: ResearchFi
     <ResearchBlock
       id="pesquisa-condicao"
       title={CONDITION_BLOCK_TITLE}
-      description="Lance final em % do valor de mercado. Faixa clara: metade do meio das vendas; traço: mediana. Clique numa condição para aplicá-la."
+      description="Lance final em % do valor de mercado."
     >
       {rows.every((row) => row.summary.kind === "none") ? (
         noSales

@@ -37,7 +37,7 @@ export async function ComparisonBlock({ filters, noSales }: { filters: ResearchF
     <ResearchBlock
       id="pesquisa-comparacao"
       title={COMPARISON_BLOCK_TITLE}
-      description="Lance final em % do valor de mercado; o resto dos filtros vale para os dois grupos."
+      description="Lance final em % do valor de mercado, com os mesmos filtros."
     >
       {groups.every(({ distribution }) => distribution.summary.kind === "none") ? (
         noSales

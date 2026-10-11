@@ -7,6 +7,7 @@ import { type MouseEvent, type ReactNode, useEffect, useState } from "react";
 import { formatRatio } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
+import { CHART_FORMATS, type ChartFormat } from "./chart-formats";
 import { ChartTooltip } from "./chart-tooltip";
 import { percentOf } from "./data-steps";
 
@@ -25,15 +26,12 @@ export type DistributionRow = {
   href?: Route;
 };
 
-/** Formatos de valor do eixo (o gráfico é client e não recebe função). */
-const FORMATS = { ratio: formatRatio } as const satisfies Record<string, (value: number) => string>;
-
 type DistributionChartProps = {
   rows: readonly DistributionRow[];
   /** Fim do eixo (o início é zero). */
   axisMax: number;
   ticks: readonly number[];
-  format: keyof typeof FORMATS;
+  format: ChartFormat;
   /** Unidade escrita na dica depois da faixa (ex.: "do mercado"). */
   unit?: string;
   /** Resumo em texto do gráfico inteiro, para leitores de tela. */
@@ -42,7 +40,8 @@ type DistributionChartProps = {
 
 type Cursor = { row: string; bin: number };
 
-const ROW_GRID = "md:grid-cols-[10rem_minmax(0,1fr)] md:gap-4";
+/** Rótulo ao lado da faixa só quando o próprio gráfico tem largura (container query), e não pela tela. */
+const ROW_GRID = "@xl:grid-cols-[10rem_minmax(0,1fr)] @xl:gap-4";
 
 /**
  * Histogramas empilhados com a mesma escala horizontal (D-45, DESIGN.md §15.8): uma faixa por grupo, barras em
@@ -54,7 +53,7 @@ const ROW_GRID = "md:grid-cols-[10rem_minmax(0,1fr)] md:gap-4";
  * Um só alvo por grupo acompanha o ponteiro, então a dica não pisca entre barras. O rótulo com `href` aplica o grupo.
  */
 export function DistributionChart({ rows, axisMax, ticks, format, unit, ariaLabel }: DistributionChartProps) {
-  const formatValue = FORMATS[format];
+  const formatValue = CHART_FORMATS[format];
   const domain = [0, axisMax] as const;
   const [hover, setHover] = useState<Cursor | null>(null);
   const [pinned, setPinned] = useState<Cursor | null>(null);
@@ -80,17 +79,19 @@ export function DistributionChart({ rows, axisMax, ticks, format, unit, ariaLabe
   }
 
   return (
-    <div className="grid gap-3">
+    <div className="@container grid gap-3">
       <div role="img" aria-label={ariaLabel} className="grid gap-1">
         {rows.map((row) => {
           const peak = Math.max(1, ...row.bins);
           const total = row.bins.reduce((sum, count) => sum + count, 0);
           const label = (
             <>
-              <span className={cn("block truncate text-body text-foreground", row.emphasis && "font-semibold")}>
+              <span className={cn("truncate text-body text-foreground @xl:block", row.emphasis && "font-semibold")}>
                 {row.label}
               </span>
-              {row.detail ? <span className="block text-caption text-muted tabular-nums">{row.detail}</span> : null}
+              {row.detail ? (
+                <span className="shrink-0 text-caption text-muted tabular-nums @xl:block">{row.detail}</span>
+              ) : null}
             </>
           );
           const isActiveRow = active?.row === row.key;
@@ -98,7 +99,7 @@ export function DistributionChart({ rows, axisMax, ticks, format, unit, ariaLabe
             <div
               key={row.key}
               className={cn(
-                "grid gap-1 rounded-md px-2 py-1.5 md:items-end",
+                "grid gap-1 rounded-md px-2 py-1.5 @xl:items-end",
                 ROW_GRID,
                 row.emphasis && "bg-background",
               )}
@@ -110,12 +111,12 @@ export function DistributionChart({ rows, axisMax, ticks, format, unit, ariaLabe
                   tabIndex={-1}
                   aria-hidden="true"
                   title="Aplicar esta condição"
-                  className="group -mx-1 min-w-0 rounded-sm px-1 py-0.5 hover:bg-surface-subtle"
+                  className="-mx-1 flex min-w-0 items-baseline gap-2 rounded-sm px-1 py-0.5 hover:bg-surface-subtle @xl:block"
                 >
                   {label}
                 </Link>
               ) : (
-                <div aria-hidden="true" className="min-w-0">
+                <div aria-hidden="true" className="flex min-w-0 items-baseline gap-2 @xl:block">
                   {label}
                 </div>
               )}
@@ -189,7 +190,7 @@ export function DistributionChart({ rows, axisMax, ticks, format, unit, ariaLabe
           );
         })}
         <div aria-hidden="true" className={cn("grid px-2", ROW_GRID)}>
-          <span className="hidden md:block" />
+          <span className="hidden @xl:block" />
           <div className="relative h-4 border-t border-border-strong">
             {ticks.map((tick) => (
               <span

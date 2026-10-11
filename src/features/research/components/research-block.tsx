@@ -20,7 +20,7 @@ type ResearchBlockProps = {
 /** Bloco da Pesquisa (DESIGN.md §15.8): título, apoio em `muted` e o gráfico sobre `surface`. */
 export function ResearchBlock({ id, title, description, actions, children }: ResearchBlockProps) {
   return (
-    <section id={id} aria-labelledby={`${id}-titulo`} className="scroll-mt-20 md:scroll-mt-64 lg:scroll-mt-60">
+    <section id={id} aria-labelledby={`${id}-titulo`} className="min-w-0 scroll-mt-20 lg:scroll-mt-60">
       <Card className="grid min-w-0 gap-5 p-5 md:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="grid max-w-3xl gap-1">

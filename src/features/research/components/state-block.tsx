@@ -7,7 +7,7 @@ import { DistributionChart } from "@/components/charts/distribution-chart";
 import { MapLegend } from "@/components/charts/map-legend";
 import { RangeBars } from "@/components/charts/range-bars";
 import { LinkTabs, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui";
-import { effectiveMetric, type ResearchFilters, vehicleLabel } from "@/domain/research/filters";
+import { effectiveMetric, type ResearchFilters } from "@/domain/research/filters";
 import { STATE_NAMES } from "@/domain/research/states";
 import { niceTicks } from "@/lib/charts";
 import { formatBRL, formatDate, formatRatio } from "@/lib/format";
@@ -28,11 +28,6 @@ export const STATE_BLOCK_TITLE = "Por estado";
 export async function StateBlock({ filters, noSales }: { filters: ResearchFilters; noSales: ReactNode }) {
   const [map, detail] = await Promise.all([getStateMap(filters), getStateDetail(filters)]);
   const { regions, legend, legendTitle } = stateMapRegions(map, filters);
-  const subject = filters.vehicle === null ? "" : ` do ${vehicleLabel(filters.vehicle)}`;
-  const description =
-    map.metric === "ratio"
-      ? `Mediana do lance final${subject} em % do valor de mercado. Clique num estado para compará-lo com o Brasil.`
-      : `Mediana do lance final${subject} em R$. Clique num estado para compará-lo com o Brasil.`;
   const withSales = map.states.filter(({ summary }) => summary.kind !== "none");
   const list = stateRangeRows(map, filters);
   const mapPanel = (
@@ -47,7 +42,6 @@ export async function StateBlock({ filters, noSales }: { filters: ResearchFilter
     <ResearchBlock
       id="pesquisa-estado"
       title={STATE_BLOCK_TITLE}
-      description={description}
       actions={
         filters.vehicle === null ? null : (
           <LinkTabs
@@ -127,9 +121,7 @@ export async function StateBlock({ filters, noSales }: { filters: ResearchFilter
 function StateDetailPanel({ detail }: { detail: StateDetail | null }) {
   if (detail === null) {
     return (
-      <p className="self-center text-body text-muted lg:max-w-sm">
-        Clique num estado para ver a distribuição dele ao lado da do Brasil e de quais fontes vêm as vendas.
-      </p>
+      <p className="self-center text-body text-muted lg:max-w-sm">Escolha um estado para compará-lo com o Brasil.</p>
     );
   }
   const name = STATE_NAMES[detail.state];

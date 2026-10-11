@@ -23,7 +23,7 @@ import { STATE_BLOCK_TITLE, StateBlock } from "./state-block";
 
 const HEADER_TITLE = "Pesquisa";
 
-/** Cabeçalho com o tamanho da base: "Arremates do catálogo: 1.506 vendas desde 28/09/2026 · 62% com FIPE do sistema". */
+/** Cabeçalho com o tamanho da base: "1.506 vendas arrematadas no catálogo desde 28/09/2026 · 62% com FIPE casado…". */
 export async function ResearchHeader() {
   const { sales, fipeMatched, since } = await getResearchOverview();
   // Valor de mercado casado pelo sistema entra no % do mercado (D-47); o cabeçalho diz quanto da base é assim.
@@ -32,7 +32,7 @@ export async function ResearchHeader() {
   return (
     <PageHeader
       title={HEADER_TITLE}
-      description={`Arremates do catálogo: ${salesLabel(sales)}${since === null ? "" : ` desde ${formatDate(since)}`}${matched}.`}
+      description={`${salesLabel(sales)} arrematadas no catálogo${since === null ? "" : ` desde ${formatDate(since)}`}${matched}.`}
     />
   );
 }
@@ -63,17 +63,11 @@ export async function ResearchView({
       <Suspense fallback={<ResearchSummarySkeleton />}>
         <ResearchSummary filters={filters} />
       </Suspense>
-      <Suspense fallback={<ResearchBlockSkeleton title={CONDITION_BLOCK_TITLE} />}>
-        <ConditionBlock filters={filters} noSales={noSales} />
-      </Suspense>
       {filters.compare === null ? null : (
         <Suspense fallback={<ResearchBlockSkeleton title={COMPARISON_BLOCK_TITLE} />}>
           <ComparisonBlock filters={filters} noSales={noSales} />
         </Suspense>
       )}
-      <Suspense fallback={<ResearchBlockSkeleton title={STATE_BLOCK_TITLE} className="h-96" />}>
-        <StateBlock filters={filters} noSales={noSales} />
-      </Suspense>
       {filters.vehicle === null ? (
         <Suspense fallback={<ResearchBlockSkeleton title={RANKING_BLOCK_TITLE} className="h-96" />}>
           <RankingBlock filters={filters} />
@@ -88,8 +82,17 @@ export async function ResearchView({
           />
         </Suspense>
       )}
-      <Suspense fallback={<ResearchBlockSkeleton title={BID_CURVE_BLOCK_TITLE} />}>
-        <BidCurveBlock filters={filters} />
+      {/* Os dois blocos de leitura geral lado a lado na tela larga: a condição pede mais largura que a curva. */}
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <Suspense fallback={<ResearchBlockSkeleton title={CONDITION_BLOCK_TITLE} />}>
+          <ConditionBlock filters={filters} noSales={noSales} />
+        </Suspense>
+        <Suspense fallback={<ResearchBlockSkeleton title={BID_CURVE_BLOCK_TITLE} />}>
+          <BidCurveBlock filters={filters} />
+        </Suspense>
+      </div>
+      <Suspense fallback={<ResearchBlockSkeleton title={STATE_BLOCK_TITLE} className="h-96" />}>
+        <StateBlock filters={filters} noSales={noSales} />
       </Suspense>
     </ResearchShell>
   );
@@ -103,8 +106,8 @@ export function ResearchViewSkeleton() {
         <Skeleton className="h-10 md:w-60" />
         <Skeleton className="h-10 md:w-44" />
       </div>
-      <ResearchBlockSkeleton title={CONDITION_BLOCK_TITLE} />
-      <ResearchBlockSkeleton title={STATE_BLOCK_TITLE} className="h-96" />
+      <ResearchSummarySkeleton />
+      <ResearchBlockSkeleton title={RANKING_BLOCK_TITLE} className="h-96" />
     </div>
   );
 }

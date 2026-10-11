@@ -52,7 +52,7 @@ export async function ResearchSummary({ filters }: { filters: ResearchFilters })
   return (
     <section aria-label="Resumo" className="grid gap-2">
       <p className="text-label text-muted">{scope}</p>
-      <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <dl className="grid grid-cols-2 gap-3 md:grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
         {ratio === null ? null : ratio.kind === "summary" ? (
           <Tile
             label="Mediana do % do mercado"

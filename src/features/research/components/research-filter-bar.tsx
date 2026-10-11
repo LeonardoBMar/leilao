@@ -88,10 +88,10 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
   }
 
   return (
-    // Fixa abaixo do cabeçalho do celular (3.5rem) a partir de `md`; no celular a barra é alta demais para ficar presa.
+    // Fixa só a partir de `lg`: abaixo disso, somada ao cabeçalho do celular, ela tomava mais da metade da tela.
     <section
       aria-label="Filtros"
-      className="grid gap-4 border-b border-border bg-surface pb-5 md:sticky md:top-14 md:z-30 md:pt-3 lg:top-0"
+      className="grid gap-3 border-b border-border bg-surface pb-4 lg:sticky lg:top-0 lg:z-30 lg:pt-3"
     >
       <div className="grid gap-3 md:flex md:flex-wrap md:items-center">
         <ModelPicker
@@ -203,12 +203,14 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
           <>
             <YearSelect
               label="Ano-modelo de"
+              short={{ empty: "Ano inicial", prefix: "De" }}
               value={filters.yearFrom}
               years={facets.years}
               onChange={(yearFrom) => apply({ ...filters, ...normalizeYears(yearFrom, filters.yearTo) })}
             />
             <YearSelect
               label="Ano-modelo até"
+              short={{ empty: "Ano final", prefix: "Até" }}
               value={filters.yearTo}
               years={facets.years}
               onChange={(yearTo) => apply({ ...filters, ...normalizeYears(filters.yearFrom, yearTo) })}
@@ -302,11 +304,11 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
 /** Âncoras dos blocos (DESIGN.md §15.8): a página é longa e cada bloco tem o seu `id`. */
 function SectionIndex({ hasModel, hasComparison }: { hasModel: boolean; hasComparison: boolean }) {
   const sections = [
-    { id: "pesquisa-condicao", label: "Condição" },
     ...(hasComparison ? [{ id: "pesquisa-comparacao", label: "Comparação" }] : []),
-    { id: "pesquisa-estado", label: "Estado" },
-    hasModel ? { id: "pesquisa-vendas", label: "Vendas do modelo" } : { id: "pesquisa-modelos", label: "Modelos" },
+    hasModel ? { id: "pesquisa-vendas", label: "Vendas" } : { id: "pesquisa-modelos", label: "Modelos" },
+    { id: "pesquisa-condicao", label: "Condição" },
     { id: "pesquisa-lance", label: "Lance" },
+    { id: "pesquisa-estado", label: "Estado" },
   ];
   return (
     <nav aria-label="Seções da página" className="flex flex-wrap gap-x-4 gap-y-1 md:ml-auto">
@@ -326,11 +328,15 @@ function SectionIndex({ hasModel, hasComparison }: { hasModel: boolean; hasCompa
 /** Ano-modelo inicial ou final. A lista traz os anos com venda e o escolhido, mesmo que o resto do filtro o esvazie. */
 function YearSelect({
   label,
+  short,
   value,
   years,
   onChange,
 }: {
+  /** Nome completo, para leitores de tela. */
   label: string;
+  /** Texto curto no campo: sem ano ("Ano inicial") e com ano ("De 2018"). */
+  short: { empty: string; prefix: string };
   value: number | null;
   years: ResearchFacets["years"];
   onChange: (year: number | null) => void;
@@ -348,7 +354,7 @@ function YearSelect({
         onValueChange={(next) => onChange(next === ALL_YEARS ? null : Number(next))}
       >
         <SelectTrigger aria-labelledby={labelId} className="md:w-48">
-          <SelectValue>{value === null ? `${label}: todos` : `${label} ${value}`}</SelectValue>
+          <SelectValue>{value === null ? short.empty : `${short.prefix} ${value}`}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value={ALL_YEARS}>Todos os anos</SelectItem>

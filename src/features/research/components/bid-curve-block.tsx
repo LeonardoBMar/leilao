@@ -5,43 +5,27 @@ import { MIN_SAMPLE } from "@/domain/research/summary";
 import { niceRange } from "@/lib/charts";
 import { formatRatio } from "@/lib/format";
 
-import { salesLabel } from "../labels";
-import { getBidCurve, getSaleBids } from "../queries";
-import { researchHref } from "../search";
+import { riseLabel, salesLabel } from "../labels";
+import { getBidCurve } from "../queries";
 import { ResearchBlock } from "./research-block";
-import { SaleBidsPanel } from "./sale-bids-panel";
 
 export const BID_CURVE_BLOCK_TITLE = "Como o lance sobe";
 
 /**
  * "Como o lance sobe" (D-45): o lance observado como % do lance final, de 48 h a 1 h antes do fim, com a faixa do
- * meio. Responde quanto um lote ainda costuma subir depois que o usuário o vê. Com uma venda escolhida (`venda` na URL),
- * os lances dela vêm antes da curva de todas.
+ * meio. Responde quanto um lote ainda costuma subir depois que o usuário o vê; a dica de cada marca diz quanto falta.
  */
 export async function BidCurveBlock({ filters }: { filters: ResearchFilters }) {
-  const [{ points }, sale] = await Promise.all([
-    getBidCurve(filters),
-    filters.sale === null ? Promise.resolve(null) : getSaleBids(filters.sale),
-  ]);
-  const [first] = points;
+  const { points } = await getBidCurve(filters);
 
   return (
-    <ResearchBlock
-      id="pesquisa-lance"
-      title={BID_CURVE_BLOCK_TITLE}
-      description="Lance visto pelo coletor em % do lance final, nas horas antes do fim. Faixa: metade do meio das vendas; linha: mediana."
-    >
-      {sale === null ? null : <SaleBidsPanel bids={sale} closeHref={researchHref({ ...filters, sale: null })} />}
-      {first === undefined ? (
+    <ResearchBlock id="pesquisa-lance" title={BID_CURVE_BLOCK_TITLE} description="Lance visto em % do lance final.">
+      {points.length === 0 ? (
         <p className="text-body text-muted">
-          Ainda não há {MIN_SAMPLE} vendas com lances observados antes do fim com esses filtros.
+          Ainda não há {MIN_SAMPLE} vendas com lances vistos antes do fim com esses filtros.
         </p>
       ) : (
         <>
-          <p className="text-body font-medium text-foreground">
-            {first.hours} h antes do fim, o lance estava em {formatRatio(first.summary.median)} do lance final, na
-            mediana: ainda subiu {formatRatio(1 / first.summary.median - 1)} até o fim.
-          </p>
           <BidCurveChart points={points} />
           <ChartDataTable
             columns={[
@@ -78,14 +62,22 @@ function BidCurveChart({ points }: { points: Awaited<ReturnType<typeof getBidCur
         .join("; ")}`}
       yDomain={domain}
       yTicks={ticks}
-      formatY={formatRatio}
+      format="ratio"
       points={points.map(({ hours, summary }) => ({
         key: String(hours),
         label: `${hours} h`,
-        title: `${hours} h antes do fim: mediana ${formatRatio(summary.median)}, faixa ${formatRatio(summary.low)} a ${formatRatio(summary.high)} (${salesLabel(summary.n)})`,
         low: summary.low,
         median: summary.median,
         high: summary.high,
+        tooltip: {
+          title: `${hours} h antes do fim`,
+          lines: [
+            `Mediana ${formatRatio(summary.median)} do lance final`,
+            `Até o fim: ${riseLabel(summary.median)}`,
+            `Metade entre ${formatRatio(summary.low)} e ${formatRatio(summary.high)}`,
+            salesLabel(summary.n),
+          ],
+        },
       }))}
     />
   );

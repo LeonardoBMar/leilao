@@ -8,7 +8,6 @@ import { MapLegend } from "@/components/charts/map-legend";
 import { RangeBars } from "@/components/charts/range-bars";
 import { ScatterPlot } from "@/components/charts/scatter-plot";
 import { STATE_NAMES } from "@/domain/research/states";
-import { formatRatio } from "@/lib/format";
 
 /** Gráficos da Pesquisa (D-45) com dados de exemplo próximos da medição de 08/10/2026. */
 const bins = (peaks: Record<number, number>) => Array.from({ length: 50 }, (_, index) => peaks[index] ?? 0);
@@ -177,7 +176,7 @@ export function ChartShowcase() {
             ariaLabel="Exemplo de curva do lance"
             yDomain={[0.8, 1]}
             yTicks={[0.8, 0.9, 1]}
-            formatY={formatRatio}
+            format="ratio"
             points={[
               { key: "48", label: "48 h", low: 0.86, median: 0.93, high: 0.97 },
               { key: "24", label: "24 h", low: 0.91, median: 0.96, high: 0.98 },

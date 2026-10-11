@@ -115,15 +115,18 @@ export function RankingExplorer({ rows, axisMax, ticks, overall }: RankingExplor
             <span />
             <span className="hidden md:block" />
             <span className="relative col-span-1 h-4">
-              {ticks.map((tick) => (
-                <span
-                  key={tick.value}
-                  className="absolute top-0 -translate-x-1/2 text-caption leading-none text-muted tabular-nums first:translate-x-0 last:-translate-x-full"
-                  style={{ left: `${percentOf(tick.value, domain)}%` }}
-                >
-                  {tick.label}
-                </span>
-              ))}
+              {/* Marca perto da mediana geral sai, para o rótulo dela não encavalar. */}
+              {ticks
+                .filter((tick) => overall === null || Math.abs(tick.value - overall) / axisMax > 0.12)
+                .map((tick) => (
+                  <span
+                    key={tick.value}
+                    className="absolute top-0 -translate-x-1/2 text-caption leading-none text-muted tabular-nums first:translate-x-0 last:-translate-x-full"
+                    style={{ left: `${percentOf(tick.value, domain)}%` }}
+                  >
+                    {tick.label}
+                  </span>
+                ))}
               {overall === null ? null : (
                 <span
                   className="absolute top-0 -translate-x-1/2 rounded-sm bg-surface px-1 text-caption leading-none font-semibold text-foreground tabular-nums"

@@ -56,7 +56,7 @@ export function SaleBidsPanel({ bids, closeHref }: { bids: SaleBids; closeHref: 
     <section
       ref={sectionRef}
       aria-label="Lances da venda"
-      className="grid scroll-mt-20 gap-4 rounded-md border border-border p-4 md:scroll-mt-64 lg:scroll-mt-60"
+      className="grid scroll-mt-20 gap-4 rounded-md border border-border p-4 lg:scroll-mt-60"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="grid min-w-0 gap-0.5">
