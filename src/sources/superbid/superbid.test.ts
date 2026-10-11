@@ -301,6 +301,21 @@ describe("parseSuperbidTitle", () => {
     ],
     ["FIAT / PALIO FIRE, ANO: 2008 / 2009", "FIAT", "PALIO FIRE", 2008, 2009, false],
     ["LOTE COM 15 SCOOTERS ELÉTRICAS BOLT MODELO SP-001, 1200W", null, null, null, null, false],
+    // Ruído antes da marca.
+    ["IMP. VW GOLF GL 1.8 MI 1997 1997 VERMELHA", "VW", "GOLF GL 1.8 MI", 1997, 1997, false],
+    ["IMP HONDA HONDA CR-V EXL 2010 2010 PRETA", "HONDA", "CR-V EXL", 2010, 2010, false],
+    ["JTA SUZUKI EN125 YES SE 2011 2011 AMARELA", "SUZUKI", "EN125 YES SE", 2011, 2011, false],
+    ["GM CHEVROLET/S10 LS DD4 2021/2021", "CHEVROLET", "S10 LS DD4", 2021, 2021, false],
+    ["AUTOMOVEL, FIAT/PALIO ELX FLEX , 2004/2005, VERMELHO", "FIAT", "PALIO ELX FLEX", 2004, 2005, false],
+    [
+      "VEÍCULO BAIXADO NO DETRAN NÃO APTO À CIRCULAÇÃO DE RENAULT CLIO RL 1.0, 2002/2003",
+      "RENAULT",
+      "CLIO RL 1.0",
+      2002,
+      2003,
+      false,
+    ],
+    ["SUCATA PARA PRENSA:KIA/BOMGO (2015)", "KIA", "BOMGO", null, 2015, true],
   ])("%s", (title, brand, model, manufactureYear, modelYear, salvage) => {
     expect(parseSuperbidTitle(title)).toEqual({
       brand,

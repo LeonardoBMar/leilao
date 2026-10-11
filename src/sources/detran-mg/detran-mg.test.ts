@@ -13,6 +13,7 @@ import {
   DETRAN_MG_BASE_URL,
   DETRAN_MG_LIVE_URL,
   detranAuctionUrl,
+  detranClosesAt,
   detranDetailsFromRaw,
   detranLotUrl,
   type DetranRaw,
@@ -27,7 +28,7 @@ import {
 const fixture = (name: string) => readFileSync(join(import.meta.dirname, "fixtures", name), "utf8");
 const liveJson = fixture("situacao.json");
 const now = new Date("2026-10-09T15:00:00Z");
-const pocos = { id: "3599", year: "2026" };
+const pocos = { id: "3599", year: "2026", closesAt: "2026-10-13T20:00:00.000Z" };
 
 function live(id: string) {
   const parsed = parseDetranLive(liveJson);
@@ -59,6 +60,17 @@ describe("parseDetranHome", () => {
     expect(auctions).toHaveLength(36);
     expect(auctions).toContainEqual(pocos);
     expect(new Set(auctions.map((auction) => auction.id)).size).toBe(auctions.length);
+    expect(auctions.every((auction) => auction.closesAt !== null)).toBe(true);
+  });
+
+  it("encerramento é o do cartão do próprio leilão, no horário de Brasília", () => {
+    const card = (id: string, text: string) =>
+      `<div>${text}</div><a href="/lotes/lista-lotes/${id}/2026" class="btn">Detalhes</a>`;
+    const html = card("1", "Finalizado Encerramento: 09/10/2026 17:00") + card("2", "Publicado");
+    expect(parseDetranHome(html)).toEqual([
+      { id: "1", year: "2026", closesAt: "2026-10-09T20:00:00.000Z" },
+      { id: "2", year: "2026", closesAt: null },
+    ]);
   });
 });
 
@@ -171,6 +183,26 @@ describe("buildDetranListing", () => {
     const listing = buildDetranListing(rawOf("325919", "280000"), now);
     expect(listing).toMatchObject({ status: "sold", currentBid: 380_000, sourceStatus: "3" });
     expect(JSON.stringify(listing.raw)).not.toMatch(/xxx/);
+  });
+
+  it("sem fim observado do lote, o fim é o encerramento do leilão", () => {
+    const sold = rawOf("325919", "280000");
+    expect(sold.live.endsAt).toBeNull();
+    expect(buildDetranListing(sold, now).endsAt).toBeNull();
+    const closesAt = "2026-10-09T20:00:00.000Z";
+    const listing = buildDetranListing({ ...sold, auction: { ...sold.auction, closesAt } }, now);
+    expect(listing.endsAt?.toISOString()).toBe(closesAt);
+  });
+
+  it("encerramento: página inicial, depois o guardado, depois a leitura do lote já encerrado", () => {
+    const ended = snapshotLive(live("280000"), null, now);
+    const open = snapshotLive(live("325919"), null, now);
+    expect(detranClosesAt("2026-10-09T20:00:00.000Z", "2026-10-01T00:00:00.000Z", ended, now)).toBe(
+      "2026-10-09T20:00:00.000Z",
+    );
+    expect(detranClosesAt(null, "2026-10-01T00:00:00.000Z", ended, now)).toBe("2026-10-01T00:00:00.000Z");
+    expect(detranClosesAt(undefined, undefined, ended, now)).toBe(now.toISOString());
+    expect(detranClosesAt(null, null, open, now)).toBeNull();
   });
 
   it("encerrado sem lance (valor nulo) é não vendido; cancelado é retirado", () => {

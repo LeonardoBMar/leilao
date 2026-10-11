@@ -41,16 +41,33 @@ export const detranAuctionUrl = (auction: DetranAuctionRef, page: number) =>
 export const detranLiveUrl = (lotIds: readonly string[]) =>
   `${DETRAN_MG_LIVE_URL}?user=&${lotIds.map((id) => `data%5B%5D=${encodeURIComponent(id)}`).join("&")}`;
 
-export type DetranAuctionRef = { id: string; year: string };
+/** `closesAt`: "Encerramento" do cartão do leilão (ISO, horário de Brasília), quando o cartão traz. */
+export type DetranAuctionRef = { id: string; year: string; closesAt: string | null };
 
-/** Leilões abertos da página inicial (`/lotes/lista-lotes/{id}/{ano}`), sem repetição. */
+const CLOSES_AT = /Encerramento:\s*(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})/g;
+
+/**
+ * Leilões da página inicial (`/lotes/lista-lotes/{id}/{ano}`), sem repetição: os abertos e os finalizados há poucos
+ * dias. O encerramento é o último do trecho entre o link anterior e o deste leilão (o cartão vem antes do botão).
+ */
 export function parseDetranHome(html: string): DetranAuctionRef[] {
   const found = new Map<string, DetranAuctionRef>();
+  let from = 0;
   for (const match of html.matchAll(/href="\/lotes\/lista-lotes\/(\d+)\/(\d{4})"/g)) {
     const [, id, year] = match;
-    if (id && year && !found.has(id)) found.set(id, { id, year });
+    const closesAt = lastClosesAt(html.slice(from, match.index));
+    from = match.index + match[0].length;
+    if (id && year && !found.has(id)) found.set(id, { id, year, closesAt });
   }
   return [...found.values()];
+}
+
+function lastClosesAt(text: string): string | null {
+  const match = [...text.matchAll(CLOSES_AT)].at(-1);
+  if (!match) return null;
+  const [, day, month, year, hour, minute] = match;
+  const date = new Date(`${year}-${month}-${day}T${hour}:${minute}:00-03:00`);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
 /** O que a lista do leilão diz de cada lote. `vehicle` é "MARCA/MODELO" (sem o ano), quando o site informa. */
@@ -72,6 +89,11 @@ const auctionSchema = z.object({
   city: z.string().nullable(),
   /** Pátio, já sem CPF ou CNPJ (o site às vezes escreve o documento de quem mantém o pátio). */
   yard: z.string().nullable(),
+  /**
+   * Encerramento do leilão, da página inicial; ou, para leilão já fora dela quando o lote foi visto encerrado sem fim
+   * observado, a hora dessa leitura (aproximação). É o fim do lote quando a consulta de situação nunca deu o tempo.
+   */
+  closesAt: z.iso.datetime().nullish(),
 });
 export type DetranAuction = z.infer<typeof auctionSchema>;
 
@@ -229,6 +251,24 @@ function mapStatus(live: LiveSnapshot, now: Date): ListingStatus {
   return endsAt !== null && endsAt.getTime() > now.getTime() ? "open" : "unknown";
 }
 
+/**
+ * Encerramento do leilão para o lote: o da página inicial; senão, o já guardado; senão, para lote encerrado sem fim
+ * observado (visto pela primeira vez depois do fim, com o leilão já fora da página inicial), a hora desta leitura, o
+ * mais perto do fim que há. Lote aberto sem encerramento conhecido fica sem.
+ */
+export function detranClosesAt(
+  fromHome: string | null | undefined,
+  stored: string | null | undefined,
+  live: LiveSnapshot,
+  now: Date,
+): string | null {
+  if (fromHome) return fromHome;
+  if (stored) return stored;
+  return live.endsAt === null && !OPEN_STATUSES.has(live.status) ? now.toISOString() : null;
+}
+
+const dateOf = (iso: string | null) => (iso === null ? null : new Date(iso));
+
 export function buildDetranListing(raw: DetranRaw, now: Date): ListingInput {
   const { lotId, auction, card, page, live } = raw;
   const field = (name: string) => page?.fields[name] ?? null;
@@ -269,7 +309,8 @@ export function buildDetranListing(raw: DetranRaw, now: Date): ListingInput {
     description: conditionText === null ? null : `Condição: ${conditionText}`,
     condition: conditionOf(conditionText),
     startsAt: null,
-    endsAt: live.endsAt === null ? null : new Date(live.endsAt),
+    // O fim observado do lote vale mais que o do leilão: os lotes encerram em sequência.
+    endsAt: dateOf(live.endsAt ?? auction.closesAt ?? null),
     location: { yardName: auction.yard, city: auction.city, state: auction.city === null ? null : "MG", address: null },
     status,
     sourceStatus: live.status,

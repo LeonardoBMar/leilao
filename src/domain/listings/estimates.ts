@@ -36,6 +36,9 @@ export const SALES_WINDOW_MS = 365 * 24 * 60 * 60 * 1000;
 export const BRAND_ALIASES: Readonly<Record<string, string>> = {
   VW: "VOLKSWAGEN",
   GM: "CHEVROLET",
+  // Leiloeiros e Detrans escrevem "GMC CORSA", "GMC CELTA": a GM do Brasil (Chevrolet), não a marca americana.
+  GMC: "CHEVROLET",
+  VOLKSWAGEM: "VOLKSWAGEN",
   // normalizePlaceName troca hífen por espaço: "MERCEDES-BENZ" vira "MERCEDES BENZ".
   MERCEDES: "MERCEDES BENZ",
 };

@@ -60,6 +60,8 @@ describe("matchFipeBrand", () => {
     ["VOLKSWAGEN", "VW - VolksWagen"],
     ["GM", "GM - Chevrolet"],
     ["CHEV", "GM - Chevrolet"],
+    ["GMC", "GM - Chevrolet"],
+    ["VOLKSWAGEM", "VW - VolksWagen"],
     ["I/FIAT", "Fiat"],
     ["CHERY", "Caoa Chery/Chery"],
     ["CAOACHERY", "Caoa Chery/Chery"],

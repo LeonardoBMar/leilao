@@ -41,6 +41,8 @@ import {
 
 const VEHICLE_CATEGORIES = ["Carros", "Utilitarios", "Motos", "Pesados"];
 const BATCH = 50;
+/** Chaves de veículo casadas ao mesmo tempo (D-63): ~1 anúncio por segundo em série, quase tudo espera de rede. */
+const CONCURRENCY = 8;
 
 export type MatchReason =
   | "matched"
@@ -138,10 +140,11 @@ export async function enrichMarketValues(input: {
     });
     if (batch.length === 0) break;
 
-    for (const listing of batch) {
+    await runByKey(batch, identityKeyOf, CONCURRENCY, async (listing) => {
+      if (summary.stoppedBy) return;
       if (now().getTime() >= deadline) {
         summary.stoppedBy = { kind: "time", message: "tempo esgotado" };
-        return summary;
+        return;
       }
       seen.add(listing.id);
       const sample = await evaluateListing(catalog, tables, listing, { dryRun });
@@ -149,9 +152,42 @@ export async function enrichMarketValues(input: {
       if (sample.match) summary.matched[sample.match.origin === "fipe_version" ? "version" : "family"]++;
       onSample?.(sample);
       if (!dryRun) await saveOutcome(listing.id, sample, now());
-    }
+    });
+    if (summary.stoppedBy) return summary;
   }
   return summary;
+}
+
+/** Chave da correlação do anúncio; sem chave (fora das categorias de veículo), o próprio anúncio. */
+function identityKeyOf(listing: PendingListing): string {
+  const identity = fipeVehicleIdentity({ ...listing, category: toListingCategory(listing.category) });
+  return identity?.key ?? listing.id;
+}
+
+/**
+ * Até `limit` chaves ao mesmo tempo, os itens da mesma chave um depois do outro: o tempo de cada anúncio é quase todo
+ * de ida e volta ao banco, e a correlação nova de uma chave (`saveAutoMatch`) só pode ser criada por um de cada vez.
+ */
+async function runByKey<T>(
+  items: readonly T[],
+  keyOf: (item: T) => string,
+  limit: number,
+  run: (item: T) => Promise<void>,
+): Promise<void> {
+  const groups = new Map<string, T[]>();
+  for (const item of items) {
+    const key = keyOf(item);
+    const group = groups.get(key);
+    if (group) group.push(item);
+    else groups.set(key, [item]);
+  }
+  const queue = [...groups.values()];
+  const worker = async () => {
+    for (let group = queue.shift(); group !== undefined; group = queue.shift()) {
+      for (const item of group) await run(item);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, queue.length) }, worker));
 }
 
 /**

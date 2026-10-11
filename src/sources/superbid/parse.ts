@@ -348,8 +348,20 @@ const TWO_WORD_BRANDS = [
 
 /** Tipo do veículo que alguns títulos trazem antes da marca; ônibus e caminhão são Pesados no vocabulário comum. */
 const TYPE_PREFIX =
-  /^(VEICULO|AUTOMOVEL|MOTOCICLETA|MOTONETA|CAMINHONETE|CAMIONETA|UTILITARIO|MICRO-?ONIBUS|ONIBUS|CAMINHAO)\s+/;
+  /^(VEICULO|AUTOMOVEL|MOTOCICLETA|MOTONETA|CAMINHONETE|CAMIONETA|UTILITARIO|MICRO-?ONIBUS|ONIBUS|CAMINHAO)(?:\s*[,:/]\s*|\s+)/;
 const HEAVY_TYPE = /ONIBUS|CAMINHAO/;
+/**
+ * O que alguns vendedores escrevem antes da marca: "SUCATA PARA PRENSA:", "BAIXADO NO DETRAN NÃO APTO À CIRCULAÇÃO DE"
+ * (depois de "VEÍCULO"), "IMP." (importado), "JTA" (a montadora da Suzuki: "JTA SUZUKI EN125") e o "GM" de
+ * "GM CHEVROLET/S10".
+ */
+const LEADING_NOISE = [
+  /^PARA PRENSA\s*[:/]?\s*/,
+  /^BAIXADO\b.*?\bCIRCULACAO DE\s+/,
+  /^IMP\.?\s+/,
+  /^JTA\s+(?=SUZUKI\b)/,
+  /^GM\s+(?=CHEVROLET\b)/,
+];
 
 type TitleParts = { salvage: boolean; heavy: boolean; brand: string | null; model: string | null; years: Years };
 
@@ -364,8 +376,12 @@ export function parseSuperbidTitle(title: string): TitleParts {
   let head = plainUpper(title).replace(/\s+/g, " ");
   const salvage = /\bSUCATA\b/.test(head);
   head = head.replace(/^SUCATA( DE| DO)?\s+/, "");
-  const type = TYPE_PREFIX.exec(head)?.[1] ?? "";
-  head = head.replace(TYPE_PREFIX, "");
+  let type = "";
+  // Ruído e tipo podem vir um depois do outro ("VEÍCULO BAIXADO NO DETRAN…", "PARA PRENSA/CAMINHÃO/…").
+  for (let pass = 0; pass < 3; pass++) {
+    type ||= TYPE_PREFIX.exec(head)?.[1] ?? "";
+    head = LEADING_NOISE.reduce((text, noise) => text.replace(noise, ""), head.replace(TYPE_PREFIX, ""));
+  }
   const base = { salvage, heavy: HEAVY_TYPE.test(type), years: yearsOf(head) };
   const vehicle = nonEmpty(head.split(/,|\(|\bANO\b|\b(?:19|20)\d{2}\b/)[0]);
   if (vehicle === null || /^LOTE\b/.test(vehicle)) return { ...base, brand: null, model: null };
@@ -374,7 +390,10 @@ export function parseSuperbidTitle(title: string): TitleParts {
   if (dashed) return { ...base, brand: nonEmpty(dashed[1]), model: nonEmpty(dashed[2]) };
   const twoWords = TWO_WORD_BRANDS.find((brand) => vehicle === brand || vehicle.startsWith(`${brand} `));
   const brand = twoWords ?? vehicle.split(" ")[0] ?? null;
-  return { ...base, brand: nonEmpty(brand), model: nonEmpty(vehicle.slice(brand?.length ?? 0)) };
+  // "HONDA HONDA CR-V EXL": a marca repetida não faz parte do modelo.
+  const model = vehicle.slice(brand?.length ?? 0).trim();
+  const repeated = brand !== null && model.startsWith(`${brand} `) ? model.slice(brand.length) : model;
+  return { ...base, brand: nonEmpty(brand), model: nonEmpty(repeated) };
 }
 
 /** Marca, modelo e anos: campos da API, depois linhas rotuladas da descrição, depois o título. */

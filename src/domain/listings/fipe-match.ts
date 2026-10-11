@@ -361,7 +361,7 @@ export function marketValueOnSave(
  * mudarem, e diga em `MATCHER_CHANGES` o que a versão nova pode mudar: as correlações automáticas afetadas são refeitas
  * e os anúncios ligados a elas, recalculados.
  */
-export const MATCHER_VERSION = 3;
+export const MATCHER_VERSION = 4;
 
 /**
  * O que cada versão da regra muda (D-53). `all`: a escolha de quem já casou pode mudar, e todas as automáticas de
@@ -374,6 +374,8 @@ export const MATCHER_CHANGES: Readonly<Record<number, "all" | "unmatched">> = {
   2: "all",
   // Segunda leitura solta (ordem trocada, letras coladas, "NOVO") e famílias de até 30 versões (D-53).
   3: "unmatched",
+  // Marcas "GMC" (Chevrolet) e "VOLKSWAGEM" (BRAND_ALIASES), que ficavam sem marca na FIPE.
+  4: "unmatched",
 };
 
 /** Correlação automática anterior a esta versão é refeita, qualquer que seja o tipo: a última versão `all`. */

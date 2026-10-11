@@ -7,6 +7,7 @@ import {
   type DetranAuctionRef,
   detranAuctionUrl,
   type DetranCard,
+  detranClosesAt,
   detranDetailsFromRaw,
   detranExternalId,
   detranListingUrl,
@@ -98,13 +99,9 @@ export const detranMgSource: SourceAdapter = {
       if (page === null) return { ok: false, gone: true, error: "página do lote fora do ar" };
     }
 
-    const raw: DetranRaw = {
-      lotId: id.lotId,
-      auction,
-      card,
-      page,
-      live: snapshotLive(live.value, previous?.live ?? null, now),
-    };
+    const snapshot = snapshotLive(live.value, previous?.live ?? null, now);
+    const closesAt = detranClosesAt(ref?.closesAt, previous?.auction.closesAt, snapshot, now);
+    const raw: DetranRaw = { lotId: id.lotId, auction: { ...auction, closesAt }, card, page, live: snapshot };
     return { ok: true, value: buildDetranListing(raw, now) };
   },
   detailsFromRaw: detranDetailsFromRaw,
