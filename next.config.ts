@@ -52,10 +52,19 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },
-  // Rotas antigas (D-42): favoritos e links já enviados continuam funcionando; a query vai junto.
+  // Rotas antigas (D-42, D-71): favoritos e links já enviados continuam funcionando; a query vai junto.
   async redirects() {
     const uuid = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+    // A Pesquisa (D-45) virou o Panorama: filtros que só ele entende levam para lá. Marca, modelo, ano, km e condição
+    // também servem ao Avaliar e ficam em /mercado.
+    const panoramaOnly = ["uf", "categoria", "medida", "fonte", "venda", "vsmarca", "vsmodelo", "vsuf"];
     return [
+      ...panoramaOnly.map((key) => ({
+        source: "/mercado",
+        has: [{ type: "query" as const, key }],
+        destination: "/mercado/panorama",
+        permanent: false,
+      })),
       { source: "/descobertos", destination: "/leiloes/veiculos", permanent: false },
       { source: "/lotes", destination: "/minhas-analises", permanent: false },
       { source: "/leiloes/novo", destination: "/minhas-analises/leiloes/novo", permanent: false },

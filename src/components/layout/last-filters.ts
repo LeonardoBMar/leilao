@@ -12,6 +12,8 @@ const REMEMBERED: Readonly<Record<string, string>> = {
   "/leiloes/veiculos": "/leiloes",
   "/minhas-analises": "/minhas-analises",
   "/alertas": "/alertas",
+  "/mercado": "/mercado",
+  "/mercado/panorama": "/mercado",
 };
 
 /** A página atual não entra no que é lembrado. */

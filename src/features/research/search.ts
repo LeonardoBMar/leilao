@@ -6,11 +6,16 @@ import type { ResearchFilters, ResearchVehicle } from "@/domain/research/filters
 
 import { researchParams } from "./schemas";
 
-export const RESEARCH_PATH = "/mercado";
+/** Abas do Mercado (D-71): Avaliar um veículo, Panorama do catálogo (a antiga Pesquisa) e Calibração. */
+export const MARKET_PATH = "/mercado";
+export const PANORAMA_PATH = "/mercado/panorama";
+export const CALIBRATION_PATH = "/mercado/calibracao";
+/** Os filtros da Pesquisa (D-45) moram no Panorama. */
+export const RESEARCH_PATH = PANORAMA_PATH;
 
 export type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-/** Endereço da Pesquisa com estes filtros (sem os padrões). */
+/** Endereço do Panorama com estes filtros (sem os padrões). */
 export function researchHref(filters: ResearchFilters): Route {
   const query = new URLSearchParams(researchParams(filters)).toString();
   return (query ? `${RESEARCH_PATH}?${query}` : RESEARCH_PATH) as Route;

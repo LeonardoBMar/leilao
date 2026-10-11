@@ -16,7 +16,7 @@ function mapStates(page: Page) {
 }
 
 test("mostra o tamanho da base e os blocos (ou o estado vazio)", async ({ page }) => {
-  await page.goto("/mercado");
+  await page.goto("/mercado/panorama");
   await expect(page.getByRole("heading", { name: "Mercado", level: 1 })).toBeVisible();
   await expect(
     page.getByText(/Preços de arremate do catálogo: [\d.]+ vendas? desde \d{2}\/\d{2}\/\d{4}/),
@@ -37,7 +37,7 @@ test("mostra o tamanho da base e os blocos (ou o estado vazio)", async ({ page }
 });
 
 test("clicar num estado mostra o detalhe dele frente ao Brasil, e o chip volta ao país todo", async ({ page }) => {
-  await page.goto("/mercado");
+  await page.goto("/mercado/panorama");
   const block = section(page, "Por estado");
   await expect(block.getByRole("group", { name: /^Mapa do Brasil/ }).or(block.getByText(NO_SALES))).toBeVisible();
   const state = mapStates(page).first();
@@ -58,7 +58,7 @@ test("clicar num estado mostra o detalhe dele frente ao Brasil, e o chip volta a
 });
 
 test("escolher um modelo troca o ranking pelas vendas do modelo e libera o mapa em R$", async ({ page }) => {
-  await page.goto("/mercado");
+  await page.goto("/mercado/panorama");
   const picker = page.getByRole("combobox", { name: "Modelo" });
   await picker.click();
   const option = page.getByRole("listbox", { name: "Modelos" }).getByRole("option").first();
@@ -86,7 +86,7 @@ test("escolher um modelo troca o ranking pelas vendas do modelo e libera o mapa 
 });
 
 test("a condição muda pela lista e vai para a URL", async ({ page }) => {
-  await page.goto("/mercado");
+  await page.goto("/mercado/panorama");
   const select = page.getByRole("combobox", { name: "Condição" });
   await select.click();
   // A primeira condição com venda além do padrão (condição sem venda fica desabilitada).
