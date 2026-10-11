@@ -62,6 +62,15 @@ describe.skipIf(process.env.DB_TESTS !== "1")("consultas da Pesquisa", () => {
     expect(sales?.total).toBeGreaterThan(0);
     expect(curve.points.length).toBeGreaterThan(0);
 
+    // Lances de uma venda: a que tem mais degraus fecha no lance final; id que não é venda dá null.
+    const withSteps = sales?.sales.toSorted((x, y) => y.bidSteps - x.bidSteps)[0];
+    if (withSteps) {
+      const bids = await queries.getSaleBids(withSteps.id);
+      expect(bids?.steps.at(-1)?.bid).toBe(withSteps.finalBid);
+      expect(bids?.steps.length).toBeGreaterThanOrEqual(1);
+    }
+    expect(await queries.getSaleBids("00000000-0000-7000-8000-000000000000")).toBeNull();
+
     // Estado e ano-modelo na barra: contagens por estado, anos do modelo e a faixa de ano no filtro.
     const onixFacets = await queries.getResearchFacets({ ...onix, state: null });
     expect(Object.values(onixFacets.states).reduce((total, n) => total + n, 0)).toBeGreaterThan(0);

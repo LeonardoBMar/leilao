@@ -1,5 +1,7 @@
 "use client";
 
+import type { Route } from "next";
+import Link from "next/link";
 import { useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -15,6 +17,10 @@ export type ScatterPoint = {
   title: string;
   /** Link da venda, oferecido sob o gráfico junto do texto. */
   href?: string;
+  /** Link interno a mais sob o gráfico (ex.: os lances da venda). */
+  extraLink?: { href: Route; label: string };
+  /** Ponto escolhido fora do gráfico (ex.: a venda aberta): anel em tinta. */
+  selected?: boolean;
   /** Pertence ao grupo em destaque: com algum ponto em destaque, os outros ficam claros. */
   highlighted?: boolean;
 };
@@ -140,11 +146,13 @@ export function ScatterPlot({
                 "size-2 rounded-full ring-2 ring-surface",
                 point.key === activeKey
                   ? "size-3 bg-accent"
-                  : anyHighlighted
-                    ? point.highlighted
-                      ? "size-3 bg-data-5"
-                      : "bg-data-1"
-                    : "bg-data-3",
+                  : point.selected
+                    ? "size-3 bg-data-5 ring-foreground"
+                    : anyHighlighted
+                      ? point.highlighted
+                        ? "size-3 bg-data-5"
+                        : "bg-data-1"
+                      : "bg-data-3",
               )}
             />
           </button>
@@ -172,6 +180,18 @@ export function ScatterPlot({
                 >
                   Abrir anúncio
                 </a>
+              </>
+            ) : null}
+            {active.extraLink ? (
+              <>
+                {" · "}
+                <Link
+                  href={active.extraLink.href}
+                  scroll={false}
+                  className="text-accent hover:text-accent-hover hover:underline"
+                >
+                  {active.extraLink.label}
+                </Link>
               </>
             ) : null}
           </>

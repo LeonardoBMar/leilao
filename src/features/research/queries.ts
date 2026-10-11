@@ -19,6 +19,7 @@ import {
   type ResearchFilters,
   vehicleLabel,
 } from "@/domain/research/filters";
+import { SALE_BIDS_WINDOW_HOURS, saleBidSteps } from "@/domain/research/sale-bids";
 import { buildStateSummaries, isStateCode, type StateCode } from "@/domain/research/states";
 import {
   BID_CURVE_HOURS,
@@ -52,6 +53,7 @@ import type {
   ResearchFacets,
   ResearchOverview,
   ResearchSale,
+  SaleBids,
   StateDetail,
   StateMapView,
 } from "./types";
@@ -346,6 +348,7 @@ const saleRow = z.object({
   market_value_origin: z.enum(MARKET_VALUE_ORIGINS).nullable(),
   source: z.string(),
   photo_url: z.string().nullable(),
+  bid_steps: z.number().int(),
 });
 
 function toSale(row: z.infer<typeof saleRow>): ResearchSale {
@@ -367,6 +370,7 @@ function toSale(row: z.infer<typeof saleRow>): ResearchSale {
     ratioInBounds: marketValue !== null && isRatioInBounds(row.final_bid_cents / marketValue),
     source: row.source,
     photoUrl: row.photo_url,
+    bidSteps: row.bid_steps,
   };
 }
 
@@ -376,7 +380,12 @@ async function listSales(where: Prisma.Sql, limit: number): Promise<ResearchSale
     saleRow,
     sql`SELECT l.id::text AS id, l.url, l.title, l.ends_at, l.state::text AS state, l.city, l.model_year::int AS model_year,
         l.mileage_km, l.damage_level::text AS damage_level, l.final_bid_cents, l.market_value_cents,
-        l.market_value_origin::text AS market_value_origin, s.name AS source, l.photo_urls[1] AS photo_url
+        l.market_value_origin::text AS market_value_origin, s.name AS source, l.photo_urls[1] AS photo_url,
+        (SELECT count(DISTINCT t.bid)::int FROM (
+          SELECT o.bid_cents AS bid FROM listing_observations o
+          WHERE o.listing_id = l.id AND o.bid_cents > 0 AND o.observed_at <= l.ends_at
+            AND o.observed_at >= l.ends_at - make_interval(hours => ${SALE_BIDS_WINDOW_HOURS}::int)
+          UNION SELECT l.final_bid_cents) t) AS bid_steps
       FROM listings l JOIN sources s ON s.id = l.source_id
       WHERE ${where} ORDER BY l.ends_at DESC, l.id LIMIT ${limit}`,
   );
@@ -490,6 +499,47 @@ export const getPriceSummary = cache(async (filters: ResearchFilters): Promise<G
       WHERE ${salesWhere(filters, {})} HAVING count(*) > 0`,
   );
   return summarize(row && toStats(row));
+});
+
+/**
+ * Lances de uma venda do catálogo nas horas antes do fim, em degraus (só o que o coletor viu). `null` se o id não é de
+ * uma venda.
+ */
+export const getSaleBids = cache(async (saleId: string): Promise<SaleBids | null> => {
+  await requireUser();
+  const sale = await db.listing.findFirst({
+    where: { id: saleId, status: "sold", finalBidCents: { gt: 0 }, endsAt: { not: null } },
+    select: {
+      id: true,
+      title: true,
+      url: true,
+      endsAt: true,
+      finalBidCents: true,
+      marketValueCents: true,
+      observations: {
+        where: { bidCents: { gt: 0 } },
+        orderBy: { observedAt: "asc" },
+        select: { observedAt: true, bidCents: true },
+      },
+    },
+  });
+  if (sale === null || sale.endsAt === null || sale.finalBidCents === null) return null;
+  const marketValue = sale.marketValueCents !== null && sale.marketValueCents > 0 ? cents(sale.marketValueCents) : null;
+  return {
+    id: sale.id,
+    title: sale.title,
+    url: sale.url,
+    endsAt: sale.endsAt,
+    finalBid: cents(sale.finalBidCents),
+    marketValue,
+    steps: saleBidSteps(
+      sale.observations.flatMap(({ observedAt, bidCents }) =>
+        bidCents === null ? [] : [{ observedAt, bid: bidCents }],
+      ),
+      sale.endsAt,
+      sale.finalBidCents,
+    ),
+  };
 });
 
 /**

@@ -20,6 +20,7 @@ const sale = (id: string, changes: Partial<ResearchSale>): ResearchSale => ({
   marketValueOrigin: "source",
   ratio: 0.5,
   ratioInBounds: true,
+  bidSteps: 1,
   source: "Freitas",
   photoUrl: null,
   ...changes,

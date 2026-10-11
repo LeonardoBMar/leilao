@@ -57,6 +57,8 @@ export type ResearchFilters = {
   /** Compara o grupo dos filtros com outro modelo e/ou outro estado; `null` sem comparação. */
   compare: ResearchComparison | null;
   metric: ResearchMetric;
+  /** Venda cujos lances o bloco do lance mostra (id do anúncio); não filtra os outros blocos. */
+  sale: string | null;
 };
 
 /** Faixas de "Km até": as mesmas do catálogo, para o link "Ver lotes abertos" levar o filtro junto. */
@@ -124,6 +126,7 @@ export const DEFAULT_RESEARCH_FILTERS: ResearchFilters = {
   maxKm: null,
   compare: null,
   metric: "ratio",
+  sale: null,
 };
 
 /**

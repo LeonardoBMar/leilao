@@ -64,8 +64,9 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
   const isDefault = Object.keys(params).length === 0;
 
   function apply(changed: ResearchFilters, { focusStatus = false } = {}) {
-    // A comparação acompanha os filtros: outro modelo ou estado igual ao principal deixa de ser comparação.
-    const next = { ...changed, compare: normalizeComparison(changed, changed.compare) };
+    // A comparação acompanha os filtros: outro modelo ou estado igual ao principal deixa de ser comparação. A venda
+    // escolhida é de um recorte: outro filtro a fecha.
+    const next = { ...changed, compare: normalizeComparison(changed, changed.compare), sale: null };
     startTransition(() => {
       setOptimisticFilters(next);
       router.push(researchHref(next), { scroll: false });

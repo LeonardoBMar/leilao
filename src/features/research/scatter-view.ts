@@ -1,3 +1,5 @@
+import type { Route } from "next";
+
 import type { ContinuousAxis } from "@/components/charts/scatter-plot";
 import { isStateCode, STATE_NAMES } from "@/domain/research/states";
 import { niceTicks } from "@/lib/charts";
@@ -16,6 +18,8 @@ export type ScatterSale = {
   finalBid: number;
   /** % do valor de mercado, só se entra nas estatísticas (`RATIO_BOUNDS`). */
   ratio: number | null;
+  /** Abre os lances da venda no bloco do lance; `null` se o coletor só viu o lance final. */
+  bidsHref: Route | null;
 };
 
 export type ScatterXAxis = "year" | "km";

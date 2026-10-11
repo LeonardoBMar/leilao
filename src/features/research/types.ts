@@ -2,6 +2,7 @@ import type { DamageLevel } from "@/domain/listings/condition";
 import type { MarketValueOrigin } from "@/domain/listings/fipe-match";
 import type { Cents } from "@/domain/money";
 import type { ResearchCategory, ResearchCondition, ResearchMetric } from "@/domain/research/filters";
+import type { SaleBidStep } from "@/domain/research/sale-bids";
 import type { StateCode, StateSummary } from "@/domain/research/states";
 import type { BidCurvePoint, GroupSummary, RankedModel } from "@/domain/research/summary";
 
@@ -27,6 +28,19 @@ export type ResearchSale = {
   source: string;
   /** Primeira foto do anúncio, para a miniatura. */
   photoUrl: string | null;
+  /** Lances distintos vistos nas 48 h antes do fim, com o final: com 2 ou mais, há subida para mostrar. */
+  bidSteps: number;
+};
+
+/** Lances de uma venda antes do fim, em degraus (`saleBidSteps`). */
+export type SaleBids = {
+  id: string;
+  title: string;
+  url: string;
+  endsAt: Date;
+  finalBid: Cents;
+  marketValue: Cents | null;
+  steps: SaleBidStep[];
 };
 
 /** Base da Pesquisa inteira, para o cabeçalho. */

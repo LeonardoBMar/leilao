@@ -6,17 +6,23 @@ import { niceRange } from "@/lib/charts";
 import { formatRatio } from "@/lib/format";
 
 import { salesLabel } from "../labels";
-import { getBidCurve } from "../queries";
+import { getBidCurve, getSaleBids } from "../queries";
+import { researchHref } from "../search";
 import { ResearchBlock } from "./research-block";
+import { SaleBidsPanel } from "./sale-bids-panel";
 
 export const BID_CURVE_BLOCK_TITLE = "Como o lance sobe";
 
 /**
  * "Como o lance sobe" (D-45): o lance observado como % do lance final, de 48 h a 1 h antes do fim, com a faixa do
- * meio. Responde quanto um lote ainda costuma subir depois que o usuário o vê.
+ * meio. Responde quanto um lote ainda costuma subir depois que o usuário o vê. Com uma venda escolhida (`venda` na URL),
+ * os lances dela vêm antes da curva de todas.
  */
 export async function BidCurveBlock({ filters }: { filters: ResearchFilters }) {
-  const { points } = await getBidCurve(filters);
+  const [{ points }, sale] = await Promise.all([
+    getBidCurve(filters),
+    filters.sale === null ? Promise.resolve(null) : getSaleBids(filters.sale),
+  ]);
   const [first] = points;
 
   return (
@@ -25,6 +31,7 @@ export async function BidCurveBlock({ filters }: { filters: ResearchFilters }) {
       title={BID_CURVE_BLOCK_TITLE}
       description="Lance observado pelo coletor como % do lance final, nas horas antes do fim. A faixa clara reúne a metade do meio das vendas; a linha é a mediana."
     >
+      {sale === null ? null : <SaleBidsPanel bids={sale} closeHref={researchHref({ ...filters, sale: null })} />}
       {first === undefined ? (
         <p className="text-body text-muted">
           Ainda não há {MIN_SAMPLE} vendas com lances observados antes do fim com esses filtros.

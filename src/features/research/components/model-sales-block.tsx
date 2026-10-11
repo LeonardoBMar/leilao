@@ -1,7 +1,9 @@
+import type { Route } from "next";
 import type { ReactNode } from "react";
 
 import { cents } from "@/domain/money";
 import { type ResearchFilters, type ResearchVehicle, vehicleLabel } from "@/domain/research/filters";
+import { MIN_SALE_BID_STEPS } from "@/domain/research/sale-bids";
 import { formatBRL, formatDate, formatKm, formatRatio } from "@/lib/format";
 
 import { CONDITION_LABELS, salesLabel } from "../labels";
@@ -43,6 +45,9 @@ export async function ModelSalesBlock({
   }
 
   const { total, sales, byYear } = data;
+  // Lances só quando o coletor viu a subida; o painel abre no bloco do lance, logo abaixo, e rola até si.
+  const bidsHrefOf = (sale: ResearchSale): Route | null =>
+    sale.bidSteps >= MIN_SALE_BID_STEPS ? researchHref({ ...filters, sale: sale.id }) : null;
   const medians = {
     price: byYear.flatMap(({ year, summary }) => (summary.kind === "summary" ? [{ x: year, y: summary.median }] : [])),
     ratio: byYear.flatMap(({ year, ratio }) => (ratio.kind === "summary" ? [{ x: year, y: ratio.median }] : [])),
@@ -57,6 +62,7 @@ export async function ModelSalesBlock({
     source: sale.source,
     finalBid: sale.finalBid,
     ratio: sale.ratioInBounds ? sale.ratio : null,
+    bidsHref: bidsHrefOf(sale),
   }));
   const yearSummary = `Lance final do ${vehicleLabel(vehicle)} por ano-modelo: ${byYear
     .flatMap(({ year, summary }) =>
@@ -67,8 +73,9 @@ export async function ModelSalesBlock({
     total > sales.length
       ? `Mostrando as ${MODEL_SALES_LIMIT} mais recentes de ${salesLabel(total)}; a ordem e o filtro da tabela valem dentro delas.`
       : null;
-  // Outro recorte recomeça a ordem, o filtro de estado e o destaque (senão a tabela poderia ficar vazia).
-  const recortKey = researchHref(filters);
+  // Outro recorte recomeça a ordem, o filtro de estado e o destaque (senão a tabela poderia ficar vazia); abrir os
+  // lances de uma venda não é outro recorte.
+  const recortKey = researchHref({ ...filters, sale: null });
 
   return (
     <ResearchBlock
@@ -83,9 +90,14 @@ export async function ModelSalesBlock({
         medians={medians}
         subject={vehicleLabel(vehicle)}
         yearSummary={yearSummary}
+        selectedSale={filters.sale}
       />
       {note ? <p className="text-label font-normal text-muted">{note}</p> : null}
-      <ModelSalesTable key={`tabela:${recortKey}`} sales={sales} />
+      <ModelSalesTable
+        key={`tabela:${recortKey}`}
+        sales={sales.map((sale) => ({ ...sale, bidsHref: bidsHrefOf(sale) }))}
+        selectedSale={filters.sale}
+      />
     </ResearchBlock>
   );
 }

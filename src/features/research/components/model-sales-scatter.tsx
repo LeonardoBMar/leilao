@@ -37,6 +37,8 @@ type ModelSalesScatterProps = {
   subject: string;
   /** Resumo em texto do gráfico por ano-modelo (as medianas de cada ano). */
   yearSummary: string;
+  /** Venda com os lances abertos, marcada no gráfico. */
+  selectedSale: string | null;
 };
 
 /**
@@ -44,7 +46,7 @@ type ModelSalesScatterProps = {
  * eixo pode ser o ano-modelo ou o km, e um estado ou uma fonte pode ser destacado. O destaque usa os tons já existentes
  * (ponto escuro sobre os claros), sem uma cor por categoria.
  */
-export function ModelSalesScatter({ sales, medians, subject, yearSummary }: ModelSalesScatterProps) {
+export function ModelSalesScatter({ sales, medians, subject, yearSummary, selectedSale }: ModelSalesScatterProps) {
   const [axis, setAxis] = useState<ScatterXAxis>("year");
   const [measure, setMeasure] = useState<ScatterYAxis>("price");
   const [highlight, setHighlight] = useState(NO_HIGHLIGHT);
@@ -75,6 +77,8 @@ export function ModelSalesScatter({ sales, medians, subject, yearSummary }: Mode
     y,
     title: sale.label,
     href: sale.url,
+    extraLink: sale.bidsHref === null ? undefined : { href: sale.bidsHref, label: "Ver lances" },
+    selected: sale.id === selectedSale,
     highlighted: isInHighlight(sale, highlight),
   }));
 

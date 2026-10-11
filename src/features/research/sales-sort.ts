@@ -17,7 +17,11 @@ const VALUE_OF = {
  * Vendas ordenadas pela coluna escolhida. Quem não tem o valor (sem km, sem valor de mercado) vai sempre para o fim,
  * qualquer que seja o sentido, e o empate segue a ordem recebida (as mais recentes primeiro).
  */
-export function sortSales(sales: readonly ResearchSale[], key: SaleSortKey, direction: SortDirection): ResearchSale[] {
+export function sortSales<T extends ResearchSale>(
+  sales: readonly T[],
+  key: SaleSortKey,
+  direction: SortDirection,
+): T[] {
   const valueOf = VALUE_OF[key];
   const sign = direction === "asc" ? 1 : -1;
   return sales.toSorted((a, b) => {

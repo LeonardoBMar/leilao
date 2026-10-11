@@ -34,6 +34,7 @@ describe("parseResearchParams", () => {
       maxKm: 100_000,
       compare: null,
       metric: "price",
+      sale: null,
     } satisfies ResearchFilters);
   });
 
@@ -76,6 +77,13 @@ describe("parseResearchParams", () => {
     expect(parseResearchParams({ fonte: "Super Bid!", kmate: "70000" })).toMatchObject({ source: null, maxKm: null });
   });
 
+  it("venda só com id no formato de UUID", () => {
+    expect(parseResearchParams({ venda: "0199C0DE-0000-7000-8000-000000000001" }).sale).toBe(
+      "0199c0de-0000-7000-8000-000000000001",
+    );
+    expect(parseResearchParams({ venda: "1; drop table" }).sale).toBeNull();
+  });
+
   it("ano sem modelo não filtra", () => {
     expect(parseResearchParams({ anode: "2018", anoate: "2020" })).toEqual(DEFAULT_RESEARCH_FILTERS);
   });
@@ -102,6 +110,7 @@ describe("researchParams", () => {
       maxKm: 50_000,
       compare: { vehicle: { brand: "FIAT", model: "TORO" }, state: "BA" },
       metric: "price",
+      sale: "0199c0de-0000-7000-8000-000000000001",
     };
     expect(parseResearchParams(researchParams(filters))).toEqual(filters);
   });

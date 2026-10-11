@@ -1,7 +1,9 @@
 "use client";
 
-import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
+import { ArrowDown, ArrowUp, ChartSpline, ChevronsUpDown } from "lucide-react";
+import type { Route } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { useId, useState } from "react";
 
 import {
@@ -56,7 +58,15 @@ const COLUMNS = [
  * estado e a miniatura do anúncio. A ordem e o filtro são só desta tela (não vão para a URL): o recorte das vendas é o
  * dos filtros da Pesquisa.
  */
-export function ModelSalesTable({ sales }: { sales: readonly ResearchSale[] }) {
+export function ModelSalesTable({
+  sales,
+  selectedSale,
+}: {
+  /** Com o link dos lances (`null` quando o coletor só viu o lance final). */
+  sales: readonly (ResearchSale & { bidsHref: Route | null })[];
+  /** Venda com os lances abertos, marcada na tabela. */
+  selectedSale: string | null;
+}) {
   const [sort, setSort] = useState<{ key: SaleSortKey; direction: SortDirection }>({ key: "date", direction: "desc" });
   const [state, setState] = useState(ALL_STATES);
   const [expanded, setExpanded] = useState(false);
@@ -135,11 +145,18 @@ export function ModelSalesTable({ sales }: { sales: readonly ResearchSale[] }) {
                 </TableHead>
               );
             })}
+            <TableHead>
+              <span className="sr-only">Lances</span>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {shown.map((sale) => (
-            <TableRow key={sale.id}>
+            <TableRow
+              key={sale.id}
+              aria-current={sale.id === selectedSale || undefined}
+              className={cn(sale.id === selectedSale && "bg-surface-subtle")}
+            >
               <TableCell className="tabular-nums">{formatDate(sale.endsAt)}</TableCell>
               <TableCell>
                 <SaleLink sale={sale} />
@@ -166,6 +183,19 @@ export function ModelSalesTable({ sales }: { sales: readonly ResearchSale[] }) {
                   ? null
                   : `${formatBRL(sale.marketValue)}${MARKET_ORIGIN_MARKS[sale.marketValueOrigin ?? "source"]}`}
               </Cell>
+              <TableCell className="text-right">
+                {sale.bidsHref === null ? null : (
+                  <Link
+                    href={sale.bidsHref}
+                    scroll={false}
+                    aria-label={`Ver os lances de ${sale.title}`}
+                    title="Ver os lances antes do fim"
+                    className="inline-flex size-10 items-center justify-center rounded-md text-muted outline-none hover:bg-background hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent"
+                  >
+                    <ChartSpline aria-hidden="true" className="size-4" />
+                  </Link>
+                )}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

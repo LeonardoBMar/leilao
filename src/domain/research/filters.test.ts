@@ -46,6 +46,7 @@ describe("DEFAULT_RESEARCH_FILTERS", () => {
       maxKm: null,
       compare: null,
       metric: "ratio",
+      sale: null,
     });
   });
 });
