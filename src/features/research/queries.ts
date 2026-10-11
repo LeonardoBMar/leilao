@@ -508,7 +508,8 @@ export const getPriceSummary = cache(async (filters: ResearchFilters): Promise<G
 export const getSaleBids = cache(async (saleId: string): Promise<SaleBids | null> => {
   await requireUser();
   const sale = await db.listing.findFirst({
-    where: { id: saleId, status: "sold", finalBidCents: { gt: 0 }, endsAt: { not: null } },
+    // Mesma base dos outros blocos: venda com lance final na janela das estimativas.
+    where: { id: saleId, status: "sold", finalBidCents: { gt: 0 }, endsAt: { gte: salesSince() } },
     select: {
       id: true,
       title: true,
@@ -534,10 +535,10 @@ export const getSaleBids = cache(async (saleId: string): Promise<SaleBids | null
     marketValue,
     steps: saleBidSteps(
       sale.observations.flatMap(({ observedAt, bidCents }) =>
-        bidCents === null ? [] : [{ observedAt, bid: bidCents }],
+        bidCents === null ? [] : [{ observedAt, bid: cents(bidCents) }],
       ),
       sale.endsAt,
-      sale.finalBidCents,
+      cents(sale.finalBidCents),
     ),
   };
 });

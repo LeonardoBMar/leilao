@@ -3,12 +3,12 @@
 import { ArrowDown, ArrowUp, ChartSpline, ChevronsUpDown } from "lucide-react";
 import type { Route } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import { useId, useState } from "react";
 
 import {
   Badge,
   Button,
+  ButtonLink,
   Select,
   SelectContent,
   SelectItem,
@@ -185,15 +185,16 @@ export function ModelSalesTable({
               </Cell>
               <TableCell className="text-right">
                 {sale.bidsHref === null ? null : (
-                  <Link
+                  <ButtonLink
                     href={sale.bidsHref}
                     scroll={false}
+                    variant="ghost"
+                    size="icon"
                     aria-label={`Ver os lances de ${sale.title}`}
                     title="Ver os lances antes do fim"
-                    className="inline-flex size-10 items-center justify-center rounded-md text-muted outline-none hover:bg-background hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent"
                   >
-                    <ChartSpline aria-hidden="true" className="size-4" />
-                  </Link>
+                    <ChartSpline aria-hidden="true" />
+                  </ButtonLink>
                 )}
               </TableCell>
             </TableRow>

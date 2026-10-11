@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { cents } from "../money";
 import { saleBidsAxisHours, saleBidSteps } from "./sale-bids";
 
 const endsAt = new Date("2026-10-08T18:00:00Z");
@@ -10,17 +11,17 @@ describe("saleBidSteps", () => {
     expect(
       saleBidSteps(
         [
-          { observedAt: at(6), bid: 30_000 },
-          { observedAt: at(30), bid: 20_000 },
-          { observedAt: at(12), bid: 20_000 },
+          { observedAt: at(6), bid: cents(30_000) },
+          { observedAt: at(30), bid: cents(20_000) },
+          { observedAt: at(12), bid: cents(20_000) },
         ],
         endsAt,
-        42_000,
+        cents(42_000),
       ),
     ).toEqual([
-      { hoursBefore: -30, bid: 20_000 },
-      { hoursBefore: -6, bid: 30_000 },
-      { hoursBefore: 0, bid: 42_000 },
+      { hoursBefore: -30, bid: cents(20_000) },
+      { hoursBefore: -6, bid: cents(30_000) },
+      { hoursBefore: 0, bid: cents(42_000) },
     ]);
   });
 
@@ -28,19 +29,19 @@ describe("saleBidSteps", () => {
     expect(
       saleBidSteps(
         [
-          { observedAt: at(72), bid: 10_000 },
-          { observedAt: at(2), bid: 0 },
-          { observedAt: at(-1), bid: 50_000 },
+          { observedAt: at(72), bid: cents(10_000) },
+          { observedAt: at(2), bid: cents(0) },
+          { observedAt: at(-1), bid: cents(50_000) },
         ],
         endsAt,
-        42_000,
+        cents(42_000),
       ),
-    ).toEqual([{ hoursBefore: 0, bid: 42_000 }]);
+    ).toEqual([{ hoursBefore: 0, bid: cents(42_000) }]);
   });
 
   it("lance final já visto antes do fim não se repete", () => {
-    expect(saleBidSteps([{ observedAt: at(1), bid: 42_000 }], endsAt, 42_000)).toEqual([
-      { hoursBefore: -1, bid: 42_000 },
+    expect(saleBidSteps([{ observedAt: at(1), bid: cents(42_000) }], endsAt, cents(42_000))).toEqual([
+      { hoursBefore: -1, bid: cents(42_000) },
     ]);
   });
 });
@@ -49,17 +50,17 @@ describe("saleBidsAxisHours", () => {
   it("a menor janela que cobre o primeiro degrau", () => {
     expect(
       saleBidsAxisHours([
-        { hoursBefore: -2.5, bid: 1 },
-        { hoursBefore: 0, bid: 2 },
+        { hoursBefore: -2.5, bid: cents(1) },
+        { hoursBefore: 0, bid: cents(2) },
       ]),
     ).toBe(3);
     expect(
       saleBidsAxisHours([
-        { hoursBefore: -13, bid: 1 },
-        { hoursBefore: 0, bid: 2 },
+        { hoursBefore: -13, bid: cents(1) },
+        { hoursBefore: 0, bid: cents(2) },
       ]),
     ).toBe(24);
-    expect(saleBidsAxisHours([{ hoursBefore: -47.9, bid: 1 }])).toBe(48);
-    expect(saleBidsAxisHours([{ hoursBefore: 0, bid: 1 }])).toBe(3);
+    expect(saleBidsAxisHours([{ hoursBefore: -47.9, bid: cents(1) }])).toBe(48);
+    expect(saleBidsAxisHours([{ hoursBefore: 0, bid: cents(1) }])).toBe(3);
   });
 });

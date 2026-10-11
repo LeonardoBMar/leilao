@@ -2,11 +2,10 @@
 
 import { X } from "lucide-react";
 import type { Route } from "next";
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { StepLine } from "@/components/charts/step-line";
-import { SegmentedControl } from "@/components/ui";
+import { ButtonLink, SegmentedControl } from "@/components/ui";
 import { cents } from "@/domain/money";
 import { MIN_SALE_BID_STEPS, saleBidsAxisHours } from "@/domain/research/sale-bids";
 import { niceRange } from "@/lib/charts";
@@ -74,14 +73,9 @@ export function SaleBidsPanel({ bids, closeHref }: { bids: SaleBids; closeHref: 
             {marketValue === null ? "" : ` (${formatRatio(bids.finalBid / marketValue)} do mercado)`}
           </p>
         </div>
-        <Link
-          href={closeHref}
-          scroll={false}
-          aria-label="Fechar os lances da venda"
-          className="inline-flex size-10 items-center justify-center rounded-md text-muted outline-none hover:bg-background hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent"
-        >
-          <X aria-hidden="true" className="size-4" />
-        </Link>
+        <ButtonLink href={closeHref} scroll={false} variant="ghost" size="icon" aria-label="Fechar os lances da venda">
+          <X aria-hidden="true" />
+        </ButtonLink>
       </div>
       {bids.steps.length < MIN_SALE_BID_STEPS ? (
         <p className="text-body text-muted">O coletor só viu o lance final desta venda.</p>

@@ -4,7 +4,16 @@ import { GitCompareArrows, LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useId, useOptimistic, useRef, useState } from "react";
 
-import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
+import {
+  Button,
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui";
 import {
   DEFAULT_RESEARCH_FILTERS,
   normalizeComparison,
@@ -421,9 +430,11 @@ function MileageSelect({
               Até {mileageLabel(option)}
             </SelectItem>
           ))}
-          <p className="px-2 py-1.5 text-caption text-muted tabular-nums">
-            {mileage.known.toLocaleString("pt-BR")} de {salesLabel(mileage.total)} têm km informado
-          </p>
+          <SelectGroup>
+            <SelectLabel className="font-normal tabular-nums">
+              {mileage.known.toLocaleString("pt-BR")} de {salesLabel(mileage.total)} têm km informado
+            </SelectLabel>
+          </SelectGroup>
         </SelectContent>
       </Select>
     </>

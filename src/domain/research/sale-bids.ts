@@ -1,3 +1,5 @@
+import type { Cents } from "../money";
+
 /**
  * Lances de uma venda nas horas antes do fim (D-45): o que o coletor viu, sem ponto estimado. Puro.
  */
@@ -11,16 +13,16 @@ export const MIN_SALE_BID_STEPS = 2;
 const HOUR_MS = 3_600_000;
 
 /** Um degrau: a partir de `hoursBefore` horas antes do fim (negativo; 0 é o fim), o lance passou a ser `bid`. */
-export type SaleBidStep = { hoursBefore: number; bid: number };
+export type SaleBidStep = { hoursBefore: number; bid: Cents };
 
 /**
  * Degraus do lance a partir das observações: só as da janela antes do fim, em ordem, e só quando o lance muda (a mesma
  * leitura repetida não é um lance novo). O lance final fecha a série no fim, se o coletor não o viu antes.
  */
 export function saleBidSteps(
-  observations: readonly { observedAt: Date; bid: number }[],
+  observations: readonly { observedAt: Date; bid: Cents }[],
   endsAt: Date,
-  finalBid: number,
+  finalBid: Cents,
 ): SaleBidStep[] {
   const start = endsAt.getTime() - SALE_BIDS_WINDOW_HOURS * HOUR_MS;
   const steps: SaleBidStep[] = [];
