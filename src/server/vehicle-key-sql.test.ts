@@ -40,6 +40,10 @@ const CASES: readonly [string | null, string | null][] = [
   ["FORD", "KA SE"],
   ["HYUNDAI", "HR HDB"],
   ["FIAT", "X"],
+  ["GM", "CORSA CLASSIC"],
+  ["CHEVROLET", "Corsa Sedan Classic Life"],
+  ["GMC", "CORSA WIND"],
+  ["FORD", "CORSA CLASSIC"],
 ];
 
 describe.skipIf(process.env.DB_TESTS !== "1")("vehicleKeySql", () => {

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { BRAND_ALIASES } from "@/domain/listings/estimates";
+import { BRAND_ALIASES, MODEL_RENAMES } from "@/domain/listings/estimates";
 import { Prisma } from "@/generated/prisma/client";
 
 /**
@@ -26,7 +26,7 @@ function normalizedSql(column: Prisma.Sql): Prisma.Sql {
 
 /**
  * Chave "MARCA|MODELO" (marca por extenso, primeira palavra do modelo, com a seguinte quando a primeira é um prefixo
- * curto, como em "T-CROSS" e "HR-V") ou `NULL` sem marca ou modelo.
+ * curto, como em "T-CROSS" e "HR-V", e as trocas de `MODEL_RENAMES`) ou `NULL` sem marca ou modelo.
  */
 export function vehicleKeySql(brand: Prisma.Sql, model: Prisma.Sql): Prisma.Sql {
   const normalizedBrand = normalizedSql(brand);
@@ -36,5 +36,12 @@ export function vehicleKeySql(brand: Prisma.Sql, model: Prisma.Sql): Prisma.Sql 
   const shortPrefix = Prisma.sql`words[2] IS NOT NULL AND (words[1] ~ ${ONE_LETTER} OR (words[1] ~ ${TWO_LETTERS} AND words[2] ~ ${ONE_LETTER}))`;
   const baseModel = Prisma.sql`(SELECT CASE WHEN ${shortPrefix} THEN words[1] || '-' || words[2] ELSE words[1] END
     FROM (SELECT regexp_match(${normalizedSql(model)}, ${MODEL_TOKENS}) AS words) AS model_words)`;
-  return Prisma.sql`CASE WHEN ${normalizedBrand} = '' OR ${baseModel} IS NULL THEN NULL ELSE ${fullBrand} || '|' || ${baseModel} END`;
+  // `MODEL_RENAMES`: a palavra inteira no modelo (entre separadores) troca o modelo base daquela marca.
+  const renames = MODEL_RENAMES.map(
+    ({ brand: renameBrand, base, word, name }) =>
+      Prisma.sql`WHEN ${fullBrand} = ${renameBrand} AND ${baseModel} = ${base}
+        AND ${normalizedSql(model)} ~ ${`(^|[^A-Z0-9])${word}([^A-Z0-9]|$)`} THEN ${name}`,
+  );
+  const renamedModel = Prisma.sql`CASE ${Prisma.join(renames, " ")} ELSE ${baseModel} END`;
+  return Prisma.sql`CASE WHEN ${normalizedBrand} = '' OR ${baseModel} IS NULL THEN NULL ELSE ${fullBrand} || '|' || ${renamedModel} END`;
 }

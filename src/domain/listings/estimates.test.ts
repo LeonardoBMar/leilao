@@ -71,6 +71,14 @@ describe("vehicleKey", () => {
     expect(vehicleKey("FIAT", "X")).toBe("FIAT|X");
   });
 
+  it("Corsa Classic agrupa com o Classic, e o resto do Corsa fica no Corsa", () => {
+    expect(vehicleKey("GM", "CORSA CLASSIC")).toBe("CHEVROLET|CLASSIC");
+    expect(vehicleKey("CHEVROLET", "Corsa Sedan Classic Life")).toBe("CHEVROLET|CLASSIC");
+    expect(vehicleKey("CHEVROLET", "CLASSIC LS")).toBe("CHEVROLET|CLASSIC");
+    expect(vehicleKey("GMC", "CORSA WIND")).toBe("CHEVROLET|CORSA");
+    expect(vehicleKey("FORD", "CORSA CLASSIC")).toBe("FORD|CORSA");
+  });
+
   it("sem marca ou modelo: sem chave", () => {
     expect(vehicleKey(null, "ONIX")).toBeNull();
     expect(vehicleKey("FIAT", "  ")).toBeNull();

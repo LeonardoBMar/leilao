@@ -73,7 +73,7 @@ export type PriceEstimate =
 
 /**
  * Marca e modelo base comparáveis entre fonte e Tracker: sem acento, maiúsculas, marca por extenso e só a primeira
- * palavra do modelo ("ONIX PLUS JOY BLACK" → "ONIX"). Prefixo curto não é modelo sozinho: uma letra, ou duas letras
+ * palavra do modelo ("ONIX PLUS JOY BLACK" → "ONIX", salvo as trocas de `MODEL_RENAMES`). Prefixo curto não é modelo sozinho: uma letra, ou duas letras
  * seguidas de uma, junta-se à palavra seguinte com hífen, venha ela com hífen ou espaço na fonte ("T CROSS" e
  * "T-Cross" → "T-CROSS", "HR-V" → "HR-V", "F 350" → "F-350"). `null` sem marca ou modelo.
  */
@@ -81,8 +81,22 @@ export function vehicleKey(brand: string | null, model: string | null): string |
   const normalizedBrand = normalizePlaceName(brand ?? "").trim();
   const base = baseModelOf(model);
   if (normalizedBrand === "" || base === null) return null;
-  return `${BRAND_ALIASES[normalizedBrand] ?? normalizedBrand}|${base.name}`;
+  const fullBrand = BRAND_ALIASES[normalizedBrand] ?? normalizedBrand;
+  const words = normalizePlaceName(model ?? "").split(/[^A-Z0-9]+/);
+  const rename = MODEL_RENAMES.find(
+    (item) => item.brand === fullBrand && item.base === base.name && words.includes(item.word),
+  );
+  return `${fullBrand}|${rename?.name ?? base.name}`;
 }
+
+/**
+ * Modelos que a fonte escreve com o nome da família antiga e o mercado conhece por outro: "CORSA CLASSIC" (e "CORSA
+ * SEDAN CLASSIC") é o Chevrolet Classic, que sem isso ficaria em dois grupos. Só a chave de agrupamento usa a troca; o
+ * casamento da FIPE segue `baseModelOf`. `vehicleKeySql` repete a regra.
+ */
+export const MODEL_RENAMES: readonly { brand: string; base: string; word: string; name: string }[] = [
+  { brand: "CHEVROLET", base: "CORSA", word: "CLASSIC", name: "CLASSIC" },
+];
 
 /**
  * Modelo base de `vehicleKey` ("ONIX PLUS JOY" → ONIX, "T CROSS" → T-CROSS) e quantas palavras do modelo ele usa.
