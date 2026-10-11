@@ -14,9 +14,12 @@ export type ScatterSale = {
   source: string;
   /** Lance final em centavos. */
   finalBid: number;
+  /** % do valor de mercado, só se entra nas estatísticas (`RATIO_BOUNDS`). */
+  ratio: number | null;
 };
 
 export type ScatterXAxis = "year" | "km";
+export type ScatterYAxis = "price" | "ratio";
 
 /** Valor do destaque "nenhum". */
 export const NO_HIGHLIGHT = "none";

@@ -456,18 +456,28 @@ export const getModelSales = cache(async (filters: ResearchFilters): Promise<Mod
   await requireUser();
   if (filters.vehicle === null) return null;
   const where = salesWhere(filters, {});
-  const [sales, byYear] = await Promise.all([
+  const yearShape = z.object({ year: z.number().int().nullable(), ...statsShape });
+  const [sales, byYear, ratioByYear] = await Promise.all([
     listSales(where, MODEL_SALES_LIMIT),
     rows(
-      z.object({ year: z.number().int().nullable(), ...statsShape }),
+      yearShape,
       sql`SELECT l.model_year::int AS year, ${statsColumns(sql`l.final_bid_cents::float8`)} FROM listings l
         WHERE ${where} GROUP BY 1 ORDER BY 1`,
+    ),
+    rows(
+      yearShape,
+      sql`SELECT l.model_year::int AS year, ${statsColumns(RATIO)} FROM listings l
+        WHERE ${salesWhere(filters, { ratio: true })} GROUP BY 1 ORDER BY 1`,
     ),
   ]);
   return {
     total: byYear.reduce((total, row) => total + row.n, 0),
     sales,
-    byYear: byYear.flatMap(({ year, ...row }) => (year === null ? [] : [{ year, summary: summarize(toStats(row)) }])),
+    byYear: byYear.flatMap(({ year, ...row }) => {
+      if (year === null) return [];
+      const ratio = ratioByYear.find((other) => other.year === year);
+      return [{ year, summary: summarize(toStats(row)), ratio: summarize(ratio && toStats(ratio)) }];
+    }),
   };
 });
 

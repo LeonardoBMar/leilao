@@ -14,8 +14,9 @@ import {
   SelectValue,
 } from "@/components/ui";
 import { cents } from "@/domain/money";
+import { ratioAxisMax } from "@/domain/research/summary";
 import { niceTicks } from "@/lib/charts";
-import { formatCompactBRL } from "@/lib/format";
+import { formatCompactBRL, formatRatio } from "@/lib/format";
 
 import { salesLabel } from "../labels";
 import {
@@ -25,12 +26,13 @@ import {
   NO_HIGHLIGHT,
   type ScatterSale,
   type ScatterXAxis,
+  type ScatterYAxis,
 } from "../scatter-view";
 
 type ModelSalesScatterProps = {
   sales: readonly ScatterSale[];
-  /** Mediana do lance final de cada ano-modelo com amostra (só no eixo do ano). */
-  medians: readonly { x: number; y: number }[];
+  /** Mediana de cada ano-modelo com amostra (só no eixo do ano), em lance final (centavos) e em % do mercado. */
+  medians: Readonly<Record<ScatterYAxis, readonly { x: number; y: number }[]>>;
   /** Nome do modelo, para o resumo em texto do gráfico. */
   subject: string;
   /** Resumo em texto do gráfico por ano-modelo (as medianas de cada ano). */
@@ -44,6 +46,7 @@ type ModelSalesScatterProps = {
  */
 export function ModelSalesScatter({ sales, medians, subject, yearSummary }: ModelSalesScatterProps) {
   const [axis, setAxis] = useState<ScatterXAxis>("year");
+  const [measure, setMeasure] = useState<ScatterYAxis>("price");
   const [highlight, setHighlight] = useState(NO_HIGHLIGHT);
   const highlightLabelId = useId();
   const options = highlightOptions(sales);
@@ -51,14 +54,25 @@ export function ModelSalesScatter({ sales, medians, subject, yearSummary }: Mode
 
   const plotted = sales.flatMap((sale) => {
     const x = axis === "year" ? sale.year : sale.km;
-    return x === null ? [] : [{ sale, x }];
+    const y = measure === "price" ? sale.finalBid : sale.ratio;
+    return x === null || y === null ? [] : [{ sale, x, y }];
   });
   const missing = sales.length - plotted.length;
-  const yTicks = niceTicks(Math.max(0, ...sales.map((sale) => sale.finalBid)));
-  const points = plotted.map(({ sale, x }) => ({
+  const ratioMax = ratioAxisMax(Math.max(0, ...plotted.map(({ y }) => y)));
+  const yTicks =
+    measure === "price"
+      ? niceTicks(Math.max(0, ...plotted.map(({ y }) => y))).map((value) => ({
+          value,
+          label: formatCompactBRL(cents(value)),
+        }))
+      : niceTicks(ratioMax)
+          .filter((value) => value <= ratioMax)
+          .map((value) => ({ value, label: formatRatio(value) }));
+  const yEnd = measure === "price" ? (yTicks.at(-1)?.value ?? 1) : ratioMax;
+  const points = plotted.map(({ sale, x, y }) => ({
     key: sale.id,
     x,
-    y: sale.finalBid,
+    y,
     title: sale.label,
     href: sale.url,
     highlighted: isInHighlight(sale, highlight),
@@ -72,7 +86,17 @@ export function ModelSalesScatter({ sales, medians, subject, yearSummary }: Mode
 
   return (
     <div className="grid gap-4">
-      <div className="grid gap-3 sm:flex sm:items-end">
+      <div className="grid gap-3 sm:flex sm:flex-wrap sm:items-end">
+        <SegmentedControl<ScatterYAxis>
+          label="Medida"
+          value={measure}
+          options={[
+            { value: "price", label: "Lance em R$" },
+            { value: "ratio", label: "% do mercado" },
+          ]}
+          onValueChange={setMeasure}
+          className="sm:w-64"
+        />
         <SegmentedControl<ScatterXAxis>
           label="Eixo horizontal"
           value={axis}
@@ -81,7 +105,7 @@ export function ModelSalesScatter({ sales, medians, subject, yearSummary }: Mode
             { value: "km", label: "Quilometragem" },
           ]}
           onValueChange={setAxis}
-          className="sm:w-72"
+          className="sm:w-64"
         />
         <div className="grid gap-2 sm:w-64">
           <span id={highlightLabelId} className="text-label text-foreground">
@@ -116,18 +140,22 @@ export function ModelSalesScatter({ sales, medians, subject, yearSummary }: Mode
       {points.length > 0 ? (
         <ScatterPlot
           ariaLabel={
-            axis === "year" ? yearSummary : `Lance final do ${subject} por quilometragem: ${salesLabel(points.length)}.`
+            axis === "year" && measure === "price"
+              ? yearSummary
+              : `${measure === "price" ? "Lance final" : "% do valor de mercado"} do ${subject} por ${axis === "year" ? "ano-modelo" : "quilometragem"}: ${salesLabel(points.length)}.`
           }
           xValues={xValues}
           xAxis={xAxis}
-          yDomain={[0, yTicks.at(-1) ?? 1]}
-          yTicks={yTicks.map((value) => ({ value, label: formatCompactBRL(cents(value)) }))}
+          yDomain={[0, yEnd]}
+          yTicks={yTicks}
+          reference={measure === "ratio" ? { value: 1, label: "100% do mercado" } : undefined}
           points={points}
-          medians={axis === "year" ? medians : []}
+          medians={axis === "year" ? medians[measure] : []}
         />
       ) : (
         <p className="text-body text-muted">
-          Nenhuma venda tem {axis === "year" ? "ano-modelo" : "quilometragem"} informado.
+          Nenhuma venda tem {axis === "year" ? "ano-modelo" : "quilometragem"}
+          {measure === "ratio" ? " e % do mercado" : ""} informado.
         </p>
       )}
       {chosen ? (
@@ -137,7 +165,8 @@ export function ModelSalesScatter({ sales, medians, subject, yearSummary }: Mode
       ) : null}
       {missing > 0 && points.length > 0 ? (
         <p className="text-label font-normal text-muted">
-          {salesLabel(missing)} sem {axis === "year" ? "ano-modelo" : "quilometragem"} fora do gráfico.
+          {salesLabel(missing)} sem {axis === "year" ? "ano-modelo" : "quilometragem"}
+          {measure === "ratio" ? " ou % do mercado" : ""} fora do gráfico.
         </p>
       ) : null}
     </div>

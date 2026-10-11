@@ -11,6 +11,7 @@ const sale = (id: string, state: string | null, source: string): ScatterSale => 
   state,
   source,
   finalBid: 3_000_000,
+  ratio: 0.5,
 });
 
 describe("kmAxis", () => {

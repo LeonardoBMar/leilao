@@ -75,8 +75,8 @@ export type ModelSales = {
   total: number;
   /** As mais recentes, até `MODEL_SALES_LIMIT`. */
   sales: ResearchSale[];
-  /** Lance final (centavos) por ano-modelo. */
-  byYear: { year: number; summary: GroupSummary }[];
+  /** Lance final (centavos) e % do valor de mercado por ano-modelo. */
+  byYear: { year: number; summary: GroupSummary; ratio: GroupSummary }[];
 };
 
 export type BidCurveView = { points: BidCurvePoint[] };

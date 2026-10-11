@@ -43,9 +43,10 @@ export async function ModelSalesBlock({
   }
 
   const { total, sales, byYear } = data;
-  const medians = byYear.flatMap(({ year, summary }) =>
-    summary.kind === "summary" ? [{ x: year, y: summary.median }] : [],
-  );
+  const medians = {
+    price: byYear.flatMap(({ year, summary }) => (summary.kind === "summary" ? [{ x: year, y: summary.median }] : [])),
+    ratio: byYear.flatMap(({ year, ratio }) => (ratio.kind === "summary" ? [{ x: year, y: ratio.median }] : [])),
+  };
   const scatterSales = sales.map((sale) => ({
     id: sale.id,
     url: sale.url,
@@ -55,6 +56,7 @@ export async function ModelSalesBlock({
     state: sale.state,
     source: sale.source,
     finalBid: sale.finalBid,
+    ratio: sale.ratioInBounds ? sale.ratio : null,
   }));
   const yearSummary = `Lance final do ${vehicleLabel(vehicle)} por ano-modelo: ${byYear
     .flatMap(({ year, summary }) =>
@@ -76,14 +78,14 @@ export async function ModelSalesBlock({
       description={`Lance final de cada venda (${CONDITION_LABELS[filters.condition].toLowerCase()}) por ano-modelo ou quilometragem; o traço é a mediana do ano, com 5 vendas ou mais. Destaque um estado ou uma fonte para ver onde ele cai. Passe o mouse ou toque num ponto para ver a venda; todas estão na tabela.`}
     >
       <ModelSalesScatter
-        key={recortKey}
+        key={`dispersao:${recortKey}`}
         sales={scatterSales}
         medians={medians}
         subject={vehicleLabel(vehicle)}
         yearSummary={yearSummary}
       />
       {note ? <p className="text-label font-normal text-muted">{note}</p> : null}
-      <ModelSalesTable key={recortKey} sales={sales} />
+      <ModelSalesTable key={`tabela:${recortKey}`} sales={sales} />
     </ResearchBlock>
   );
 }

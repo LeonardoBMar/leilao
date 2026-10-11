@@ -33,6 +33,8 @@ type ScatterPlotProps = {
   yDomain: readonly [number, number];
   /** Marcas do eixo y já com o rótulo escrito (o gráfico é client e não recebe função). */
   yTicks: readonly { value: number; label: string }[];
+  /** Linha horizontal tracejada de referência, com o rótulo à direita (ex.: 100% do valor de mercado). */
+  reference?: { value: number; label: string };
   ariaLabel: string;
 };
 
@@ -54,6 +56,7 @@ export function ScatterPlot({
   xAxis,
   yDomain,
   yTicks,
+  reference,
   ariaLabel,
 }: ScatterPlotProps) {
   const [activeKey, setActiveKey] = useState<string | null>(null);
@@ -70,6 +73,11 @@ export function ScatterPlot({
     if (group.length === 1) return point.x;
     return point.x - SPREAD + (2 * SPREAD * group.indexOf(point)) / (group.length - 1);
   };
+  // Medianas ligadas na ordem do x: a tendência por ano aparece sem esconder os pontos.
+  const medianLine = medians
+    .toSorted((a, b) => a.x - b.x)
+    .map((median) => `${percentOf(median.x, xDomain)},${100 - percentOf(median.y, yDomain)}`)
+    .join(" ");
   return (
     <div className="grid gap-3">
       <PlotFrame
@@ -88,6 +96,32 @@ export function ScatterPlot({
               }))
         }
       >
+        {reference ? (
+          <span
+            className="absolute inset-x-0 border-t border-dashed border-border-strong"
+            style={{ bottom: `${percentOf(reference.value, yDomain)}%` }}
+          >
+            <span className="absolute right-0 bottom-1 text-caption leading-none text-muted">{reference.label}</span>
+          </span>
+        ) : null}
+        {medians.length > 1 ? (
+          <svg
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            className="pointer-events-none absolute inset-0 size-full overflow-visible"
+            focusable="false"
+          >
+            <polyline
+              points={medianLine}
+              fill="none"
+              className="stroke-foreground"
+              strokeOpacity={0.5}
+              strokeWidth={1.5}
+              strokeLinejoin="round"
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+        ) : null}
         {points.map((point) => (
           // Área de toque maior que o ponto; fora da ordem de tabulação, porque o gráfico é só para ver (a tabela serve ao teclado).
           <button
@@ -98,7 +132,7 @@ export function ScatterPlot({
             aria-label={point.title}
             onMouseEnter={() => setActiveKey(point.key)}
             onClick={() => setActiveKey((current) => (current === point.key ? null : point.key))}
-            className="absolute flex size-6 -translate-x-1/2 translate-y-1/2 cursor-pointer items-center justify-center"
+            className="absolute flex size-6 -translate-x-1/2 translate-y-1/2 cursor-pointer items-center justify-center transition-[left,bottom] duration-180"
             style={{ left: `${percentOf(spread(point), xDomain)}%`, bottom: `${percentOf(point.y, yDomain)}%` }}
           >
             <span
@@ -118,7 +152,7 @@ export function ScatterPlot({
         {medians.map((median) => (
           <span
             key={median.x}
-            className="absolute h-0.5 w-5 -translate-x-1/2 translate-y-1/2 rounded-full bg-foreground"
+            className="pointer-events-none absolute h-0.5 w-5 -translate-x-1/2 translate-y-1/2 rounded-full bg-foreground transition-[left,bottom] duration-180"
             style={{ left: `${percentOf(median.x, xDomain)}%`, bottom: `${percentOf(median.y, yDomain)}%` }}
           />
         ))}
