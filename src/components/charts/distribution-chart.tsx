@@ -2,8 +2,9 @@
 
 import type { Route } from "next";
 import Link from "next/link";
-import { type MouseEvent, type ReactNode, useEffect, useState } from "react";
+import { type KeyboardEvent, type MouseEvent, type ReactNode, useEffect, useState } from "react";
 
+import { Button } from "@/components/ui";
 import { formatRatio } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -50,7 +51,9 @@ const ROW_GRID = "@xl:grid-cols-[10rem_minmax(0,1fr)] @xl:gap-4";
  *
  * Passar o mouse numa faixa mostra na hora a dica (vendas na faixa, a parte do grupo e quantas saíram abaixo) e marca a
  * mesma faixa nos outros grupos; clicar fixa a faixa e escreve a comparação sob o gráfico (Esc ou outro clique solta).
- * Um só alvo por grupo acompanha o ponteiro, então a dica não pisca entre barras. O rótulo com `href` aplica o grupo.
+ * Um só alvo por grupo acompanha o ponteiro, então a dica não pisca entre barras. Pelo teclado, o gráfico recebe foco:
+ * setas escolhem a faixa (no grupo do filtro), Enter ou Espaço fixa, Esc solta; a comparação fixada é anunciada. O
+ * rótulo com `href` aplica o grupo.
  */
 export function DistributionChart({ rows, axisMax, ticks, format, unit, ariaLabel }: DistributionChartProps) {
   const formatValue = CHART_FORMATS[format];
@@ -65,12 +68,29 @@ export function DistributionChart({ rows, axisMax, ticks, format, unit, ariaLabe
 
   useEffect(() => {
     if (pinned === null) return;
-    function release(event: KeyboardEvent) {
+    function release(event: globalThis.KeyboardEvent) {
       if (event.key === "Escape") setPinned(null);
     }
     document.addEventListener("keydown", release);
     return () => document.removeEventListener("keydown", release);
   }, [pinned]);
+
+  // O teclado anda no grupo em destaque (o do filtro), começando pela mediana dele.
+  const keyboardRow = rows.find((row) => row.emphasis) ?? rows[0];
+
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (keyboardRow === undefined) return;
+    const start = active?.bin ?? Math.floor((keyboardRow.summary?.median ?? 0) / binWidth);
+    const step = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
+    if (step !== 0) {
+      event.preventDefault();
+      const bin = Math.min(binCount - 1, Math.max(0, (active === null ? start - step : start) + step));
+      setHover({ row: active?.row ?? keyboardRow.key, bin });
+    } else if ((event.key === "Enter" || event.key === " ") && active !== null) {
+      event.preventDefault();
+      setPinned(active);
+    }
+  }
 
   function binAt(event: MouseEvent<HTMLElement>): number {
     const box = event.currentTarget.getBoundingClientRect();
@@ -80,127 +100,138 @@ export function DistributionChart({ rows, axisMax, ticks, format, unit, ariaLabe
 
   return (
     <div className="@container grid gap-3">
-      <div role="img" aria-label={ariaLabel} className="grid gap-1">
-        {rows.map((row) => {
-          const peak = Math.max(1, ...row.bins);
-          const total = row.bins.reduce((sum, count) => sum + count, 0);
-          const label = (
-            <>
-              <span className={cn("truncate text-body text-foreground @xl:block", row.emphasis && "font-semibold")}>
-                {row.label}
-              </span>
-              {row.detail ? (
-                <span className="shrink-0 text-caption text-muted tabular-nums @xl:block">{row.detail}</span>
-              ) : null}
-            </>
-          );
-          const isActiveRow = active?.row === row.key;
-          return (
-            <div
-              key={row.key}
-              className={cn(
-                "grid gap-1 rounded-md px-2 py-1.5 @xl:items-end",
-                ROW_GRID,
-                row.emphasis && "bg-background",
-              )}
-            >
-              {row.href ? (
-                <Link
-                  href={row.href}
-                  scroll={false}
-                  tabIndex={-1}
-                  aria-hidden="true"
-                  title="Aplicar esta condição"
-                  className="-mx-1 flex min-w-0 items-baseline gap-2 rounded-sm px-1 py-0.5 hover:bg-surface-subtle @xl:block"
-                >
-                  {label}
-                </Link>
-              ) : (
-                <div aria-hidden="true" className="flex min-w-0 items-baseline gap-2 @xl:block">
-                  {label}
-                </div>
-              )}
-              <div aria-hidden="true" className="relative h-14 pt-4">
-                <svg
-                  viewBox={`0 0 ${binCount} 100`}
-                  preserveAspectRatio="none"
-                  className="block h-8 w-full"
-                  focusable="false"
-                >
-                  {active ? <rect x={active.bin} width={1} y={0} height={100} className="fill-surface-subtle" /> : null}
-                  {row.bins.map((count, index) =>
-                    count > 0 ? (
-                      <rect
-                        key={index}
-                        x={index + 0.1}
-                        width={0.8}
-                        y={100 - (count / peak) * 100}
-                        height={(count / peak) * 100}
-                        className={active?.bin === index ? "fill-data-5" : "fill-data-3"}
+      <div
+        role="group"
+        tabIndex={0}
+        aria-label="Histograma: setas escolhem a faixa, Enter fixa e compara os grupos, Esc solta."
+        onKeyDown={handleKeyDown}
+        onBlur={() => setHover(null)}
+        className="rounded-md outline-none focus-visible:ring-2 focus-visible:ring-accent"
+      >
+        <div role="img" aria-label={ariaLabel} className="grid gap-1">
+          {rows.map((row) => {
+            const peak = Math.max(1, ...row.bins);
+            const total = row.bins.reduce((sum, count) => sum + count, 0);
+            const label = (
+              <>
+                <span className={cn("truncate text-body text-foreground @xl:block", row.emphasis && "font-semibold")}>
+                  {row.label}
+                </span>
+                {row.detail ? (
+                  <span className="shrink-0 text-caption text-muted tabular-nums @xl:block">{row.detail}</span>
+                ) : null}
+              </>
+            );
+            const isActiveRow = active?.row === row.key;
+            return (
+              <div
+                key={row.key}
+                className={cn(
+                  "grid gap-1 rounded-md px-2 py-1.5 @xl:items-end",
+                  ROW_GRID,
+                  row.emphasis && "bg-background",
+                )}
+              >
+                {row.href ? (
+                  <Link
+                    href={row.href}
+                    scroll={false}
+                    tabIndex={-1}
+                    aria-hidden="true"
+                    title="Aplicar esta condição"
+                    className="-mx-1 flex min-w-0 items-baseline gap-2 rounded-sm px-1 py-0.5 hover:bg-surface-subtle @xl:block"
+                  >
+                    {label}
+                  </Link>
+                ) : (
+                  <div aria-hidden="true" className="flex min-w-0 items-baseline gap-2 @xl:block">
+                    {label}
+                  </div>
+                )}
+                <div aria-hidden="true" className="relative h-14 pt-4">
+                  <svg
+                    viewBox={`0 0 ${binCount} 100`}
+                    preserveAspectRatio="none"
+                    className="block h-8 w-full"
+                    focusable="false"
+                  >
+                    {active ? (
+                      <rect x={active.bin} width={1} y={0} height={100} className="fill-surface-subtle" />
+                    ) : null}
+                    {row.bins.map((count, index) =>
+                      count > 0 ? (
+                        <rect
+                          key={index}
+                          x={index + 0.1}
+                          width={0.8}
+                          y={100 - (count / peak) * 100}
+                          height={(count / peak) * 100}
+                          className={active?.bin === index ? "fill-data-5" : "fill-data-3"}
+                        />
+                      ) : null,
+                    )}
+                  </svg>
+                  <div className="relative mt-1 h-1.5 rounded-full bg-surface-subtle">
+                    {row.summary ? (
+                      <span
+                        className="absolute inset-y-0 rounded-full bg-data-1 transition-[left,width] duration-180"
+                        style={{
+                          left: `${percentOf(row.summary.low, domain)}%`,
+                          width: `${percentOf(row.summary.high, domain) - percentOf(row.summary.low, domain)}%`,
+                        }}
                       />
-                    ) : null,
-                  )}
-                </svg>
-                <div className="relative mt-1 h-1.5 rounded-full bg-surface-subtle">
+                    ) : null}
+                  </div>
                   {row.summary ? (
                     <span
-                      className="absolute inset-y-0 rounded-full bg-data-1 transition-[left,width] duration-180"
-                      style={{
-                        left: `${percentOf(row.summary.low, domain)}%`,
-                        width: `${percentOf(row.summary.high, domain) - percentOf(row.summary.low, domain)}%`,
-                      }}
+                      className="pointer-events-none absolute top-0 bottom-0 flex -translate-x-1/2 flex-col items-center transition-[left] duration-180"
+                      style={{ left: `${percentOf(row.summary.median, domain)}%` }}
+                    >
+                      <span className="text-caption leading-none font-semibold text-foreground tabular-nums">
+                        {formatValue(row.summary.median)}
+                      </span>
+                      <span className="mt-0.5 w-0.5 flex-1 bg-foreground" />
+                    </span>
+                  ) : null}
+                  {/* Alvo único da faixa: o ponteiro escolhe a faixa pela posição, sem trocar de elemento entre barras. */}
+                  <div
+                    className="absolute inset-x-0 top-0 bottom-0 cursor-crosshair touch-none"
+                    onPointerMove={(event) => setHover({ row: row.key, bin: binAt(event) })}
+                    onPointerLeave={() => setHover(null)}
+                    onClick={(event) => {
+                      const bin = binAt(event);
+                      setPinned((current) =>
+                        current?.row === row.key && current.bin === bin ? null : { row: row.key, bin },
+                      );
+                    }}
+                  />
+                  {isActiveRow && active ? (
+                    <BinTooltip
+                      at={percentOf((active.bin + 0.5) * binWidth, domain)}
+                      title={rangeLabel(active.bin)}
+                      count={row.bins[active.bin] ?? 0}
+                      total={total}
+                      below={row.bins.slice(0, active.bin).reduce((sum, count) => sum + count, 0)}
+                      pinned={hover === null || (pinned?.row === row.key && pinned.bin === active.bin)}
                     />
                   ) : null}
                 </div>
-                {row.summary ? (
-                  <span
-                    className="pointer-events-none absolute top-0 bottom-0 flex -translate-x-1/2 flex-col items-center transition-[left] duration-180"
-                    style={{ left: `${percentOf(row.summary.median, domain)}%` }}
-                  >
-                    <span className="text-caption leading-none font-semibold text-foreground tabular-nums">
-                      {formatValue(row.summary.median)}
-                    </span>
-                    <span className="mt-0.5 w-0.5 flex-1 bg-foreground" />
-                  </span>
-                ) : null}
-                {/* Alvo único da faixa: o ponteiro escolhe a faixa pela posição, sem trocar de elemento entre barras. */}
-                <div
-                  className="absolute inset-x-0 top-0 bottom-0 cursor-crosshair touch-none"
-                  onPointerMove={(event) => setHover({ row: row.key, bin: binAt(event) })}
-                  onPointerLeave={() => setHover(null)}
-                  onClick={(event) => {
-                    const bin = binAt(event);
-                    setPinned((current) =>
-                      current?.row === row.key && current.bin === bin ? null : { row: row.key, bin },
-                    );
-                  }}
-                />
-                {isActiveRow && active ? (
-                  <BinTooltip
-                    at={percentOf((active.bin + 0.5) * binWidth, domain)}
-                    title={rangeLabel(active.bin)}
-                    count={row.bins[active.bin] ?? 0}
-                    total={total}
-                    below={row.bins.slice(0, active.bin).reduce((sum, count) => sum + count, 0)}
-                    pinned={hover === null || (pinned?.row === row.key && pinned.bin === active.bin)}
-                  />
-                ) : null}
               </div>
+            );
+          })}
+          <div aria-hidden="true" className={cn("grid px-2", ROW_GRID)}>
+            <span className="hidden @xl:block" />
+            <div className="relative h-4 border-t border-border-strong">
+              {ticks.map((tick) => (
+                <span
+                  key={tick}
+                  className="absolute top-1 -translate-x-1/2 text-caption leading-none text-muted tabular-nums first:translate-x-0 last:-translate-x-full"
+                  style={{ left: `${percentOf(tick, domain)}%` }}
+                >
+                  {formatValue(tick)}
+                </span>
+              ))}
             </div>
-          );
-        })}
-        <div aria-hidden="true" className={cn("grid px-2", ROW_GRID)}>
-          <span className="hidden @xl:block" />
-          <div className="relative h-4 border-t border-border-strong">
-            {ticks.map((tick) => (
-              <span
-                key={tick}
-                className="absolute top-1 -translate-x-1/2 text-caption leading-none text-muted tabular-nums first:translate-x-0 last:-translate-x-full"
-                style={{ left: `${percentOf(tick, domain)}%` }}
-              >
-                {formatValue(tick)}
-              </span>
-            ))}
           </div>
         </div>
       </div>
@@ -255,9 +286,12 @@ function PinnedComparison({
   rangeLabel: (bin: number) => string;
   onRelease: () => void;
 }) {
-  if (pinned === null) return <span />;
+  if (pinned === null) return <p aria-live="polite" />;
   return (
-    <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-label font-normal text-foreground-secondary tabular-nums">
+    <p
+      aria-live="polite"
+      className="flex flex-wrap items-center gap-x-3 gap-y-1 text-label font-normal text-foreground-secondary tabular-nums"
+    >
       <span className="font-semibold text-foreground">{rangeLabel(pinned.bin)}:</span>
       {rows.map((row) => {
         const total = row.bins.reduce((sum, count) => sum + count, 0);
@@ -269,13 +303,9 @@ function PinnedComparison({
           </span>
         );
       })}
-      <button
-        type="button"
-        onClick={onRelease}
-        className="rounded-sm text-accent outline-none hover:text-accent-hover hover:underline focus-visible:ring-2 focus-visible:ring-accent"
-      >
+      <Button variant="link" size="sm" className="h-auto px-0" onClick={onRelease}>
         Soltar
-      </button>
+      </Button>
     </p>
   );
 }

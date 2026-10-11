@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { Skeleton } from "@/components/ui";
+import { Card, Skeleton } from "@/components/ui";
 import { cents } from "@/domain/money";
 import { type ResearchFilters, vehicleLabel } from "@/domain/research/filters";
 import { isSmallSample } from "@/domain/research/summary";
@@ -95,11 +95,11 @@ export async function ResearchSummary({ filters }: { filters: ResearchFilters })
 
 function Tile({ label, note, children }: { label: string; note: string; children: ReactNode }) {
   return (
-    <div className="grid content-start gap-1 rounded-lg border border-border bg-surface p-4">
+    <Card variant="metric" className="grid content-start gap-1 p-4">
       <dt className="text-caption text-muted">{label}</dt>
       <dd className="text-heading-2 text-foreground tabular-nums">{children}</dd>
       {note ? <dd className="text-caption text-muted">{note}</dd> : null}
-    </div>
+    </Card>
   );
 }
 
