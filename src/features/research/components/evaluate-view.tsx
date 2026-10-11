@@ -9,6 +9,7 @@ import type { SearchParams } from "../search";
 import type { EvaluationView, LotTarget } from "../types";
 import { EvaluateAnswer } from "./evaluate-answer";
 import { EVALUATE_CHART_TITLE, EvaluateChartBlock } from "./evaluate-chart-block";
+import { EvaluateComparables } from "./evaluate-comparables";
 import { type EvaluateFacets, EvaluateFilterBar } from "./evaluate-filter-bar";
 import { ResearchBlockSkeleton } from "./research-block";
 import { ResearchShell } from "./research-shell";
@@ -51,6 +52,9 @@ export async function EvaluateView({ searchParams }: { searchParams: SearchParam
             <Suspense fallback={<ResearchBlockSkeleton title={EVALUATE_CHART_TITLE} />}>
               <EvaluateChartBlock filters={filters} evaluation={evaluation} />
             </Suspense>
+          )}
+          {evaluation.comparables.length === 0 ? null : (
+            <EvaluateComparables filters={filters} evaluation={evaluation} />
           )}
         </>
       )}
