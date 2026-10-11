@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { DEFAULT_EVALUATE_FILTERS } from "@/domain/research/evaluate";
 import { DEFAULT_RESEARCH_FILTERS, type ResearchFilters } from "@/domain/research/filters";
 
 /**
@@ -98,6 +99,18 @@ describe.skipIf(process.env.DB_TESTS !== "1")("consultas da Pesquisa", () => {
     });
     expect(brazilVsState?.groups.map((group) => group.label)).toEqual(["Brasil", "São Paulo"]);
     expect(await queries.getComparison(DEFAULT_RESEARCH_FILTERS)).toBeNull();
+
+    // Avaliar: o recorte do domínio sobre as vendas do modelo; as versões ganham o nome da FIPE.
+    const evaluation = await queries.getEvaluation(
+      { ...DEFAULT_EVALUATE_FILTERS, vehicle: { brand: "CHEVROLET", model: "ONIX" } },
+      null,
+    );
+    expect(evaluation?.answer.kind).toBe("band");
+    expect(evaluation?.comparables.length).toBeLessThanOrEqual(evaluation?.modelSales ?? 0);
+    const [topVersion] = evaluation?.versions ?? [];
+    if (topVersion) expect(evaluation?.versionLabels[topVersion.value]).toBeTruthy();
+    expect(await queries.getEvaluation(DEFAULT_EVALUATE_FILTERS, null)).toBeNull();
+    expect(await queries.getLotTarget("00000000-0000-7000-8000-000000000000")).toBeNull();
 
     await db.$disconnect();
   }, 60_000);

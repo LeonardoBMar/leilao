@@ -1,6 +1,8 @@
 import type { DamageLevel } from "@/domain/listings/condition";
+import type { EstimateSale, EstimateTarget } from "@/domain/listings/estimates";
 import type { MarketValueOrigin } from "@/domain/listings/fipe-match";
 import type { Cents } from "@/domain/money";
+import type { Evaluation } from "@/domain/research/evaluate";
 import type { ResearchCategory, ResearchCondition, ResearchMetric } from "@/domain/research/filters";
 import type { SaleBidStep } from "@/domain/research/sale-bids";
 import type { StateCode, StateSummary } from "@/domain/research/states";
@@ -112,3 +114,23 @@ export type ResearchFacets = {
   years: { year: number; sales: number }[];
   models: ResearchModelOption[];
 };
+
+/** Venda do modelo para o Avaliar: o que o cálculo usa e o que a lista mostra. */
+export type EvaluateSaleView = EstimateSale & {
+  url: string;
+  title: string;
+  state: StateCode | null;
+  city: string | null;
+  source: string;
+  photoUrl: string | null;
+};
+
+/** Resultado do Avaliar com os nomes das versões FIPE para os seletores. */
+export type EvaluationView = Evaluation<EvaluateSaleView> & {
+  /** Vendas do modelo base no último ano, antes do recorte. */
+  modelSales: number;
+  versionLabels: Readonly<Record<string, string>>;
+};
+
+/** Lote do usuário como alvo do Avaliar. */
+export type LotTarget = { id: string; label: string; target: EstimateTarget };

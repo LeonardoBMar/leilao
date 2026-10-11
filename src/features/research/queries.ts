@@ -5,9 +5,11 @@ import { z } from "zod";
 
 import { DAMAGE_LEVELS } from "@/domain/listings/condition";
 import { CATEGORY_OF_KEY } from "@/domain/listings/criteria";
-import { SALES_WINDOW_MS } from "@/domain/listings/estimates";
+import { type EstimateTarget, SALES_WINDOW_MS } from "@/domain/listings/estimates";
 import { MARKET_VALUE_ORIGINS } from "@/domain/listings/fipe-match";
+import { VEHICLE_ORIGINS } from "@/domain/listings/origin";
 import { cents } from "@/domain/money";
+import { evaluate, type EvaluateFilters } from "@/domain/research/evaluate";
 import {
   comparisonGroups,
   DAMAGE_OF_CONDITION,
@@ -48,6 +50,9 @@ import type {
   BidCurveView,
   ComparisonView,
   ConditionDistribution,
+  EvaluateSaleView,
+  EvaluationView,
+  LotTarget,
   ModelRanking,
   ModelSales,
   ResearchFacets,
@@ -575,5 +580,137 @@ export const getBidCurve = cache(async (filters: ResearchFilters): Promise<BidCu
         return hours === undefined ? [] : [{ hours, stats: toStats(row) }];
       }),
     ),
+  };
+});
+
+/** Teto de vendas de um modelo no Avaliar: o maior modelo do catálogo tem perto de 2 mil no ano. */
+const EVALUATE_SALES_LIMIT = 5000;
+
+const evaluateSaleRow = z.object({
+  id: z.string(),
+  url: z.string(),
+  title: z.string(),
+  ends_at: z.date(),
+  state: z.string().nullable(),
+  city: z.string().nullable(),
+  brand: z.string().nullable(),
+  model: z.string().nullable(),
+  model_year: z.number().int().nullable(),
+  mileage_km: z.number().int().nullable(),
+  category: z.string().nullable(),
+  damage_level: z.enum(DAMAGE_LEVELS).nullable(),
+  fipe_code: z.string().nullable(),
+  vehicle_origin: z.enum(VEHICLE_ORIGINS),
+  final_bid_cents: z.number().int(),
+  market_value_cents: z.number().int().nullable(),
+  source: z.string(),
+  photo_url: z.string().nullable(),
+});
+
+/**
+ * Avaliar (D-71, docs/PLANO-MERCADO.md §5): as vendas do modelo base no último ano (o banco filtra o modelo, como a
+ * Pesquisa) e o recorte, a faixa e as contagens calculados no domínio (`evaluate`), com o mesmo critério do preço
+ * provável. Uma vez por requisição: a resposta, a lista e o gráfico usam o mesmo resultado.
+ */
+export const getEvaluation = cache(
+  async (filters: EvaluateFilters, target: EstimateTarget | null): Promise<EvaluationView | null> => {
+    await requireUser();
+    if (filters.vehicle === null) return null;
+    const rowsFound = await rows(
+      evaluateSaleRow,
+      sql`SELECT l.id::text AS id, l.url, l.title, l.ends_at, l.state::text AS state, l.city, l.brand, l.model,
+          l.model_year::int AS model_year, l.mileage_km, l.category, l.damage_level::text AS damage_level,
+          coalesce(l.fipe_code, l.market_value_fipe_code) AS fipe_code, l.vehicle_origin::text AS vehicle_origin,
+          l.final_bid_cents, l.market_value_cents, s.name AS source, l.photo_urls[1] AS photo_url
+        FROM listings l JOIN sources s ON s.id = l.source_id
+        WHERE l.status = 'sold' AND l.final_bid_cents > 0 AND l.ends_at >= ${salesSince()}
+          AND ${VEHICLE_KEY} = ${`${filters.vehicle.brand}|${filters.vehicle.model}`}
+        ORDER BY l.ends_at DESC, l.id LIMIT ${EVALUATE_SALES_LIMIT}`,
+    );
+    const sales = rowsFound.map((row): EvaluateSaleView => ({
+      id: row.id,
+      endsAt: row.ends_at,
+      url: row.url,
+      title: row.title,
+      state: row.state !== null && isStateCode(row.state) ? row.state : null,
+      city: row.city,
+      brand: row.brand,
+      model: row.model,
+      modelYear: row.model_year,
+      mileageKm: row.mileage_km,
+      category: row.category,
+      damageLevel: row.damage_level,
+      fipeCode: row.fipe_code,
+      origin: row.vehicle_origin,
+      finalBid: cents(row.final_bid_cents),
+      marketValue: row.market_value_cents !== null && row.market_value_cents > 0 ? cents(row.market_value_cents) : null,
+      source: row.source,
+      photoUrl: row.photo_url,
+    }));
+    const evaluation = evaluate(sales, filters, target);
+    const codes = evaluation.versions.map((option) => option.value);
+    const labels =
+      codes.length === 0
+        ? []
+        : await rows(
+            z.object({ code: z.string(), name: z.string() }),
+            sql`SELECT DISTINCT ON (p.fipe_code) p.fipe_code AS code, p.model_name AS name FROM fipe_prices p
+              WHERE p.fipe_code IN (${Prisma.join(codes)}) ORDER BY p.fipe_code, p.reference_month DESC`,
+          );
+    return {
+      ...evaluation,
+      modelSales: sales.length,
+      versionLabels: Object.fromEntries(labels.map(({ code, name }) => [code, name])),
+    };
+  },
+);
+
+/**
+ * Lote do usuário como alvo do Avaliar: veículo do lote e, com anúncio ligado, categoria, condição, versão FIPE,
+ * origem e valor de mercado. Lote de outro dono é `null`.
+ */
+export const getLotTarget = cache(async (lotId: string): Promise<LotTarget | null> => {
+  const user = await requireUser();
+  const lot = await db.lot.findFirst({
+    where: { id: lotId, ownerId: user.id },
+    select: {
+      id: true,
+      lotNumber: true,
+      brand: true,
+      model: true,
+      modelYear: true,
+      mileageKm: true,
+      listing: {
+        select: {
+          mileageKm: true,
+          category: true,
+          damageLevel: true,
+          fipeCode: true,
+          marketValueFipeCode: true,
+          vehicleOrigin: true,
+          marketValueCents: true,
+        },
+      },
+    },
+  });
+  if (lot === null) return null;
+  const { listing } = lot;
+  return {
+    id: lot.id,
+    label: `Lote ${lot.lotNumber} · ${lot.brand} ${lot.model} ${lot.modelYear}`,
+    target: {
+      brand: lot.brand,
+      model: lot.model,
+      modelYear: lot.modelYear,
+      mileageKm: lot.mileageKm ?? listing?.mileageKm ?? null,
+      category: listing?.category ?? null,
+      damageLevel: listing?.damageLevel ?? null,
+      fipeCode: listing === null ? null : (listing.fipeCode ?? listing.marketValueFipeCode),
+      origin: listing?.vehicleOrigin ?? null,
+      marketValue:
+        listing?.marketValueCents === null || listing?.marketValueCents === undefined
+          ? null
+          : cents(listing.marketValueCents),
+    },
   };
 });
