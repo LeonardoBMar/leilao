@@ -24,14 +24,17 @@ type ScheduleInput = {
   endsAt: Date | null;
   /** Dentro da região de algum interesse (ex.: 150 km de São Carlos): vale acompanhar o lance. */
   inRegion: boolean;
+  /** O anúncio já tem foto. As fontes costumam publicar o lote antes das fotos (o Leilo, cerca de um dia antes). */
+  hasPhotos: boolean;
   now: Date;
 };
 
 /**
  * Quando revisitar o anúncio (docs/PLANO-COLETA.md §4). `null`: não precisa mais voltar.
  * Fora da região, o lance em andamento não importa: só volta depois do fim, para gravar o arremate.
+ * A exceção é o aberto ainda sem foto: volta todo dia até as fotos aparecerem.
  */
-export function nextCheckAt({ status, endsAt, inRegion, now }: ScheduleInput): Date | null {
+export function nextCheckAt({ status, endsAt, inRegion, hasPhotos, now }: ScheduleInput): Date | null {
   if (isFinalStatus(status)) return null;
   const at = (ms: number) => new Date(now.getTime() + ms);
 
@@ -40,8 +43,9 @@ export function nextCheckAt({ status, endsAt, inRegion, now }: ScheduleInput): D
 
   const afterEnd = new Date(endsAt.getTime() + AFTER_END_DELAY_MS);
   if (status === "open" && now < afterEnd) {
-    if (!inRegion) return afterEnd;
-    return new Date(Math.min(afterEnd.getTime(), now.getTime() + OPEN_REFRESH_MS));
+    const refresh = inRegion ? OPEN_REFRESH_MS : hasPhotos ? null : PENDING_REFRESH_MS;
+    if (refresh === null) return afterEnd;
+    return new Date(Math.min(afterEnd.getTime(), now.getTime() + refresh));
   }
   // Encerrado (ou deveria estar) sem desfecho definitivo.
   return at(PENDING_REFRESH_MS);

@@ -107,43 +107,61 @@ describe("nextCheckAt — agenda de revisitas", () => {
 
   it("desfecho definitivo não é revisitado", () => {
     for (const status of ["sold", "unsold", "withdrawn"] as const) {
-      expect(nextCheckAt({ status, endsAt, inRegion: true, now })).toBeNull();
+      expect(nextCheckAt({ status, endsAt, inRegion: true, hasPhotos: true, now })).toBeNull();
     }
   });
 
   it("aberto na região: atualiza o lance a cada 6 h", () => {
-    expect(nextCheckAt({ status: "open", endsAt, inRegion: true, now })).toEqual(plus(now, OPEN_REFRESH_MS));
+    expect(nextCheckAt({ status: "open", endsAt, inRegion: true, hasPhotos: true, now })).toEqual(
+      plus(now, OPEN_REFRESH_MS),
+    );
   });
 
   it("aberto na região perto do fim: volta 1 h depois do fim, não antes", () => {
     const nearEnd = at("2026-09-28T12:00:00Z");
-    expect(nextCheckAt({ status: "open", endsAt, inRegion: true, now: nearEnd })).toEqual(
+    expect(nextCheckAt({ status: "open", endsAt, inRegion: true, hasPhotos: true, now: nearEnd })).toEqual(
       plus(endsAt, AFTER_END_DELAY_MS),
     );
   });
 
   it("aberto fora da região: só volta depois do fim, para gravar o arremate", () => {
-    expect(nextCheckAt({ status: "open", endsAt, inRegion: false, now })).toEqual(plus(endsAt, AFTER_END_DELAY_MS));
+    expect(nextCheckAt({ status: "open", endsAt, inRegion: false, hasPhotos: true, now })).toEqual(
+      plus(endsAt, AFTER_END_DELAY_MS),
+    );
+  });
+
+  it("aberto fora da região ainda sem foto: volta todo dia até as fotos aparecerem", () => {
+    expect(nextCheckAt({ status: "open", endsAt, inRegion: false, hasPhotos: false, now })).toEqual(
+      plus(now, PENDING_REFRESH_MS),
+    );
+    const nearEnd = at("2026-09-28T12:00:00Z");
+    expect(nextCheckAt({ status: "open", endsAt, inRegion: false, hasPhotos: false, now: nearEnd })).toEqual(
+      plus(endsAt, AFTER_END_DELAY_MS),
+    );
   });
 
   it("condicional ou ainda aberto depois do fim: revisita diária", () => {
     const afterEnd = plus(endsAt, 3 * AFTER_END_DELAY_MS);
-    expect(nextCheckAt({ status: "conditional", endsAt, inRegion: false, now: afterEnd })).toEqual(
+    expect(nextCheckAt({ status: "conditional", endsAt, inRegion: false, hasPhotos: true, now: afterEnd })).toEqual(
       plus(afterEnd, PENDING_REFRESH_MS),
     );
-    expect(nextCheckAt({ status: "open", endsAt, inRegion: true, now: afterEnd })).toEqual(
+    expect(nextCheckAt({ status: "open", endsAt, inRegion: true, hasPhotos: true, now: afterEnd })).toEqual(
       plus(afterEnd, PENDING_REFRESH_MS),
     );
   });
 
   it("desiste depois de 14 dias do fim sem desfecho definitivo", () => {
     const late = plus(endsAt, GIVE_UP_AFTER_END_MS + 1);
-    expect(nextCheckAt({ status: "unknown", endsAt, inRegion: true, now: late })).toBeNull();
+    expect(nextCheckAt({ status: "unknown", endsAt, inRegion: true, hasPhotos: true, now: late })).toBeNull();
   });
 
   it("sem data de fim: 6 h na região, diário fora dela", () => {
-    expect(nextCheckAt({ status: "open", endsAt: null, inRegion: true, now })).toEqual(plus(now, OPEN_REFRESH_MS));
-    expect(nextCheckAt({ status: "open", endsAt: null, inRegion: false, now })).toEqual(plus(now, PENDING_REFRESH_MS));
+    expect(nextCheckAt({ status: "open", endsAt: null, inRegion: true, hasPhotos: true, now })).toEqual(
+      plus(now, OPEN_REFRESH_MS),
+    );
+    expect(nextCheckAt({ status: "open", endsAt: null, inRegion: false, hasPhotos: true, now })).toEqual(
+      plus(now, PENDING_REFRESH_MS),
+    );
   });
 });
 

@@ -149,7 +149,13 @@ export async function saveListing(
     photoUrls: input.photoUrls,
     raw: toJson(input.raw),
     lastCheckedAt: now,
-    nextCheckAt: nextCheckAt({ status: input.status, endsAt: input.endsAt, inRegion, now }),
+    nextCheckAt: nextCheckAt({
+      status: input.status,
+      endsAt: input.endsAt,
+      inRegion,
+      hasPhotos: input.photoUrls.length > 0,
+      now,
+    }),
     checkFailures: 0,
   } satisfies Prisma.ListingUncheckedUpdateInput;
 
