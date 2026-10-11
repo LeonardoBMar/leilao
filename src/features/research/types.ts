@@ -9,7 +9,7 @@ import type { Evaluation } from "@/domain/research/evaluate";
 import type { ResearchCategory, ResearchCondition, ResearchMetric } from "@/domain/research/filters";
 import type { SaleBidStep } from "@/domain/research/sale-bids";
 import type { StateCode, StateSummary } from "@/domain/research/states";
-import type { BidCurvePoint, GroupSummary, RankedModel } from "@/domain/research/summary";
+import type { BidCurvePoint, DistanceBand, GroupSummary, RankedModel } from "@/domain/research/summary";
 
 /** Uma venda do catálogo, para as listas "uma a uma" e as vendas de um modelo. */
 export type ResearchSale = {
@@ -71,6 +71,16 @@ export type ConditionDistribution = {
   axisMax: number;
   /** "Sem monta declarada" perto de pequena monta: a tela avisa que ela mistura avariados não classificados. */
   looksMixed: boolean;
+};
+
+/**
+ * "Onde": o resumo por faixa de distância da região padrão (`null` = cidade do pátio não identificada) e por estado e
+ * fonte, na medida do mapa.
+ */
+export type WhereView = {
+  metric: ResearchMetric;
+  distance: { band: DistanceBand | null; summary: GroupSummary }[];
+  places: { state: StateCode; source: { id: string; name: string }; summary: GroupSummary }[];
 };
 
 export type StateMapView = { metric: ResearchMetric; states: StateSummary[] };

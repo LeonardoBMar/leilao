@@ -1,6 +1,7 @@
 export type Coordinates = { latitude: number; longitude: number };
 
-const EARTH_RADIUS_KM = 6371;
+/** Raio da Terra da fórmula de haversine; o SQL de distância usa o mesmo. */
+export const EARTH_RADIUS_KM = 6371;
 /** Na esfera de `EARTH_RADIUS_KM`, a mesma usada por `distanceKm`: ≈ 111,19 km. */
 const KM_PER_LATITUDE_DEGREE = (2 * Math.PI * EARTH_RADIUS_KM) / 360;
 

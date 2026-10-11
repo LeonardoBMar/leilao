@@ -71,6 +71,16 @@ export type AgeBand = (typeof AGE_BANDS)[number];
 /** Maior idade de cada faixa, exceto a última; o SQL do ranking usa os mesmos limites. */
 export const AGE_BAND_LIMITS = { ate5: 5, "6a10": 10 } as const;
 
+/**
+ * Distância em linha reta da região padrão (São Carlos/SP) até a cidade do pátio, em faixas, para o bloco "Onde"
+ * (docs/PLANO-MERCADO.md §6). O frete e a viagem pesam no custo; a distância de estrada é maior.
+ */
+export const DISTANCE_BANDS = ["ate100", "ate300", "mais300"] as const;
+export type DistanceBand = (typeof DISTANCE_BANDS)[number];
+
+/** Maior distância (km) de cada faixa, exceto a última; o SQL usa os mesmos limites. */
+export const DISTANCE_BAND_LIMITS = { ate100: 100, ate300: 300 } as const;
+
 /** Faixa de idade de uma venda; sem ano-modelo, `null`. */
 export function ageBandOf(modelYear: number | null, saleYear: number): AgeBand | null {
   if (modelYear === null) return null;

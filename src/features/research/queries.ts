@@ -7,7 +7,9 @@ import { DAMAGE_LEVELS } from "@/domain/listings/condition";
 import { CATEGORY_OF_KEY } from "@/domain/listings/criteria";
 import { type EstimateTarget, SALES_WINDOW_MS } from "@/domain/listings/estimates";
 import { MARKET_VALUE_ORIGINS } from "@/domain/listings/fipe-match";
+import { EARTH_RADIUS_KM } from "@/domain/listings/geo";
 import { VEHICLE_ORIGINS } from "@/domain/listings/origin";
+import { DEFAULT_REGION } from "@/domain/listings/region";
 import { cents } from "@/domain/money";
 import {
   DEFAULT_EVALUATE_FILTERS,
@@ -35,6 +37,8 @@ import {
   BID_CURVE_HOURS,
   BID_CURVE_LOOKBACK_HOURS,
   bidCurve,
+  DISTANCE_BAND_LIMITS,
+  DISTANCE_BANDS,
   type ExcludedSales,
   fillHistogram,
   type GroupStats,
@@ -77,6 +81,7 @@ import type {
   SaleBids,
   StateDetail,
   StateMapView,
+  WhereView,
 } from "./types";
 
 /**
@@ -370,6 +375,65 @@ export async function getStateMap(filters: ResearchFilters): Promise<StateMapVie
   for (const row of byState) if (isStateCode(row.state)) stats[row.state] = toStats(row);
   return { metric, states: buildStateSummaries(stats) };
 }
+
+/** Distância em linha reta (haversine, km) da região padrão até a cidade do pátio; sem cidade, `NULL`. */
+const DISTANCE_KM = (() => {
+  const { latitude, longitude } = DEFAULT_REGION.center;
+  return sql`2 * ${EARTH_RADIUS_KM}::float8 * asin(least(1, sqrt(
+    power(sin(radians(m.latitude - ${latitude}::float8) / 2), 2)
+    + cos(radians(${latitude}::float8)) * cos(radians(m.latitude)) * power(sin(radians(m.longitude - ${longitude}::float8) / 2), 2))))`;
+})();
+
+/**
+ * "Onde" (docs/PLANO-MERCADO.md §6): o resumo por faixa de distância da região padrão e por estado e fonte, com todos
+ * os filtros e na medida do mapa (% da FIPE ou, com modelo, lance final).
+ */
+export const getWhereView = cache(async (filters: ResearchFilters): Promise<WhereView> => {
+  await requireUser();
+  const metric = effectiveMetric(filters);
+  const value = metric === "ratio" ? RATIO : sql`l.final_bid_cents::float8`;
+  const where = salesWhere(filters, { ratio: metric === "ratio" });
+  const [byDistance, byPlace] = await Promise.all([
+    rows(
+      z.object({ band: z.enum(DISTANCE_BANDS).nullable(), ...statsShape }),
+      sql`SELECT CASE
+          WHEN d.km IS NULL THEN NULL
+          WHEN d.km <= ${DISTANCE_BAND_LIMITS.ate100}::int THEN 'ate100'
+          WHEN d.km <= ${DISTANCE_BAND_LIMITS.ate300}::int THEN 'ate300'
+          ELSE 'mais300'
+        END AS band, ${statsColumns(value)}
+        FROM listings l LEFT JOIN municipalities m ON m.ibge_code = l.municipality_id
+        CROSS JOIN LATERAL (SELECT ${DISTANCE_KM} AS km) d
+        WHERE ${where} GROUP BY 1`,
+    ),
+    rows(
+      z.object({ state: z.string(), source_id: z.string(), source_name: z.string(), ...statsShape }),
+      sql`SELECT l.state AS state, s.id AS source_id, s.name AS source_name, ${statsColumns(value)}
+        FROM listings l JOIN sources s ON s.id = l.source_id
+        WHERE ${where} AND l.state IS NOT NULL GROUP BY 1, 2, 3`,
+    ),
+  ]);
+  return {
+    metric,
+    distance: [...DISTANCE_BANDS, null].map((band) => {
+      const stats = byDistance.find((row) => row.band === band);
+      return { band, summary: summarize(stats && toStats(stats)) };
+    }),
+    places: byPlace
+      .toSorted((a, b) => b.n - a.n || a.state.localeCompare(b.state) || a.source_name.localeCompare(b.source_name))
+      .flatMap((row) =>
+        isStateCode(row.state)
+          ? [
+              {
+                state: row.state,
+                source: { id: row.source_id, name: row.source_name },
+                summary: summarize(toStats(row)),
+              },
+            ]
+          : [],
+      ),
+  };
+});
 
 const saleRow = z.object({
   id: z.string(),

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_RESEARCH_FILTERS } from "@/domain/research/filters";
 import { buildStateSummaries } from "@/domain/research/states";
 
-import { stateMapRegions, stateRangeRows } from "./state-regions";
+import { stateMapRegions, stateRangeRows, whereRangeRows } from "./state-regions";
 
 const view = {
   metric: "ratio" as const,
@@ -94,5 +94,47 @@ describe("stateRangeRows", () => {
     );
     expect(price.rows[0]?.valueLabel).toBe("38,9");
     expect(price.domain).toEqual([0, 5_000_000]);
+  });
+});
+
+describe("whereRangeRows", () => {
+  const summary = (n: number, median: number) => ({
+    kind: "summary" as const,
+    n,
+    low: median - 0.05,
+    median,
+    high: median + 0.05,
+  });
+  const where = {
+    metric: "ratio" as const,
+    distance: [
+      { band: "ate100" as const, summary: summary(40, 0.42) },
+      { band: "ate300" as const, summary: { kind: "few" as const, n: 3 } },
+      { band: "mais300" as const, summary: summary(20, 0.5) },
+      { band: null, summary: { kind: "few" as const, n: 4 } },
+    ],
+    places: [
+      { state: "SP" as const, source: { id: "superbid", name: "Superbid" }, summary: summary(30, 0.4) },
+      { state: "GO" as const, source: { id: "leilo", name: "Leilo" }, summary: summary(10, 0.55) },
+      { state: "MT" as const, source: { id: "leilo", name: "Leilo" }, summary: { kind: "few" as const, n: 2 } },
+    ],
+  };
+
+  it("faixas com base na ordem e as sem cidade só contadas", () => {
+    const result = whereRangeRows(where, DEFAULT_RESEARCH_FILTERS);
+    expect(result.distance.map((row) => row.label)).toEqual(["Até 100 km", "Mais de 300 km"]);
+    expect(result.unknownDistance).toBe(4);
+  });
+
+  it("pares estado e fonte com base aplicam os dois filtros; o escolhido limpa", () => {
+    const result = whereRangeRows(where, DEFAULT_RESEARCH_FILTERS);
+    expect(result.places.map((row) => [row.label, row.href])).toEqual([
+      ["SP · Superbid", "/mercado/panorama?uf=SP&fonte=superbid"],
+      ["GO · Leilo", "/mercado/panorama?uf=GO&fonte=leilo"],
+    ]);
+    expect(result.places[1]?.faint).toBe(true);
+    expect(result.otherPlaces).toBe(1);
+    const chosen = whereRangeRows(where, { ...DEFAULT_RESEARCH_FILTERS, state: "SP", source: "superbid" });
+    expect(chosen.places[0]?.href).toBe("/mercado/panorama");
   });
 });

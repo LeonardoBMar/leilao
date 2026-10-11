@@ -50,6 +50,10 @@ describe.skipIf(process.env.DB_TESTS !== "1")("consultas da Pesquisa", () => {
     ]);
     expect(origins.rows.some((row) => row.summary.kind === "summary")).toBe(true);
 
+    const where = await queries.getWhereView(DEFAULT_RESEARCH_FILTERS);
+    expect(where.distance.map((row) => row.band)).toEqual(["ate100", "ate300", "mais300", null]);
+    expect(where.places.length).toBeGreaterThan(0);
+
     const map = await queries.getStateMap(DEFAULT_RESEARCH_FILTERS);
     expect(map.states).toHaveLength(27);
 

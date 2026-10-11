@@ -7,29 +7,37 @@ import { DistributionChart } from "@/components/charts/distribution-chart";
 import { MapLegend } from "@/components/charts/map-legend";
 import { RangeBars } from "@/components/charts/range-bars";
 import { LinkTabs, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui";
+import { DEFAULT_REGION } from "@/domain/listings/region";
 import { effectiveMetric, type ResearchFilters } from "@/domain/research/filters";
 import { STATE_NAMES } from "@/domain/research/states";
+import { MIN_SAMPLE } from "@/domain/research/summary";
 import { niceTicks } from "@/lib/charts";
 import { formatBRL, formatDate, formatRatio } from "@/lib/format";
 
 import { formatMetric, METRIC_LABELS, salesLabel, summaryDetail } from "../labels";
-import { getStateDetail, getStateMap } from "../queries";
+import { getStateDetail, getStateMap, getWhereView } from "../queries";
 import { researchHref } from "../search";
-import { stateMapRegions, stateRangeRows } from "../state-regions";
+import { stateMapRegions, stateRangeRows, whereRangeRows } from "../state-regions";
 import type { StateDetail } from "../types";
 import { ResearchBlock } from "./research-block";
 
-export const STATE_BLOCK_TITLE = "Por estado";
+export const STATE_BLOCK_TITLE = "Onde";
 
 /**
- * "Por estado" (D-45): mapa do Brasil com a mediana de cada UF e, com um estado escolhido, o detalhe ao lado (abaixo
- * no celular). Com um modelo escolhido, a medida pode ser o lance final em R$.
+ * "Onde" (docs/PLANO-MERCADO.md §6): a mediana por faixa de distância de São Carlos e por estado e fonte, em barras de
+ * faixa numa escala comum; o mapa do Brasil (D-46) fica atrás de "Ver no mapa", aberto quando há estado escolhido,
+ * com o detalhe do estado ao lado (abaixo no celular). Com um modelo escolhido, a medida pode ser o lance final em R$.
  */
 export async function StateBlock({ filters, noSales }: { filters: ResearchFilters; noSales: ReactNode }) {
-  const [map, detail] = await Promise.all([getStateMap(filters), getStateDetail(filters)]);
+  const [map, detail, where] = await Promise.all([
+    getStateMap(filters),
+    getStateDetail(filters),
+    getWhereView(filters),
+  ]);
   const { regions, legend, legendTitle } = stateMapRegions(map, filters);
   const withSales = map.states.filter(({ summary }) => summary.kind !== "none");
   const list = stateRangeRows(map, filters);
+  const bands = whereRangeRows(where, filters);
   const mapPanel = (
     <>
       <BrazilMap ariaLabel={`Mapa do Brasil: mediana ${METRIC_LABELS[map.metric]} por estado`} regions={regions} />
@@ -59,58 +67,107 @@ export async function StateBlock({ filters, noSales }: { filters: ResearchFilter
         noSales
       ) : (
         <>
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,32rem)_minmax(0,1fr)]">
-            {/* Mapa a partir de `md`; no celular, a lista de estados, com o mapa a um toque (siglas espremidas não se leem). */}
-            <div className="hidden w-full max-w-lg content-start gap-4 md:grid">{mapPanel}</div>
-            <div className="grid content-start gap-4 md:hidden">
-              <div className="grid gap-1">
-                <p className="text-caption text-muted">{legendTitle}</p>
+          <div className="grid gap-8 lg:grid-cols-2">
+            <section aria-labelledby="pesquisa-onde-distancia" className="grid min-w-0 content-start gap-3">
+              <h3 id="pesquisa-onde-distancia" className="text-heading-3 text-foreground">
+                Distância de {DEFAULT_REGION.label}
+              </h3>
+              {bands.distance.length === 0 ? (
+                <p className="text-body text-muted">Poucas vendas em cada faixa para uma mediana.</p>
+              ) : (
                 <RangeBars
-                  ariaLabel={`Estados do menor para o maior valor: ${list.rows.map((row) => `${row.label} ${row.valueLabel}`).join(", ")}`}
-                  domain={list.domain}
-                  rows={list.rows}
+                  ariaLabel={`Mediana por distância de ${DEFAULT_REGION.label}: ${bands.distance.map((row) => row.ariaLabel).join("; ")}`}
+                  domain={bands.domain}
+                  rows={bands.distance}
                 />
-              </div>
-              {list.few.length > 0 ? (
+              )}
+              <p className="text-label font-normal text-muted">
+                Em linha reta até a cidade do pátio; de estrada é mais.
+                {bands.unknownDistance > 0 ? ` ${salesLabel(bands.unknownDistance)} sem a cidade identificada.` : ""}
+              </p>
+            </section>
+            <section aria-labelledby="pesquisa-onde-fonte" className="grid min-w-0 content-start gap-3">
+              <h3 id="pesquisa-onde-fonte" className="text-heading-3 text-foreground">
+                Estado e fonte
+              </h3>
+              {bands.places.length === 0 ? (
+                <p className="text-body text-muted">Nenhum estado e fonte com {MIN_SAMPLE} vendas ou mais.</p>
+              ) : (
+                <RangeBars
+                  ariaLabel={`Mediana por estado e fonte, das que mais vendem: ${bands.places.map((row) => row.ariaLabel).join("; ")}`}
+                  domain={bands.domain}
+                  rows={bands.places}
+                />
+              )}
+              {bands.otherPlaces > 0 ? (
                 <p className="text-label font-normal text-muted">
-                  Poucas vendas para uma mediana:{" "}
-                  {list.few.map(({ state, sales }) => `${STATE_NAMES[state]} (${sales})`).join(", ")}.
+                  Mais {bands.otherPlaces} {bands.otherPlaces === 1 ? "par" : "pares"} de estado e fonte com menos
+                  vendas.
                 </p>
               ) : null}
-              <details className="group">
-                <summary className="w-fit cursor-pointer text-label text-accent hover:text-accent-hover hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                  Ver o mapa
-                </summary>
-                <div className="mt-3 grid content-start gap-4">{mapPanel}</div>
-              </details>
-            </div>
-            <StateDetailPanel detail={detail} />
+            </section>
           </div>
-          <ChartDataTable
-            columns={[
-              { key: "state", label: "Estado" },
-              { key: "sales", label: "Vendas", align: "right" },
-              { key: "low", label: "P25", align: "right" },
-              { key: "median", label: "Mediana", align: "right" },
-              { key: "high", label: "P75", align: "right" },
-            ]}
-            rows={withSales
-              .toSorted(
-                (a, b) => (b.summary.kind === "none" ? 0 : b.summary.n) - (a.summary.kind === "none" ? 0 : a.summary.n),
-              )
-              .map(({ state, summary }) => ({
-                key: state,
-                state: STATE_NAMES[state],
-                sales: summary.kind === "none" ? "0" : summary.n.toLocaleString("pt-BR"),
-                ...(summary.kind === "summary"
-                  ? {
-                      low: formatMetric(map.metric, summary.low),
-                      median: formatMetric(map.metric, summary.median),
-                      high: formatMetric(map.metric, summary.high),
-                    }
-                  : {}),
-              }))}
-          />
+          <details open={filters.state !== null}>
+            <summary className="w-fit cursor-pointer text-label text-accent hover:text-accent-hover hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+              <span className="hidden md:inline">Ver no mapa</span>
+              <span className="md:hidden">Ver por estado</span>
+            </summary>
+            <div className="mt-4 grid gap-6">
+              <div className="grid gap-8 lg:grid-cols-[minmax(0,32rem)_minmax(0,1fr)]">
+                {/* Mapa a partir de `md`; no celular, a lista de estados, com o mapa a um toque (siglas espremidas não se leem). */}
+                <div className="hidden w-full max-w-lg content-start gap-4 md:grid">{mapPanel}</div>
+                <div className="grid content-start gap-4 md:hidden">
+                  <div className="grid gap-1">
+                    <p className="text-caption text-muted">{legendTitle}</p>
+                    <RangeBars
+                      ariaLabel={`Estados do menor para o maior valor: ${list.rows.map((row) => `${row.label} ${row.valueLabel}`).join(", ")}`}
+                      domain={list.domain}
+                      rows={list.rows}
+                    />
+                  </div>
+                  {list.few.length > 0 ? (
+                    <p className="text-label font-normal text-muted">
+                      Poucas vendas para uma mediana:{" "}
+                      {list.few.map(({ state, sales }) => `${STATE_NAMES[state]} (${sales})`).join(", ")}.
+                    </p>
+                  ) : null}
+                  <details className="group">
+                    <summary className="w-fit cursor-pointer text-label text-accent hover:text-accent-hover hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                      Ver o mapa
+                    </summary>
+                    <div className="mt-3 grid content-start gap-4">{mapPanel}</div>
+                  </details>
+                </div>
+                <StateDetailPanel detail={detail} />
+              </div>
+              <ChartDataTable
+                columns={[
+                  { key: "state", label: "Estado" },
+                  { key: "sales", label: "Vendas", align: "right" },
+                  { key: "low", label: "P25", align: "right" },
+                  { key: "median", label: "Mediana", align: "right" },
+                  { key: "high", label: "P75", align: "right" },
+                ]}
+                rows={withSales
+                  .toSorted(
+                    (a, b) =>
+                      (b.summary.kind === "none" ? 0 : b.summary.n) - (a.summary.kind === "none" ? 0 : a.summary.n),
+                  )
+                  .map(({ state, summary }) => ({
+                    key: state,
+                    state: STATE_NAMES[state],
+                    sales: summary.kind === "none" ? "0" : summary.n.toLocaleString("pt-BR"),
+                    ...(summary.kind === "summary"
+                      ? {
+                          low: formatMetric(map.metric, summary.low),
+                          median: formatMetric(map.metric, summary.median),
+                          high: formatMetric(map.metric, summary.high),
+                        }
+                      : {}),
+                  }))}
+              />
+            </div>
+          </details>
         </>
       )}
     </ResearchBlock>
@@ -121,7 +178,9 @@ export async function StateBlock({ filters, noSales }: { filters: ResearchFilter
 function StateDetailPanel({ detail }: { detail: StateDetail | null }) {
   if (detail === null) {
     return (
-      <p className="self-center text-body text-muted lg:max-w-sm">Escolha um estado para compará-lo com o Brasil.</p>
+      <p className="self-center text-body text-muted lg:max-w-sm">
+        Escolha um estado no mapa para compará-lo com o Brasil.
+      </p>
     );
   }
   const name = STATE_NAMES[detail.state];

@@ -4,13 +4,20 @@ import type { LegendItem } from "@/components/charts/map-legend";
 import type { RangeRow } from "@/components/charts/range-bars";
 import type { ResearchFilters } from "@/domain/research/filters";
 import { STATE_NAMES, type StateCode } from "@/domain/research/states";
-import { isSmallSample, MIN_SAMPLE, ratioAxisMax, SMALL_SAMPLE } from "@/domain/research/summary";
+import {
+  type DistanceBand,
+  type GroupSummary,
+  isSmallSample,
+  MIN_SAMPLE,
+  ratioAxisMax,
+  SMALL_SAMPLE,
+} from "@/domain/research/summary";
 import { sequentialScale } from "@/lib/charts";
 import { formatRatio } from "@/lib/format";
 
 import { formatMetric, salesLabel, smallSampleLabel } from "./labels";
 import { researchHref } from "./search";
-import type { StateMapView } from "./types";
+import type { StateMapView, WhereView } from "./types";
 
 /** Passos da escala do mapa (`data-1` a `data-5`). */
 const MAP_STEPS = 5;
@@ -154,4 +161,83 @@ export function stateRangeRows(
     summary.kind === "few" ? [{ state, sales: summary.n }] : [],
   );
   return { rows, domain, few };
+}
+
+/** Linhas de estado e fonte visíveis no bloco "Onde"; as demais são contadas numa nota. */
+export const WHERE_PLACES_VISIBLE = 8;
+
+export const DISTANCE_LABELS = {
+  ate100: "Até 100 km",
+  ate300: "De 100 a 300 km",
+  mais300: "Mais de 300 km",
+} as const satisfies Record<DistanceBand, string>;
+
+type SummaryRow = {
+  key: string;
+  label: string;
+  summary: Extract<GroupSummary, { kind: "summary" }>;
+  href?: RangeRow["href"];
+};
+
+/**
+ * O bloco "Onde" como barras de faixa numa escala comum: as faixas de distância, na ordem, e os pares estado e fonte
+ * com a amostra mínima, do que mais vende para o que menos vende (os primeiros `WHERE_PLACES_VISIBLE`). Cada par aplica
+ * o estado e a fonte (ou limpa os dois, se já são os escolhidos). Distância sem cidade identificada e pares com poucas
+ * vendas só entram na contagem das notas.
+ */
+export function whereRangeRows(
+  view: WhereView,
+  filters: ResearchFilters,
+): {
+  distance: RangeRow[];
+  places: RangeRow[];
+  domain: readonly [number, number];
+  /** Vendas sem cidade do pátio identificada. */
+  unknownDistance: number;
+  /** Pares estado e fonte fora da lista: os além dos primeiros e os com poucas vendas. */
+  otherPlaces: number;
+} {
+  const measure = view.metric === "ratio" ? "da FIPE" : "de lance final";
+  const toRow = ({ key, label, summary, href }: SummaryRow): RangeRow => ({
+    key,
+    label,
+    low: summary.low,
+    median: summary.median,
+    high: summary.high,
+    valueLabel: formatMetric(view.metric, summary.median),
+    detail: smallSampleLabel(summary.n),
+    faint: isSmallSample(summary.n),
+    href,
+    ariaLabel: `${label}: mediana ${formatMetric(view.metric, summary.median)} ${measure}, ${smallSampleLabel(summary.n)}`,
+  });
+  const distance = view.distance.flatMap(({ band, summary }) =>
+    band !== null && summary.kind === "summary" ? [toRow({ key: band, label: DISTANCE_LABELS[band], summary })] : [],
+  );
+  const based = view.places.flatMap(({ state, source, summary }) => {
+    if (summary.kind !== "summary") return [];
+    const selected = filters.state === state && filters.source === source.id;
+    return [
+      toRow({
+        key: `${state}|${source.id}`,
+        label: `${state} · ${source.name}`,
+        summary,
+        href: researchHref({
+          ...filters,
+          state: selected ? null : state,
+          source: selected ? null : source.id,
+          sale: null,
+        }),
+      }),
+    ];
+  });
+  const places = based.slice(0, WHERE_PLACES_VISIBLE);
+  const highest = Math.max(0, ...[...distance, ...places].map((row) => row.high));
+  const unknown = view.distance.find((row) => row.band === null)?.summary;
+  return {
+    distance,
+    places,
+    domain: [0, view.metric === "ratio" ? ratioAxisMax(highest) : highest] as const,
+    unknownDistance: unknown === undefined || unknown.kind === "none" ? 0 : unknown.n,
+    otherPlaces: view.places.length - places.length,
+  };
 }

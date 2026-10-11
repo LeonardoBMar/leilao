@@ -21,7 +21,7 @@ test("mostra o tamanho da base e os blocos (ou o estado vazio)", async ({ page }
   await expect(page.getByText(/[\d.]+ vendas? arrematadas no catálogo desde \d{2}\/\d{2}\/\d{4}/)).toBeVisible();
   await expect(page.getByRole("status").filter({ hasText: /com esses filtros/ })).toBeVisible();
 
-  for (const title of ["Quanto se paga por condição", "Por estado", "Modelos", "Como o lance sobe"]) {
+  for (const title of ["De quem se compra", "Quanto se paga por condição", "Onde", "Modelos", "Como o lance sobe"]) {
     await expect(section(page, title)).toBeVisible();
   }
   // Cada gráfico tem a tabela equivalente, ou o bloco diz que não há venda.
@@ -29,16 +29,26 @@ test("mostra o tamanho da base e os blocos (ou o estado vazio)", async ({ page }
   await expect(condition.getByText("Ver dados em tabela").or(condition.getByText(NO_SALES))).toBeVisible();
 });
 
+/** Abre o mapa do bloco "Onde", que fica recolhido sem estado escolhido. */
+async function openMap(page: Page) {
+  const block = section(page, "Onde");
+  await block.getByText("Ver no mapa").click();
+  return block;
+}
+
 test("clicar num estado mostra o detalhe dele frente ao Brasil, e o chip volta ao país todo", async ({ page }) => {
   await page.goto("/mercado/panorama");
-  const block = section(page, "Por estado");
-  await expect(block.getByRole("group", { name: /^Mapa do Brasil/ }).or(block.getByText(NO_SALES))).toBeVisible();
+  await expect(section(page, "Onde")).toBeVisible();
+  test.skip((await section(page, "Onde").getByText(NO_SALES).count()) > 0, "Nenhuma venda.");
+  const block = await openMap(page);
+  await expect(block.getByRole("group", { name: /^Mapa do Brasil/ })).toBeVisible();
   const state = mapStates(page).first();
   test.skip((await state.count()) === 0, "Nenhum estado com venda.");
 
   const name = (await state.getAttribute("aria-label"))?.split(":")[0] ?? "";
   await state.click();
   await expect(page).toHaveURL(/[?&]uf=[A-Z]{2}/);
+  // Com estado escolhido, o mapa já abre.
   await expect(block.getByRole("heading", { name, level: 3 })).toBeVisible();
   await expect(mapStates(page).and(page.locator('[aria-current="true"]'))).toHaveCount(1);
 
@@ -47,6 +57,8 @@ test("clicar num estado mostra o detalhe dele frente ao Brasil, e o chip volta a
     .getByRole("button", { name: `Remover filtro ${name}` })
     .click();
   await expect(page).not.toHaveURL(/uf=/);
+  // Sem estado, o mapa volta a ficar recolhido.
+  await openMap(page);
   await expect(block.getByText(/Escolha um estado no mapa/)).toBeVisible();
 });
 
@@ -66,7 +78,10 @@ test("escolher um modelo troca o ranking pelas vendas do modelo e libera o mapa 
   const metric = page.getByRole("navigation", { name: "Medida do mapa" });
   await metric.getByRole("link", { name: "Lance em R$" }).click();
   await expect(page).toHaveURL(/medida=price/);
-  await expect(page.getByText("em milhares de R$").or(section(page, "Por estado").getByText(NO_SALES))).toBeVisible();
+  if ((await section(page, "Onde").getByText(NO_SALES).count()) === 0) {
+    await openMap(page);
+    await expect(page.getByText("em milhares de R$")).toBeVisible();
+  }
 
   // Os filtros sobrevivem ao recarregar.
   await page.reload();
