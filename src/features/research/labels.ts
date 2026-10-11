@@ -1,4 +1,4 @@
-import type { ComparableLevel, SimilarityReason } from "@/domain/listings/estimates";
+import type { ComparableLevel, EstimateConfidence, SimilarityReason } from "@/domain/listings/estimates";
 import { cents } from "@/domain/money";
 import type { BandPosition, EvaluateLoosen } from "@/domain/research/evaluate";
 import type { ResearchCategory, ResearchCondition, ResearchMetric } from "@/domain/research/filters";
@@ -144,3 +144,10 @@ const LOOSEN_LABELS = {
 export function loosenLabel({ change, n }: EvaluateLoosen): string {
   return `${LOOSEN_LABELS[change]} (${salesLabel(n)})`;
 }
+
+/** Confiança da faixa (D-72), sozinha num rótulo "Confiança: alta". */
+export const CONFIDENCE_SHORT_LABELS = {
+  high: "alta",
+  medium: "média",
+  low: "baixa",
+} as const satisfies Record<EstimateConfidence, string>;

@@ -287,3 +287,23 @@ export function bandPosition(value: number, band: { low: number; high: number })
   if (value < band.low) return "below";
   return value > band.high ? "above" : "inside";
 }
+
+/** O recorte com um filtro afrouxado (`EvaluateLoosen`): ano ±1 a mais, ou sem km, origem, versão ou família. */
+export function loosened(filters: EvaluateFilters, change: EvaluateLoosen["change"]): EvaluateFilters {
+  switch (change) {
+    case "years":
+      return {
+        ...filters,
+        yearFrom: filters.yearFrom === null ? null : filters.yearFrom - 1,
+        yearTo: filters.yearTo === null ? null : filters.yearTo + 1,
+      };
+    case "km":
+      return { ...filters, maxKm: null };
+    case "origin":
+      return { ...filters, origin: null };
+    case "version":
+      return { ...filters, version: null };
+    case "family":
+      return { ...filters, family: null, version: null };
+  }
+}

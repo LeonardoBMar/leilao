@@ -10,6 +10,7 @@ import {
   evaluationLevel,
   familyLabel,
   inCut,
+  loosened,
   targetFilters,
 } from "./evaluate";
 
@@ -177,5 +178,16 @@ describe("bandPosition", () => {
     expect(bandPosition(100, band)).toBe("inside");
     expect(bandPosition(200, band)).toBe("inside");
     expect(bandPosition(201, band)).toBe("above");
+  });
+});
+
+describe("loosened", () => {
+  it("cada sugestão muda só o seu filtro (sem família, sem versão também)", () => {
+    const base = filters({ family: "f", version: "v", yearFrom: 2020, yearTo: 2021, maxKm: 50_000, origin: "frota" });
+    expect(loosened(base, "years")).toMatchObject({ yearFrom: 2019, yearTo: 2022, maxKm: 50_000 });
+    expect(loosened(base, "km").maxKm).toBeNull();
+    expect(loosened(base, "origin").origin).toBeNull();
+    expect(loosened(base, "version")).toMatchObject({ version: null, family: "f" });
+    expect(loosened(base, "family")).toMatchObject({ version: null, family: null });
   });
 });

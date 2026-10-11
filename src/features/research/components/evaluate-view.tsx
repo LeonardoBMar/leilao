@@ -5,6 +5,7 @@ import { getEvaluateModels, getEvaluation, getLotTarget } from "../queries";
 import { evaluateParams, parseEvaluateParams } from "../schemas";
 import type { SearchParams } from "../search";
 import type { EvaluationView, LotTarget } from "../types";
+import { EvaluateAnswer } from "./evaluate-answer";
 import { type EvaluateFacets, EvaluateFilterBar } from "./evaluate-filter-bar";
 import { ResearchShell } from "./research-shell";
 
@@ -39,7 +40,7 @@ export async function EvaluateView({ searchParams }: { searchParams: SearchParam
         />
       }
     >
-      {null}
+      {evaluation === null ? null : <EvaluateAnswer filters={filters} evaluation={evaluation} />}
     </ResearchShell>
   );
 }
