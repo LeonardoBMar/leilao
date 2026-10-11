@@ -11,6 +11,7 @@ import { EvaluateAnswer } from "./evaluate-answer";
 import { EVALUATE_CHART_TITLE, EvaluateChartBlock } from "./evaluate-chart-block";
 import { EvaluateComparables } from "./evaluate-comparables";
 import { type EvaluateFacets, EvaluateFilterBar } from "./evaluate-filter-bar";
+import { EvaluateOpenListings, OPEN_LISTINGS_TITLE, type OpenListingAction } from "./evaluate-open-listings";
 import { ResearchBlockSkeleton } from "./research-block";
 import { ResearchShell } from "./research-shell";
 
@@ -31,7 +32,14 @@ export async function resolveEvaluation(
  * Avaliar (D-71, docs/PLANO-MERCADO.md §5): a busca do veículo e, com ele escolhido, a resposta, as vendas e os lotes
  * abertos do recorte. Os blocos leem o mesmo resultado (`getEvaluation` é uma vez por requisição).
  */
-export async function EvaluateView({ searchParams }: { searchParams: SearchParams }) {
+export async function EvaluateView({
+  searchParams,
+  openListingAction,
+}: {
+  searchParams: SearchParams;
+  /** Ação de cada lote aberto, composta pela rota. */
+  openListingAction: OpenListingAction;
+}) {
   const { filters, lot } = await resolveEvaluation(searchParams);
   const [models, evaluation] = await Promise.all([getEvaluateModels(), getEvaluation(filters, lot?.target ?? null)]);
   return (
@@ -53,6 +61,9 @@ export async function EvaluateView({ searchParams }: { searchParams: SearchParam
               <EvaluateChartBlock filters={filters} evaluation={evaluation} />
             </Suspense>
           )}
+          <Suspense fallback={<ResearchBlockSkeleton title={OPEN_LISTINGS_TITLE} className="h-32" />}>
+            <EvaluateOpenListings filters={filters} evaluation={evaluation} action={openListingAction} />
+          </Suspense>
           {evaluation.comparables.length === 0 ? null : (
             <EvaluateComparables filters={filters} evaluation={evaluation} />
           )}

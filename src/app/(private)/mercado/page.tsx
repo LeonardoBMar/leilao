@@ -5,6 +5,8 @@ import { EvaluateView, EvaluateViewSkeleton } from "@/features/research/componen
 import { MarketTabs } from "@/features/research/components/market-tabs";
 import { ResearchHeader, ResearchHeaderSkeleton } from "@/features/research/components/research-view";
 
+import { openListingAction } from "./open-listing-action";
+
 export const metadata: Metadata = { title: "Mercado · Leilão Tracker" };
 
 export default function EvaluatePage({ searchParams }: PageProps<"/mercado">) {
@@ -15,7 +17,7 @@ export default function EvaluatePage({ searchParams }: PageProps<"/mercado">) {
       </Suspense>
       <MarketTabs active="evaluate" />
       <Suspense fallback={<EvaluateViewSkeleton />}>
-        <EvaluateView searchParams={searchParams} />
+        <EvaluateView searchParams={searchParams} openListingAction={openListingAction} />
       </Suspense>
     </div>
   );
