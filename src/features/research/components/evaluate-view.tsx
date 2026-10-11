@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { type ReactNode, Suspense } from "react";
 
 import { Skeleton } from "@/components/ui";
 import { type EvaluateFilters, familyLabel, targetFilters } from "@/domain/research/evaluate";
@@ -36,10 +36,13 @@ export async function resolveEvaluation(
 export async function EvaluateView({
   searchParams,
   openListingAction,
+  vehicleActions,
 }: {
   searchParams: SearchParams;
   /** Ação de cada lote aberto, composta pela rota. */
   openListingAction: OpenListingAction;
+  /** Ações do recorte (monitor, catálogo), compostas pela rota: juntam outras features. */
+  vehicleActions: (filters: EvaluateFilters) => ReactNode;
 }) {
   const { filters, lot } = await resolveEvaluation(searchParams);
   const [models, evaluation] = await Promise.all([getEvaluateModels(), getEvaluation(filters, lot?.target ?? null)]);
@@ -60,7 +63,7 @@ export async function EvaluateView({
         </Suspense>
       ) : (
         <>
-          <EvaluateAnswer filters={filters} evaluation={evaluation} />
+          <EvaluateAnswer filters={filters} evaluation={evaluation} actions={vehicleActions(filters)} />
           {evaluation.comparables.length === 0 ? null : (
             <Suspense fallback={<ResearchBlockSkeleton title={EVALUATE_CHART_TITLE} />}>
               <EvaluateChartBlock filters={filters} evaluation={evaluation} />

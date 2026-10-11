@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { ButtonLink, Card } from "@/components/ui";
 import { type EvaluateFilters, familyLabel, loosened } from "@/domain/research/evaluate";
 import { vehicleLabel } from "@/domain/research/filters";
@@ -39,7 +41,16 @@ export function evaluateScopeLabel(filters: EvaluateFilters, versionLabels: Read
  * mediana, o % do valor de mercado, o `n`, o período, a confiança e o grupo de onde vieram as vendas. Com menos de 5
  * vendas, diz quantas há e oferece afrouxar um filtro (com quantas vendas ficariam).
  */
-export function EvaluateAnswer({ filters, evaluation }: { filters: EvaluateFilters; evaluation: EvaluationView }) {
+export function EvaluateAnswer({
+  filters,
+  evaluation,
+  actions,
+}: {
+  filters: EvaluateFilters;
+  evaluation: EvaluationView;
+  /** Monitor e catálogo, compostos pela rota. */
+  actions: ReactNode;
+}) {
   const { answer, excluded, loosen, level } = evaluation;
   const scope = evaluateScopeLabel(filters, evaluation.versionLabels);
   const loosenLinks =
@@ -125,12 +136,13 @@ export function EvaluateAnswer({ filters, evaluation }: { filters: EvaluateFilte
             {loosenLinks}
           </div>
         )}
+        {actions}
       </Card>
     </section>
   );
 }
 
-function Fact({ label, children }: { label: string; children: React.ReactNode }) {
+function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex items-baseline gap-1.5">
       <dt className="text-caption text-muted">{label}</dt>

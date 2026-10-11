@@ -1,4 +1,5 @@
 import type { ConditionKey } from "@/domain/listings/criteria";
+import { type EvaluateFilters, familyLabel } from "@/domain/research/evaluate";
 import { type ResearchCondition, type ResearchFilters, vehicleLabel } from "@/domain/research/filters";
 
 /**
@@ -30,6 +31,30 @@ export function catalogParams(filters: ResearchFilters): Record<string, string> 
     anoAte: filters.yearTo?.toString(),
     kmAte: filters.maxKm?.toString(),
     fonte: filters.source ?? undefined,
+    distancia: "todas",
+  };
+  return Object.fromEntries(
+    Object.entries(params).flatMap(([key, value]) => (value === undefined ? [] : [[key, value]])),
+  );
+}
+
+/**
+ * Parâmetros do catálogo para os lotes abertos do recorte do Avaliar: a busca pelo modelo (ou pela família, que o
+ * texto do anúncio costuma trazer: "Onix Plus"), a condição, o ano, o km e a origem, em qualquer categoria e distância.
+ * A versão FIPE não tem filtro no catálogo e fica de fora. Sem modelo, `null`.
+ */
+export function evaluateCatalogParams(filters: EvaluateFilters): Record<string, string> | null {
+  if (filters.vehicle === null) return null;
+  const brand = vehicleLabel(filters.vehicle).split(" ")[0] ?? "";
+  const family = filters.family === null ? "" : familyLabel(filters.family);
+  const params: Record<string, string | undefined> = {
+    busca: family === "" ? vehicleLabel(filters.vehicle) : `${brand} ${family}`,
+    categoria: "todas",
+    condicao: CATALOG_CONDITION[filters.condition],
+    anoDe: filters.yearFrom?.toString(),
+    anoAte: filters.yearTo?.toString(),
+    kmAte: filters.maxKm?.toString(),
+    origem: filters.origin ?? undefined,
     distancia: "todas",
   };
   return Object.fromEntries(

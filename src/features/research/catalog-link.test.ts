@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import { DEFAULT_EVALUATE_FILTERS } from "@/domain/research/evaluate";
 import { DEFAULT_RESEARCH_FILTERS } from "@/domain/research/filters";
 import { parseListingParams } from "@/features/listings/schemas";
 
-import { catalogParams } from "./catalog-link";
+import { catalogParams, evaluateCatalogParams } from "./catalog-link";
 
 const onix = { brand: "CHEVROLET", model: "ONIX" };
 
@@ -51,6 +52,40 @@ describe("catalogParams", () => {
       categories: ["motos"],
       yearFrom: 2019,
       radiusKm: null,
+    });
+  });
+});
+
+describe("evaluateCatalogParams", () => {
+  it("sem modelo, nada", () => {
+    expect(evaluateCatalogParams(DEFAULT_EVALUATE_FILTERS)).toBeNull();
+  });
+
+  it("busca pela família quando há, com condição, ano, km e origem, em qualquer categoria", () => {
+    const params = evaluateCatalogParams({
+      ...DEFAULT_EVALUATE_FILTERS,
+      vehicle: onix,
+      family: "CHEVROLET|ONIX|PLUS",
+      version: "004450-1",
+      yearFrom: 2022,
+      yearTo: 2024,
+      maxKm: 100_000,
+      origin: "financiamento",
+    });
+    expect(params).toEqual({
+      busca: "Chevrolet ONIX PLUS",
+      categoria: "todas",
+      condicao: "sem-monta",
+      anoDe: "2022",
+      anoAte: "2024",
+      kmAte: "100000",
+      origem: "financiamento",
+      distancia: "todas",
+    });
+    expect(parseListingParams(params ?? {}).criteria).toMatchObject({
+      search: "Chevrolet ONIX PLUS",
+      categories: null,
+      origins: ["financiamento"],
     });
   });
 });
