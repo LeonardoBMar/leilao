@@ -813,3 +813,24 @@ export const getEvaluateModels = cache(async (): Promise<ResearchModelOption[]> 
     return brand && model ? [{ brand, model, label: vehicleLabel({ brand, model }), sales: n }] : [];
   });
 });
+
+/** Quantos lotes o Avaliar oferece como atalho sem veículo escolhido. */
+const LOT_SHORTCUTS = 6;
+
+/**
+ * Atalhos da entrada do Avaliar: os lotes do usuário que ainda não foram arquivados, os acompanhados primeiro e depois
+ * os mexidos por último. Cada um abre o Avaliar com o lote como alvo.
+ */
+export async function getEvaluateLotShortcuts(): Promise<{ id: string; label: string }[]> {
+  const user = await requireUser();
+  const lots = await db.lot.findMany({
+    where: { ownerId: user.id, archivedAt: null },
+    orderBy: [{ isFollowed: "desc" }, { updatedAt: "desc" }],
+    take: LOT_SHORTCUTS,
+    select: { id: true, lotNumber: true, brand: true, model: true, modelYear: true },
+  });
+  return lots.map((lot) => ({
+    id: lot.id,
+    label: `${lot.brand} ${lot.model} ${lot.modelYear} · lote ${lot.lotNumber}`,
+  }));
+}

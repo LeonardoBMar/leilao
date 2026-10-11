@@ -10,6 +10,7 @@ import type { EvaluationView, LotTarget } from "../types";
 import { EvaluateAnswer } from "./evaluate-answer";
 import { EVALUATE_CHART_TITLE, EvaluateChartBlock } from "./evaluate-chart-block";
 import { EvaluateComparables } from "./evaluate-comparables";
+import { EvaluateEntry } from "./evaluate-entry";
 import { type EvaluateFacets, EvaluateFilterBar } from "./evaluate-filter-bar";
 import { EvaluateOpenListings, OPEN_LISTINGS_TITLE, type OpenListingAction } from "./evaluate-open-listings";
 import { ResearchBlockSkeleton } from "./research-block";
@@ -53,7 +54,11 @@ export async function EvaluateView({
         />
       }
     >
-      {evaluation === null ? null : (
+      {evaluation === null ? (
+        <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+          <EvaluateEntry models={models} />
+        </Suspense>
+      ) : (
         <>
           <EvaluateAnswer filters={filters} evaluation={evaluation} />
           {evaluation.comparables.length === 0 ? null : (
