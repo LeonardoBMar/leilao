@@ -18,9 +18,7 @@ function mapStates(page: Page) {
 test("mostra o tamanho da base e os blocos (ou o estado vazio)", async ({ page }) => {
   await page.goto("/mercado/panorama");
   await expect(page.getByRole("heading", { name: "Mercado", level: 1 })).toBeVisible();
-  await expect(
-    page.getByText(/Preços de arremate do catálogo: [\d.]+ vendas? desde \d{2}\/\d{2}\/\d{4}/),
-  ).toBeVisible();
+  await expect(page.getByText(/[\d.]+ vendas? arrematadas no catálogo desde \d{2}\/\d{2}\/\d{4}/)).toBeVisible();
   await expect(page.getByRole("status").filter({ hasText: /com esses filtros/ })).toBeVisible();
 
   for (const title of [

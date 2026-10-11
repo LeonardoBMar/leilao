@@ -65,9 +65,12 @@ export async function EvaluateView({
         <>
           <EvaluateAnswer filters={filters} evaluation={evaluation} actions={vehicleActions(filters)} />
           {evaluation.comparables.length === 0 ? null : (
-            <Suspense fallback={<ResearchBlockSkeleton title={EVALUATE_CHART_TITLE} />}>
-              <EvaluateChartBlock filters={filters} evaluation={evaluation} />
-            </Suspense>
+            // No celular o gráfico vem depois das listas, que dizem o mesmo em texto (§5.2).
+            <div className="order-last min-w-0 md:order-none">
+              <Suspense fallback={<ResearchBlockSkeleton title={EVALUATE_CHART_TITLE} />}>
+                <EvaluateChartBlock filters={filters} evaluation={evaluation} />
+              </Suspense>
+            </div>
           )}
           <Suspense fallback={<ResearchBlockSkeleton title={OPEN_LISTINGS_TITLE} className="h-32" />}>
             <EvaluateOpenListings filters={filters} evaluation={evaluation} action={openListingAction} />

@@ -1,14 +1,15 @@
 "use client";
 
-import { LoaderCircle, Target, X } from "lucide-react";
+import { LoaderCircle, SlidersHorizontal, Target, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useId, useOptimistic } from "react";
+import { useId, useOptimistic, useState } from "react";
 
 import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import { VEHICLE_ORIGINS } from "@/domain/listings/origin";
 import { DEFAULT_EVALUATE_FILTERS, type EvaluateFilters } from "@/domain/research/evaluate";
 import { normalizeYears, RESEARCH_CONDITIONS, RESEARCH_MILEAGE_OPTIONS, vehicleLabel } from "@/domain/research/filters";
 import { ORIGIN_LABELS } from "@/features/listings/filter-labels";
+import { cn } from "@/lib/utils";
 
 import { CONDITION_LABELS, mileageLabel, salesLabel } from "../labels";
 import { parseEvaluateParams } from "../schemas";
@@ -52,6 +53,18 @@ export function EvaluateFilterBar({ params, models, facets, lotLabel }: Evaluate
   const router = useRouter();
   const { isPending, startTransition } = useResearchTransition();
   const [filters, setOptimisticFilters] = useOptimistic(parseEvaluateParams(params));
+  // No celular, os seletores ficam atrás de "Refinar" para a resposta aparecer sem rolar (§5.2).
+  const [refining, setRefining] = useState(false);
+  const refineId = useId();
+  const refinements = [
+    filters.family,
+    filters.version,
+    filters.yearFrom,
+    filters.yearTo,
+    filters.maxKm,
+    filters.origin,
+    filters.condition === DEFAULT_EVALUATE_FILTERS.condition ? null : filters.condition,
+  ].filter((value) => value !== null).length;
 
   function apply(next: EvaluateFilters) {
     startTransition(() => {
@@ -92,7 +105,18 @@ export function EvaluateFilterBar({ params, models, facets, lotLabel }: Evaluate
       />
       {facets === null || filters.vehicle === null ? null : (
         <>
-          <div className="grid grid-cols-2 gap-3 md:flex md:flex-wrap">
+          <Button
+            variant="secondary"
+            className="w-fit md:hidden"
+            aria-expanded={refining}
+            aria-controls={refineId}
+            onClick={() => setRefining((open) => !open)}
+          >
+            <SlidersHorizontal aria-hidden="true" />
+            {refining ? "Fechar refinamento" : "Refinar recorte"}
+            {refinements > 0 ? <span className="text-muted tabular-nums">({refinements})</span> : null}
+          </Button>
+          <div id={refineId} className={cn("grid-cols-2 gap-3 md:flex md:flex-wrap", refining ? "grid" : "hidden")}>
             <CountSelect
               label="Família"
               allLabel="Todas as famílias"
