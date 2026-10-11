@@ -16,6 +16,8 @@ export const SUPERBID_IMAGE_ORIGIN = "https://ms.sbwebservices.net";
 export const SUPORTE_LEILOES_IMAGE_ORIGIN = "https://static.suporteleiloes.com.br";
 /** Site da Leilões Freire; o adaptador só monta fotos da pasta `/storage/lotes/`. */
 export const LEILOES_FREIRE_IMAGE_ORIGIN = "https://www.leiloesfreire.com.br";
+/** Armazenamento da plataforma VIP Leilões (Lance Certo); o adaptador só aceita a pasta `/controle/galeria/`. */
+export const LANCE_CERTO_IMAGE_ORIGIN = "https://armazviplprd.blob.core.windows.net";
 
 export const LISTING_IMAGE_ORIGINS = [
   LEILO_IMAGE_ORIGIN,
@@ -27,4 +29,5 @@ export const LISTING_IMAGE_ORIGINS = [
   SUPERBID_IMAGE_ORIGIN,
   SUPORTE_LEILOES_IMAGE_ORIGIN,
   LEILOES_FREIRE_IMAGE_ORIGIN,
+  LANCE_CERTO_IMAGE_ORIGIN,
 ] as const;

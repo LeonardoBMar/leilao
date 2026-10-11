@@ -189,6 +189,20 @@ Leiloeiro de Maceió com leilões de prefeituras de **Alagoas, Pernambuco e Serg
 | Dados pessoais | O JSON traz o apelido de quem deu o último lance, ids de arrematante e de usuário; descrições com placa, chassi (às vezes com tamanho errado) e Renavam | Nada de quem deu lance é lido; redação comum (D-40), que passa a apagar qualquer código depois de "CHASSI" |
 | Volume | Em ~80 leilões lidos: 1.060 veículos, 0 problemas de contrato; Maceió 351, Arapiraca 228, e prefeituras de AL, PE e SE. 29 lotes (judiciais e de empresa) sem local | Sergipe e Pernambuco aparecem a cada poucas semanas; entre um pregão e outro a fonte pode ter poucos abertos |
 
+### 2.13 Décima fonte: Lance Certo (`lancecertoleiloes.com.br`, levantamento de 2026-10-11)
+
+Loja da plataforma VIP Leilões com leiloeiros de **Recife e Natal**: PRF-PE, Detran-PE, Detran-RN, CTTU, prefeituras, TRT e Justiça Federal do RN. Buscada para cobrir o RN depois da D-68. Implementada em 11/10/2026 (D-69). **Não passa na regra do preço final ao pé da letra** (não diz "vendido"); o usuário aceitou o maior lance de leilão de órgão público como venda.
+
+| Item | Achado | Consequência |
+| --- | --- | --- |
+| `robots.txt` e termos | Só os comentários de "content signals" do Cloudflare, sem regras. Termos de uso não lidos | Mesmo regime das outras fontes: uso privado, coleta identificada, pausa em `sources.active` |
+| Acesso sem navegador | HTML do servidor (ASP.NET WebForms) e um JSON da página inicial, sem anti-robô nem login | Cabe na `SourceHttp` atual |
+| Descoberta | `/ajaxhomeLanceCerto/{página}/0/0/0/0/`: leilões abertos e futuros (31 em 2 páginas em 11/10), com o edital; os outros parâmetros não filtram encerrados e **não há lista de encerrados**. `/leilao/{edital}?pag=N`: 32 cartões por página, com categoria, comitente e começo da descrição. O lote vendido **some** da lista do leilão; só a página dele fica | Descoberta pelos abertos; a revisita lê a página do lote depois do fim. Sem carga avulsa |
+| Dados do lote | `/leilao/{edital}/lote/{id}` (com outro edital, página vazia): status, valor atual, número de lances, lance inicial, "Data leilão" do lote, comitente, anotação (taxa administrativa, avisos), descrição e fotos. Descrição em colunas separadas por tabulação no Detran e na PRF ("placa, UF, marca/modelo, tipo, Renavam, chassi, motor, anos, cor, situação, pátio") ou texto livre nas prefeituras | Marca, modelo, anos e cor da descrição; sem km, chave e combustível. Local pelo comitente ou pelo texto do leilão |
+| Resultado | Leilão de 30/09 (DPGRAN, RN): o lote vendido fica "Encerrado" com o valor (Jeep Compass 2021/2022, R$ 76.000, 52 lances); os que não venderam ficam "Suspenso" com o último lance e listados como "RETIRADO" | "Encerrado" com lance → vendido; sem lance → não vendido; "Suspenso" → retirado |
+| Dados pessoais | Apelido mascarado ("D\*\*\*S") e UF de quem deu o último lance; placa, Renavam, chassi e motor nas descrições | Nada de quem deu lance é lido; colunas de código e identificadores rotulados saem antes do `raw` |
+| Volume | ~260 veículos abertos em 11/10: PRF-PE (101 conservados + 47 sucatas), Detran-RN (50 + 42 sucatas), prefeituras de Ibimirim/PE e Tenente Laurentino Cruz/RN; mais leilões do Detran-RN, Detran-PE e CTTU marcados até dezembro | RN e PE com lotes toda semana |
+
 ## 3. Arquitetura
 
 ```text
