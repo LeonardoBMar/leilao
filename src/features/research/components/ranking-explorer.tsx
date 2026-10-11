@@ -183,7 +183,7 @@ function RankingRowLink({
     <Link
       href={row.href}
       scroll={false}
-      aria-label={`${row.label}: mediana ${formatRatio(row.median)} do valor de mercado, metade das vendas entre ${formatRatio(row.low)} e ${formatRatio(row.high)}, ${salesLabel(row.n)}${versus ? `, ${versus}` : ""}. Avaliar o modelo.`}
+      aria-label={`${row.label}: mediana ${formatRatio(row.median)} da FIPE, metade das vendas entre ${formatRatio(row.low)} e ${formatRatio(row.high)}, ${salesLabel(row.n)}${versus ? `, ${versus}` : ""}. Avaliar o modelo.`}
       className={cn(
         ROW_GRID,
         "group rounded-md border-b border-border px-2 py-2.5 outline-none hover:bg-background focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-accent",

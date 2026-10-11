@@ -24,11 +24,11 @@ describe("stateMapRegions", () => {
       tone: { kind: "colored", step: 1 },
       selected: true,
       href: "/mercado/panorama",
-      ariaLabel: "São Paulo: mediana 43% do valor de mercado, 297 vendas",
+      ariaLabel: "São Paulo: mediana 43% da FIPE, 297 vendas",
       tooltip: {
         title: "São Paulo",
         lines: [
-          "Mediana 43% do valor de mercado",
+          "Mediana 43% da FIPE",
           "Metade das vendas entre 36% e 50%",
           "297 vendas",
           "Clique para voltar ao Brasil",
@@ -80,7 +80,7 @@ describe("stateRangeRows", () => {
     expect(list.few).toEqual([{ state: "MT", sales: 2 }]);
   });
 
-  it("a escala comum vai de 0 até o fim do eixo do % do valor de mercado", () => {
+  it("a escala comum vai de 0 até o fim do eixo do % da FIPE", () => {
     expect(list.domain).toEqual([0, 1]);
   });
 

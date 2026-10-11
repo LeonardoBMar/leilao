@@ -92,7 +92,7 @@ function ComparableRow({ item, filters }: { item: EvaluateComparable<EvaluateSal
             {formatCompactBRL(sale.finalBid)}
           </span>
           {sale.marketValue === null ? null : (
-            <span className="text-caption text-muted">{formatRatio(sale.finalBid / sale.marketValue)} do mercado</span>
+            <span className="text-caption text-muted">{formatRatio(sale.finalBid / sale.marketValue)} da FIPE</span>
           )}
           {excluded ? <Badge variant="outline">Fora da conta</Badge> : null}
         </p>

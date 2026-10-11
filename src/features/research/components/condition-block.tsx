@@ -14,24 +14,20 @@ import { ResearchBlock } from "./research-block";
 export const CONDITION_BLOCK_TITLE = "Quanto se paga por condição";
 
 /**
- * "Quanto se paga por condição" (D-45): o histograma do % do valor de mercado de cada condição, com o resto dos
+ * "Quanto se paga por condição" (D-45): o histograma do % da FIPE de cada condição, com o resto dos
  * filtros. A condição do filtro fica em destaque (a mediana dela está no resumo) e clicar noutra a aplica.
  */
 export async function ConditionBlock({ filters, noSales }: { filters: ResearchFilters; noSales: ReactNode }) {
   const { rows, axisMax, looksMixed } = await getConditionDistribution(filters);
 
   return (
-    <ResearchBlock
-      id="pesquisa-condicao"
-      title={CONDITION_BLOCK_TITLE}
-      description="Lance final em % do valor de mercado."
-    >
+    <ResearchBlock id="pesquisa-condicao" title={CONDITION_BLOCK_TITLE} description="Lance final em % da FIPE.">
       {rows.every((row) => row.summary.kind === "none") ? (
         noSales
       ) : (
         <>
           <DistributionChart
-            ariaLabel={`Lance final em % do valor de mercado por condição. ${rows
+            ariaLabel={`Lance final em % da FIPE por condição. ${rows
               .map((row) =>
                 row.summary.kind === "summary"
                   ? `${CONDITION_LABELS[row.condition]}: mediana ${formatRatio(row.summary.median)}, ${salesLabel(row.summary.n)}`
@@ -41,7 +37,7 @@ export async function ConditionBlock({ filters, noSales }: { filters: ResearchFi
             axisMax={axisMax}
             ticks={niceTicks(axisMax).filter((tick) => tick <= axisMax)}
             format="ratio"
-            unit="do mercado"
+            unit="da FIPE"
             // Condição sem venda só aparece se é a do filtro; a tabela traz todas.
             rows={rows
               .filter((row) => row.summary.kind !== "none" || row.condition === filters.condition)

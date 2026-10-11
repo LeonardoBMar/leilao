@@ -20,11 +20,11 @@ function differenceSentence([first, second]: ComparisonView["groups"]): string |
   const points = Math.round(Math.abs(a.median - b.median) * 100);
   const lower = a.median < b.median ? first : second;
   if (points === 0) return `${first.label} e ${second.label} têm medianas que diferem em menos de 1 ponto percentual.`;
-  return `${lower.label} saiu ${points} ${points === 1 ? "ponto percentual" : "pontos percentuais"} mais abaixo do valor de mercado, na mediana.`;
+  return `${lower.label} saiu ${points} ${points === 1 ? "ponto percentual" : "pontos percentuais"} mais abaixo da FIPE, na mediana.`;
 }
 
 /**
- * "Comparação" (D-61): a distribuição do % do valor de mercado de dois grupos na mesma escala — dois modelos ou dois
+ * "Comparação" (D-61): a distribuição do % da FIPE de dois grupos na mesma escala — dois modelos ou dois
  * estados, com a condição, a categoria e o resto dos filtros iguais. Só descreve: medianas, amostras e a diferença.
  */
 export async function ComparisonBlock({ filters, noSales }: { filters: ResearchFilters; noSales: ReactNode }) {
@@ -37,7 +37,7 @@ export async function ComparisonBlock({ filters, noSales }: { filters: ResearchF
     <ResearchBlock
       id="pesquisa-comparacao"
       title={COMPARISON_BLOCK_TITLE}
-      description="Lance final em % do valor de mercado, com os mesmos filtros."
+      description="Lance final em % da FIPE, com os mesmos filtros."
     >
       {groups.every(({ distribution }) => distribution.summary.kind === "none") ? (
         noSales
@@ -45,7 +45,7 @@ export async function ComparisonBlock({ filters, noSales }: { filters: ResearchF
         <>
           {sentence ? <p className="text-body font-medium text-foreground">{sentence}</p> : null}
           <DistributionChart
-            ariaLabel={`${groups[0]?.label} comparado com ${groups[1]?.label}, em % do valor de mercado. ${groups
+            ariaLabel={`${groups[0]?.label} comparado com ${groups[1]?.label}, em % da FIPE. ${groups
               .map(({ label, distribution: { summary } }) =>
                 summary.kind === "summary"
                   ? `${label}: mediana ${formatRatio(summary.median)}, ${smallSampleLabel(summary.n)}`
@@ -55,7 +55,7 @@ export async function ComparisonBlock({ filters, noSales }: { filters: ResearchF
             axisMax={axisMax}
             ticks={niceTicks(axisMax).filter((tick) => tick <= axisMax)}
             format="ratio"
-            unit="do mercado"
+            unit="da FIPE"
             rows={groups.map(({ label, distribution: { summary, bins } }, index) => ({
               key: String(index),
               label,

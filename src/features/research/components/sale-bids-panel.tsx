@@ -26,7 +26,7 @@ function hoursLabel(hoursBefore: number): string {
 
 /**
  * Lances de uma venda (D-45), escolhida na tabela ou na dispersão do modelo: os degraus que o coletor viu nas horas
- * antes do fim, em R$ ou em % do valor de mercado, com a linha do valor de mercado. Entre duas visitas do coletor o lance
+ * antes do fim, em R$ ou em % da FIPE, com a linha do valor de mercado. Entre duas visitas do coletor o lance
  * pode ter mudado sem registro, e o texto diz isso.
  */
 export function SaleBidsPanel({ bids, closeHref }: { bids: SaleBids; closeHref: Route }) {
@@ -70,7 +70,7 @@ export function SaleBidsPanel({ bids, closeHref }: { bids: SaleBids; closeHref: 
           </a>
           <p className="text-caption text-muted tabular-nums">
             Encerrada em {formatDateTime(bids.endsAt)} · lance final {formatBRL(bids.finalBid)}
-            {marketValue === null ? "" : ` (${formatRatio(bids.finalBid / marketValue)} do mercado)`}
+            {marketValue === null ? "" : ` (${formatRatio(bids.finalBid / marketValue)} da FIPE)`}
           </p>
         </div>
         <ButtonLink href={closeHref} scroll={false} variant="ghost" size="icon" aria-label="Fechar os lances da venda">
@@ -94,7 +94,7 @@ export function SaleBidsPanel({ bids, closeHref }: { bids: SaleBids; closeHref: 
                 value={measure}
                 options={[
                   { value: "price", label: "R$" },
-                  { value: "ratio", label: "% do mercado" },
+                  { value: "ratio", label: "% da FIPE" },
                 ]}
                 onValueChange={setMeasure}
                 className="w-56"
@@ -111,9 +111,7 @@ export function SaleBidsPanel({ bids, closeHref }: { bids: SaleBids; closeHref: 
             yDomain={domain}
             yTicks={ticks.map((value) => ({ value, label: format(value) }))}
             reference={
-              showReference && reference !== null
-                ? { value: reference, label: `Valor de mercado ${format(reference)}` }
-                : undefined
+              showReference && reference !== null ? { value: reference, label: `FIPE ${format(reference)}` } : undefined
             }
             endLabel={format(valueOf(bids.finalBid))}
             points={bids.steps.map((step) => ({

@@ -21,12 +21,7 @@ test("mostra o tamanho da base e os blocos (ou o estado vazio)", async ({ page }
   await expect(page.getByText(/[\d.]+ vendas? arrematadas no catálogo desde \d{2}\/\d{2}\/\d{4}/)).toBeVisible();
   await expect(page.getByRole("status").filter({ hasText: /com esses filtros/ })).toBeVisible();
 
-  for (const title of [
-    "Quanto se paga por condição",
-    "Por estado",
-    "Modelos que mais saem abaixo do valor de mercado",
-    "Como o lance sobe",
-  ]) {
+  for (const title of ["Quanto se paga por condição", "Por estado", "Modelos", "Como o lance sobe"]) {
     await expect(section(page, title)).toBeVisible();
   }
   // Cada gráfico tem a tabela equivalente, ou o bloco diz que não há venda.
@@ -66,7 +61,7 @@ test("escolher um modelo troca o ranking pelas vendas do modelo e libera o mapa 
   await expect(page).toHaveURL(/[?&]marca=.+&modelo=/);
   const label = await picker.inputValue();
   await expect(section(page, `Vendas do ${label}`)).toBeVisible();
-  await expect(section(page, "Modelos que mais saem abaixo do valor de mercado")).toHaveCount(0);
+  await expect(section(page, "Modelos")).toHaveCount(0);
 
   const metric = page.getByRole("navigation", { name: "Medida do mapa" });
   await metric.getByRole("link", { name: "Lance em R$" }).click();
@@ -80,7 +75,7 @@ test("escolher um modelo troca o ranking pelas vendas do modelo e libera o mapa 
 
   await page.getByRole("button", { name: "Ver todos os modelos" }).click();
   await expect(page).not.toHaveURL(/modelo=/);
-  await expect(section(page, "Modelos que mais saem abaixo do valor de mercado")).toBeVisible();
+  await expect(section(page, "Modelos")).toBeVisible();
 });
 
 /** Abre a gaveta "Mais filtros" (condição, estado, fonte, km e ano). */

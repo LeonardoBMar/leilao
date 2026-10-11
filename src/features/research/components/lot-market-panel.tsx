@@ -59,7 +59,7 @@ export async function LotMarketPanel({ lotId }: { lotId: string }) {
                 Mediana {formatCompactBRL(evaluation.answer.median)}
                 {evaluation.answer.marketRatio === null
                   ? ""
-                  : ` (${formatRatio(evaluation.answer.marketRatio)} do mercado)`}{" "}
+                  : ` (${formatRatio(evaluation.answer.marketRatio)} da FIPE)`}{" "}
                 · {salesLabel(evaluation.answer.n)} {EVALUATE_LEVEL_LABELS[evaluation.level]} · confiança{" "}
                 {CONFIDENCE_SHORT_LABELS[evaluation.answer.confidence]}
               </p>

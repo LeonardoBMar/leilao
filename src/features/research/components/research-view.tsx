@@ -26,7 +26,7 @@ const HEADER_TITLE = "Mercado";
 /** Cabeçalho com o tamanho da base: "1.506 vendas arrematadas no catálogo desde 28/09/2026 · 62% com FIPE casado…". */
 export async function ResearchHeader() {
   const { sales, fipeMatched, since } = await getResearchOverview();
-  // Valor de mercado casado pelo sistema entra no % do mercado (D-47); o cabeçalho diz quanto da base é assim.
+  // Valor de mercado casado pelo sistema entra no % da FIPE (D-47); o cabeçalho diz quanto da base é assim.
   const matched =
     fipeMatched === 0 || sales === 0 ? "" : ` · ${formatRatio(fipeMatched / sales)} com valor FIPE casado pelo sistema`;
   return (

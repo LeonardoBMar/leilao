@@ -36,7 +36,7 @@ export function stateMapRegions(
   const medians = view.states.flatMap(({ summary }) => (summary.kind === "summary" ? [summary.median] : []));
   const scale = sequentialScale(medians, MAP_STEPS);
   const format = (value: number) => formatMetric(view.metric, value);
-  const measure = view.metric === "ratio" ? "do valor de mercado" : "de lance final";
+  const measure = view.metric === "ratio" ? "da FIPE" : "de lance final";
   const action = (selected: boolean) => (selected ? "Clique para voltar ao Brasil" : "Clique para ver o detalhe");
 
   const regions = view.states.map(({ state, summary }): MapRegion => {
@@ -111,8 +111,7 @@ export function stateMapRegions(
     { key: "few", swatch: "few", label: `(n) 1 a ${MIN_SAMPLE - 1} vendas` },
     { key: "empty", swatch: "empty", label: "nenhuma venda" },
   ];
-  const legendTitle =
-    view.metric === "ratio" ? "Mediana em % do valor de mercado" : "Mediana do lance final, em milhares de R$";
+  const legendTitle = view.metric === "ratio" ? "Mediana em % da FIPE" : "Mediana do lance final, em milhares de R$";
   return { regions, legend, legendTitle };
 }
 
@@ -130,7 +129,7 @@ export function stateRangeRows(
   const summaries = view.states.flatMap(({ state, summary }) =>
     summary.kind === "summary" ? [{ state, summary }] : [],
   );
-  const measure = view.metric === "ratio" ? "do valor de mercado" : "de lance final";
+  const measure = view.metric === "ratio" ? "da FIPE" : "de lance final";
   const rows = summaries
     .toSorted((a, b) => a.summary.median - b.summary.median || b.summary.n - a.summary.n)
     .map(({ state, summary }): RangeRow => {

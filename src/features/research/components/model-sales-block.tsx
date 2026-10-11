@@ -106,7 +106,7 @@ export async function ModelSalesBlock({
 }
 
 function saleTitle(sale: ResearchSale): string {
-  const ratio = sale.ratio === null ? "" : ` (${formatRatio(sale.ratio)} do mercado)`;
+  const ratio = sale.ratio === null ? "" : ` (${formatRatio(sale.ratio)} da FIPE)`;
   const km = sale.mileageKm === null ? "" : ` · ${formatKm(sale.mileageKm)}`;
   return `${formatDate(sale.endsAt)} · ${sale.state ?? "UF?"} · ${sale.modelYear ?? "ano?"}${km} · ${formatBRL(sale.finalBid)}${ratio}`;
 }

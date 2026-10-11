@@ -48,7 +48,7 @@ export async function StateBlock({ filters, noSales }: { filters: ResearchFilter
             label="Medida do mapa"
             tabs={(["ratio", "price"] as const).map((metric) => ({
               href: researchHref({ ...filters, metric, sale: null }),
-              label: metric === "ratio" ? "% do mercado" : "Lance em R$",
+              label: metric === "ratio" ? "% da FIPE" : "Lance em R$",
               active: effectiveMetric(filters) === metric,
             }))}
           />
@@ -144,7 +144,7 @@ function StateDetailPanel({ detail }: { detail: StateDetail | null }) {
         </p>
       </div>
       <DistributionChart
-        ariaLabel={`${name} comparado com o Brasil, em % do valor de mercado. ${rows
+        ariaLabel={`${name} comparado com o Brasil, em % da FIPE. ${rows
           .map(({ label, distribution: { summary } }) =>
             summary.kind === "summary"
               ? `${label}: mediana ${formatRatio(summary.median)}, ${salesLabel(summary.n)}`
@@ -154,7 +154,7 @@ function StateDetailPanel({ detail }: { detail: StateDetail | null }) {
         axisMax={detail.axisMax}
         ticks={niceTicks(detail.axisMax).filter((tick) => tick <= detail.axisMax)}
         format="ratio"
-        unit="do mercado"
+        unit="da FIPE"
         rows={rows.map(({ key, label, distribution: { summary, bins }, emphasis }) => ({
           key,
           label,
@@ -173,7 +173,7 @@ function StateDetailPanel({ detail }: { detail: StateDetail | null }) {
                 <TableHead>Data</TableHead>
                 <TableHead>Veículo</TableHead>
                 <TableHead className="text-right">Lance final</TableHead>
-                <TableHead className="text-right">% do mercado</TableHead>
+                <TableHead className="text-right">% da FIPE</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

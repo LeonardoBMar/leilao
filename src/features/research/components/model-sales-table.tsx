@@ -47,10 +47,10 @@ const COLUMNS = [
   { key: "date", label: "Data" },
   { key: "sale", label: "Anúncio" },
   { key: "bid", label: "Lance final", align: "right" },
-  { key: "ratio", label: "% do mercado", align: "right" },
+  { key: "ratio", label: "% da FIPE", align: "right" },
   { key: "year", label: "Ano", align: "right" },
   { key: "km", label: "Km", align: "right" },
-  { key: "market", label: "Valor de mercado", align: "right" },
+  { key: "market", label: "FIPE", align: "right" },
 ] as const satisfies readonly { key: SaleSortKey | "sale"; label: string; align?: "right" }[];
 
 /**
@@ -169,7 +169,7 @@ export function ModelSalesTable({
                   formatRatio(sale.ratio)
                 ) : (
                   <span className="inline-flex items-center gap-1.5">
-                    <Badge variant="outline" title="Fora das estatísticas: valor de mercado provavelmente errado">
+                    <Badge variant="outline" title="Fora das estatísticas: FIPE provavelmente errada">
                       fora do %
                     </Badge>
                     {formatRatio(sale.ratio)}

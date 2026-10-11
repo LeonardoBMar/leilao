@@ -23,9 +23,10 @@ const RISE_MARK_HOURS = 24;
 const compact = (value: number) => formatCompactBRL(cents(Math.round(value)));
 
 /**
- * Resumo no topo (D-45): a resposta da condição do filtro antes dos gráficos, em cartões — mediana do % do valor de
- * mercado, a amostra e, com modelo escolhido, o lance final mediano e quanto o lance sobe na véspera. Sem mediana
- * (menos de 5 vendas), diz quantas faltam; sem nenhuma venda com valor de mercado, fica só o lance em R$.
+ * Resumo no topo (D-45): a resposta da condição do filtro antes dos gráficos, em cartões — mediana do % da FIPE, as
+ * vendas fora do % (só quando há; sem elas o número repetiria o total da barra) e, com modelo escolhido, o lance final
+ * mediano e quanto o lance sobe na véspera. Amostra pequena vem marcada. Sem mediana (menos de 5 vendas), diz quantas
+ * faltam; sem nenhuma venda com FIPE, fica só o lance em R$.
  */
 export async function ResearchSummary({ filters }: { filters: ResearchFilters }) {
   const [{ rows }, bidCurve, excluded, price] = await Promise.all([
@@ -55,19 +56,25 @@ export async function ResearchSummary({ filters }: { filters: ResearchFilters })
       <dl className="grid grid-cols-2 gap-3 md:grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
         {ratio === null ? null : ratio.kind === "summary" ? (
           <Tile
-            label="Mediana do % do mercado"
-            note={`${belowMarketLabel(ratio.median)}. Metade entre ${formatRatio(ratio.low)} e ${formatRatio(ratio.high)}.`}
+            label="Mediana do % da FIPE"
+            note={[
+              `${belowMarketLabel(ratio.median)}. Metade entre ${formatRatio(ratio.low)} e ${formatRatio(ratio.high)}.`,
+              outside === null && isSmallSample(ratio.n) ? `Amostra pequena (${salesLabel(ratio.n)}).` : null,
+            ]
+              .filter((part) => part !== null)
+              .join(" ")}
           >
             {formatRatio(ratio.median)}
           </Tile>
         ) : (
-          <Tile label="Mediana do % do mercado" note="Poucas vendas para uma mediana.">
+          <Tile label="Mediana do % da FIPE" note="Poucas vendas para uma mediana.">
             <span className="text-heading-3">{summaryDetail(ratio)}</span>
           </Tile>
         )}
-        {ratio === null ? null : (
+        {/* Só quando há vendas fora do %: sem elas, o número é o total da barra de filtros. */}
+        {ratio === null || outside === null ? null : (
           <Tile
-            label="Vendas no %"
+            label="Vendas com % da FIPE"
             note={[isSmallSample(ratio.n) ? "Amostra pequena." : null, outside === null ? null : `Fora: ${outside}.`]
               .filter((part) => part !== null)
               .join(" ")}
@@ -78,7 +85,9 @@ export async function ResearchSummary({ filters }: { filters: ResearchFilters })
         {priceSummary === null ? null : (
           <Tile
             label="Lance final mediano"
-            note={`Metade entre ${compact(priceSummary.low)} e ${compact(priceSummary.high)}.`}
+            note={`Metade entre ${compact(priceSummary.low)} e ${compact(priceSummary.high)}.${
+              isSmallSample(priceSummary.n) ? ` Amostra pequena (${salesLabel(priceSummary.n)}).` : ""
+            }`}
           >
             {compact(priceSummary.median)}
           </Tile>

@@ -13,7 +13,7 @@ const MIXED_YEARS = 3;
 
 /**
  * Resposta do Avaliar (docs/PLANO-MERCADO.md §5.1): a faixa típica de arremate em R$ antes de qualquer gráfico, com a
- * mediana, o % do valor de mercado, o `n`, o período, a confiança e o grupo de onde vieram as vendas. Com menos de 5
+ * mediana, o % da FIPE, o `n`, o período, a confiança e o grupo de onde vieram as vendas. Com menos de 5
  * vendas, diz quantas há e oferece afrouxar um filtro (com quantas vendas ficariam).
  */
 export function EvaluateAnswer({
@@ -61,9 +61,7 @@ export function EvaluateAnswer({
             </div>
             <dl className="flex flex-wrap gap-x-5 gap-y-2 text-body text-foreground-secondary tabular-nums">
               <Fact label="Mediana">{formatCompactBRL(answer.median)}</Fact>
-              {answer.marketRatio === null ? null : (
-                <Fact label="Do valor de mercado">{formatRatio(answer.marketRatio)}</Fact>
-              )}
+              {answer.marketRatio === null ? null : <Fact label="Da FIPE">{formatRatio(answer.marketRatio)}</Fact>}
               <Fact label="Base">{salesLabel(answer.n)}</Fact>
               <Fact label="Período">
                 {formatDate(answer.from)} a {formatDate(answer.to)}

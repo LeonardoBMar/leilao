@@ -31,7 +31,7 @@ import {
 
 type ModelSalesScatterProps = {
   sales: readonly ScatterSale[];
-  /** Mediana de cada ano-modelo com amostra (só no eixo do ano), em lance final (centavos) e em % do mercado. */
+  /** Mediana de cada ano-modelo com amostra (só no eixo do ano), em lance final (centavos) e em % da FIPE. */
   medians: Readonly<Record<ScatterYAxis, readonly { x: number; y: number }[]>>;
   /** Nome do modelo, para o resumo em texto do gráfico. */
   subject: string;
@@ -96,7 +96,7 @@ export function ModelSalesScatter({ sales, medians, subject, yearSummary, select
           value={measure}
           options={[
             { value: "price", label: "Lance em R$" },
-            { value: "ratio", label: "% do mercado" },
+            { value: "ratio", label: "% da FIPE" },
           ]}
           onValueChange={setMeasure}
           className="sm:w-64"
@@ -146,20 +146,20 @@ export function ModelSalesScatter({ sales, medians, subject, yearSummary, select
           ariaLabel={
             axis === "year" && measure === "price"
               ? yearSummary
-              : `${measure === "price" ? "Lance final" : "% do valor de mercado"} do ${subject} por ${axis === "year" ? "ano-modelo" : "quilometragem"}: ${salesLabel(points.length)}.`
+              : `${measure === "price" ? "Lance final" : "% da FIPE"} do ${subject} por ${axis === "year" ? "ano-modelo" : "quilometragem"}: ${salesLabel(points.length)}.`
           }
           xValues={xValues}
           xAxis={xAxis}
           yDomain={[0, yEnd]}
           yTicks={yTicks}
-          reference={measure === "ratio" ? { value: 1, label: "100% do mercado" } : undefined}
+          reference={measure === "ratio" ? { value: 1, label: "100% da FIPE" } : undefined}
           points={points}
           medians={axis === "year" ? medians[measure] : []}
         />
       ) : (
         <p className="text-body text-muted">
           Nenhuma venda tem {axis === "year" ? "ano-modelo" : "quilometragem"}
-          {measure === "ratio" ? " e % do mercado" : ""} informado.
+          {measure === "ratio" ? " e % da FIPE" : ""} informado.
         </p>
       )}
       {chosen ? (
@@ -170,7 +170,7 @@ export function ModelSalesScatter({ sales, medians, subject, yearSummary, select
       {missing > 0 && points.length > 0 ? (
         <p className="text-label font-normal text-muted">
           {salesLabel(missing)} sem {axis === "year" ? "ano-modelo" : "quilometragem"}
-          {measure === "ratio" ? " ou % do mercado" : ""} fora do gráfico.
+          {measure === "ratio" ? " ou % da FIPE" : ""} fora do gráfico.
         </p>
       ) : null}
     </div>

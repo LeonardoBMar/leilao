@@ -33,7 +33,7 @@ export const CATEGORY_LABELS = {
 } as const satisfies Record<ResearchCategory, string>;
 
 export const METRIC_LABELS = {
-  ratio: "% do valor de mercado",
+  ratio: "% da FIPE",
   price: "Lance final em R$",
 } as const satisfies Record<ResearchMetric, string>;
 
@@ -62,7 +62,7 @@ export function yearRangeLabel({
  */
 export function excludedLabel({ noMarketValue, outOfBounds }: ExcludedSales): string | null {
   const parts = [
-    noMarketValue > 0 ? `${noMarketValue.toLocaleString("pt-BR")} sem valor de mercado` : null,
+    noMarketValue > 0 ? `${noMarketValue.toLocaleString("pt-BR")} sem FIPE` : null,
     outOfBounds > 0
       ? `${outOfBounds.toLocaleString("pt-BR")} com % fora de ${formatRatio(RATIO_BOUNDS.min)} a ${formatRatio(RATIO_BOUNDS.max)}`
       : null,
@@ -101,10 +101,10 @@ export function riseLabel(ratioToFinal: number): string {
   return `${rise < 0 ? "−" : "+"}${formatRatio(Math.abs(rise))}`;
 }
 
-/** A mediana dita como desconto: "51% abaixo do valor de mercado" (ou acima, se passar de 100%). */
+/** A mediana dita como desconto: "51% abaixo da FIPE" (ou acima, se passar de 100%). */
 export function belowMarketLabel(median: number): string {
-  if (median >= 1) return `${formatRatio(median - 1)} acima do valor de mercado`;
-  return `${formatRatio(1 - median)} abaixo do valor de mercado`;
+  if (median >= 1) return `${formatRatio(median - 1)} acima da FIPE`;
+  return `${formatRatio(1 - median)} abaixo da FIPE`;
 }
 
 /** De que grupo vêm as vendas do Avaliar (D-71, D-72). */

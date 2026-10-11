@@ -12,7 +12,7 @@ import { ResearchBlock } from "./research-block";
 export const RANKING_BLOCK_TITLE = "Modelos";
 
 /**
- * Ranking dos modelos (D-45), só sem modelo escolhido: mediana e faixa do meio do % do valor de mercado de cada modelo
+ * Ranking dos modelos (D-45), só sem modelo escolhido: mediana e faixa do meio do % da FIPE de cada modelo
  * com a amostra mínima, frente à mediana de todos os modelos. Cada linha aplica o filtro do modelo.
  */
 export async function RankingBlock({ filters }: { filters: ResearchFilters }) {
@@ -38,7 +38,7 @@ export async function RankingBlock({ filters }: { filters: ResearchFilters }) {
     <ResearchBlock
       id="pesquisa-modelos"
       title={RANKING_BLOCK_TITLE}
-      description={`% do valor de mercado pago por modelo (${MIN_SAMPLE} vendas ou mais).`}
+      description={`% da FIPE pago por modelo (${MIN_SAMPLE} vendas ou mais).`}
     >
       {rows.length === 0 ? (
         <p className="text-body text-muted">
