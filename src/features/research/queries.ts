@@ -115,8 +115,9 @@ type SalesScope = {
   ratio?: boolean;
 };
 
-function salesSince(): Date {
-  return new Date(Date.now() - SALES_WINDOW_MS);
+/** Início da janela das estimativas, contada de agora ou de `until`. */
+function salesSince(until: Date | null = null): Date {
+  return new Date((until?.getTime() ?? Date.now()) - SALES_WINDOW_MS);
 }
 
 /** Venda (mesmo critério da base do preço provável) dentro dos filtros pedidos. */
@@ -785,7 +786,12 @@ const evaluateSaleRow = z.object({
  * provável. Uma vez por requisição: a resposta, a lista e o gráfico usam o mesmo resultado.
  */
 export const getEvaluation = cache(
-  async (filters: EvaluateFilters, target: EstimateTarget | null): Promise<EvaluationView | null> => {
+  async (
+    filters: EvaluateFilters,
+    target: EstimateTarget | null,
+    // Só vendas encerradas antes desta data (a Calibração recalcula a faixa da época sem vendas posteriores).
+    until: Date | null = null,
+  ): Promise<EvaluationView | null> => {
     await requireUser();
     if (filters.vehicle === null) return null;
     const rowsFound = await rows(
@@ -795,7 +801,8 @@ export const getEvaluation = cache(
           coalesce(l.fipe_code, l.market_value_fipe_code) AS fipe_code, l.vehicle_origin::text AS vehicle_origin,
           l.final_bid_cents, l.market_value_cents, s.name AS source, l.photo_urls[1] AS photo_url
         FROM listings l JOIN sources s ON s.id = l.source_id
-        WHERE l.status = 'sold' AND l.final_bid_cents > 0 AND l.ends_at >= ${salesSince()}
+        WHERE l.status = 'sold' AND l.final_bid_cents > 0 AND l.ends_at >= ${salesSince(until)}
+          AND ${until === null ? sql`TRUE` : sql`l.ends_at < ${until}`}
           AND ${VEHICLE_KEY} = ${`${filters.vehicle.brand}|${filters.vehicle.model}`}
         ORDER BY l.ends_at DESC, l.id LIMIT ${EVALUATE_SALES_LIMIT}`,
     );
@@ -892,28 +899,31 @@ export const getLotTarget = cache(async (lotId: string): Promise<LotTarget | nul
 
 /**
  * Mercado do lote para a análise (bloco Concorrência e snapshot da fixação, docs/PLANO-MERCADO.md §8): o mesmo recorte
- * do preço provável e do painel da ficha. Lote de outro dono ou sem marca e modelo é `null`.
+ * do preço provável e do painel da ficha. Com `until`, só as vendas encerradas antes dele (a faixa da época, para a
+ * Calibração). Lote de outro dono ou sem marca e modelo é `null`.
  */
-export const getLotMarketReference = cache(async (lotId: string): Promise<LotMarketReference | null> => {
-  const lot = await getLotTarget(lotId);
-  if (lot === null) return null;
-  const filters = targetFilters(lot.target, lot.id, []);
-  const evaluation = await getEvaluation(filters, lot.target);
-  if (evaluation === null) return null;
-  const { answer } = evaluation;
-  return {
-    level: evaluation.level,
-    scope: evaluateScopeLabel(filters, evaluation.versionLabels),
-    href: evaluateHref({ ...DEFAULT_EVALUATE_FILTERS, lot: lot.id }),
-    sales: evaluation.comparables.flatMap(({ sale, excluded }) =>
-      excluded ? [] : [{ id: sale.id, finalBid: sale.finalBid }],
-    ),
-    band:
-      answer.kind === "band"
-        ? { low: answer.low, median: answer.median, high: answer.high, confidence: answer.confidence }
-        : null,
-  };
-});
+export const getLotMarketReference = cache(
+  async (lotId: string, until: Date | null = null): Promise<LotMarketReference | null> => {
+    const lot = await getLotTarget(lotId);
+    if (lot === null) return null;
+    const filters = targetFilters(lot.target, lot.id, []);
+    const evaluation = await getEvaluation(filters, lot.target, until);
+    if (evaluation === null) return null;
+    const { answer } = evaluation;
+    return {
+      level: evaluation.level,
+      scope: evaluateScopeLabel(filters, evaluation.versionLabels),
+      href: evaluateHref({ ...DEFAULT_EVALUATE_FILTERS, lot: lot.id }),
+      sales: evaluation.comparables.flatMap(({ sale, excluded }) =>
+        excluded ? [] : [{ id: sale.id, finalBid: sale.finalBid }],
+      ),
+      band:
+        answer.kind === "band"
+          ? { low: answer.low, median: answer.median, high: answer.high, confidence: answer.confidence }
+          : null,
+    };
+  },
+);
 
 /** Teto de lotes abertos de um modelo no Avaliar. */
 const OPEN_LISTINGS_LIMIT = 200;

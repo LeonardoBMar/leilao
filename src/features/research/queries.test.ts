@@ -133,6 +133,15 @@ describe.skipIf(process.env.DB_TESTS !== "1")("consultas da Pesquisa", () => {
     const [topVersion] = evaluation?.versions ?? [];
     if (topVersion) expect(evaluation?.versionLabels[topVersion.value]).toBeTruthy();
     expect(await queries.getEvaluation(DEFAULT_EVALUATE_FILTERS, null)).toBeNull();
+    // Com `until`, nenhuma venda encerrada depois entra (a faixa da época na Calibração).
+    const until = new Date("2026-10-01T00:00:00Z");
+    const before = await queries.getEvaluation(
+      { ...DEFAULT_EVALUATE_FILTERS, vehicle: { brand: "CHEVROLET", model: "ONIX" } },
+      null,
+      until,
+    );
+    expect(before?.comparables.every(({ sale }) => sale.endsAt < until)).toBe(true);
+    expect(before?.modelSales ?? 0).toBeLessThan(evaluation?.modelSales ?? 0);
     const open = await queries.getOpenListingsFor({
       ...DEFAULT_EVALUATE_FILTERS,
       vehicle: { brand: "CHEVROLET", model: "ONIX" },
@@ -140,6 +149,9 @@ describe.skipIf(process.env.DB_TESTS !== "1")("consultas da Pesquisa", () => {
     expect(open.every((listing) => listing.endsAt === null || listing.endsAt > new Date())).toBe(true);
     expect(await queries.getLotTarget("00000000-0000-7000-8000-000000000000")).toBeNull();
     expect(await queries.getLotMarketReference("00000000-0000-7000-8000-000000000000")).toBeNull();
+    // Calibração: só os resultados do dono (o usuário do teste não tem nenhum).
+    const { getCalibration } = await import("@/features/analyses/queries");
+    expect(await getCalibration()).toEqual([]);
 
     await db.$disconnect();
   }, 60_000);

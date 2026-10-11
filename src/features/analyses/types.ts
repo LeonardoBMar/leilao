@@ -57,3 +57,22 @@ export type AnalysisVersion = {
   fixedAt: Date | null;
   updatedAt: Date;
 };
+
+/**
+ * Análise fixada antes do desfecho de um lote arrematado (Calibração, docs/PLANO-MERCADO.md §7): o limite da época, o
+ * arremate e a faixa típica do mercado na fixação, só com vendas encerradas antes dela.
+ */
+export type CalibrationItem = {
+  lotId: string;
+  analysisId: string;
+  label: string;
+  /** Categoria do anúncio ligado, para a quebra por categoria; `null` sem anúncio. */
+  category: string | null;
+  fixedAt: Date;
+  /** Limite fixado; `null` quando a análise concluiu que não havia lance viável. */
+  limit: Cents | null;
+  finalBid: Cents;
+  band: { low: Cents; median: Cents; high: Cents } | null;
+  /** De onde veio a faixa: o snapshot gravado na fixação (D-74) ou o recálculo com as vendas anteriores a ela. */
+  bandSource: "snapshot" | "recomputed";
+};

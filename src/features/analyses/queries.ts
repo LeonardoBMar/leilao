@@ -2,13 +2,14 @@ import "server-only";
 
 import type { AnalysisInputs } from "@/domain/finance/calculator";
 import { bps, cents } from "@/domain/money";
+import { getLotMarketReference } from "@/features/research/queries";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
 
 import { listingFipeOf } from "./draft-defaults";
 import { readMarketSnapshot } from "./market-snapshot";
-import type { AnalysisDetail, AnalysisVersion } from "./types";
+import type { AnalysisDetail, AnalysisVersion, CalibrationItem } from "./types";
 
 const money = (value: number | null) => (value === null ? null : cents(value));
 
@@ -172,4 +173,55 @@ export async function listLotAnalyses(lotId: string): Promise<AnalysisVersion[]>
     },
   });
   return rows.map(({ maxBidCents, ...row }) => ({ ...row, maxBid: money(maxBidCents) }));
+}
+
+/**
+ * Calibração (docs/PLANO-MERCADO.md §7): a revisão vigente de cada lote do usuário, quando o lote foi arrematado com
+ * preço conhecido e a análise vinculada foi fixada antes do desfecho (`prior`, SPEC §10). A faixa da época vem do
+ * snapshot da fixação (D-74) ou, nas fixadas antes dele, do recálculo só com as vendas encerradas antes da fixação: a
+ * Calibração nunca olha vendas posteriores. Lotes arquivados entram: são histórico.
+ */
+export async function getCalibration(): Promise<CalibrationItem[]> {
+  const user = await requireUser();
+  const current = await db.result.findMany({
+    where: { ownerId: user.id },
+    orderBy: [{ lotId: "asc" }, { revision: "desc" }],
+    distinct: ["lotId"],
+    select: {
+      lotId: true,
+      outcome: true,
+      finalBidCents: true,
+      analysisTiming: true,
+      lot: {
+        select: { lotNumber: true, brand: true, model: true, modelYear: true, listing: { select: { category: true } } },
+      },
+      analysis: {
+        select: { id: true, status: true, fixedAt: true, isViable: true, maxBidCents: true, marketSnapshot: true },
+      },
+    },
+  });
+  const items = await Promise.all(
+    current.map(async (result): Promise<CalibrationItem | null> => {
+      const { analysis, lot } = result;
+      if (result.outcome !== "sold" || result.finalBidCents === null || result.analysisTiming !== "prior") return null;
+      if (analysis === null || analysis.status !== "fixed" || analysis.fixedAt === null) return null;
+      const snapshot = readMarketSnapshot(analysis.marketSnapshot);
+      const band =
+        snapshot === null
+          ? ((await getLotMarketReference(result.lotId, analysis.fixedAt))?.band ?? null)
+          : snapshot.band;
+      return {
+        lotId: result.lotId,
+        analysisId: analysis.id,
+        label: `Lote ${lot.lotNumber} · ${lot.brand} ${lot.model} ${lot.modelYear}`,
+        category: lot.listing?.category ?? null,
+        fixedAt: analysis.fixedAt,
+        limit: analysis.isViable && analysis.maxBidCents !== null ? cents(analysis.maxBidCents) : null,
+        finalBid: cents(result.finalBidCents),
+        band: band === null ? null : { low: band.low, median: band.median, high: band.high },
+        bandSource: snapshot === null ? "recomputed" : "snapshot",
+      };
+    }),
+  );
+  return items.filter((item) => item !== null).toSorted((a, b) => b.fixedAt.getTime() - a.fixedAt.getTime());
 }
