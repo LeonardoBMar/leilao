@@ -40,7 +40,8 @@ export async function ConditionBlock({ filters, noSales }: { filters: ResearchFi
               .join("; ")}.`}
             axisMax={axisMax}
             ticks={niceTicks(axisMax).filter((tick) => tick <= axisMax)}
-            formatValue={formatRatio}
+            format="ratio"
+            unit="do mercado"
             // Condição sem venda só aparece se é a do filtro; a tabela traz todas.
             rows={rows
               .filter((row) => row.summary.kind !== "none" || row.condition === filters.condition)

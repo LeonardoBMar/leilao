@@ -35,7 +35,7 @@ describe("DistributionChart", () => {
       ariaLabel="Sem monta declarada: mediana 49%"
       axisMax={1}
       ticks={[0, 0.5, 1]}
-      formatValue={pct}
+      format="ratio"
       rows={[
         {
           key: "sem-monta",
@@ -54,15 +54,16 @@ describe("DistributionChart", () => {
     expect(html).toMatch(/role="img" aria-label="Sem monta declarada: mediana 49%"/);
   });
 
-  it("desenha só as faixas com venda (barra e alvo da dica), e a mediana só com amostra", () => {
-    expect(html.match(/<rect/g)).toHaveLength(8);
+  it("desenha só as faixas com venda, e a mediana só com amostra", () => {
+    expect(html.match(/<rect/g)).toHaveLength(4);
     expect(html.match(/left:49%/g)).toHaveLength(1);
     expect(html).toContain(">49%<");
   });
 
-  it("a dica de cada barra diz a faixa e quantas vendas", () => {
-    expect(html).toContain("<title>25% a 50%: 2 vendas</title>");
-    expect(html).toContain("<title>0% a 25%: 1 venda</title>");
+  it("sem dica nativa: a dica própria só aparece com o ponteiro, e a legenda substitui a frase", () => {
+    expect(html).not.toContain("<title>");
+    expect(html).not.toContain('role="tooltip"');
+    expect(html).toContain("metade do meio");
   });
 
   it("o rótulo com href aplica o grupo", () => {
@@ -71,7 +72,7 @@ describe("DistributionChart", () => {
         ariaLabel="x"
         axisMax={1}
         ticks={[0, 1]}
-        formatValue={pct}
+        format="ratio"
         rows={[{ key: "a", label: "Média monta", bins: [1], summary: null, href: "/mercado?condicao=media" }]}
       />,
     );

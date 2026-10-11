@@ -161,7 +161,8 @@ function StateDetailPanel({ detail }: { detail: StateDetail | null }) {
           .join("; ")}.`}
         axisMax={detail.axisMax}
         ticks={niceTicks(detail.axisMax).filter((tick) => tick <= detail.axisMax)}
-        formatValue={formatRatio}
+        format="ratio"
+        unit="do mercado"
         rows={rows.map(({ key, label, distribution: { summary, bins }, emphasis }) => ({
           key,
           label,

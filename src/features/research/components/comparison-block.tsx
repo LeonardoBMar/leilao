@@ -54,7 +54,8 @@ export async function ComparisonBlock({ filters, noSales }: { filters: ResearchF
               .join("; ")}.`}
             axisMax={axisMax}
             ticks={niceTicks(axisMax).filter((tick) => tick <= axisMax)}
-            formatValue={formatRatio}
+            format="ratio"
+            unit="do mercado"
             rows={groups.map(({ label, distribution: { summary, bins } }, index) => ({
               key: String(index),
               label,
