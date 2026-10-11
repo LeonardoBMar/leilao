@@ -86,7 +86,11 @@ export type ComparisonView = {
   axisMax: number;
 };
 
-export type ModelRanking = RankedModel[];
+export type ModelRanking = {
+  models: RankedModel[];
+  /** Semanas entre a primeira e a última venda do filtro: a base de "vendas por semana". */
+  weeks: number;
+};
 
 export type ModelSales = {
   /** Vendas do modelo no filtro. */

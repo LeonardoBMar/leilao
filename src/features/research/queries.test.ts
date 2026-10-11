@@ -44,7 +44,10 @@ describe.skipIf(process.env.DB_TESTS !== "1")("consultas da Pesquisa", () => {
     expect(map.states).toHaveLength(27);
 
     const ranking = await queries.getModelRanking(DEFAULT_RESEARCH_FILTERS);
-    expect(ranking.length).toBeGreaterThan(0);
+    expect(ranking.models.length).toBeGreaterThan(0);
+    expect(ranking.weeks).toBeGreaterThanOrEqual(1);
+    const withAges = ranking.models.find((model) => Object.keys(model.byAge).length > 0);
+    expect(withAges?.context.medianBid).toBeGreaterThan(0);
 
     const onix: ResearchFilters = {
       ...DEFAULT_RESEARCH_FILTERS,

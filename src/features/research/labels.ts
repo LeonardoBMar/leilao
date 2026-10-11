@@ -42,6 +42,13 @@ export function salesLabel(count: number): string {
   return `${count.toLocaleString("pt-BR")} ${count === 1 ? "venda" : "vendas"}`;
 }
 
+const perWeek = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
+
+/** Liquidez: "3,5 por semana"; abaixo de uma, "menos de 1 por semana". */
+export function perWeekLabel(value: number): string {
+  return value < 1 ? "menos de 1 por semana" : `${perWeek.format(value)} por semana`;
+}
+
 /** "2018 a 2020", "a partir de 2018", "até 2020"; `null` sem faixa de ano. */
 export function yearRangeLabel({
   yearFrom,

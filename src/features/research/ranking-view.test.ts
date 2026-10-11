@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { type RankingRow, viewRanking } from "./ranking-view";
+import { cents } from "@/domain/money";
+
+import { type RankingModel, type RankingRow, rowsForAge, viewRanking } from "./ranking-view";
 
 const row = (brand: string, model: string, median: number, n: number): RankingRow => ({
   brand,
@@ -10,6 +12,9 @@ const row = (brand: string, model: string, median: number, n: number): RankingRo
   low: median - 0.1,
   median,
   high: median + 0.1,
+  year: 2015,
+  bid: cents(2_000_000),
+  perWeek: n / 10,
 });
 
 const rows = [
@@ -49,5 +54,22 @@ describe("viewRanking", () => {
     expect(labels(viewRanking(rows, "lowest", "fiat"))).toEqual(["FIAT UNO", "FIAT MOBI"]);
     expect(labels(viewRanking(rows, "lowest", "hb"))).toEqual(["HYUNDAI HB20"]);
     expect(viewRanking(rows, "lowest", "gol")).toEqual([]);
+  });
+});
+
+describe("rowsForAge", () => {
+  const models: RankingModel<RankingRow>[] = [
+    { ...row("FIAT", "UNO", 0.4, 30), byAge: { mais10: { ...row("FIAT", "UNO", 0.35, 20), year: 2009 } } },
+    { ...row("CHEVROLET", "ONIX", 0.55, 90), byAge: {} },
+  ];
+
+  it("todas as idades devolve os modelos como estão", () => {
+    expect(labels(rowsForAge(models, "all"))).toEqual(["FIAT UNO", "CHEVROLET ONIX"]);
+  });
+
+  it("uma faixa troca os números pelos dela e tira quem não tem amostra nela", () => {
+    const [uno, ...rest] = rowsForAge(models, "mais10");
+    expect(rest).toEqual([]);
+    expect(uno).toMatchObject({ label: "FIAT UNO", n: 20, median: 0.35, year: 2009 });
   });
 });

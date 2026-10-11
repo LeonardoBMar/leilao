@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  ageBandOf,
   bidCurve,
   fillHistogram,
   type GroupStats,
@@ -13,9 +14,18 @@ import {
   remainingRise,
   summarize,
   unclassifiedLooksMixed,
+  weeksBetween,
 } from "./summary";
 
 const stats = (n: number, median = 0.5): GroupStats => ({ n, p25: median - 0.05, median, p75: median + 0.05 });
+const context = { medianYear: 2015, medianBid: 2_000_000 };
+const model = (brand: string, name: string, groupStats: GroupStats) => ({
+  brand,
+  model: name,
+  stats: groupStats,
+  context,
+  byAge: {},
+});
 
 describe("isSmallSample", () => {
   it.each([
@@ -54,19 +64,19 @@ describe("summarize", () => {
 describe("rankModels", () => {
   it("só modelos com amostra mínima, da menor mediana para a maior", () => {
     const ranked = rankModels([
-      { brand: "FIAT", model: "STRADA", stats: stats(7, 0.66) },
-      { brand: "PEUGEOT", model: "207", stats: stats(5, 0.21) },
-      { brand: "FORD", model: "KA", stats: stats(4, 0.1) },
-      { brand: "CHEVROLET", model: "ONIX", stats: stats(43, 0.57) },
+      model("FIAT", "STRADA", stats(7, 0.66)),
+      model("PEUGEOT", "207", stats(5, 0.21)),
+      model("FORD", "KA", stats(4, 0.1)),
+      model("CHEVROLET", "ONIX", stats(43, 0.57)),
     ]);
     expect(ranked.map((item) => item.model)).toEqual(["207", "ONIX", "STRADA"]);
   });
 
   it("no empate, a amostra maior vem antes e, depois, o nome", () => {
     const ranked = rankModels([
-      { brand: "VOLKSWAGEN", model: "GOL", stats: stats(8, 0.5) },
-      { brand: "FIAT", model: "UNO", stats: stats(8, 0.5) },
-      { brand: "RENAULT", model: "SANDERO", stats: stats(30, 0.5) },
+      model("VOLKSWAGEN", "GOL", stats(8, 0.5)),
+      model("FIAT", "UNO", stats(8, 0.5)),
+      model("RENAULT", "SANDERO", stats(30, 0.5)),
     ]);
     expect(ranked.map((item) => item.model)).toEqual(["SANDERO", "UNO", "GOL"]);
   });
@@ -162,6 +172,41 @@ describe("remainingRise", () => {
   it("encerrado ou longe demais do fim, não diz nada", () => {
     expect(remainingRise(points, 0)).toBeNull();
     expect(remainingRise(points, 73)).toBeNull();
+  });
+});
+
+describe("rankModels por idade", () => {
+  it("cada faixa guarda o seu resumo, só com amostra mínima", () => {
+    const [ranked] = rankModels([
+      {
+        ...model("FIAT", "UNO", stats(30, 0.4)),
+        byAge: {
+          ate5: { stats: stats(4, 0.8), context },
+          "6a10": { stats: stats(10, 0.5), context: { medianYear: 2017, medianBid: 2_500_000 } },
+          mais10: { stats: stats(16, 0.3), context },
+        },
+      },
+    ]);
+    expect(Object.keys(ranked?.byAge ?? {})).toEqual(["6a10", "mais10"]);
+    expect(ranked?.byAge["6a10"]?.context.medianYear).toBe(2017);
+  });
+});
+
+describe("ageBandOf", () => {
+  it.each([
+    [2021, 2026, "ate5"],
+    [2016, 2026, "6a10"],
+    [2015, 2026, "mais10"],
+    [null, 2026, null],
+  ] as const)("ano-modelo %s vendido em %s", (modelYear, saleYear, band) => {
+    expect(ageBandOf(modelYear, saleYear)).toBe(band);
+  });
+});
+
+describe("weeksBetween", () => {
+  it("conta semanas, com o mínimo de uma", () => {
+    expect(weeksBetween(new Date("2026-09-01T00:00:00Z"), new Date("2026-09-15T00:00:00Z"))).toBe(2);
+    expect(weeksBetween(new Date("2026-09-01T00:00:00Z"), new Date("2026-09-02T00:00:00Z"))).toBe(1);
   });
 });
 

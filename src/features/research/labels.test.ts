@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { excludedLabel, mileageLabel, riseLabel } from "./labels";
+import { excludedLabel, mileageLabel, perWeekLabel, riseLabel } from "./labels";
 
 describe("riseLabel", () => {
   it("sobe com mais, cai com menos", () => {
@@ -24,5 +24,13 @@ describe("excludedLabel", () => {
 describe("mileageLabel", () => {
   it("em milhares de km", () => {
     expect(mileageLabel(100_000)).toBe("100 mil km");
+  });
+});
+
+describe("perWeekLabel", () => {
+  it("uma casa decimal e o piso de uma por semana", () => {
+    expect(perWeekLabel(3.46)).toBe("3,5 por semana");
+    expect(perWeekLabel(12)).toBe("12 por semana");
+    expect(perWeekLabel(0.4)).toBe("menos de 1 por semana");
   });
 });

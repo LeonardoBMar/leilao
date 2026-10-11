@@ -1,5 +1,6 @@
+import type { Cents } from "@/domain/money";
 import type { ResearchVehicle } from "@/domain/research/filters";
-import { isSmallSample } from "@/domain/research/summary";
+import { AGE_BANDS, type AgeBand, isSmallSample } from "@/domain/research/summary";
 
 import { matchModels } from "./search";
 
@@ -13,8 +14,47 @@ export const RANKING_SORT_LABELS = {
   name: "Nome",
 } as const satisfies Record<RankingSort, string>;
 
+export const RANKING_AGES = ["all", ...AGE_BANDS] as const;
+export type RankingAge = (typeof RANKING_AGES)[number];
+
+export const RANKING_AGE_LABELS = {
+  all: "Qualquer idade",
+  ate5: "Até 5 anos",
+  "6a10": "6 a 10 anos",
+  mais10: "Mais de 10 anos",
+} as const satisfies Record<RankingAge, string>;
+
+/**
+ * Números de um grupo do ranking: o % da FIPE (mediana e faixa do meio), o ano-modelo e o lance final (centavos)
+ * medianos e as vendas por semana no período do filtro.
+ */
+export type RankingStats = {
+  n: number;
+  low: number;
+  median: number;
+  high: number;
+  year: number | null;
+  bid: Cents;
+  perWeek: number;
+};
+
 /** Linha do ranking como a lista usa: só dados serializáveis. */
-export type RankingRow = ResearchVehicle & { label: string; n: number; low: number; median: number; high: number };
+export type RankingRow = ResearchVehicle & RankingStats & { label: string };
+
+/** Modelo do ranking com os grupos por idade na venda; cada grupo pode trazer os seus próprios campos extras. */
+export type RankingModel<T extends RankingRow> = T & { byAge: Partial<Record<AgeBand, RankingStats & Partial<T>>> };
+
+/**
+ * As linhas de uma idade: o grupo da faixa no lugar dos números de todas as idades; modelo sem a amostra mínima na
+ * faixa sai da lista.
+ */
+export function rowsForAge<T extends RankingRow>(models: readonly RankingModel<T>[], age: RankingAge): T[] {
+  return models.flatMap((model) => {
+    if (age === "all") return [model];
+    const group = model.byAge[age];
+    return group === undefined ? [] : [{ ...model, ...group }];
+  });
+}
 
 const COMPARE = {
   lowest: (a, b) => a.median - b.median || b.n - a.n,

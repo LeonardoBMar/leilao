@@ -64,18 +64,50 @@ export function medianOf(summary: GroupSummary): number | null {
   return summary.kind === "summary" ? summary.median : null;
 }
 
-export type ModelStats = ResearchVehicle & { stats: GroupStats };
-export type RankedModel = ResearchVehicle & { summary: Extract<GroupSummary, { kind: "summary" }> };
+/** Idade do veículo na venda (ano da venda − ano-modelo), em faixas, para o ranking (docs/PLANO-MERCADO.md §6). */
+export const AGE_BANDS = ["ate5", "6a10", "mais10"] as const;
+export type AgeBand = (typeof AGE_BANDS)[number];
+
+/** Maior idade de cada faixa, exceto a última; o SQL do ranking usa os mesmos limites. */
+export const AGE_BAND_LIMITS = { ate5: 5, "6a10": 10 } as const;
+
+/** Faixa de idade de uma venda; sem ano-modelo, `null`. */
+export function ageBandOf(modelYear: number | null, saleYear: number): AgeBand | null {
+  if (modelYear === null) return null;
+  const age = saleYear - modelYear;
+  if (age <= AGE_BAND_LIMITS.ate5) return "ate5";
+  return age <= AGE_BAND_LIMITS["6a10"] ? "6a10" : "mais10";
+}
+
+/** Contexto de um grupo do ranking: o ano-modelo e o lance final (centavos) medianos. */
+export type RankingContext = { medianYear: number | null; medianBid: number };
+
+type ModelGroup = { stats: GroupStats; context: RankingContext };
+export type ModelStats = ResearchVehicle & ModelGroup & { byAge: Partial<Record<AgeBand, ModelGroup>> };
+
+type RankedGroup = { summary: Extract<GroupSummary, { kind: "summary" }>; context: RankingContext };
+export type RankedModel = ResearchVehicle & RankedGroup & { byAge: Partial<Record<AgeBand, RankedGroup>> };
+
+function rankedGroup({ stats, context }: ModelGroup): RankedGroup | null {
+  const summary = summarize(stats);
+  return summary.kind === "summary" ? { summary, context } : null;
+}
 
 /**
- * Ranking "Modelos que mais saem abaixo do valor de mercado": só modelos com amostra mínima, da menor mediana para a
- * maior; empate pela amostra maior (mais confiável) e, depois, pelo nome.
+ * Ranking dos modelos: só modelos com amostra mínima, da menor mediana para a maior; empate pela amostra maior (mais
+ * confiável) e, depois, pelo nome. Cada faixa de idade guarda o seu resumo, também só com amostra mínima.
  */
 export function rankModels(models: readonly ModelStats[]): RankedModel[] {
   return models
-    .flatMap(({ brand, model, stats }) => {
-      const summary = summarize(stats);
-      return summary.kind === "summary" ? [{ brand, model, summary }] : [];
+    .flatMap(({ brand, model, stats, context, byAge }) => {
+      const all = rankedGroup({ stats, context });
+      if (all === null) return [];
+      const ages = AGE_BANDS.flatMap((band) => {
+        const group = byAge[band];
+        const ranked = group === undefined ? null : rankedGroup(group);
+        return ranked === null ? [] : [[band, ranked] as const];
+      });
+      return [{ brand, model, ...all, byAge: Object.fromEntries(ages) }];
     })
     .toSorted(
       (a, b) =>
@@ -83,6 +115,13 @@ export function rankModels(models: readonly ModelStats[]): RankedModel[] {
         b.summary.n - a.summary.n ||
         `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`),
     );
+}
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** Semanas entre duas datas, no mínimo uma: a base de "vendas por semana". */
+export function weeksBetween(from: Date, to: Date): number {
+  return Math.max(1, (to.getTime() - from.getTime()) / WEEK_MS);
 }
 
 /** Distância entre medianas abaixo da qual "sem monta declarada" e pequena monta se confundem. */

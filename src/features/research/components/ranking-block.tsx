@@ -1,19 +1,53 @@
+import type { Route } from "next";
+
+import { cents } from "@/domain/money";
 import { DEFAULT_EVALUATE_FILTERS } from "@/domain/research/evaluate";
-import { type ResearchFilters, vehicleLabel } from "@/domain/research/filters";
-import { MIN_SAMPLE, ratioAxisMax } from "@/domain/research/summary";
+import { type ResearchFilters, type ResearchVehicle, vehicleLabel } from "@/domain/research/filters";
+import {
+  AGE_BAND_LIMITS,
+  AGE_BANDS,
+  type AgeBand,
+  MIN_SAMPLE,
+  type RankedModel,
+  ratioAxisMax,
+} from "@/domain/research/summary";
 import { niceTicks } from "@/lib/charts";
 import { formatRatio } from "@/lib/format";
 
 import { getConditionDistribution, getModelRanking } from "../queries";
+import type { RankingModel, RankingRow, RankingStats } from "../ranking-view";
 import { evaluateHref } from "../search";
 import { RankingExplorer } from "./ranking-explorer";
 import { ResearchBlock } from "./research-block";
 
 export const RANKING_BLOCK_TITLE = "Modelos";
 
+type Group = Pick<RankedModel, "summary" | "context">;
+
+/** Anos-modelo de uma faixa de idade, contados a partir do ano corrente, para o Avaliar abrir no mesmo recorte. */
+function yearsOfAge(age: AgeBand, year: number): { yearFrom: number | null; yearTo: number | null } {
+  if (age === "ate5") return { yearFrom: year - AGE_BAND_LIMITS.ate5, yearTo: null };
+  if (age === "6a10") return { yearFrom: year - AGE_BAND_LIMITS["6a10"], yearTo: year - AGE_BAND_LIMITS.ate5 - 1 };
+  return { yearFrom: null, yearTo: year - AGE_BAND_LIMITS["6a10"] - 1 };
+}
+
+function statsOf({ summary, context }: Group, weeks: number): RankingStats {
+  return {
+    n: summary.n,
+    low: summary.low,
+    median: summary.median,
+    high: summary.high,
+    year: context.medianYear,
+    bid: cents(Math.round(context.medianBid)),
+    perWeek: summary.n / weeks,
+  };
+}
+
 /**
- * Ranking dos modelos (D-45), só sem modelo escolhido: mediana e faixa do meio do % da FIPE de cada modelo
- * com a amostra mínima, frente à mediana de todos os modelos. Cada linha aplica o filtro do modelo.
+ * Ranking dos modelos (D-45), só sem modelo escolhido: mediana e faixa do meio do % da FIPE de cada modelo com a
+ * amostra mínima, frente à mediana de todos os modelos, com o ano e o lance medianos e as vendas por semana; os
+ * grupos por idade na venda vão junto para o filtro de idade. Cada linha abre o modelo no Avaliar (D-71), na mesma
+ * condição e, com idade escolhida, nos mesmos anos-modelo: lá estão a faixa em R$, as vendas e os lotes abertos.
  */
 export async function RankingBlock({ filters }: { filters: ResearchFilters }) {
   const [ranking, { rows: conditions }] = await Promise.all([
@@ -21,18 +55,29 @@ export async function RankingBlock({ filters }: { filters: ResearchFilters }) {
     getConditionDistribution(filters),
   ]);
   const overall = conditions.find((row) => row.condition === filters.condition)?.summary;
-  const rows = ranking.map(({ brand, model, summary }) => ({
-    brand,
-    model,
-    label: vehicleLabel({ brand, model }),
-    n: summary.n,
-    low: summary.low,
-    median: summary.median,
-    high: summary.high,
-    // O modelo abre no Avaliar (D-71), na mesma condição: lá estão a faixa em R$, as vendas e os lotes abertos.
-    href: evaluateHref({ ...DEFAULT_EVALUATE_FILTERS, vehicle: { brand, model }, condition: filters.condition }),
-  }));
-  const axisMax = ratioAxisMax(Math.max(0, ...rows.map((row) => row.high)));
+  const year = new Date().getUTCFullYear();
+  const href = (vehicle: ResearchVehicle, years: { yearFrom: number | null; yearTo: number | null }): Route =>
+    evaluateHref({ ...DEFAULT_EVALUATE_FILTERS, vehicle, condition: filters.condition, ...years });
+  const rows: RankingModel<RankingRow & { href: Route }>[] = ranking.models.map((model) => {
+    const vehicle = { brand: model.brand, model: model.model };
+    return {
+      ...vehicle,
+      label: vehicleLabel(vehicle),
+      ...statsOf(model, ranking.weeks),
+      href: href(vehicle, { yearFrom: null, yearTo: null }),
+      byAge: Object.fromEntries(
+        AGE_BANDS.flatMap((age) => {
+          const group = model.byAge[age];
+          return group === undefined
+            ? []
+            : [[age, { ...statsOf(group, ranking.weeks), href: href(vehicle, yearsOfAge(age, year)) }] as const];
+        }),
+      ),
+    };
+  });
+  const axisMax = ratioAxisMax(
+    Math.max(0, ...rows.flatMap((row) => [row.high, ...Object.values(row.byAge).map((group) => group.high)])),
+  );
 
   return (
     <ResearchBlock

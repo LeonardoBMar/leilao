@@ -30,6 +30,8 @@ import {
 import { SALE_BIDS_WINDOW_HOURS, saleBidSteps } from "@/domain/research/sale-bids";
 import { buildStateSummaries, isStateCode, type StateCode } from "@/domain/research/states";
 import {
+  AGE_BAND_LIMITS,
+  AGE_BANDS,
   BID_CURVE_HOURS,
   BID_CURVE_LOOKBACK_HOURS,
   bidCurve,
@@ -40,11 +42,13 @@ import {
   HISTOGRAM_STEP,
   isRatioInBounds,
   MIN_SAMPLE,
+  type ModelStats,
   rankModels,
   RATIO_BOUNDS,
   ratioAxisMax,
   summarize,
   unclassifiedLooksMixed,
+  weeksBetween,
 } from "@/domain/research/summary";
 import { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
@@ -440,22 +444,72 @@ export const getComparison = cache(async (filters: ResearchFilters): Promise<Com
   };
 });
 
-/** "Modelos que mais saem abaixo do valor de mercado": só com a amostra mínima (D-45). */
+const rankingRow = z.object({
+  key: z.string(),
+  age: z.enum(AGE_BANDS).nullable(),
+  all_ages: z.number().int(),
+  median_year: z.number().nullable(),
+  median_bid: z.number(),
+  ...statsShape,
+});
+
+/**
+ * Ranking dos modelos (D-45, docs/PLANO-MERCADO.md §6): por modelo, o resumo do % da FIPE com o ano-modelo e o lance
+ * final medianos, para todas as idades e por faixa de idade na venda (`GROUPING SETS`, uma consulta só), mais as
+ * semanas cobertas pelas vendas do filtro, para "vendas por semana". Só grupos com a amostra mínima.
+ */
 export async function getModelRanking(filters: ResearchFilters): Promise<ModelRanking> {
   await requireUser();
-  const groups = await rows(
-    z.object({ key: z.string(), ...statsShape }),
-    sql`SELECT t.key, ${statsColumns(sql`t.ratio`)}
-      FROM (SELECT ${VEHICLE_KEY} AS key, ${RATIO} AS ratio FROM listings l
-        WHERE ${salesWhere({ ...filters, vehicle: null }, { ratio: true })}) t
-      WHERE t.key IS NOT NULL GROUP BY t.key HAVING count(*) >= ${MIN_SAMPLE}`,
-  );
-  return rankModels(
-    groups.map((group) => {
-      const [brand = "", model = ""] = group.key.split("|");
-      return { brand, model, stats: toStats(group) };
-    }),
-  );
+  const where = salesWhere({ ...filters, vehicle: null }, { ratio: true });
+  const [groups, [span]] = await Promise.all([
+    rows(
+      rankingRow,
+      sql`WITH t AS (
+          SELECT ${VEHICLE_KEY} AS key, ${RATIO} AS ratio, l.model_year AS year, l.final_bid_cents::float8 AS bid,
+            CASE
+              WHEN l.model_year IS NULL THEN NULL
+              WHEN extract(year FROM l.ends_at)::int - l.model_year <= ${AGE_BAND_LIMITS.ate5}::int THEN 'ate5'
+              WHEN extract(year FROM l.ends_at)::int - l.model_year <= ${AGE_BAND_LIMITS["6a10"]}::int THEN '6a10'
+              ELSE 'mais10'
+            END AS age
+          FROM listings l WHERE ${where}
+        )
+        SELECT t.key, t.age, GROUPING(t.age)::int AS all_ages, ${statsColumns(sql`t.ratio`)},
+          percentile_disc(0.5) WITHIN GROUP (ORDER BY t.year)::float8 AS median_year,
+          percentile_cont(0.5) WITHIN GROUP (ORDER BY t.bid) AS median_bid
+        FROM t WHERE t.key IS NOT NULL
+        GROUP BY GROUPING SETS ((t.key), (t.key, t.age))
+        HAVING count(*) >= ${MIN_SAMPLE}`,
+    ),
+    rows(
+      z.object({ first: z.date().nullable(), last: z.date().nullable() }),
+      sql`SELECT min(l.ends_at) AS first, max(l.ends_at) AS last FROM listings l WHERE ${where}`,
+    ),
+  ]);
+  const byKey = new Map<string, ModelStats>();
+  // Primeiro as linhas de todas as idades (`GROUPING` = 1), depois as faixas de cada modelo.
+  for (const group of groups.filter((row) => row.all_ages === 1)) {
+    const [brand = "", model = ""] = group.key.split("|");
+    byKey.set(group.key, {
+      brand,
+      model,
+      stats: toStats(group),
+      context: { medianYear: group.median_year, medianBid: group.median_bid },
+      byAge: {},
+    });
+  }
+  for (const group of groups) {
+    const model = byKey.get(group.key);
+    if (group.all_ages === 1 || group.age === null || model === undefined) continue;
+    model.byAge[group.age] = {
+      stats: toStats(group),
+      context: { medianYear: group.median_year, medianBid: group.median_bid },
+    };
+  }
+  return {
+    models: rankModels([...byKey.values()]),
+    weeks: span?.first && span.last ? weeksBetween(span.first, span.last) : 1,
+  };
 }
 
 /** Vendas do modelo escolhido: as mais recentes uma a uma e o lance final por ano-modelo. */
