@@ -25,7 +25,7 @@ describe("redactVehicleIds", () => {
   });
 
   it("chassi digitado com outro tamanho some depois do rótulo", () => {
-    expect(redactVehicleIds("RENAULT/LOGAN, CHASSI 93Y4SRF84JJ9142204, PLACA S/INFO")).toBe(
+    expect(redactVehicleIds("RENAULT/LOGAN, CHASSI 9BWAA00000A0000001, PLACA S/INFO")).toBe(
       "RENAULT/LOGAN, CHASSI [removido], PLACA S/INFO",
     );
     expect(redactVehicleIds("TRATOR 650, CHASSI: MF489535M3.")).toBe("TRATOR 650, CHASSI: [removido].");

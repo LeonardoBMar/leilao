@@ -12,7 +12,7 @@ const LABELED_SPACED_PLATE = /\b(PLACA)(\s*(?:N[º°O.]*)?\s*:?\s*)[A-Z]{3} \d[A
 /** Chassi (VIN): 17 letras e números, sem I, O e Q, com pelo menos um de cada. */
 const CHASSIS = /\b(?=[A-HJ-NPR-Z0-9]*\d)(?=[A-HJ-NPR-Z0-9]*[A-HJ-NPR-Z])[A-HJ-NPR-Z0-9]{17}\b/gi;
 /**
- * Chassi depois do rótulo, de qualquer tamanho: alguns leiloeiros digitam errado ("CHASSI 93Y4SRF84JJ9142204", com 18
+ * Chassi depois do rótulo, de qualquer tamanho: alguns leiloeiros digitam errado ("CHASSI 9BWAA00000A0000001", com 18
  * caracteres) e o padrão de 17 não pega.
  */
 const LABELED_CHASSIS = /\b(CHASSIS?)(\s*(?:N[º°O.]*)?\s*:?\s*)(?=[A-Z0-9]*\d)[A-Z0-9]{8,20}\b/gi;
