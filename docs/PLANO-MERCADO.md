@@ -224,7 +224,7 @@ Usa o ativo exclusivo do produto: análises fixadas antes do resultado.
 | Id proposto | Decisão |
 | --- | --- |
 | D-71 | Mercado em três abas por rota (Avaliar, Panorama, Calibração); Avaliar é a entrada; menu "Mercado" |
-| D-72 | Motor de comparáveis v2: hierarquia versão FIPE → família → modelo → proporção, nível e confiança expostos, portão por backtest |
+| D-72 | Motor de comparáveis v2: níveis versão FIPE, família e modelo, confiança e vendas usadas expostas, portão por backtest. Resultado do portão: o preço provável segue no modelo base com a faixa corrigida; os outros níveis viram recortes da tela Avaliar (§2) |
 | D-73 | Origem inferida do veículo (`recovery_type` + comitente + fonte), coluna persistida com backfill, usada no catálogo e no Mercado |
 | D-74 | Snapshot de mercado na análise fixada (migration) e bloco Concorrência |
 | D-75 | Filtro de período e tendência semanal (revisa a regra "sem período até 3 meses" de D-45) |

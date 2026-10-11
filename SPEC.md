@@ -123,7 +123,9 @@ Conteúdo principal:
 
 O indicador **“X de Y resultados comparáveis ficaram dentro do limite”** continua visível. As regras de elegibilidade estão na seção 10.
 
-O bloco "Para analisar agora" compara o **preço provável** com o limite, nunca o lance atual com o histórico: dois dias antes do fim, o lance ainda está, na mediana, em 90% do final. Estimativas não fixam análise, mostram a base (`n`, método) e não viram score, lucro ou economia.
+O bloco "Para analisar agora" compara o **preço provável** com o limite, nunca o lance atual com o histórico: dois dias antes do fim, o lance ainda está, na mediana, em 90% do final. Estimativas não fixam análise, mostram a base (`n`, método e confiança) e não viram score, lucro ou economia.
+
+O **preço provável** de um anúncio é a mediana dos lances finais de vendas do mesmo modelo base, ano ±1, mesma condição declarada e quilometragem próxima, encerradas no último ano; sem 5 delas, a proporção lance ÷ valor de mercado das vendas da mesma categoria e condição. A faixa mostrada é onde cai **metade das próximas vendas** (alargada quando há poucas). A **confiança** é alta com 20 vendas ou mais e faixa estreita, média com faixa aceitável e baixa no resto, incluindo toda estimativa pela proporção. Os números do backtest que fixaram essas regras estão em [docs/PLANO-MERCADO.md](docs/PLANO-MERCADO.md) §2.
 
 Não haverá card de lucro realizado ou economia garantida baseado em simulações.
 
