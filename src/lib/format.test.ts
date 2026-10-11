@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { cents } from "@/domain/money";
 
-import { formatCompactBRL, formatDayParts, formatShortDateTime, formatTime } from "./format";
+import { formatCalendarDayMonth, formatCompactBRL, formatDayParts, formatShortDateTime, formatTime } from "./format";
 
 describe("formatadores de agenda", () => {
   // 13:00 UTC = 10:00 em São Paulo.
@@ -27,5 +27,11 @@ describe("formatCompactBRL", () => {
     // O Intl separa "R$" do número com espaço não separável.
     expect(formatCompactBRL(cents(3_254_000)).replace(/\s/g, " ")).toBe("R$ 32,5 mil");
     expect(formatCompactBRL(cents(85_000)).replace(/\s/g, " ")).toBe("R$ 850");
+  });
+});
+
+describe("formatCalendarDayMonth", () => {
+  it("dia e mês em UTC, sem voltar um dia", () => {
+    expect(formatCalendarDayMonth(new Date("2026-10-05T00:00:00Z"))).toBe("05/10");
   });
 });

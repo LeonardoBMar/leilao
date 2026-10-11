@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  availablePeriods,
   comparisonGroups,
   DEFAULT_RESEARCH_FILTERS,
   effectiveMetric,
@@ -34,7 +35,7 @@ describe("effectiveMetric", () => {
 });
 
 describe("DEFAULT_RESEARCH_FILTERS", () => {
-  it("começa em carros sem monta declarada, em % do valor de mercado", () => {
+  it("começa em carros sem monta declarada, em % da FIPE e em todo o período", () => {
     expect(DEFAULT_RESEARCH_FILTERS).toEqual({
       category: "carros",
       condition: "sem-monta",
@@ -46,6 +47,7 @@ describe("DEFAULT_RESEARCH_FILTERS", () => {
       maxKm: null,
       compare: null,
       metric: "ratio",
+      period: null,
       sale: null,
     });
   });
@@ -141,5 +143,16 @@ describe("groupLabel", () => {
     );
     expect(groupLabel({ vehicle: null, state: "GO" })).toBe("Goiás");
     expect(groupLabel({ vehicle: null, state: null })).toBe("Brasil");
+  });
+});
+
+describe("availablePeriods", () => {
+  const now = new Date("2026-12-31T12:00:00Z");
+
+  it("só os períodos que a base já cobre", () => {
+    expect(availablePeriods(null, now)).toEqual([]);
+    expect(availablePeriods(new Date("2026-12-10T00:00:00Z"), now)).toEqual([]);
+    expect(availablePeriods(new Date("2026-11-01T00:00:00Z"), now)).toEqual([30]);
+    expect(availablePeriods(new Date("2026-06-01T00:00:00Z"), now)).toEqual([30, 90]);
   });
 });

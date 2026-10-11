@@ -21,6 +21,7 @@ import { ResearchFilterBar } from "./research-filter-bar";
 import { ResearchShell } from "./research-shell";
 import { ResearchSummary, ResearchSummarySkeleton } from "./research-summary";
 import { STATE_BLOCK_TITLE, StateBlock } from "./state-block";
+import { TrendBlock } from "./trend-block";
 
 const HEADER_TITLE = "Mercado";
 
@@ -92,6 +93,10 @@ export async function ResearchView({
           <ConditionBlock filters={filters} noSales={noSales} />
         </Suspense>
       </div>
+      {/* A tendência só aparece com base (D-75): sem esqueleto, para não reservar lugar que pode sumir. */}
+      <Suspense fallback={null}>
+        <TrendBlock filters={filters} />
+      </Suspense>
       <Suspense fallback={<ResearchBlockSkeleton title={STATE_BLOCK_TITLE} className="h-96" />}>
         <StateBlock filters={filters} noSales={noSales} />
       </Suspense>

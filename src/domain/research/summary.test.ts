@@ -14,6 +14,7 @@ import {
   remainingRise,
   summarize,
   unclassifiedLooksMixed,
+  weeklyTrend,
   weeksBetween,
 } from "./summary";
 
@@ -217,5 +218,15 @@ describe("isRatioInBounds", () => {
     expect(isRatioInBounds(2)).toBe(true);
     expect(isRatioInBounds(0.005)).toBe(false);
     expect(isRatioInBounds(2.5)).toBe(false);
+  });
+});
+
+describe("weeklyTrend", () => {
+  const week = (index: number, n: number) => ({ index, stats: stats(n) });
+
+  it("só semanas com 50 vendas ou mais, e só com 8 delas", () => {
+    const weeks = [week(0, 49), ...Array.from({ length: 8 }, (_, index) => week(index + 1, 50))];
+    expect(weeklyTrend(weeks)?.map((item) => item.index)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(weeklyTrend(weeks.slice(0, 8))).toBeNull();
   });
 });

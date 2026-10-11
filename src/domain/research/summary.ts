@@ -213,3 +213,17 @@ export function remainingRise(
   if (point === undefined || point.summary.median <= 0) return null;
   return { hours: nearest, rise: 1 / point.summary.median - 1, n: point.summary.n };
 }
+
+/** Semanas com base que a tendência exige antes de aparecer (D-75). */
+export const TREND_MIN_WEEKS = 8;
+/** Vendas mínimas de uma semana para ela entrar na tendência (D-75): abaixo disso, a mediana semanal oscila à toa. */
+export const TREND_MIN_WEEKLY_SALES = 50;
+
+/**
+ * Tendência semanal (D-75): só as semanas com `TREND_MIN_WEEKLY_SALES` vendas ou mais, na ordem; com menos de
+ * `TREND_MIN_WEEKS` delas, `null` (a tela não mostra tendência).
+ */
+export function weeklyTrend<T extends { stats: GroupStats }>(weeks: readonly T[]): T[] | null {
+  const based = weeks.filter((week) => week.stats.n >= TREND_MIN_WEEKLY_SALES);
+  return based.length >= TREND_MIN_WEEKS ? based : null;
+}

@@ -5,6 +5,7 @@ import {
   type ResearchCategory,
   type ResearchCondition,
   type ResearchMetric,
+  type ResearchPeriod,
   vehicleLabel,
 } from "@/domain/research/filters";
 import {
@@ -36,6 +37,11 @@ export const METRIC_LABELS = {
   ratio: "% da FIPE",
   price: "Lance final em R$",
 } as const satisfies Record<ResearchMetric, string>;
+
+/** "Últimos 30 dias". */
+export function periodLabel(period: ResearchPeriod): string {
+  return `Últimos ${period} dias`;
+}
 
 /** "1 venda", "1.506 vendas". */
 export function salesLabel(count: number): string {

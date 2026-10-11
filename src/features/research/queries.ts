@@ -19,10 +19,12 @@ import {
   targetFilters,
 } from "@/domain/research/evaluate";
 import {
+  availablePeriods,
   comparisonGroups,
   DAMAGE_OF_CONDITION,
   effectiveMetric,
   groupLabel,
+  periodStart,
   RESEARCH_CONDITIONS,
   type ResearchCategory,
   type ResearchCondition,
@@ -52,6 +54,7 @@ import {
   ratioAxisMax,
   summarize,
   unclassifiedLooksMixed,
+  weeklyTrend,
   weeksBetween,
 } from "@/domain/research/summary";
 import { Prisma } from "@/generated/prisma/client";
@@ -81,6 +84,7 @@ import type {
   SaleBids,
   StateDetail,
   StateMapView,
+  WeeklyTrend,
   WhereView,
 } from "./types";
 
@@ -129,6 +133,7 @@ function salesWhere(
   if (state && filters.state !== null) parts.push(sql`l.state = ${filters.state}`);
   if (source && filters.source !== null) parts.push(sql`l.source_id = ${filters.source}`);
   if (mileage && filters.maxKm !== null) parts.push(sql`l.mileage_km <= ${filters.maxKm}`);
+  if (filters.period !== null) parts.push(sql`l.ends_at >= ${periodStart(filters.period, new Date())}`);
   if (filters.vehicle !== null) {
     parts.push(sql`${VEHICLE_KEY} = ${`${filters.vehicle.brand}|${filters.vehicle.model}`}`);
     if (filters.yearFrom !== null) parts.push(sql`l.model_year >= ${filters.yearFrom}`);
@@ -190,7 +195,8 @@ const MODEL_SUGGESTIONS_LIMIT = 2000;
 export async function getResearchFacets(filters: ResearchFilters): Promise<ResearchFacets> {
   await requireUser();
   const level = sql`coalesce(l.damage_level::text, 'unclassified')`;
-  const [byLevel, byCategory, byState, bySource, [mileage], byYear, models] = await Promise.all([
+  const [{ since }, byLevel, byCategory, byState, bySource, [mileage], byYear, models] = await Promise.all([
+    getResearchOverview(),
     rows(
       z.object({ level: levelSchema, n: z.number().int() }),
       sql`SELECT ${level} AS level, count(*)::int AS n FROM listings l
@@ -261,6 +267,7 @@ export async function getResearchFacets(filters: ResearchFilters): Promise<Resea
       const [brand = "", model = ""] = key.split("|");
       return brand && model ? [{ brand, model, label: vehicleLabel({ brand, model }), sales: n }] : [];
     }),
+    periods: availablePeriods(since, new Date()),
   };
 }
 
@@ -375,6 +382,27 @@ export async function getStateMap(filters: ResearchFilters): Promise<StateMapVie
   for (const row of byState) if (isStateCode(row.state)) stats[row.state] = toStats(row);
   return { metric, states: buildStateSummaries(stats) };
 }
+
+/**
+ * Tendência (D-75): o resumo do % da FIPE por semana (segunda a domingo, UTC) com todos os filtros; só aparece com
+ * semanas de base o bastante (`weeklyTrend`).
+ */
+export const getWeeklyTrend = cache(async (filters: ResearchFilters): Promise<WeeklyTrend> => {
+  await requireUser();
+  const byWeek = await rows(
+    z.object({ week: z.date(), ...statsShape }),
+    sql`SELECT date_trunc('week', l.ends_at AT TIME ZONE 'UTC') AS week, ${statsColumns(RATIO)}
+      FROM listings l WHERE ${salesWhere(filters, { ratio: true })} GROUP BY 1 ORDER BY 1`,
+  );
+  const weeks = weeklyTrend(byWeek.map((row) => ({ start: row.week, stats: toStats(row) })));
+  return {
+    weeks:
+      weeks?.flatMap(({ start, stats }) => {
+        const summary = summarize(stats);
+        return summary.kind === "summary" ? [{ start, summary }] : [];
+      }) ?? null,
+  };
+});
 
 /** Distância em linha reta (haversine, km) da região padrão até a cidade do pátio; sem cidade, `NULL`. */
 const DISTANCE_KM = (() => {

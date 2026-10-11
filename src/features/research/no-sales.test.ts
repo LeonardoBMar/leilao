@@ -19,6 +19,7 @@ const facets: ResearchFacets = {
     { year: 2018, sales: 6 },
   ],
   models: [],
+  periods: [],
 };
 
 const filters = (changes: Partial<ResearchFilters>): ResearchFilters => ({ ...DEFAULT_RESEARCH_FILTERS, ...changes });

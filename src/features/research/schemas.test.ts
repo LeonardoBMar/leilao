@@ -23,6 +23,7 @@ describe("parseResearchParams", () => {
         fonte: "superbid",
         kmate: "100000",
         medida: "price",
+        periodo: "90",
       }),
     ).toEqual({
       category: "motos",
@@ -35,13 +36,22 @@ describe("parseResearchParams", () => {
       maxKm: 100_000,
       compare: null,
       metric: "price",
+      period: 90,
       sale: null,
     } satisfies ResearchFilters);
   });
 
   it("valor inválido vira o padrão, sem erro", () => {
     expect(
-      parseResearchParams({ categoria: "pesados", condicao: "x", uf: "ZZ", medida: "y", marca: "   ", modelo: "Onix" }),
+      parseResearchParams({
+        categoria: "pesados",
+        condicao: "x",
+        uf: "ZZ",
+        medida: "y",
+        marca: "   ",
+        modelo: "Onix",
+        periodo: "7",
+      }),
     ).toEqual(DEFAULT_RESEARCH_FILTERS);
   });
 
@@ -111,6 +121,7 @@ describe("researchParams", () => {
       maxKm: 50_000,
       compare: { vehicle: { brand: "FIAT", model: "TORO" }, state: "BA" },
       metric: "price",
+      period: 30,
       sale: "0199c0de-0000-7000-8000-000000000001",
     };
     expect(parseResearchParams(researchParams(filters))).toEqual(filters);

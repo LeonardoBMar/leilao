@@ -33,12 +33,13 @@ import {
   RESEARCH_MILEAGE_OPTIONS,
   type ResearchCondition,
   type ResearchFilters,
+  type ResearchPeriod,
   vehicleLabel,
 } from "@/domain/research/filters";
 import { isStateCode, STATE_CODES, STATE_NAMES, type StateCode } from "@/domain/research/states";
 import { cn } from "@/lib/utils";
 
-import { CATEGORY_LABELS, CONDITION_LABELS, mileageLabel, salesLabel, yearRangeLabel } from "../labels";
+import { CATEGORY_LABELS, CONDITION_LABELS, mileageLabel, periodLabel, salesLabel, yearRangeLabel } from "../labels";
 import { parseResearchParams } from "../schemas";
 import { researchHref } from "../search";
 import type { ResearchFacets } from "../types";
@@ -56,6 +57,9 @@ const ALL_SOURCES = "todas";
 
 /** Valor do item "Qualquer km". */
 const ANY_KM = "qualquer";
+
+/** Valor do item "Todo o período". */
+const ALL_PERIOD = "tudo";
 
 /** Valor do item "sem outro estado" da comparação. */
 const NO_COMPARE_STATE = "nenhum";
@@ -92,6 +96,9 @@ function activeFilters(filters: ResearchFilters, sourceNames: Readonly<Record<st
       ? null
       : { id: "km", label: `Até ${mileageLabel(filters.maxKm)}`, without: { ...filters, maxKm: null } },
     years === null ? null : { id: "ano", label: years, without: { ...filters, yearFrom: null, yearTo: null } },
+    filters.period === null
+      ? null
+      : { id: "periodo", label: periodLabel(filters.period), without: { ...filters, period: null } },
   ].filter((chip) => chip !== null);
 }
 
@@ -105,12 +112,13 @@ function withoutDrawerFilters(filters: ResearchFilters): ResearchFilters {
     maxKm: null,
     yearFrom: null,
     yearTo: null,
+    period: null,
   };
 }
 
 /**
  * Barra de filtros do Panorama (DESIGN.md §15.8, docs/PLANO-MERCADO.md §6): na linha fixa, o modelo, a categoria,
- * "Mais filtros" (gaveta com condição, estado, fonte, km e ano), a comparação e o total; embaixo, os filtros ativos em
+ * "Mais filtros" (gaveta com condição, estado, fonte, km, ano e, quando a base cobre, período), a comparação e o total; embaixo, os filtros ativos em
  * chips. Cada escolha aplica na hora e vai para a URL; enquanto a tela recarrega, os controles já mostram a escolha.
  */
 export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
@@ -239,6 +247,13 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
                     />
                   </div>
                 )}
+                {facets.periods.length > 0 || filters.period !== null ? (
+                  <PeriodSelect
+                    value={filters.period}
+                    periods={facets.periods}
+                    onChange={(period) => apply({ ...filters, period })}
+                  />
+                ) : null}
               </DrawerBody>
               <DrawerFooter>
                 <Button
@@ -552,6 +567,40 @@ function MileageSelect({
               {mileage.known.toLocaleString("pt-BR")} de {salesLabel(mileage.total)} têm km informado
             </SelectLabel>
           </SelectGroup>
+        </SelectContent>
+      </Select>
+    </DrawerField>
+  );
+}
+
+/** Período das vendas (D-75): só os que a base já cobre, mais o escolhido. */
+function PeriodSelect({
+  value,
+  periods,
+  onChange,
+}: {
+  value: ResearchPeriod | null;
+  periods: readonly ResearchPeriod[];
+  onChange: (period: ResearchPeriod | null) => void;
+}) {
+  const labelId = useId();
+  const options = value === null || periods.includes(value) ? periods : [...periods, value];
+  return (
+    <DrawerField labelId={labelId} label="Período">
+      <Select
+        value={value === null ? ALL_PERIOD : String(value)}
+        onValueChange={(next) => onChange(options.find((option) => String(option) === next) ?? null)}
+      >
+        <SelectTrigger aria-labelledby={labelId}>
+          <SelectValue>{value === null ? "Todo o período" : periodLabel(value)}</SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL_PERIOD}>Todo o período</SelectItem>
+          {options.map((option) => (
+            <SelectItem key={option} value={String(option)}>
+              {periodLabel(option)}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </DrawerField>

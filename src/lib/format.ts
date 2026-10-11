@@ -56,6 +56,13 @@ export function formatCalendarDate(value: Date): string {
   return calendarDate.format(value);
 }
 
+const calendarDayMonth = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "UTC" });
+
+/** Dia e mês de uma data de calendário, para eixos (ex.: início da semana): "06/10". */
+export function formatCalendarDayMonth(value: Date): string {
+  return calendarDayMonth.format(value);
+}
+
 /** Mês de referência (ex.: FIPE): "outubro de 2026". */
 export function formatMonth(value: Date): string {
   return calendarMonth.format(value);

@@ -46,6 +46,10 @@ export function noSalesSuggestions(filters: ResearchFilters, facets: ResearchFac
     }
   }
 
+  if (filters.period !== null) {
+    suggestions.push({ label: "Ver todo o período", filters: { ...filters, period: null } });
+  }
+
   if (filters.maxKm !== null && facets.mileage.total > 0) {
     suggestions.push({
       label: `Tirar o limite de km (${salesLabel(facets.mileage.total)})`,

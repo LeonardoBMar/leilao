@@ -57,9 +57,31 @@ export type ResearchFilters = {
   /** Compara o grupo dos filtros com outro modelo e/ou outro estado; `null` sem comparação. */
   compare: ResearchComparison | null;
   metric: ResearchMetric;
+  /** Só as vendas dos últimos dias (D-75); `null` em toda a janela das estimativas. */
+  period: ResearchPeriod | null;
   /** Venda cujos lances o bloco do lance mostra (id do anúncio); não filtra os outros blocos. */
   sale: string | null;
 };
+
+/** Períodos oferecidos, em dias (D-75). */
+export const RESEARCH_PERIODS = [30, 90] as const;
+export type ResearchPeriod = (typeof RESEARCH_PERIODS)[number];
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Início de um período contado de `now`. */
+export function periodStart(period: ResearchPeriod, now: Date): Date {
+  return new Date(now.getTime() - period * DAY_MS);
+}
+
+/**
+ * Períodos que a base já cobre (D-75, revisa a regra de D-45): um período só entra quando há vendas mais antigas que
+ * ele; antes disso, "últimos 30 dias" seria a base toda com outro nome.
+ */
+export function availablePeriods(since: Date | null, now: Date): ResearchPeriod[] {
+  if (since === null) return [];
+  return RESEARCH_PERIODS.filter((period) => since < periodStart(period, now));
+}
 
 /** Faixas de "Km até": as mesmas do catálogo, para o link "Ver lotes abertos" levar o filtro junto. */
 export const RESEARCH_MILEAGE_OPTIONS = MILEAGE_OPTIONS_KM;
@@ -126,6 +148,7 @@ export const DEFAULT_RESEARCH_FILTERS: ResearchFilters = {
   maxKm: null,
   compare: null,
   metric: "ratio",
+  period: null,
   sale: null,
 };
 

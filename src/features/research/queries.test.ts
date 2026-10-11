@@ -54,6 +54,12 @@ describe.skipIf(process.env.DB_TESTS !== "1")("consultas da Pesquisa", () => {
     expect(where.distance.map((row) => row.band)).toEqual(["ate100", "ate300", "mais300", null]);
     expect(where.places.length).toBeGreaterThan(0);
 
+    // Base com menos de 8 semanas cheias: sem tendência; com período, só as vendas dele.
+    const trend = await queries.getWeeklyTrend(DEFAULT_RESEARCH_FILTERS);
+    expect(trend.weeks === null || trend.weeks.length >= 8).toBe(true);
+    const lastMonth = await queries.getResearchFacets({ ...DEFAULT_RESEARCH_FILTERS, period: 30 });
+    expect(lastMonth.conditions["sem-monta"]).toBeLessThanOrEqual(facets.conditions["sem-monta"]);
+
     const map = await queries.getStateMap(DEFAULT_RESEARCH_FILTERS);
     expect(map.states).toHaveLength(27);
 

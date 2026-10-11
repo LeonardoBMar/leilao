@@ -10,6 +10,7 @@ import {
   RESEARCH_CONDITIONS,
   RESEARCH_METRICS,
   RESEARCH_MILEAGE_OPTIONS,
+  RESEARCH_PERIODS,
   type ResearchFilters,
   researchVehicle,
 } from "@/domain/research/filters";
@@ -58,6 +59,13 @@ const maxKm = z
   .catch(undefined)
   .transform((value) => RESEARCH_MILEAGE_OPTIONS.find((option) => String(option) === value) ?? null);
 
+/** Período em dias: só um dos oferecidos. */
+const period = z
+  .string()
+  .optional()
+  .catch(undefined)
+  .transform((value) => RESEARCH_PERIODS.find((option) => String(option) === value) ?? null);
+
 /** Id de anúncio (UUID): só o formato; quem consulta confere se é uma venda. */
 const saleId = z
   .string()
@@ -83,6 +91,7 @@ export const researchFiltersSchema = z
     vsmodelo: text,
     vsuf: state,
     medida: z.enum(RESEARCH_METRICS).catch(DEFAULT_RESEARCH_FILTERS.metric),
+    periodo: period,
     venda: saleId,
   })
   .transform((input): ResearchFilters => {
@@ -104,6 +113,7 @@ export const researchFiltersSchema = z
       // A comparação só vale se difere dos filtros (outro modelo ou outro estado).
       compare: normalizeComparison({ vehicle, state: input.uf }, { vehicle: compareVehicle, state: input.vsuf }),
       metric: input.medida,
+      period: input.periodo,
       sale: input.venda,
     };
   });
@@ -131,6 +141,7 @@ export function researchParams(filters: ResearchFilters): Record<string, string>
     vsmodelo: filters.compare?.vehicle?.model,
     vsuf: filters.compare?.state ?? undefined,
     medida: filters.metric === DEFAULT_RESEARCH_FILTERS.metric ? undefined : filters.metric,
+    periodo: filters.period?.toString(),
     venda: filters.sale ?? undefined,
   };
   return Object.fromEntries(

@@ -6,7 +6,7 @@ import type { MarketValueOrigin } from "@/domain/listings/fipe-match";
 import type { VehicleOrigin } from "@/domain/listings/origin";
 import type { Cents } from "@/domain/money";
 import type { Evaluation } from "@/domain/research/evaluate";
-import type { ResearchCategory, ResearchCondition, ResearchMetric } from "@/domain/research/filters";
+import type { ResearchCategory, ResearchCondition, ResearchMetric, ResearchPeriod } from "@/domain/research/filters";
 import type { SaleBidStep } from "@/domain/research/sale-bids";
 import type { StateCode, StateSummary } from "@/domain/research/states";
 import type { BidCurvePoint, DistanceBand, GroupSummary, RankedModel } from "@/domain/research/summary";
@@ -83,6 +83,9 @@ export type WhereView = {
   places: { state: StateCode; source: { id: string; name: string }; summary: GroupSummary }[];
 };
 
+/** Tendência semanal do % da FIPE (D-75); `weeks` é `null` quando não há semanas com base o bastante. */
+export type WeeklyTrend = { weeks: { start: Date; summary: Extract<GroupSummary, { kind: "summary" }> }[] | null };
+
 export type StateMapView = { metric: ResearchMetric; states: StateSummary[] };
 
 export type StateDetail = {
@@ -136,6 +139,8 @@ export type ResearchFacets = {
   /** Anos-modelo do modelo escolhido, do mais novo ao mais velho, com as vendas de cada um; vazio sem modelo. */
   years: { year: number; sales: number }[];
   models: ResearchModelOption[];
+  /** Períodos que a base já cobre (D-75). */
+  periods: ResearchPeriod[];
 };
 
 /** Venda do modelo para o Avaliar: o que o cálculo usa e o que a lista mostra. */
