@@ -8,18 +8,25 @@ import {
   type AnalysisSample,
   buildEstimateIndex,
   byAnalysisPriority,
+  confidenceOf,
   estimateLimit,
   estimatePrice,
   type EstimateSale,
   type EstimateTarget,
+  findComparables,
   isComparable,
   limitFit,
   limitMaxBid,
   percentile,
   type PriceEstimate,
+  similarityOf,
 } from "./estimates";
 
 const sale = (overrides: Partial<EstimateSale> = {}): EstimateSale => ({
+  id: "venda",
+  endsAt: new Date("2026-10-01T15:00:00Z"),
+  fipeCode: null,
+  origin: null,
   brand: "CHEVROLET",
   model: "ONIX 10MT LT1",
   modelYear: 2020,
@@ -32,6 +39,8 @@ const sale = (overrides: Partial<EstimateSale> = {}): EstimateSale => ({
 });
 
 const target = (overrides: Partial<EstimateTarget> = {}): EstimateTarget => ({
+  fipeCode: null,
+  origin: null,
   brand: "Chevrolet",
   model: "Onix Plus",
   modelYear: 2020,
@@ -55,13 +64,18 @@ describe("isComparable", () => {
 describe("estimatePrice", () => {
   it("com 5 comparáveis: mediana e faixa P25–P75 dos lances finais", () => {
     const bids = [2_000_000, 2_500_000, 3_000_000, 3_500_000, 4_000_000];
-    const index = buildEstimateIndex(bids.map((bid) => sale({ finalBid: cents(bid) })));
+    const index = buildEstimateIndex(bids.map((bid, n) => sale({ id: `v${n}`, finalBid: cents(bid) })));
     expect(estimatePrice(target(), index)).toEqual({
       kind: "comparables",
+      level: "model",
+      sameOrigin: false,
+      // Faixa de R$ 10 mil sobre R$ 30 mil (33%), mas só 5 vendas e no nível do modelo.
+      confidence: "medium",
       n: 5,
       median: 3_000_000,
       low: 2_500_000,
       high: 3_500_000,
+      saleIds: ["v0", "v1", "v2", "v3", "v4"],
     });
   });
 
@@ -110,6 +124,115 @@ describe("estimatePrice", () => {
       kind: "insufficient",
       comparables: 3,
       needed: 5,
+    });
+  });
+});
+
+describe("comparáveis em níveis (D-72)", () => {
+  const v2 = { levels: ["version", "family", "model"], preferOrigin: false } as const;
+  const many = (count: number, overrides: Partial<EstimateSale>) =>
+    Array.from({ length: count }, (_, n) =>
+      sale({
+        id: `${overrides.model ?? "x"}-${overrides.fipeCode ?? ""}-${overrides.origin ?? ""}-${n}`,
+        ...overrides,
+      }),
+    );
+
+  it("a mesma versão FIPE vem antes da família e do modelo", () => {
+    const index = buildEstimateIndex([
+      ...many(5, { fipeCode: "004450-1", finalBid: cents(4_000_000) }),
+      ...many(5, { fipeCode: "004451-0", finalBid: cents(1_000_000) }),
+    ]);
+    expect(estimatePrice(target({ fipeCode: "004450-1" }), index, v2)).toMatchObject({
+      kind: "comparables",
+      level: "version",
+      n: 5,
+      median: 4_000_000,
+    });
+  });
+
+  it("sem versão, a família separa o Onix Plus do Onix hatch; o v1 mistura os dois", () => {
+    const index = buildEstimateIndex([
+      ...many(5, { model: "ONIX PLUS LTZ", finalBid: cents(6_000_000) }),
+      ...many(10, { model: "ONIX 10MT LT1", finalBid: cents(2_700_000) }),
+    ]);
+    expect(estimatePrice(target(), index, v2)).toMatchObject({ level: "family", n: 5, median: 6_000_000 });
+    expect(estimatePrice(target(), index)).toMatchObject({ level: "model", n: 15 });
+  });
+
+  it("família com menos de 5 cai para o modelo; sem nenhum nível, diz o maior número achado", () => {
+    const plus = many(3, { model: "ONIX PLUS LTZ" });
+    const index = buildEstimateIndex([...plus, ...many(5, { model: "ONIX LT" })]);
+    expect(findComparables(target(), index, v2)).toMatchObject({
+      found: { level: "model", sameOrigin: false },
+      largest: 8,
+    });
+    expect(findComparables(target(), buildEstimateIndex(plus), v2)).toEqual({ found: null, largest: 3 });
+  });
+
+  it("as vendas excluídas saem da conta", () => {
+    const sales = many(5, { model: "ONIX PLUS" });
+    const exclude = new Set([sales[0]?.id ?? ""]);
+    expect(estimatePrice(target({ marketValue: null }), buildEstimateIndex(sales), { ...v2, exclude })).toEqual({
+      kind: "insufficient",
+      comparables: 4,
+      needed: 5,
+    });
+  });
+
+  it("com 5 vendas da mesma origem, a preferência por origem usa só elas", () => {
+    const index = buildEstimateIndex([
+      ...many(5, { model: "ONIX PLUS", origin: "financiamento", finalBid: cents(4_000_000) }),
+      ...many(3, { model: "ONIX PLUS", origin: "orgao_publico", finalBid: cents(1_000_000) }),
+    ]);
+    const financed = target({ origin: "financiamento" });
+    expect(estimatePrice(financed, index, { ...v2, preferOrigin: true })).toMatchObject({
+      sameOrigin: true,
+      n: 5,
+      median: 4_000_000,
+    });
+    expect(estimatePrice(financed, index, v2)).toMatchObject({ sameOrigin: false, n: 8 });
+    // Só 3 de órgão público: usa todas.
+    expect(estimatePrice(target({ origin: "orgao_publico" }), index, { ...v2, preferOrigin: true })).toMatchObject({
+      sameOrigin: false,
+      n: 8,
+    });
+  });
+});
+
+describe("confidenceOf", () => {
+  const band = { level: "family", n: 10, low: 850, median: 1_000, high: 1_150 } as const;
+
+  it("alta com versão ou família, 10 vendas e faixa estreita", () => {
+    expect(confidenceOf(band)).toBe("high");
+    expect(confidenceOf({ ...band, level: "version" })).toBe("high");
+  });
+
+  it("média no nível do modelo, com poucas vendas ou com faixa aceitável", () => {
+    expect(confidenceOf({ ...band, level: "model" })).toBe("medium");
+    expect(confidenceOf({ ...band, n: 9 })).toBe("medium");
+    expect(confidenceOf({ ...band, low: 750, high: 1_300 })).toBe("medium");
+  });
+
+  it("baixa com faixa larga ou mediana zero", () => {
+    expect(confidenceOf({ ...band, low: 600, high: 1_400 })).toBe("low");
+    expect(confidenceOf({ ...band, low: 0, median: 0, high: 0 })).toBe("low");
+  });
+});
+
+describe("similarityOf", () => {
+  it("mesma versão, ano, origem, km e condição somam mais", () => {
+    const vehicle = target({ fipeCode: "004450-1", origin: "frota", mileageKm: 80_000 });
+    expect(similarityOf(vehicle, sale({ fipeCode: "004450-1", origin: "frota" }))).toEqual({
+      score: 8,
+      reasons: ["same_version", "same_year", "same_origin", "close_mileage", "same_condition"],
+    });
+  });
+
+  it("mesma família a um ano de distância", () => {
+    expect(similarityOf(target({ mileageKm: null }), sale({ model: "ONIX PLUS LTZ", modelYear: 2021 }))).toEqual({
+      score: 3,
+      reasons: ["same_family", "year_apart", "same_condition"],
     });
   });
 });
@@ -294,6 +417,10 @@ describe("estimateLimit com premissas padrão (D-44)", () => {
 describe("limitFit", () => {
   const price: PriceEstimate = {
     kind: "comparables",
+    level: "model",
+    sameOrigin: false,
+    confidence: "medium",
+    saleIds: [],
     n: 8,
     median: cents(3_000_000),
     low: cents(2_500_000),
@@ -314,9 +441,20 @@ describe("limitFit", () => {
 });
 
 describe("byAnalysisPriority", () => {
-  const comparables: PriceEstimate = { kind: "comparables", n: 6, median: cents(1), low: cents(1), high: cents(1) };
+  const comparables: PriceEstimate = {
+    kind: "comparables",
+    level: "model",
+    sameOrigin: false,
+    confidence: "medium",
+    saleIds: [],
+    n: 6,
+    median: cents(1),
+    low: cents(1),
+    high: cents(1),
+  };
   const ratio: PriceEstimate = {
     kind: "market_ratio",
+    confidence: "low",
     n: 40,
     median: cents(1),
     low: cents(1),

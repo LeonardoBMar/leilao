@@ -47,7 +47,17 @@ const listing: ListingListItem = {
   trackable: true,
   trackedLotId: "00000000-0000-7000-8000-000000000002",
   estimate: {
-    price: { kind: "comparables", n: 7, median: cents(3_900_000), low: cents(3_600_000), high: cents(4_100_000) },
+    price: {
+      kind: "comparables",
+      level: "family",
+      sameOrigin: false,
+      confidence: "medium",
+      saleIds: [],
+      n: 7,
+      median: cents(3_900_000),
+      low: cents(3_600_000),
+      high: cents(4_100_000),
+    },
     limit: { kind: "estimated", n: 4, maxBid: cents(4_200_000), marketValueFrom: "listing" },
     fit: "comfortable",
   },

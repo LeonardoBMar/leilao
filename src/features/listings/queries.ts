@@ -49,6 +49,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
 import { storedCriteriaSelect } from "@/server/collector/alerts";
 import { db } from "@/server/db";
+import { estimateSaleSelect, soldSaleWhere, toEstimateSale } from "@/server/market/sold-sales";
 
 import {
   CATALOG_AUCTIONS_PAGE_SIZE,
@@ -95,6 +96,8 @@ export const listingCardSelect = (ownerId: string) =>
     fuel: true,
     recoveryType: true,
     vehicleOrigin: true,
+    fipeCode: true,
+    marketValueFipeCode: true,
     damageLevel: true,
     conditionFlags: true,
     inspectionResult: true,
@@ -139,21 +142,8 @@ export async function loadEstimateContext(now: Date): Promise<EstimateContext> {
   const user = await requireUser();
   const [sales, lots] = await Promise.all([
     db.listing.findMany({
-      where: {
-        status: "sold",
-        finalBidCents: { gt: 0 },
-        endsAt: { gte: new Date(now.getTime() - SALES_WINDOW_MS) },
-      },
-      select: {
-        brand: true,
-        model: true,
-        modelYear: true,
-        mileageKm: true,
-        category: true,
-        damageLevel: true,
-        finalBidCents: true,
-        marketValueCents: true,
-      },
+      where: { ...soldSaleWhere, endsAt: { gte: new Date(now.getTime() - SALES_WINDOW_MS) } },
+      select: estimateSaleSelect,
     }),
     db.lot.findMany({
       where: { ownerId: user.id, analyses: { some: { status: "fixed" } } },
@@ -167,13 +157,7 @@ export async function loadEstimateContext(now: Date): Promise<EstimateContext> {
   ]);
 
   return {
-    index: buildEstimateIndex(
-      sales.map(({ finalBidCents, marketValueCents, ...sale }) => ({
-        ...sale,
-        finalBid: cents(finalBidCents ?? 0),
-        marketValue: toCents(marketValueCents),
-      })),
-    ),
+    index: buildEstimateIndex(sales.flatMap((sale) => toEstimateSale(sale) ?? [])),
     analyses: lots.flatMap(({ analyses, ...lot }) =>
       analyses.map((analysis) => ({ ...lot, inputs: toInputs(analysis) })),
     ),
@@ -200,6 +184,8 @@ function estimateFor(row: ListingCardRow, context: EstimateContext | null): List
     mileageKm: row.mileageKm,
     category: row.category,
     damageLevel: row.damageLevel,
+    fipeCode: row.fipeCode ?? row.marketValueFipeCode,
+    origin: row.vehicleOrigin,
     marketValue: toCents(row.marketValueCents),
   };
   const price = estimatePrice(target, context.index);

@@ -10,6 +10,8 @@ const day = (n: number) => new Date(Date.UTC(2026, 8, 1) + n * DAY + 12 * 60 * 6
 const sale = (id: string, endsAt: Date, finalBid: number, overrides: Partial<BacktestSale> = {}): BacktestSale => ({
   id,
   endsAt,
+  fipeCode: null,
+  origin: null,
   brand: "CHEVROLET",
   model: "ONIX",
   modelYear: 2020,
@@ -71,7 +73,17 @@ describe("runBacktest", () => {
 
 describe("summarizeBacktest", () => {
   it("conta acertos dentro da faixa e o erro mediano só entre as vendas com estimativa", () => {
-    const band = { kind: "comparables", n: 5, median: cents(100), low: cents(90), high: cents(110) } as const;
+    const band = {
+      kind: "comparables",
+      level: "model",
+      sameOrigin: false,
+      confidence: "medium",
+      saleIds: [],
+      n: 5,
+      median: cents(100),
+      low: cents(90),
+      high: cents(110),
+    } as const;
     const outcomes = [
       { sale: sale("dentro", day(0), 100), estimate: band },
       { sale: sale("na borda", day(0), 110), estimate: band },
@@ -96,7 +108,17 @@ describe("summarizeBacktest", () => {
   });
 
   it("agrupa pelo critério dado", () => {
-    const band = { kind: "comparables", n: 5, median: cents(100), low: cents(90), high: cents(110) } as const;
+    const band = {
+      kind: "comparables",
+      level: "model",
+      sameOrigin: false,
+      confidence: "medium",
+      saleIds: [],
+      n: 5,
+      median: cents(100),
+      low: cents(90),
+      high: cents(110),
+    } as const;
     const outcomes = [
       { sale: sale("a", day(0), 100), estimate: band },
       { sale: sale("b", day(0), 100, { category: "Motos" }), estimate: band },

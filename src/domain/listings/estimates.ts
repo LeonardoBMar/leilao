@@ -8,6 +8,8 @@ import {
 import { defaultMaxBid, type DefaultsInput, estimateFromFipe } from "../finance/defaults";
 import { bps, type Cents, cents } from "../money";
 import type { DamageLevel } from "./condition";
+import type { VehicleOrigin } from "./origin";
+import { vehicleFamilyKey } from "./vehicle-family";
 import { vehicleKey } from "./vehicle-key";
 
 /**
@@ -39,18 +41,46 @@ type Vehicle = {
   mileageKm: number | null;
   category: string | null;
   damageLevel: DamageLevel | null;
+  /** Código FIPE da versão (da fonte ou casado, D-47); nulo sem versão conhecida. */
+  fipeCode: string | null;
+  /** Origem inferida (D-73); nula quando não se sabe (lote cadastrado à mão). */
+  origin: VehicleOrigin | null;
 };
 
 /** Venda encerrada do catálogo (situação vendido, com lance final positivo). */
-export type EstimateSale = Vehicle & { finalBid: Cents; marketValue: Cents | null };
+export type EstimateSale = Vehicle & { id: string; endsAt: Date; finalBid: Cents; marketValue: Cents | null };
 
 /** Anúncio a estimar. */
 export type EstimateTarget = Vehicle & { marketValue: Cents | null };
 
+/**
+ * De onde vêm os comparáveis (docs/PLANO-MERCADO.md, D-72), do mais estreito ao mais largo: a mesma versão FIPE, a
+ * mesma família (`vehicleFamilyKey`) e o mesmo modelo base (`vehicleKey`). Em todos, ano ±1, mesma condição e km
+ * próximo (`isComparable`).
+ */
+export const COMPARABLE_LEVELS = ["version", "family", "model"] as const;
+export type ComparableLevel = (typeof COMPARABLE_LEVELS)[number];
+
+/** Quanto a faixa merece confiança: pelo nível, pelo número de vendas e pela largura da faixa (`confidenceOf`). */
+export type EstimateConfidence = "high" | "medium" | "low";
+
 export type PriceEstimate =
-  | { kind: "comparables"; n: number; median: Cents; low: Cents; high: Cents }
+  | {
+      kind: "comparables";
+      level: ComparableLevel;
+      /** Só vendas da mesma origem do alvo (havia 5 ou mais delas no nível). */
+      sameOrigin: boolean;
+      confidence: EstimateConfidence;
+      n: number;
+      median: Cents;
+      low: Cents;
+      high: Cents;
+      /** As vendas usadas, para mostrar de onde veio o número. */
+      saleIds: readonly string[];
+    }
   | {
       kind: "market_ratio";
+      confidence: "low";
       n: number;
       median: Cents;
       low: Cents;
@@ -62,31 +92,57 @@ export type PriceEstimate =
 
 /** Vendas indexadas para estimar vários anúncios de uma vez (uma tela de cartões). */
 export type EstimateIndex = {
-  byVehicle: Map<string, EstimateSale[]>;
+  byLevel: Record<ComparableLevel, Map<string, EstimateSale[]>>;
   /** Proporções ordenadas por categoria e condição (`ratioKey`). */
   ratios: Map<string, number[]>;
 };
 
+export type EstimateOptions = {
+  /** Níveis tentados, em ordem. */
+  levels: readonly ComparableLevel[];
+  /** Com 5 ou mais vendas da mesma origem no nível, usa só elas. */
+  preferOrigin: boolean;
+  /** Vendas que o usuário tirou da conta (tela Avaliar). */
+  exclude?: ReadonlySet<string>;
+};
+
+/** O motor das telas, escolhido pelo backtest (T0.6). */
+export const DEFAULT_ESTIMATE_OPTIONS: EstimateOptions = { levels: ["model"], preferOrigin: false };
+
 const ratioKey = (vehicle: Pick<Vehicle, "category" | "damageLevel">) =>
   `${vehicle.category ?? ""}|${vehicle.damageLevel ?? ""}`;
 
+/** Chave do veículo em cada nível; `null` quando o nível não se aplica (sem versão FIPE, sem marca ou modelo). */
+export function levelKey(level: ComparableLevel, vehicle: Vehicle): string | null {
+  switch (level) {
+    case "version":
+      return vehicle.fipeCode;
+    case "family":
+      return vehicleFamilyKey(vehicle.brand, vehicle.model, vehicle.category);
+    case "model":
+      return vehicleKey(vehicle.brand, vehicle.model);
+  }
+}
+
 export function buildEstimateIndex(sales: readonly EstimateSale[]): EstimateIndex {
-  const byVehicle = new Map<string, EstimateSale[]>();
+  const byLevel: EstimateIndex["byLevel"] = { version: new Map(), family: new Map(), model: new Map() };
   const ratios = new Map<string, number[]>();
   for (const sale of sales) {
     if (sale.finalBid <= 0) continue;
-    const key = vehicleKey(sale.brand, sale.model);
-    if (key !== null) pushTo(byVehicle, key, sale);
+    for (const level of COMPARABLE_LEVELS) {
+      const key = levelKey(level, sale);
+      if (key !== null) pushTo(byLevel[level], key, sale);
+    }
     if (sale.marketValue !== null && sale.marketValue > 0)
       pushTo(ratios, ratioKey(sale), sale.finalBid / sale.marketValue);
   }
   for (const values of ratios.values()) values.sort((a, b) => a - b);
-  return { byVehicle, ratios };
+  return { byLevel, ratios };
 }
 
 /**
- * Entre vendas do mesmo veículo (`vehicleKey`, garantido pelo índice): ano ±1, mesma condição declarada (sem
- * declaração só compara com sem declaração) e quilometragem a até 40 mil km, quando as duas são conhecidas.
+ * Entre vendas do mesmo grupo (garantido pelo índice): ano ±1, mesma condição declarada (sem declaração só compara
+ * com sem declaração) e quilometragem a até 40 mil km, quando as duas são conhecidas.
  */
 export function isComparable(target: Vehicle, sale: Vehicle): boolean {
   if (target.modelYear === null || sale.modelYear === null) return false;
@@ -98,18 +154,57 @@ export function isComparable(target: Vehicle, sale: Vehicle): boolean {
   return true;
 }
 
-export function estimatePrice(target: EstimateTarget, index: EstimateIndex): PriceEstimate {
-  const key = vehicleKey(target.brand, target.model);
-  const comparables = key === null ? [] : (index.byVehicle.get(key) ?? []).filter((sale) => isComparable(target, sale));
+export type ComparableSet = { level: ComparableLevel; sameOrigin: boolean; sales: EstimateSale[] };
 
-  if (comparables.length >= MIN_COMPARABLES) {
-    const bids = comparables.map((sale) => sale.finalBid).sort((a, b) => a - b);
-    return {
-      kind: "comparables",
+/**
+ * Comparáveis do alvo: o primeiro nível com 5 vendas ou mais. `largest` é o maior número achado em algum nível, para
+ * dizer quantas faltam quando nenhum basta.
+ */
+export function findComparables(
+  target: EstimateTarget,
+  index: EstimateIndex,
+  options: EstimateOptions = DEFAULT_ESTIMATE_OPTIONS,
+): { found: ComparableSet | null; largest: number } {
+  let largest = 0;
+  for (const level of options.levels) {
+    const key = levelKey(level, target);
+    if (key === null) continue;
+    const sales = (index.byLevel[level].get(key) ?? []).filter(
+      (sale) => !options.exclude?.has(sale.id) && isComparable(target, sale),
+    );
+    largest = Math.max(largest, sales.length);
+    if (sales.length < MIN_COMPARABLES) continue;
+    const sameOrigin = target.origin === null ? [] : sales.filter((sale) => sale.origin === target.origin);
+    if (options.preferOrigin && sameOrigin.length >= MIN_COMPARABLES) {
+      return { found: { level, sameOrigin: true, sales: sameOrigin }, largest };
+    }
+    return { found: { level, sameOrigin: false, sales }, largest };
+  }
+  return { found: null, largest };
+}
+
+export function estimatePrice(
+  target: EstimateTarget,
+  index: EstimateIndex,
+  options: EstimateOptions = DEFAULT_ESTIMATE_OPTIONS,
+): PriceEstimate {
+  const { found, largest } = findComparables(target, index, options);
+
+  if (found !== null) {
+    const bids = found.sales.map((sale) => sale.finalBid).sort((a, b) => a - b);
+    const band = {
       n: bids.length,
       median: rough(percentile(bids, 0.5)),
       low: rough(percentile(bids, 0.25)),
       high: rough(percentile(bids, 0.75)),
+    };
+    return {
+      kind: "comparables",
+      level: found.level,
+      sameOrigin: found.sameOrigin,
+      confidence: confidenceOf({ level: found.level, ...band }),
+      ...band,
+      saleIds: found.sales.map((sale) => sale.id),
     };
   }
 
@@ -120,6 +215,7 @@ export function estimatePrice(target: EstimateTarget, index: EstimateIndex): Pri
     const apply = (value: number) => rough((target.marketValue ?? 0) * value);
     return {
       kind: "market_ratio",
+      confidence: "low",
       n: ratios.length,
       median: apply(ratio.median),
       low: apply(ratio.low),
@@ -128,7 +224,64 @@ export function estimatePrice(target: EstimateTarget, index: EstimateIndex): Pri
     };
   }
 
-  return { kind: "insufficient", comparables: comparables.length, needed: MIN_COMPARABLES };
+  return { kind: "insufficient", comparables: largest, needed: MIN_COMPARABLES };
+}
+
+/** Faixa com até 35% de largura (P75 − P25 sobre a mediana) é estreita; até 60%, aceitável. Ajustado no backtest. */
+const NARROW_SPREAD = 0.35;
+const WIDE_SPREAD = 0.6;
+const HIGH_CONFIDENCE_SAMPLE = 10;
+
+/**
+ * Confiança da faixa por comparáveis: **alta** com versão ou família, 10 vendas ou mais e faixa estreita; **média**
+ * com faixa aceitável; **baixa** no resto. A proporção da categoria é sempre baixa (não olha para o veículo).
+ */
+export function confidenceOf(band: {
+  level: ComparableLevel;
+  n: number;
+  low: number;
+  median: number;
+  high: number;
+}): EstimateConfidence {
+  const spread = band.median > 0 ? (band.high - band.low) / band.median : Number.POSITIVE_INFINITY;
+  if (band.level !== "model" && band.n >= HIGH_CONFIDENCE_SAMPLE && spread <= NARROW_SPREAD) return "high";
+  if (spread <= WIDE_SPREAD) return "medium";
+  return "low";
+}
+
+/** Por que uma venda é parecida com o alvo, do mais forte ao mais fraco, para a lista de comparáveis. */
+export type SimilarityReason =
+  "same_version" | "same_family" | "same_year" | "year_apart" | "same_origin" | "close_mileage" | "same_condition";
+
+/**
+ * Semelhança de uma venda com o alvo (ordem da lista de comparáveis): versão, família, ano, origem e km. A nota só
+ * ordena; quem decide se a venda entra na conta é `findComparables`.
+ */
+export function similarityOf(target: Vehicle, sale: Vehicle): { score: number; reasons: readonly SimilarityReason[] } {
+  const reasons: SimilarityReason[] = [];
+  let score = 0;
+  if (target.fipeCode !== null && target.fipeCode === sale.fipeCode) {
+    reasons.push("same_version");
+    score += 4;
+  } else if (levelKey("family", target) !== null && levelKey("family", target) === levelKey("family", sale)) {
+    reasons.push("same_family");
+    score += 2;
+  }
+  if (target.modelYear !== null && sale.modelYear !== null) {
+    const apart = Math.abs(target.modelYear - sale.modelYear);
+    reasons.push(apart === 0 ? "same_year" : "year_apart");
+    score += Math.max(0, 2 - apart);
+  }
+  if (target.origin !== null && target.origin === sale.origin) {
+    reasons.push("same_origin");
+    score += 1;
+  }
+  if (target.mileageKm !== null && sale.mileageKm !== null && Math.abs(target.mileageKm - sale.mileageKm) <= 20_000) {
+    reasons.push("close_mileage");
+    score += 1;
+  }
+  if (target.damageLevel === sale.damageLevel) reasons.push("same_condition");
+  return { score, reasons };
 }
 
 /** Análise fixada do usuário: o veículo do lote e as entradas que ele usou. */

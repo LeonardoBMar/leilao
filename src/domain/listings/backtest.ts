@@ -9,7 +9,7 @@ import type { EstimateSale, EstimateTarget, PriceEstimate } from "./estimates";
  * 50%) e o erro mediano da mediana estimada.
  */
 
-export type BacktestSale = EstimateSale & EstimateTarget & { id: string; endsAt: Date };
+export type BacktestSale = EstimateSale & EstimateTarget;
 
 /** Estimador montado a partir das vendas anteriores (ex.: `buildEstimateIndex` + `estimatePrice`). */
 export type MakeEstimator<S extends BacktestSale> = (prior: readonly S[]) => (target: S) => PriceEstimate;
