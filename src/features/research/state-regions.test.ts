@@ -39,12 +39,12 @@ describe("stateMapRegions", () => {
   });
 
   it("poucas vendas: só a contagem, sem cor; nenhuma venda: sem link", () => {
-    expect(region("MT")).toMatchObject({ value: "2", tone: { kind: "few" }, href: "/mercado?uf=MT" });
+    expect(region("MT")).toMatchObject({ value: "(2)", tone: { kind: "few" }, href: "/mercado?uf=MT" });
     expect(region("AC")).toMatchObject({ tone: { kind: "empty" }, href: undefined, ariaLabel: "Acre: nenhuma venda" });
   });
 
   it("a legenda mostra só os passos usados e os casos sem cor", () => {
-    expect(legend.map((item) => item.label)).toEqual(["43%–46%", "53%–56%", "1 a 4 vendas", "nenhuma venda"]);
+    expect(legend.map((item) => item.label)).toEqual(["43%–46%", "53%–56%", "(n) 1 a 4 vendas", "nenhuma venda"]);
   });
 
   it("em lance final, o mapa escreve os milhares de reais e a dica leva o valor completo", () => {

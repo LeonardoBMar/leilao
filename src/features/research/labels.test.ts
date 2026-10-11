@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { excludedLabel, mileageLabel } from "./labels";
+import { excludedLabel, mileageLabel, riseLabel } from "./labels";
+
+describe("riseLabel", () => {
+  it("sobe com mais, cai com menos", () => {
+    expect(riseLabel(0.93)).toBe("+8%");
+    expect(riseLabel(1)).toBe("+0%");
+    expect(riseLabel(1.03)).toBe("−3%");
+  });
+});
 
 describe("excludedLabel", () => {
   it("diz cada motivo com a contagem", () => {

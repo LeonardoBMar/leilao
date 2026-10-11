@@ -53,7 +53,7 @@ export async function StateBlock({ filters, noSales }: { filters: ResearchFilter
           <LinkTabs
             label="Medida do mapa"
             tabs={(["ratio", "price"] as const).map((metric) => ({
-              href: researchHref({ ...filters, metric }),
+              href: researchHref({ ...filters, metric, sale: null }),
               label: metric === "ratio" ? "% do mercado" : "Lance em R$",
               active: effectiveMetric(filters) === metric,
             }))}

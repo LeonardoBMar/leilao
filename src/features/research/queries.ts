@@ -171,8 +171,11 @@ export const getResearchOverview = cache(async (): Promise<ResearchOverview> => 
   return row ?? { sales: 0, fipeMatched: 0, since: null };
 });
 
-/** Até quantos modelos a busca sugere. */
-const MODEL_SUGGESTIONS_LIMIT = 300;
+/**
+ * Até quantos modelos a busca conhece (os de mais vendas primeiro). Alto o bastante para a cauda longa do catálogo
+ * entrar; cada modelo pesa poucos bytes na barra.
+ */
+const MODEL_SUGGESTIONS_LIMIT = 2000;
 
 /**
  * Contagens da barra de filtros: vendas por condição e por categoria (cada uma com os outros filtros) e os modelos com

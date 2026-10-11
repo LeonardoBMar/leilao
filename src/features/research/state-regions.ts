@@ -42,7 +42,8 @@ export function stateMapRegions(
   const regions = view.states.map(({ state, summary }): MapRegion => {
     const name = STATE_NAMES[state];
     const selected = filters.state === state;
-    const href = researchHref({ ...filters, state: selected ? null : state });
+    // Outro estado é outro recorte: a venda aberta fecha.
+    const href = researchHref({ ...filters, state: selected ? null : state, sale: null });
     if (summary.kind === "summary") {
       const small = isSmallSample(summary.n);
       return {
@@ -68,7 +69,8 @@ export function stateMapRegions(
       return {
         state,
         selected,
-        value: String(summary.n),
+        // Entre parênteses, para a contagem não passar por mediana (a legenda explica).
+        value: `(${summary.n})`,
         tone: { kind: "few" },
         href,
         ariaLabel: `${name}: ${salesLabel(summary.n)}, poucas para uma mediana`,
@@ -106,7 +108,7 @@ export function stateMapRegions(
           },
         ]
       : []),
-    { key: "few", swatch: "few", label: `1 a ${MIN_SAMPLE - 1} vendas` },
+    { key: "few", swatch: "few", label: `(n) 1 a ${MIN_SAMPLE - 1} vendas` },
     { key: "empty", swatch: "empty", label: "nenhuma venda" },
   ];
   const legendTitle =
@@ -143,7 +145,7 @@ export function stateRangeRows(
         valueLabel: mapValue(view.metric, summary.median),
         detail: smallSampleLabel(summary.n),
         faint: isSmallSample(summary.n),
-        href: researchHref({ ...filters, state: selected ? null : state }),
+        href: researchHref({ ...filters, state: selected ? null : state, sale: null }),
         ariaLabel: `${name}: mediana ${formatMetric(view.metric, summary.median)} ${measure}, ${smallSampleLabel(summary.n)}`,
       };
     });

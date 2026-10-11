@@ -1,13 +1,16 @@
-import { DataList, Skeleton, Stat } from "@/components/ui";
+import type { ReactNode } from "react";
+
+import { Skeleton } from "@/components/ui";
 import { cents } from "@/domain/money";
 import { type ResearchFilters, vehicleLabel } from "@/domain/research/filters";
 import { isSmallSample } from "@/domain/research/summary";
-import { formatBRL, formatCompactBRL, formatRatio } from "@/lib/format";
+import { formatCompactBRL, formatRatio } from "@/lib/format";
 
 import {
   belowMarketLabel,
   CONDITION_LABELS,
   excludedLabel,
+  riseLabel,
   salesLabel,
   summaryDetail,
   yearRangeLabel,
@@ -17,10 +20,12 @@ import { getBidCurve, getConditionDistribution, getExcludedSales, getPriceSummar
 /** Marca da curva de lance usada na leitura "ainda sobe": a véspera do fim. */
 const RISE_MARK_HOURS = 24;
 
+const compact = (value: number) => formatCompactBRL(cents(Math.round(value)));
+
 /**
- * Resumo no topo (D-45): a resposta da condição do filtro antes dos gráficos — mediana e faixa do meio do % do valor
- * de mercado, a amostra e, com modelo escolhido, o lance final em R$ e quanto o lance ainda sobe na véspera. Sem
- * mediana (menos de 5 vendas), diz quantas faltam em vez de mostrar um número.
+ * Resumo no topo (D-45): a resposta da condição do filtro antes dos gráficos, em cartões — mediana do % do valor de
+ * mercado, a amostra e, com modelo escolhido, o lance final mediano e quanto o lance sobe na véspera. Sem mediana
+ * (menos de 5 vendas), diz quantas faltam; sem nenhuma venda com valor de mercado, fica só o lance em R$.
  */
 export async function ResearchSummary({ filters }: { filters: ResearchFilters }) {
   const [{ rows }, bidCurve, excluded, price] = await Promise.all([
@@ -29,8 +34,10 @@ export async function ResearchSummary({ filters }: { filters: ResearchFilters })
     getExcludedSales(filters),
     filters.vehicle === null ? Promise.resolve(null) : getPriceSummary(filters),
   ]);
-  const selected = rows.find((row) => row.condition === filters.condition)?.summary;
-  if (selected === undefined || selected.kind === "none") return null;
+  const found = rows.find((row) => row.condition === filters.condition)?.summary;
+  const ratio = found === undefined || found.kind === "none" ? null : found;
+  const priceSummary = price?.kind === "summary" ? price : null;
+  if (ratio === null && priceSummary === null) return null;
 
   const outside = excludedLabel(excluded);
   const rise = bidCurve.points.find((point) => point.hours === RISE_MARK_HOURS)?.summary;
@@ -43,60 +50,65 @@ export async function ResearchSummary({ filters }: { filters: ResearchFilters })
     .join(" · ");
 
   return (
-    <section aria-label="Resumo" className="grid gap-3">
+    <section aria-label="Resumo" className="grid gap-2">
       <p className="text-label text-muted">{scope}</p>
-      <DataList className="gap-x-8 gap-y-5 border-b-0 sm:grid-cols-2 lg:grid-cols-4">
-        {selected.kind === "summary" ? (
-          <Stat
+      <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {ratio === null ? null : ratio.kind === "summary" ? (
+          <Tile
             label="Mediana do % do mercado"
-            size="heading-2"
-            note={`${belowMarketLabel(selected.median)} · metade do meio de ${formatRatio(selected.low)} a ${formatRatio(selected.high)}`}
+            note={`${belowMarketLabel(ratio.median)}. Metade entre ${formatRatio(ratio.low)} e ${formatRatio(ratio.high)}.`}
           >
-            {formatRatio(selected.median)}
-          </Stat>
+            {formatRatio(ratio.median)}
+          </Tile>
         ) : (
-          <Stat label="Mediana do % do mercado" size="heading-3" note="Poucas vendas para uma mediana.">
-            {summaryDetail(selected)}
-          </Stat>
+          <Tile label="Mediana do % do mercado" note="Poucas vendas para uma mediana.">
+            <span className="text-heading-3">{summaryDetail(ratio)}</span>
+          </Tile>
         )}
-        <Stat
-          label="Vendas no %"
-          size="heading-2"
-          note={[isSmallSample(selected.n) ? "Amostra pequena." : null, outside === null ? null : `Fora: ${outside}.`]
-            .filter((part) => part !== null)
-            .join(" ")}
-        >
-          {selected.n.toLocaleString("pt-BR")}
-        </Stat>
-        {price?.kind === "summary" ? (
-          <Stat
+        {ratio === null ? null : (
+          <Tile
+            label="Vendas no %"
+            note={[isSmallSample(ratio.n) ? "Amostra pequena." : null, outside === null ? null : `Fora: ${outside}.`]
+              .filter((part) => part !== null)
+              .join(" ")}
+          >
+            {ratio.n.toLocaleString("pt-BR")}
+          </Tile>
+        )}
+        {priceSummary === null ? null : (
+          <Tile
             label="Lance final mediano"
-            size="heading-2"
-            note={`Metade do meio de ${formatCompactBRL(cents(Math.round(price.low)))} a ${formatCompactBRL(cents(Math.round(price.high)))}`}
+            note={`Metade entre ${compact(priceSummary.low)} e ${compact(priceSummary.high)}.`}
           >
-            {formatBRL(cents(Math.round(price.median)))}
-          </Stat>
-        ) : null}
-        {rise === undefined ? null : (
-          <Stat
-            label={`Sobe nas últimas ${RISE_MARK_HOURS} h`}
-            size="heading-2"
-            note={`Mediana de ${salesLabel(rise.n)} com lances vistos.`}
-          >
-            {`+${formatRatio(1 / rise.median - 1)}`}
-          </Stat>
+            {compact(priceSummary.median)}
+          </Tile>
         )}
-      </DataList>
+        {rise === undefined ? null : (
+          <Tile label={`Sobe nas últimas ${RISE_MARK_HOURS} h`} note={`Mediana de ${salesLabel(rise.n)}.`}>
+            {riseLabel(rise.median)}
+          </Tile>
+        )}
+      </dl>
     </section>
+  );
+}
+
+function Tile({ label, note, children }: { label: string; note: string; children: ReactNode }) {
+  return (
+    <div className="grid content-start gap-1 rounded-lg border border-border bg-surface p-4">
+      <dt className="text-caption text-muted">{label}</dt>
+      <dd className="text-heading-2 text-foreground tabular-nums">{children}</dd>
+      {note ? <dd className="text-caption text-muted">{note}</dd> : null}
+    </div>
   );
 }
 
 export function ResearchSummarySkeleton() {
   return (
-    <div className="grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
-      <Skeleton className="h-20" />
-      <Skeleton className="h-20" />
-      <Skeleton className="hidden h-20 lg:block" />
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <Skeleton className="h-28 rounded-lg" />
+      <Skeleton className="h-28 rounded-lg" />
+      <Skeleton className="hidden h-28 rounded-lg lg:block" />
     </div>
   );
 }

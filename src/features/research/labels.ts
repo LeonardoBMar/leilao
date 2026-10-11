@@ -84,6 +84,15 @@ export function formatMetric(metric: ResearchMetric, value: number): string {
   return metric === "ratio" ? formatRatio(value) : formatCompactBRL(cents(Math.round(value)));
 }
 
+/**
+ * Quanto o lance ainda sobe até o fim, dada a proporção lance visto ÷ lance final: 0,93 → "+8%". Com dado ruim do
+ * coletor (lance visto acima do final) o sinal vira menos, em vez de "+-3%".
+ */
+export function riseLabel(ratioToFinal: number): string {
+  const rise = 1 / ratioToFinal - 1;
+  return `${rise < 0 ? "−" : "+"}${formatRatio(Math.abs(rise))}`;
+}
+
 /** A mediana dita como desconto: "51% abaixo do valor de mercado" (ou acima, se passar de 100%). */
 export function belowMarketLabel(median: number): string {
   if (median >= 1) return `${formatRatio(median - 1)} acima do valor de mercado`;

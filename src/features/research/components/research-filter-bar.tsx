@@ -241,6 +241,7 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
               label="Comparar com outro modelo"
               placeholder="Outro modelo"
               shortcut={false}
+              clearLabel="Tirar o modelo da comparação"
               value={filters.compare?.vehicle ? vehicleLabel(filters.compare.vehicle) : null}
               options={facets.models.filter(
                 (option) => option.brand !== filters.vehicle?.brand || option.model !== filters.vehicle.model,

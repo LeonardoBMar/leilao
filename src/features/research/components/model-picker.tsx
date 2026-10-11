@@ -26,6 +26,8 @@ type ModelPickerProps = {
   placeholder?: string;
   /** A tecla `/` foca este campo (só um por página). */
   shortcut?: boolean;
+  /** Rótulo do "×" que tira o modelo escolhido. */
+  clearLabel?: string;
 };
 
 /** Mais sugestões que isso só atrapalham a lista; cabem os recentes e os mais vendidos. */
@@ -51,6 +53,7 @@ export function ModelPicker({
   label = "Modelo",
   placeholder = "Todos os modelos",
   shortcut = true,
+  clearLabel = "Ver todos os modelos",
 }: ModelPickerProps) {
   const inputId = useId();
   const listId = useId();
@@ -170,7 +173,7 @@ export function ModelPicker({
         {value ? (
           <button
             type="button"
-            aria-label="Ver todos os modelos"
+            aria-label={clearLabel}
             onClick={() => {
               setText("");
               onChange(null);

@@ -24,7 +24,7 @@ export async function RankingBlock({ filters }: { filters: ResearchFilters }) {
     low: summary.low,
     median: summary.median,
     high: summary.high,
-    href: researchHref({ ...filters, vehicle: { brand, model } }),
+    href: researchHref({ ...filters, vehicle: { brand, model }, yearFrom: null, yearTo: null, sale: null }),
   }));
   const axisMax = ratioAxisMax(Math.max(0, ...rows.map((row) => row.high)));
 
