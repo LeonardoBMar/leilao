@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { EstimateSale } from "../listings/estimates";
 import { cents } from "../money";
 import {
+  bandPosition,
   DEFAULT_EVALUATE_FILTERS,
   evaluate,
   type EvaluateFilters,
@@ -164,5 +165,15 @@ describe("targetFilters", () => {
       lot: "lote",
       excluded: ["x"],
     });
+  });
+});
+
+describe("bandPosition", () => {
+  it("abaixo, dentro (com as bordas) e acima", () => {
+    const band = { low: 100, high: 200 };
+    expect(bandPosition(99, band)).toBe("below");
+    expect(bandPosition(100, band)).toBe("inside");
+    expect(bandPosition(200, band)).toBe("inside");
+    expect(bandPosition(201, band)).toBe("above");
   });
 });

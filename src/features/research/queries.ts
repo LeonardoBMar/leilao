@@ -9,7 +9,7 @@ import { type EstimateTarget, SALES_WINDOW_MS } from "@/domain/listings/estimate
 import { MARKET_VALUE_ORIGINS } from "@/domain/listings/fipe-match";
 import { VEHICLE_ORIGINS } from "@/domain/listings/origin";
 import { cents } from "@/domain/money";
-import { evaluate, type EvaluateFilters } from "@/domain/research/evaluate";
+import { evaluate, type EvaluateFilters, inCut } from "@/domain/research/evaluate";
 import {
   comparisonGroups,
   DAMAGE_OF_CONDITION,
@@ -50,6 +50,7 @@ import type {
   BidCurveView,
   ComparisonView,
   ConditionDistribution,
+  EvaluateOpenListing,
   EvaluateSaleView,
   EvaluationView,
   LotTarget,
@@ -713,4 +714,85 @@ export const getLotTarget = cache(async (lotId: string): Promise<LotTarget | nul
           : cents(listing.marketValueCents),
     },
   };
+});
+
+/** Teto de lotes abertos de um modelo no Avaliar. */
+const OPEN_LISTINGS_LIMIT = 200;
+
+const openListingRow = z.object({
+  id: z.string(),
+  url: z.string(),
+  title: z.string(),
+  ends_at: z.date().nullable(),
+  state: z.string().nullable(),
+  city: z.string().nullable(),
+  brand: z.string().nullable(),
+  model: z.string().nullable(),
+  model_year: z.number().int().nullable(),
+  mileage_km: z.number().int().nullable(),
+  category: z.string().nullable(),
+  damage_level: z.enum(DAMAGE_LEVELS).nullable(),
+  fipe_code: z.string().nullable(),
+  vehicle_origin: z.enum(VEHICLE_ORIGINS),
+  current_bid_cents: z.number().int().nullable(),
+  source: z.string(),
+  photo_url: z.string().nullable(),
+});
+
+/**
+ * Lotes abertos do recorte do Avaliar (mesmo modelo base no banco, o resto do recorte no domínio com `inCut`), do que
+ * encerra primeiro ao último, com o lote do usuário quando o anúncio já foi analisado.
+ */
+export const getOpenListingsFor = cache(async (filters: EvaluateFilters): Promise<EvaluateOpenListing[]> => {
+  const user = await requireUser();
+  if (filters.vehicle === null) return [];
+  const found = await rows(
+    openListingRow,
+    sql`SELECT l.id::text AS id, l.url, l.title, l.ends_at, l.state::text AS state, l.city, l.brand, l.model,
+        l.model_year::int AS model_year, l.mileage_km, l.category, l.damage_level::text AS damage_level,
+        coalesce(l.fipe_code, l.market_value_fipe_code) AS fipe_code, l.vehicle_origin::text AS vehicle_origin,
+        l.current_bid_cents, s.name AS source, l.photo_urls[1] AS photo_url
+      FROM listings l JOIN sources s ON s.id = l.source_id
+      WHERE l.status = 'open' AND (l.ends_at IS NULL OR l.ends_at > now())
+        AND ${VEHICLE_KEY} = ${`${filters.vehicle.brand}|${filters.vehicle.model}`}
+      ORDER BY l.ends_at ASC NULLS LAST, l.id LIMIT ${OPEN_LISTINGS_LIMIT}`,
+  );
+  const inRecort = found.filter((row) =>
+    inCut(
+      {
+        brand: row.brand,
+        model: row.model,
+        modelYear: row.model_year,
+        mileageKm: row.mileage_km,
+        category: row.category,
+        damageLevel: row.damage_level,
+        fipeCode: row.fipe_code,
+        origin: row.vehicle_origin,
+      },
+      filters,
+    ),
+  );
+  const lots =
+    inRecort.length === 0
+      ? []
+      : await db.lot.findMany({
+          where: { ownerId: user.id, listingId: { in: inRecort.map((row) => row.id) } },
+          select: { id: true, listingId: true },
+        });
+  const lotOf = new Map(lots.map((lot) => [lot.listingId, lot.id]));
+  return inRecort.map((row) => ({
+    id: row.id,
+    url: row.url,
+    title: row.title,
+    modelYear: row.model_year,
+    mileageKm: row.mileage_km,
+    endsAt: row.ends_at,
+    currentBid: row.current_bid_cents === null ? null : cents(row.current_bid_cents),
+    state: row.state !== null && isStateCode(row.state) ? row.state : null,
+    city: row.city,
+    source: row.source,
+    photoUrl: row.photo_url,
+    trackedLotId: lotOf.get(row.id) ?? null,
+    trackable: row.brand !== null && row.model !== null && row.model_year !== null,
+  }));
 });

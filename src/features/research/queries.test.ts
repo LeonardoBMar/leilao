@@ -110,6 +110,11 @@ describe.skipIf(process.env.DB_TESTS !== "1")("consultas da Pesquisa", () => {
     const [topVersion] = evaluation?.versions ?? [];
     if (topVersion) expect(evaluation?.versionLabels[topVersion.value]).toBeTruthy();
     expect(await queries.getEvaluation(DEFAULT_EVALUATE_FILTERS, null)).toBeNull();
+    const open = await queries.getOpenListingsFor({
+      ...DEFAULT_EVALUATE_FILTERS,
+      vehicle: { brand: "CHEVROLET", model: "ONIX" },
+    });
+    expect(open.every((listing) => listing.endsAt === null || listing.endsAt > new Date())).toBe(true);
     expect(await queries.getLotTarget("00000000-0000-7000-8000-000000000000")).toBeNull();
 
     await db.$disconnect();

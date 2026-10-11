@@ -74,8 +74,14 @@ export function familyLabel(key: string): string {
 /** Dimensões do recorte que podem ser contadas sem elas (seletores) ou afrouxadas. */
 type CutDimension = "family" | "version" | "years" | "km" | "condition" | "origin";
 
-/** A venda (já do modelo base, pela consulta) está no recorte? `skip` ignora uma dimensão. */
-export function inCut(sale: EstimateSale, filters: EvaluateFilters, skip?: CutDimension): boolean {
+/** O que o recorte olha de uma venda ou de um lote aberto. */
+export type CutVehicle = Pick<
+  EstimateSale,
+  "brand" | "model" | "category" | "fipeCode" | "modelYear" | "mileageKm" | "damageLevel" | "origin"
+>;
+
+/** O veículo (já do modelo base, pela consulta) está no recorte? `skip` ignora uma dimensão. */
+export function inCut(sale: CutVehicle, filters: EvaluateFilters, skip?: CutDimension): boolean {
   if (skip !== "family" && filters.family !== null) {
     if (vehicleFamilyKey(sale.brand, sale.model, sale.category) !== filters.family) return false;
   }
@@ -260,4 +266,12 @@ export function targetFilters(target: EstimateTarget, lot: string, excluded: rea
     lot,
     excluded,
   };
+}
+
+export type BandPosition = "below" | "inside" | "above";
+
+/** Onde um valor (o lance atual de um lote aberto) fica frente à faixa do recorte. Bordas contam como dentro. */
+export function bandPosition(value: number, band: { low: number; high: number }): BandPosition {
+  if (value < band.low) return "below";
+  return value > band.high ? "above" : "inside";
 }

@@ -134,3 +134,22 @@ export type EvaluationView = Evaluation<EvaluateSaleView> & {
 
 /** Lote do usuário como alvo do Avaliar. */
 export type LotTarget = { id: string; label: string; target: EstimateTarget };
+
+/** Lote aberto do recorte do Avaliar. */
+export type EvaluateOpenListing = {
+  id: string;
+  url: string;
+  title: string;
+  modelYear: number | null;
+  mileageKm: number | null;
+  endsAt: Date | null;
+  currentBid: Cents | null;
+  state: StateCode | null;
+  city: string | null;
+  source: string;
+  photoUrl: string | null;
+  /** Lote do usuário já ligado ao anúncio. */
+  trackedLotId: string | null;
+  /** Tem marca, modelo e ano para virar lote. */
+  trackable: boolean;
+};
