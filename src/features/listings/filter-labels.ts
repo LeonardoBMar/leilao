@@ -50,6 +50,7 @@ export const ORIGIN_LABELS = {
   financiamento: "Financiamento",
   seguradora: "Seguradora",
   frota: "Frota",
+  orgao_publico: "Órgão público",
   outros: "Outras",
 } satisfies Record<OriginKey, string>;
 

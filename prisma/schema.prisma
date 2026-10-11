@@ -345,6 +345,17 @@ enum CollectorRunStatus {
   @@map("collector_run_status")
 }
 
+/// De quem o veículo vem (`inferOrigin`, D-73): texto de retomada, comitente e fonte.
+enum VehicleOrigin {
+  financiamento
+  seguradora
+  frota
+  orgao_publico
+  outros
+
+  @@map("vehicle_origin")
+}
+
 /// Site de leilão coletado. O id é a chave usada no código (ex.: "leilo").
 model Source {
   id        String   @id @db.VarChar(40)
@@ -398,6 +409,8 @@ model Listing {
   recoveryType         String?            @map("recovery_type")
   hasKey               Boolean?           @map("has_key")
   sellerName           String?            @map("seller_name")
+  /// Origem inferida (D-73): a coleta grava a cada visita; `npm run db:origins` refaz depois de mudar a regra.
+  vehicleOrigin        VehicleOrigin      @default(outros) @map("vehicle_origin")
   /// Texto do leiloeiro sobre o lote, sem HTML.
   description          String?
   /// Condição declarada pela fonte (src/domain/listings/condition.ts). Nula: a fonte não classificou.

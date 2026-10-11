@@ -1,5 +1,6 @@
 import { type Cents, cents } from "../money";
 import type { ConditionFlag, DamageLevel, InspectionResult } from "./condition";
+import { VEHICLE_ORIGINS, type VehicleOrigin } from "./origin";
 import type { ListingCategory, ListingStatus } from "./types";
 
 /**
@@ -67,17 +68,12 @@ export const HIDE_FLAGS = {
   airbag: "airbag_deployed",
 } as const satisfies Record<Exclude<HideKey, "laudo-reprovado">, ConditionFlag>;
 
-/** Origem do veículo, normalizada do texto livre da fonte (`recovery_type`, 18 grafias em 07/10/2026). */
-export const ORIGIN_KEYS = ["financiamento", "seguradora", "frota", "outros"] as const;
-export type OriginKey = (typeof ORIGIN_KEYS)[number];
-
-export function originOf(recoveryType: string | null): OriginKey {
-  const text = toSearchText(recoveryType ?? "");
-  if (/FINAN|FINAC/.test(text)) return "financiamento";
-  if (/SEGUR|SINISTRO/.test(text)) return "seguradora";
-  if (/\bFROTA\b/.test(text)) return "frota";
-  return "outros";
-}
+/**
+ * Origem do veículo (`inferOrigin`, D-73): gravada no anúncio pela coleta (`vehicle_origin`). As chaves são as do
+ * banco e vão na URL e nos monitores; "orgao_publico" entrou em 11/10/2026, as outras são as de D-43.
+ */
+export const ORIGIN_KEYS = VEHICLE_ORIGINS;
+export type OriginKey = VehicleOrigin;
 
 /** Combustível, normalizado do texto da fonte (27 grafias). Sem termo reconhecido: `null` (não se adivinha). */
 export const FUEL_KEYS = ["flex", "gasolina", "diesel", "eletrico"] as const;
@@ -149,7 +145,7 @@ export type MatchableListing = {
   mileageKm: number | null;
   category: string | null;
   fuel: string | null;
-  recoveryType: string | null;
+  origin: VehicleOrigin;
   hasKey: boolean | null;
   damageLevel: DamageLevel | null;
   conditionFlags: readonly ConditionFlag[];
@@ -192,7 +188,7 @@ export function isOpenAt(listing: Pick<MatchableListing, "status" | "endsAt">, n
 export type FacetCriteria = Pick<ListingCriteria, "search" | "categories" | "sources" | "origins" | "fuels">;
 export type FacetListing = Pick<
   MatchableListing,
-  "sourceId" | "title" | "brand" | "model" | "fipeName" | "category" | "recoveryType" | "fuel"
+  "sourceId" | "title" | "brand" | "model" | "fipeName" | "category" | "origin" | "fuel"
 >;
 
 export function matchesSearch(search: string | null, listing: FacetListing): boolean {
@@ -207,7 +203,7 @@ export const matchesCategories = (categories: FacetCriteria["categories"], listi
 export const matchesSources = (sources: FacetCriteria["sources"], listing: FacetListing) =>
   sources.length === 0 || sources.includes(listing.sourceId);
 export const matchesOrigins = (origins: FacetCriteria["origins"], listing: FacetListing) =>
-  origins.length === 0 || origins.includes(originOf(listing.recoveryType));
+  origins.length === 0 || origins.includes(listing.origin);
 export function matchesFuels(fuels: FacetCriteria["fuels"], listing: FacetListing): boolean {
   if (fuels.length === 0) return true;
   const fuel = fuelOf(listing.fuel);

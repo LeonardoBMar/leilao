@@ -62,7 +62,7 @@ export async function createAlerts(now: Date): Promise<number> {
       mileageKm: true,
       category: true,
       fuel: true,
-      recoveryType: true,
+      vehicleOrigin: true,
       hasKey: true,
       damageLevel: true,
       conditionFlags: true,
@@ -76,9 +76,18 @@ export async function createAlerts(now: Date): Promise<number> {
     },
   });
   const candidates = listings.map(
-    ({ currentBidCents, minimumBidCents, marketValueCents, inspectionResult, municipality, ...listing }) => ({
+    ({
+      currentBidCents,
+      minimumBidCents,
+      marketValueCents,
+      inspectionResult,
+      municipality,
+      vehicleOrigin,
+      ...listing
+    }) => ({
       ...listing,
       inspection: inspectionResult,
+      origin: vehicleOrigin,
       currentBid: toCents(currentBidCents),
       minimumBid: toCents(minimumBidCents),
       marketValue: toCents(marketValueCents),

@@ -25,6 +25,7 @@
     "db:reparse": "node --conditions=react-server --import tsx scripts/reparse.ts",
     "db:seed": "node --conditions=react-server --import tsx scripts/seed-municipalities.ts",
     "db:estimate-backtest": "node --conditions=react-server --import tsx scripts/estimate-backtest.ts",
+    "db:origins": "node --conditions=react-server --import tsx scripts/origin-backfill.ts",
     "db:market-values": "node --conditions=react-server --import tsx scripts/market-values.ts",
     "db:fipe-import": "node --conditions=react-server --import tsx scripts/fipe-import.ts",
     "db:fipe-match": "node --conditions=react-server --import tsx scripts/fipe-match.ts",

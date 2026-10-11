@@ -24,7 +24,6 @@ import {
   matchesCriteria,
   NAMED_CATEGORIES,
   type OriginKey,
-  originOf,
   searchTokens,
 } from "@/domain/listings/criteria";
 import {
@@ -95,6 +94,7 @@ export const listingCardSelect = (ownerId: string) =>
     mileageKm: true,
     fuel: true,
     recoveryType: true,
+    vehicleOrigin: true,
     damageLevel: true,
     conditionFlags: true,
     inspectionResult: true,
@@ -304,30 +304,19 @@ function searchWhere(search: string | null): Prisma.ListingWhereInput {
 }
 
 /**
- * Grafias de origem e combustível presentes no catálogo (poucas dezenas). A classificação é do domínio
- * (`originOf`, `fuelOf`); no banco o filtro vira `in` sobre as grafias que caem em cada chave.
+ * Grafias de combustível presentes no catálogo (poucas dezenas). A classificação é do domínio (`fuelOf`); no banco o
+ * filtro vira `in` sobre as grafias que caem em cada chave. A origem já está gravada no anúncio (D-73).
  */
-type TextValues = { recoveryTypes: string[]; fuels: string[] };
+type TextValues = { fuels: string[] };
 
 async function loadTextValues(criteria: ListingCriteria): Promise<TextValues> {
-  const [recoveryTypes, fuels] = await Promise.all([
-    criteria.origins.length === 0
-      ? []
-      : db.listing.findMany({ distinct: ["recoveryType"], select: { recoveryType: true } }),
-    criteria.fuels.length === 0 ? [] : db.listing.findMany({ distinct: ["fuel"], select: { fuel: true } }),
-  ]);
-  return {
-    recoveryTypes: recoveryTypes.flatMap(({ recoveryType }) => (recoveryType === null ? [] : [recoveryType])),
-    fuels: fuels.flatMap(({ fuel }) => (fuel === null ? [] : [fuel])),
-  };
+  const fuels =
+    criteria.fuels.length === 0 ? [] : await db.listing.findMany({ distinct: ["fuel"], select: { fuel: true } });
+  return { fuels: fuels.flatMap(({ fuel }) => (fuel === null ? [] : [fuel])) };
 }
 
-function originWhere(origins: readonly OriginKey[], values: TextValues): Prisma.ListingWhereInput {
-  if (origins.length === 0) return {};
-  const matching = values.recoveryTypes.filter((value) => origins.includes(originOf(value)));
-  return {
-    OR: [{ recoveryType: { in: matching } }, ...(origins.includes("outros") ? [{ recoveryType: null }] : [])],
-  };
+function originWhere(origins: readonly OriginKey[]): Prisma.ListingWhereInput {
+  return origins.length === 0 ? {} : { vehicleOrigin: { in: [...origins] } };
 }
 
 function fuelWhere(fuels: readonly FuelKey[], values: TextValues): Prisma.ListingWhereInput {
@@ -366,7 +355,7 @@ function criteriaWhere(criteria: ListingCriteria, values: TextValues): Prisma.Li
       criteria.maxMarketPct === null ? {} : { marketRatioBps: { lte: criteria.maxMarketPct * 100 } },
       criteria.maxMileageKm === null ? {} : { mileageKm: { lte: criteria.maxMileageKm } },
       criteria.sources.length === 0 ? {} : { sourceId: { in: [...criteria.sources] } },
-      originWhere(criteria.origins, values),
+      originWhere(criteria.origins),
       fuelWhere(criteria.fuels, values),
       criteria.keyOnly ? { hasKey: true } : {},
     ],
@@ -514,7 +503,7 @@ export async function getListingFacets(
         model: true,
         fipeName: true,
         category: true,
-        recoveryType: true,
+        vehicleOrigin: true,
         fuel: true,
         municipality: { select: { latitude: true, longitude: true } },
       },
@@ -522,8 +511,9 @@ export async function getListingFacets(
     db.source.findMany({ where: { active: true }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
   ]);
   const inRadius = rows
-    .map(({ municipality, ...row }) => ({
+    .map(({ municipality, vehicleOrigin, ...row }) => ({
       ...row,
+      origin: vehicleOrigin,
       distanceKm: municipality ? distanceKm(DEFAULT_REGION.center, municipality) : null,
     }))
     .filter(withinRadius(filters.criteria.radiusKm));
@@ -719,7 +709,7 @@ function toMatchable(row: MatchableRow, distance: number | null): MatchableListi
     mileageKm: row.mileageKm,
     category: row.category,
     fuel: row.fuel,
-    recoveryType: row.recoveryType,
+    origin: row.vehicleOrigin,
     hasKey: row.hasKey,
     damageLevel: row.damageLevel,
     conditionFlags: row.conditionFlags,

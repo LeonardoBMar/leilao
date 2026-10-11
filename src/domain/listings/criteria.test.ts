@@ -11,7 +11,6 @@ import {
   marketRatioBps,
   type MatchableListing,
   matchesCriteria,
-  originOf,
   searchTokens,
 } from "./criteria";
 
@@ -45,7 +44,7 @@ const fox: MatchableListing = {
   mileageKm: 90_000,
   category: "Carros",
   fuel: "Flex",
-  recoveryType: "Recuperado de Financiamento",
+  origin: "financiamento",
   hasKey: true,
   damageLevel: null,
   conditionFlags: [],
@@ -182,20 +181,6 @@ describe("categoryKeyOf", () => {
     expect(categoryKeyOf("Utilitarios")).toBe("utilitarios");
     expect(categoryKeyOf("Equipamentos")).toBe("outros");
     expect(categoryKeyOf(null)).toBe("outros");
-  });
-});
-
-describe("originOf", () => {
-  it("normaliza as grafias das fontes", () => {
-    expect(originOf("Recuperado de Financiamento")).toBe("financiamento");
-    expect(originOf("FINANCEIRA")).toBe("financiamento");
-    expect(originOf("FINACIAMENTO")).toBe("financiamento");
-    expect(originOf("SEGURADORA")).toBe("seguradora");
-    expect(originOf("SINISTRO/PEQUENA MONTA")).toBe("seguradora");
-    expect(originOf("Frota")).toBe("frota");
-    expect(originOf("LEILOSHOP")).toBe("outros");
-    expect(originOf("-")).toBe("outros");
-    expect(originOf(null)).toBe("outros");
   });
 });
 

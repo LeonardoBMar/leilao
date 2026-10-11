@@ -10,7 +10,7 @@ const row = (overrides: Partial<FacetListing> = {}): FacetListing => ({
   model: "FOX 1.0",
   fipeName: null,
   category: "Carros",
-  recoveryType: "Recuperado de Financiamento",
+  origin: "financiamento",
   fuel: "Flex",
   ...overrides,
 });
@@ -20,7 +20,7 @@ const none: FacetCriteria = { search: null, categories: null, sources: [], origi
 const rows = [
   row(),
   row({ sourceId: "patio", brand: "HONDA", model: "CG 160 FAN", title: "HONDA CG 160", category: "Motos" }),
-  row({ sourceId: "patio", recoveryType: "SEGURADORA", fuel: "DIESEL", category: "Pesados", brand: "FORD" }),
+  row({ sourceId: "patio", origin: "seguradora", fuel: "DIESEL", category: "Pesados", brand: "FORD" }),
   row({ category: null, fuel: null, brand: null }),
 ];
 
@@ -29,7 +29,7 @@ describe("computeFacets", () => {
     const facets = computeFacets(rows, none);
     expect(facets.categories).toEqual({ carros: 1, motos: 1, utilitarios: 0, pesados: 1, sucatas: 0, outros: 1 });
     expect(facets.sources).toEqual({ leilo: 2, patio: 2 });
-    expect(facets.origins).toEqual({ financiamento: 3, seguradora: 1, frota: 0, outros: 0 });
+    expect(facets.origins).toEqual({ financiamento: 3, seguradora: 1, frota: 0, orgao_publico: 0, outros: 0 });
     expect(facets.fuels).toEqual({ flex: 2, gasolina: 0, diesel: 1, eletrico: 0 });
   });
 

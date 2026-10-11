@@ -14,7 +14,6 @@ import {
   matchesSources,
   ORIGIN_KEYS,
   type OriginKey,
-  originOf,
   toSearchText,
 } from "./criteria";
 
@@ -57,7 +56,7 @@ export function computeFacets(rows: readonly FacetListing[], criteria: FacetCrit
   for (const row of rows) {
     if (passes(row, "categories")) categories[categoryKeyOf(row.category)] += 1;
     if (passes(row, "sources")) sources[row.sourceId] = (sources[row.sourceId] ?? 0) + 1;
-    if (passes(row, "origins")) origins[originOf(row.recoveryType)] += 1;
+    if (passes(row, "origins")) origins[row.origin] += 1;
     if (passes(row, "fuels")) {
       const fuel = fuelOf(row.fuel);
       if (fuel !== null) fuels[fuel] += 1;

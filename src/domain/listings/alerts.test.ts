@@ -27,7 +27,7 @@ const listing = (overrides: Partial<AlertCandidate> = {}): AlertCandidate => ({
   mileageKm: null,
   category: "Carros",
   fuel: null,
-  recoveryType: null,
+  origin: "outros",
   hasKey: null,
   damageLevel: null,
   conditionFlags: [],

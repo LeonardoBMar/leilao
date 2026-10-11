@@ -3,6 +3,7 @@ import "server-only";
 import { finalBidOf, goneStatus, observationChanged } from "@/domain/listings/collect";
 import { marketValueOnSave } from "@/domain/listings/fipe-match";
 import { type Coordinates, distanceKm } from "@/domain/listings/geo";
+import { inferOrigin } from "@/domain/listings/origin";
 import { municipalityKey } from "@/domain/listings/place";
 import { DEFAULT_REGION } from "@/domain/listings/region";
 import { nextCheckAt, retryAfterFailure, TRACKED_REFRESH_MS } from "@/domain/listings/schedule";
@@ -119,6 +120,11 @@ export async function saveListing(
     recoveryType: input.vehicle.recoveryType,
     hasKey: input.vehicle.hasKey,
     sellerName: input.sellerName,
+    vehicleOrigin: inferOrigin({
+      recoveryType: input.vehicle.recoveryType,
+      sellerName: input.sellerName,
+      sourceId,
+    }),
     description: input.description,
     damageLevel: input.condition.damageLevel,
     conditionFlags: input.condition.flags,
