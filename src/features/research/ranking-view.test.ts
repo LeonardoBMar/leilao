@@ -37,6 +37,14 @@ describe("viewRanking", () => {
     expect(labels(viewRanking(rows, "name", ""))).toEqual(["CHEVROLET ONIX", "FIAT MOBI", "FIAT UNO", "HYUNDAI HB20"]);
   });
 
+  it("sem amostra pequena, os de 5 a 14 vendas saem", () => {
+    expect(labels(viewRanking(rows, "lowest", "", { includeSmall: false }))).toEqual([
+      "HYUNDAI HB20",
+      "FIAT UNO",
+      "CHEVROLET ONIX",
+    ]);
+  });
+
   it("filtra pela busca, com marca ou modelo", () => {
     expect(labels(viewRanking(rows, "lowest", "fiat"))).toEqual(["FIAT UNO", "FIAT MOBI"]);
     expect(labels(viewRanking(rows, "lowest", "hb"))).toEqual(["HYUNDAI HB20"]);

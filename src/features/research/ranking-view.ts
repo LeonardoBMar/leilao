@@ -1,4 +1,5 @@
 import type { ResearchVehicle } from "@/domain/research/filters";
+import { isSmallSample } from "@/domain/research/summary";
 
 import { matchModels } from "./search";
 
@@ -23,11 +24,18 @@ const COMPARE = {
 } as const satisfies Record<RankingSort, (a: RankingRow, b: RankingRow) => number>;
 
 /**
- * Modelos do ranking que casam com o texto (a mesma busca da barra de filtros), na ordem escolhida. Empate final pelo
- * nome, para a ordem não pular entre renderizações.
+ * Modelos do ranking que casam com o texto (a mesma busca da barra de filtros), na ordem escolhida. Sem
+ * `includeSmall`, os de amostra pequena saem: com poucas vendas, eles tomariam o topo da ordem por mediana. Empate
+ * final pelo nome, para a ordem não pular entre renderizações.
  */
-export function viewRanking<T extends RankingRow>(rows: readonly T[], sort: RankingSort, typed: string): T[] {
-  return matchModels(rows, typed, rows.length).toSorted(
+export function viewRanking<T extends RankingRow>(
+  rows: readonly T[],
+  sort: RankingSort,
+  typed: string,
+  { includeSmall = true }: { includeSmall?: boolean } = {},
+): T[] {
+  const pool = includeSmall ? rows : rows.filter((row) => !isSmallSample(row.n));
+  return matchModels(pool, typed, pool.length).toSorted(
     (a, b) => COMPARE[sort](a, b) || a.label.localeCompare(b.label, "pt-BR"),
   );
 }
