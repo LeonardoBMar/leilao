@@ -4,8 +4,15 @@ import { type ResearchFilters, vehicleLabel } from "@/domain/research/filters";
 import { isSmallSample } from "@/domain/research/summary";
 import { formatBRL, formatRatio } from "@/lib/format";
 
-import { belowMarketLabel, CONDITION_LABELS, salesLabel, summaryDetail, yearRangeLabel } from "../labels";
-import { getBidCurve, getConditionDistribution, getPriceSummary } from "../queries";
+import {
+  belowMarketLabel,
+  CONDITION_LABELS,
+  excludedLabel,
+  salesLabel,
+  summaryDetail,
+  yearRangeLabel,
+} from "../labels";
+import { getBidCurve, getConditionDistribution, getExcludedSales, getPriceSummary } from "../queries";
 
 /** Marca da curva de lance usada na leitura "ainda sobe": a véspera do fim. */
 const RISE_MARK_HOURS = 24;
@@ -16,14 +23,16 @@ const RISE_MARK_HOURS = 24;
  * mediana (menos de 5 vendas), diz quantas faltam em vez de mostrar um número.
  */
 export async function ResearchSummary({ filters }: { filters: ResearchFilters }) {
-  const [{ rows }, bidCurve, price] = await Promise.all([
+  const [{ rows }, bidCurve, excluded, price] = await Promise.all([
     getConditionDistribution(filters),
     getBidCurve(filters),
+    getExcludedSales(filters),
     filters.vehicle === null ? Promise.resolve(null) : getPriceSummary(filters),
   ]);
   const selected = rows.find((row) => row.condition === filters.condition)?.summary;
   if (selected === undefined || selected.kind === "none") return null;
 
+  const outside = excludedLabel(excluded);
   const rise = bidCurve.points.find((point) => point.hours === RISE_MARK_HOURS)?.summary;
   const scope = [
     filters.vehicle === null ? null : vehicleLabel(filters.vehicle),
@@ -55,9 +64,11 @@ export async function ResearchSummary({ filters }: { filters: ResearchFilters })
           </Stat>
         )}
         <Stat
-          label="Vendas com valor de mercado"
+          label="Vendas no %"
           size="heading-2"
-          note={isSmallSample(selected.n) ? "Amostra pequena: leia a mediana com cuidado." : "Base da mediana ao lado."}
+          note={[isSmallSample(selected.n) ? "Amostra pequena." : null, outside === null ? null : `Fora: ${outside}.`]
+            .filter((part) => part !== null)
+            .join(" ")}
         >
           {selected.n.toLocaleString("pt-BR")}
         </Stat>

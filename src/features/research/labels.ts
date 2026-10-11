@@ -1,6 +1,12 @@
 import { cents } from "@/domain/money";
 import type { ResearchCategory, ResearchCondition, ResearchMetric } from "@/domain/research/filters";
-import { type GroupSummary, isSmallSample, MIN_SAMPLE } from "@/domain/research/summary";
+import {
+  type ExcludedSales,
+  type GroupSummary,
+  isSmallSample,
+  MIN_SAMPLE,
+  RATIO_BOUNDS,
+} from "@/domain/research/summary";
 import { formatCompactBRL, formatRatio } from "@/lib/format";
 
 export const CONDITION_LABELS = {
@@ -40,6 +46,20 @@ export function yearRangeLabel({
   if (yearFrom !== null) return `a partir de ${yearFrom}`;
   if (yearTo !== null) return `até ${yearTo}`;
   return null;
+}
+
+/**
+ * Por que vendas do filtro ficam fora do %: "15 sem valor de mercado · 3 com % fora de 1% a 200%". `null` sem
+ * nenhuma de fora.
+ */
+export function excludedLabel({ noMarketValue, outOfBounds }: ExcludedSales): string | null {
+  const parts = [
+    noMarketValue > 0 ? `${noMarketValue.toLocaleString("pt-BR")} sem valor de mercado` : null,
+    outOfBounds > 0
+      ? `${outOfBounds.toLocaleString("pt-BR")} com % fora de ${formatRatio(RATIO_BOUNDS.min)} a ${formatRatio(RATIO_BOUNDS.max)}`
+      : null,
+  ].filter((part) => part !== null);
+  return parts.length === 0 ? null : parts.join(" · ");
 }
 
 /** "100 mil km". */

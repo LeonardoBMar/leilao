@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useId, useState } from "react";
 
 import {
+  Badge,
   Button,
   Select,
   SelectContent,
@@ -144,7 +145,20 @@ export function ModelSalesTable({ sales }: { sales: readonly ResearchSale[] }) {
                 <SaleLink sale={sale} />
               </TableCell>
               <Cell>{formatBRL(sale.finalBid)}</Cell>
-              <Cell>{sale.ratio === null ? null : formatRatio(sale.ratio)}</Cell>
+              <TableCell className="text-right whitespace-nowrap tabular-nums">
+                {sale.ratio === null ? (
+                  "—"
+                ) : sale.ratioInBounds ? (
+                  formatRatio(sale.ratio)
+                ) : (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Badge variant="outline" title="Fora das estatísticas: valor de mercado provavelmente errado">
+                      fora do %
+                    </Badge>
+                    {formatRatio(sale.ratio)}
+                  </span>
+                )}
+              </TableCell>
               <Cell>{sale.modelYear === null ? null : String(sale.modelYear)}</Cell>
               <Cell>{sale.mileageKm === null ? null : formatKm(sale.mileageKm)}</Cell>
               <Cell>

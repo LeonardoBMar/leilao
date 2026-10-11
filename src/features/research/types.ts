@@ -22,6 +22,8 @@ export type ResearchSale = {
   marketValueOrigin: MarketValueOrigin | null;
   /** Lance final ÷ valor de mercado; `null` sem valor de mercado. */
   ratio: number | null;
+  /** O % entra nas estatísticas (dentro de `RATIO_BOUNDS`); `false` também sem valor de mercado. */
+  ratioInBounds: boolean;
   source: string;
   /** Primeira foto do anúncio, para a miniatura. */
   photoUrl: string | null;

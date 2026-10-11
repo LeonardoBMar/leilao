@@ -19,6 +19,7 @@ const sale = (id: string, changes: Partial<ResearchSale>): ResearchSale => ({
   marketValue: cents(6_000_000),
   marketValueOrigin: "source",
   ratio: 0.5,
+  ratioInBounds: true,
   source: "Freitas",
   photoUrl: null,
   ...changes,

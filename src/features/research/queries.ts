@@ -24,10 +24,12 @@ import {
   BID_CURVE_HOURS,
   BID_CURVE_LOOKBACK_HOURS,
   bidCurve,
+  type ExcludedSales,
   fillHistogram,
   type GroupStats,
   type GroupSummary,
   HISTOGRAM_STEP,
+  isRatioInBounds,
   MIN_SAMPLE,
   rankModels,
   RATIO_BOUNDS,
@@ -300,6 +302,19 @@ export const getConditionDistribution = cache(async (filters: ResearchFilters): 
   };
 });
 
+/** Vendas do filtro que ficam fora dos gráficos em %, por motivo. */
+export const getExcludedSales = cache(async (filters: ResearchFilters): Promise<ExcludedSales> => {
+  await requireUser();
+  const [row] = await rows(
+    z.object({ noMarketValue: z.number().int(), outOfBounds: z.number().int() }),
+    sql`SELECT count(*) FILTER (WHERE coalesce(l.market_value_cents, 0) <= 0)::int AS "noMarketValue",
+        count(*) FILTER (WHERE l.market_value_cents > 0
+          AND ${RATIO} NOT BETWEEN ${RATIO_BOUNDS.min}::float8 AND ${RATIO_BOUNDS.max}::float8)::int AS "outOfBounds"
+      FROM listings l WHERE ${salesWhere(filters, {})}`,
+  );
+  return row ?? { noMarketValue: 0, outOfBounds: 0 };
+});
+
 /** Mapa: um resumo por estado, em % do valor de mercado ou, com modelo, em lance final (centavos). */
 export async function getStateMap(filters: ResearchFilters): Promise<StateMapView> {
   await requireUser();
@@ -349,6 +364,7 @@ function toSale(row: z.infer<typeof saleRow>): ResearchSale {
     marketValue: marketValue === null ? null : cents(marketValue),
     marketValueOrigin: marketValue === null ? null : row.market_value_origin,
     ratio: marketValue === null ? null : row.final_bid_cents / marketValue,
+    ratioInBounds: marketValue !== null && isRatioInBounds(row.final_bid_cents / marketValue),
     source: row.source,
     photoUrl: row.photo_url,
   };

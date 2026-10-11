@@ -14,25 +14,15 @@ export const CONDITION_BLOCK_TITLE = "Quanto se paga por condição";
 
 /**
  * "Quanto se paga por condição" (D-45): o histograma do % do valor de mercado de cada condição, com o resto dos
- * filtros. A condição do filtro fica em destaque e vira a frase de apoio. `total` é o número da barra de filtros: as
- * vendas sem valor de mercado entram nele, mas não no %, e a diferença é dita.
+ * filtros. A condição do filtro fica em destaque e vira a frase de apoio; as vendas fora do % são ditas no resumo.
  */
-export async function ConditionBlock({
-  filters,
-  total,
-  noSales,
-}: {
-  filters: ResearchFilters;
-  total: number;
-  noSales: ReactNode;
-}) {
+export async function ConditionBlock({ filters, noSales }: { filters: ResearchFilters; noSales: ReactNode }) {
   const { rows, axisMax, looksMixed } = await getConditionDistribution(filters);
   const selected = rows.find((row) => row.condition === filters.condition)?.summary;
   const headline =
     selected?.kind === "summary"
       ? `${CONDITION_LABELS[filters.condition]}: mediana de ${formatRatio(selected.median)}, ou ${belowMarketLabel(selected.median)} (${salesLabel(selected.n)}).`
       : null;
-  const withoutMarket = selected?.kind === "summary" ? total - selected.n : 0;
 
   return (
     <ResearchBlock
@@ -44,18 +34,7 @@ export async function ConditionBlock({
         noSales
       ) : (
         <>
-          {headline ? (
-            <div className="grid gap-1">
-              <p className="text-body font-medium text-foreground">{headline}</p>
-              {withoutMarket > 0 ? (
-                <p className="text-label font-normal text-muted">
-                  {withoutMarket === 1
-                    ? `1 das ${salesLabel(total)} não tem valor de mercado e fica fora dos gráficos em %.`
-                    : `${withoutMarket.toLocaleString("pt-BR")} das ${salesLabel(total)} não têm valor de mercado e ficam fora dos gráficos em %.`}
-                </p>
-              ) : null}
-            </div>
-          ) : null}
+          {headline ? <p className="text-body font-medium text-foreground">{headline}</p> : null}
           <DistributionChart
             ariaLabel={`Lance final em % do valor de mercado por condição. ${rows
               .map((row) =>

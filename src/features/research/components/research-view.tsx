@@ -66,7 +66,7 @@ export async function ResearchView({
         <ResearchSummary filters={filters} />
       </Suspense>
       <Suspense fallback={<ResearchBlockSkeleton title={CONDITION_BLOCK_TITLE} />}>
-        <ConditionBlock filters={filters} total={facets.conditions[filters.condition]} noSales={noSales} />
+        <ConditionBlock filters={filters} noSales={noSales} />
       </Suspense>
       {filters.compare === null ? null : (
         <Suspense fallback={<ResearchBlockSkeleton title={COMPARISON_BLOCK_TITLE} />}>

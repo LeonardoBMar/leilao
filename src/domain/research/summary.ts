@@ -26,6 +26,17 @@ export function isSmallSample(n: number): boolean {
  */
 export const RATIO_BOUNDS = { min: 0.01, max: 2 } as const;
 
+/** A proporção entra nas estatísticas? Fora de `RATIO_BOUNDS`, a venda aparece na tabela marcada, mas não no %. */
+export function isRatioInBounds(ratio: number): boolean {
+  return ratio >= RATIO_BOUNDS.min && ratio <= RATIO_BOUNDS.max;
+}
+
+/**
+ * Vendas do filtro que ficam fora dos gráficos em %: sem valor de mercado, ou com o % fora de `RATIO_BOUNDS` (valor de
+ * mercado provavelmente errado na fonte).
+ */
+export type ExcludedSales = { noMarketValue: number; outOfBounds: number };
+
 /** Histograma de 2 em 2 pontos percentuais: funciona com 20 ou 20 mil vendas. */
 export const HISTOGRAM_STEP = 0.02;
 

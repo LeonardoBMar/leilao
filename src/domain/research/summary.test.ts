@@ -5,6 +5,7 @@ import {
   fillHistogram,
   type GroupStats,
   histogramBin,
+  isRatioInBounds,
   isSmallSample,
   MIN_SAMPLE,
   rankModels,
@@ -134,5 +135,15 @@ describe("bidCurve", () => {
     ]);
     expect(points.map((point) => point.hours)).toEqual([48, 1]);
     expect(points[0]?.summary.median).toBe(0.9);
+  });
+});
+
+describe("isRatioInBounds", () => {
+  it("aceita de 1% a 200% do valor de mercado, inclusive", () => {
+    expect(isRatioInBounds(0.01)).toBe(true);
+    expect(isRatioInBounds(0.5)).toBe(true);
+    expect(isRatioInBounds(2)).toBe(true);
+    expect(isRatioInBounds(0.005)).toBe(false);
+    expect(isRatioInBounds(2.5)).toBe(false);
   });
 });
