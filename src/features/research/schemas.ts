@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { VEHICLE_ORIGINS } from "@/domain/listings/origin";
+import { DEFAULT_EVALUATE_FILTERS, type EvaluateFilters, MAX_EXCLUDED } from "@/domain/research/evaluate";
 import {
   DEFAULT_RESEARCH_FILTERS,
   normalizeComparison,
@@ -130,6 +132,76 @@ export function researchParams(filters: ResearchFilters): Record<string, string>
     vsuf: filters.compare?.state ?? undefined,
     medida: filters.metric === DEFAULT_RESEARCH_FILTERS.metric ? undefined : filters.metric,
     venda: filters.sale ?? undefined,
+  };
+  return Object.fromEntries(
+    Object.entries(params).flatMap(([key, value]) => (value === undefined ? [] : [[key, value]])),
+  );
+}
+
+const FIPE_CODE = /^\d{6}-\d$/;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+/** Filtros do Avaliar (docs/PLANO-MERCADO.md §5, D-71) na URL. Nunca lança: valor inválido vira o padrão. */
+export const evaluateFiltersSchema = z
+  .object({
+    marca: text,
+    modelo: text,
+    familia: z.string().trim().max(80).optional().catch(undefined),
+    versao: z.string().trim().regex(FIPE_CODE).optional().catch(undefined),
+    anode: year,
+    anoate: year,
+    kmate: maxKm,
+    condicao: z.enum(RESEARCH_CONDITIONS).catch(DEFAULT_EVALUATE_FILTERS.condition),
+    origem: z.enum(VEHICLE_ORIGINS).optional().catch(undefined),
+    lote: z.string().trim().toLowerCase().regex(UUID).optional().catch(undefined),
+    fora: z.string().optional().catch(undefined),
+  })
+  .transform((input): EvaluateFilters => {
+    const vehicle =
+      input.marca === undefined || input.modelo === undefined ? null : researchVehicle(input.marca, input.modelo);
+    const excluded = [
+      ...new Set(
+        (input.fora ?? "")
+          .split(",")
+          .map((id) => id.trim().toLowerCase())
+          .filter((id) => UUID.test(id)),
+      ),
+    ].slice(0, MAX_EXCLUDED);
+    return {
+      vehicle,
+      // Família e versão só valem dentro de um modelo, e a família precisa ser dele.
+      family: vehicle === null || !input.familia?.startsWith(`${vehicle.brand}|`) ? null : (input.familia ?? null),
+      version: vehicle === null ? null : (input.versao ?? null),
+      ...(vehicle === null ? { yearFrom: null, yearTo: null } : normalizeYears(input.anode, input.anoate)),
+      maxKm: input.kmate,
+      condition: input.condicao,
+      origin: input.origem ?? null,
+      lot: input.lote ?? null,
+      excluded,
+    };
+  });
+
+/** URL crua (`searchParams`) → filtros do Avaliar. Parâmetro repetido: vale o primeiro. */
+export function parseEvaluateParams(raw: Readonly<Record<string, string | string[] | undefined>>): EvaluateFilters {
+  return evaluateFiltersSchema.parse(
+    Object.fromEntries(Object.entries(raw).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value])),
+  );
+}
+
+/** Filtros do Avaliar → parâmetros da URL, sem os padrões. Inverso de `parseEvaluateParams`. */
+export function evaluateParams(filters: EvaluateFilters): Record<string, string> {
+  const params: Record<string, string | undefined> = {
+    marca: filters.vehicle?.brand,
+    modelo: filters.vehicle?.model,
+    familia: filters.vehicle === null ? undefined : (filters.family ?? undefined),
+    versao: filters.vehicle === null ? undefined : (filters.version ?? undefined),
+    anode: filters.vehicle === null ? undefined : filters.yearFrom?.toString(),
+    anoate: filters.vehicle === null ? undefined : filters.yearTo?.toString(),
+    kmate: filters.maxKm?.toString(),
+    condicao: filters.condition === DEFAULT_EVALUATE_FILTERS.condition ? undefined : filters.condition,
+    origem: filters.origin ?? undefined,
+    lote: filters.lot ?? undefined,
+    fora: filters.excluded.length === 0 ? undefined : filters.excluded.join(","),
   };
   return Object.fromEntries(
     Object.entries(params).flatMap(([key, value]) => (value === undefined ? [] : [[key, value]])),
