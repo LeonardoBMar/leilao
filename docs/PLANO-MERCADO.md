@@ -49,6 +49,20 @@ O `originOf` atual lê só o `recovery_type` e põe toda a Superbid em "outros".
 
 **Dados do usuário:** 58 lotes (42 ligados a anúncio), 75 análises fixadas e 64 resultados. Já dá para uma primeira calibração (§7).
 
+### Linha de base do preço provável (T0.1, 11/10/2026)
+
+`npm run db:estimate-backtest`: cada venda desde 15/09 estimada só com as vendas de dias anteriores (6.404 alvos).
+
+| Grupo | Alvos | Com estimativa | Dentro da P25–P75 | Erro mediano |
+| --- | ---: | ---: | ---: | ---: |
+| Total | 6.404 | 82,1% | 44,8% | 19,4% |
+| Por comparáveis (`vehicleKey`, ano ±1) | 2.720 | — | 40,9% | 16,6% |
+| Pela proporção da categoria | 2.535 | — | 49,0% | 23,3% |
+| Carros | 2.817 | 91,4% | 44,4% | 24,9% |
+| Motos | 2.433 | 93,3% | 45,5% | 14,5% |
+
+Os comparáveis acertam a faixa menos que o esperado (41% contra 50%): a faixa é estreita para grupos que misturam versões. Nos carros, a mediana erra um quarto do lance.
+
 ## 3. Princípios
 
 1. **Resposta primeiro, evidência depois.** O topo diz a faixa de arremate em R$; os gráficos justificam.
