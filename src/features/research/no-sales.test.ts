@@ -9,6 +9,11 @@ const facets: ResearchFacets = {
   conditions: { "sem-monta": 0, pequena: 48, media: 12, grande: 0, sucata: 0 },
   categories: { carros: 60, motos: 0, utilitarios: 0, sucatas: 0 },
   states: { SP: 30, SC: 10 },
+  sources: [
+    { id: "superbid", name: "Superbid", sales: 50 },
+    { id: "leilo", name: "Leilo", sales: 10 },
+  ],
+  mileage: { total: 60, known: 20 },
   years: [
     { year: 2021, sales: 4 },
     { year: 2018, sales: 6 },
@@ -40,6 +45,17 @@ describe("noSalesSuggestions", () => {
     expect(labels).toEqual([
       "Tirar a faixa de ano (10 vendas)",
       "Ver todos os modelos",
+      "Ver pequena monta (48 vendas)",
+    ]);
+  });
+
+  it("com fonte e km, oferece todas as fontes e tirar o limite de km", () => {
+    const labels = noSalesSuggestions(filters({ source: "freitas", maxKm: 50_000 }), facets).map(
+      (suggestion) => suggestion.label,
+    );
+    expect(labels).toEqual([
+      "Ver todas as fontes (60 vendas)",
+      "Tirar o limite de km (60 vendas)",
       "Ver pequena monta (48 vendas)",
     ]);
   });

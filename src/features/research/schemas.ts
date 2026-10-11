@@ -7,6 +7,7 @@ import {
   RESEARCH_CATEGORIES,
   RESEARCH_CONDITIONS,
   RESEARCH_METRICS,
+  RESEARCH_MILEAGE_OPTIONS,
   type ResearchFilters,
   researchVehicle,
 } from "@/domain/research/filters";
@@ -39,6 +40,22 @@ const year = z
   .catch(undefined)
   .transform((value) => (value === undefined ? null : Number(value)));
 
+/** Id de fonte: sem lista fechada (as fontes vêm do banco), só o formato do id. */
+const source = z
+  .string()
+  .trim()
+  .regex(/^[a-z0-9-]{1,40}$/)
+  .optional()
+  .catch(undefined)
+  .transform((value) => value ?? null);
+
+/** "Km até": só uma das faixas oferecidas. */
+const maxKm = z
+  .string()
+  .optional()
+  .catch(undefined)
+  .transform((value) => RESEARCH_MILEAGE_OPTIONS.find((option) => String(option) === value) ?? null);
+
 /** Filtros da Pesquisa (D-45) na URL. Nunca lança: valor inválido vira o padrão. */
 export const researchFiltersSchema = z
   .object({
@@ -49,6 +66,8 @@ export const researchFiltersSchema = z
     uf: state,
     anode: year,
     anoate: year,
+    fonte: source,
+    kmate: maxKm,
     vsmarca: text,
     vsmodelo: text,
     vsuf: state,
@@ -68,6 +87,8 @@ export const researchFiltersSchema = z
       state: input.uf,
       // O ano só vale dentro de um modelo.
       ...(vehicle === null ? { yearFrom: null, yearTo: null } : normalizeYears(input.anode, input.anoate)),
+      source: input.fonte,
+      maxKm: input.kmate,
       // A comparação só vale se difere dos filtros (outro modelo ou outro estado).
       compare: normalizeComparison({ vehicle, state: input.uf }, { vehicle: compareVehicle, state: input.vsuf }),
       metric: input.medida,
@@ -91,6 +112,8 @@ export function researchParams(filters: ResearchFilters): Record<string, string>
     uf: filters.state ?? undefined,
     anode: filters.vehicle === null ? undefined : filters.yearFrom?.toString(),
     anoate: filters.vehicle === null ? undefined : filters.yearTo?.toString(),
+    fonte: filters.source ?? undefined,
+    kmate: filters.maxKm?.toString(),
     vsmarca: filters.compare?.vehicle?.brand,
     vsmodelo: filters.compare?.vehicle?.model,
     vsuf: filters.compare?.state ?? undefined,

@@ -17,8 +17,8 @@ const CATALOG_CONDITION = {
 
 /**
  * Parâmetros do catálogo de lotes (`/leiloes/veiculos`) para os lotes abertos do modelo escolhido, com a categoria, a
- * condição e a faixa de ano da Pesquisa, em qualquer distância. Sem modelo escolhido, `null`: a busca ficaria sem
- * assunto. O estado não vai, porque o catálogo filtra por distância e não por UF.
+ * condição, a faixa de ano, o km e a fonte da Pesquisa, em qualquer distância. Sem modelo escolhido, `null`: a busca
+ * ficaria sem assunto. O estado não vai, porque o catálogo filtra por distância e não por UF.
  */
 export function catalogParams(filters: ResearchFilters): Record<string, string> | null {
   if (filters.vehicle === null) return null;
@@ -28,6 +28,8 @@ export function catalogParams(filters: ResearchFilters): Record<string, string> 
     condicao: CATALOG_CONDITION[filters.condition],
     anoDe: filters.yearFrom?.toString(),
     anoAte: filters.yearTo?.toString(),
+    kmAte: filters.maxKm?.toString(),
+    fonte: filters.source ?? undefined,
     distancia: "todas",
   };
   return Object.fromEntries(

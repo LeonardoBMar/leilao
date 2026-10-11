@@ -25,6 +25,15 @@ describe.skipIf(process.env.DB_TESTS !== "1")("consultas da Pesquisa", () => {
     expect(facets.conditions["sem-monta"]).toBeGreaterThan(0);
     expect(facets.categories.carros).toBe(facets.conditions["sem-monta"]);
     expect(facets.models.some((model) => model.label === "Chevrolet Onix")).toBe(true);
+    expect(facets.sources.length).toBeGreaterThan(0);
+    expect(facets.mileage.known).toBeLessThanOrEqual(facets.mileage.total);
+    const [topSource] = facets.sources;
+    if (topSource) {
+      const bySource = await queries.getResearchFacets({ ...DEFAULT_RESEARCH_FILTERS, source: topSource.id });
+      expect(bySource.conditions["sem-monta"]).toBe(topSource.sales);
+    }
+    const withKm = await queries.getResearchFacets({ ...DEFAULT_RESEARCH_FILTERS, maxKm: 150_000 });
+    expect(withKm.conditions["sem-monta"]).toBeLessThanOrEqual(facets.mileage.known);
 
     const conditions = await queries.getConditionDistribution(DEFAULT_RESEARCH_FILTERS);
     expect(conditions.rows.map((row) => row.condition)).toEqual(["sem-monta", "pequena", "media", "grande", "sucata"]);

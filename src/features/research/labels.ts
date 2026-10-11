@@ -42,6 +42,11 @@ export function yearRangeLabel({
   return null;
 }
 
+/** "100 mil km". */
+export function mileageLabel(km: number): string {
+  return `${(km / 1000).toLocaleString("pt-BR")} mil km`;
+}
+
 /** O `n` do grupo e, se a amostra é pequena, o aviso: "8 vendas · amostra pequena". */
 export function smallSampleLabel(n: number): string {
   return isSmallSample(n) ? `${salesLabel(n)} · amostra pequena` : salesLabel(n);

@@ -11,12 +11,13 @@ import {
   normalizeYears,
   RESEARCH_CATEGORIES,
   RESEARCH_CONDITIONS,
+  RESEARCH_MILEAGE_OPTIONS,
   type ResearchFilters,
   vehicleLabel,
 } from "@/domain/research/filters";
 import { isStateCode, STATE_CODES, STATE_NAMES, type StateCode } from "@/domain/research/states";
 
-import { CATEGORY_LABELS, CONDITION_LABELS, salesLabel } from "../labels";
+import { CATEGORY_LABELS, CONDITION_LABELS, mileageLabel, salesLabel } from "../labels";
 import { parseResearchParams } from "../schemas";
 import { researchHref } from "../search";
 import type { ResearchFacets } from "../types";
@@ -28,6 +29,12 @@ const ALL_STATES = "todos";
 
 /** Valor do item "Todos os anos". */
 const ALL_YEARS = "todos";
+
+/** Valor do item "Todas as fontes". */
+const ALL_SOURCES = "todas";
+
+/** Valor do item "Qualquer km". */
+const ANY_KM = "qualquer";
 
 /** Valor do item "sem outro estado" da comparação. */
 const NO_COMPARE_STATE = "nenhum";
@@ -198,22 +205,34 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
         />
       </div>
 
-      {filters.vehicle === null ? null : (
-        <div className="grid grid-cols-2 gap-3 md:flex">
-          <YearSelect
-            label="Ano-modelo de"
-            value={filters.yearFrom}
-            years={facets.years}
-            onChange={(yearFrom) => apply({ ...filters, ...normalizeYears(yearFrom, filters.yearTo) })}
-          />
-          <YearSelect
-            label="Ano-modelo até"
-            value={filters.yearTo}
-            years={facets.years}
-            onChange={(yearTo) => apply({ ...filters, ...normalizeYears(filters.yearFrom, yearTo) })}
-          />
-        </div>
-      )}
+      <div className="grid grid-cols-2 gap-3 md:flex md:flex-wrap">
+        <SourceSelect
+          value={filters.source}
+          sources={facets.sources}
+          onChange={(source) => apply({ ...filters, source })}
+        />
+        <MileageSelect
+          value={filters.maxKm}
+          mileage={facets.mileage}
+          onChange={(maxKm) => apply({ ...filters, maxKm })}
+        />
+        {filters.vehicle === null ? null : (
+          <>
+            <YearSelect
+              label="Ano-modelo de"
+              value={filters.yearFrom}
+              years={facets.years}
+              onChange={(yearFrom) => apply({ ...filters, ...normalizeYears(yearFrom, filters.yearTo) })}
+            />
+            <YearSelect
+              label="Ano-modelo até"
+              value={filters.yearTo}
+              years={facets.years}
+              onChange={(yearTo) => apply({ ...filters, ...normalizeYears(filters.yearFrom, yearTo) })}
+            />
+          </>
+        )}
+      </div>
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <p
@@ -305,6 +324,83 @@ function YearSelect({
               <OptionWithCount label={String(year)} count={sales} />
             </SelectItem>
           ))}
+        </SelectContent>
+      </Select>
+    </>
+  );
+}
+
+/** Fonte (leiloeiro), com as vendas de cada uma; a escolhida fica na lista mesmo que o resto do filtro a esvazie. */
+function SourceSelect({
+  value,
+  sources,
+  onChange,
+}: {
+  value: string | null;
+  sources: ResearchFacets["sources"];
+  onChange: (source: string | null) => void;
+}) {
+  const labelId = useId();
+  const options =
+    value === null || sources.some(({ id }) => id === value)
+      ? sources
+      : [{ id: value, name: value, sales: 0 }, ...sources];
+  const chosen = options.find(({ id }) => id === value);
+  return (
+    <>
+      <span id={labelId} className="sr-only">
+        Fonte
+      </span>
+      <Select value={value ?? ALL_SOURCES} onValueChange={(next) => onChange(next === ALL_SOURCES ? null : next)}>
+        <SelectTrigger aria-labelledby={labelId} className="md:w-48">
+          <SelectValue>{chosen ? chosen.name : "Todas as fontes"}</SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL_SOURCES}>Todas as fontes</SelectItem>
+          {options.map(({ id, name, sales }) => (
+            <SelectItem key={id} value={id}>
+              <OptionWithCount label={name} count={sales} />
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </>
+  );
+}
+
+/** "Km até": com limite, vendas sem km informado saem; a lista diz quantas vendas têm km. */
+function MileageSelect({
+  value,
+  mileage,
+  onChange,
+}: {
+  value: ResearchFilters["maxKm"];
+  mileage: ResearchFacets["mileage"];
+  onChange: (maxKm: ResearchFilters["maxKm"]) => void;
+}) {
+  const labelId = useId();
+  return (
+    <>
+      <span id={labelId} className="sr-only">
+        Quilometragem máxima
+      </span>
+      <Select
+        value={value === null ? ANY_KM : String(value)}
+        onValueChange={(next) => onChange(RESEARCH_MILEAGE_OPTIONS.find((option) => String(option) === next) ?? null)}
+      >
+        <SelectTrigger aria-labelledby={labelId} className="md:w-44">
+          <SelectValue>{value === null ? "Qualquer km" : `Até ${mileageLabel(value)}`}</SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ANY_KM}>Qualquer km</SelectItem>
+          {RESEARCH_MILEAGE_OPTIONS.map((option) => (
+            <SelectItem key={option} value={String(option)}>
+              Até {mileageLabel(option)}
+            </SelectItem>
+          ))}
+          <p className="px-2 py-1.5 text-caption text-muted tabular-nums">
+            {mileage.known.toLocaleString("pt-BR")} de {salesLabel(mileage.total)} têm km informado
+          </p>
         </SelectContent>
       </Select>
     </>

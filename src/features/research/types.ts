@@ -88,6 +88,10 @@ export type ResearchFacets = {
   categories: Record<ResearchCategory, number>;
   /** Vendas por estado, com os outros filtros: o estado do mapa não entra. */
   states: Partial<Record<StateCode, number>>;
+  /** Vendas por fonte, com os outros filtros (a fonte escolhida não entra), da que tem mais vendas à que tem menos. */
+  sources: { id: string; name: string; sales: number }[];
+  /** Vendas do filtro sem o km máximo, e quantas delas têm km informado. */
+  mileage: { total: number; known: number };
   /** Anos-modelo do modelo escolhido, do mais novo ao mais velho, com as vendas de cada um; vazio sem modelo. */
   years: { year: number; sales: number }[];
   models: ResearchModelOption[];

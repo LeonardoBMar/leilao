@@ -42,6 +42,8 @@ describe("DEFAULT_RESEARCH_FILTERS", () => {
       state: null,
       yearFrom: null,
       yearTo: null,
+      source: null,
+      maxKm: null,
       compare: null,
       metric: "ratio",
     });

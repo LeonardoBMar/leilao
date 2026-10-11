@@ -1,5 +1,5 @@
 import type { DamageLevel } from "../listings/condition";
-import type { CategoryKey } from "../listings/criteria";
+import { type CategoryKey, MILEAGE_OPTIONS_KM } from "../listings/criteria";
 import { vehicleKey } from "../listings/estimates";
 import { STATE_NAMES, type StateCode } from "./states";
 
@@ -50,10 +50,18 @@ export type ResearchFilters = {
   /** Ano-modelo, de e até (inclusive). Só vale com um modelo escolhido: o ano pesa no preço dentro de um modelo. */
   yearFrom: number | null;
   yearTo: number | null;
+  /** Id da fonte (leiloeiro); `null` em todas. Fora SP, cada estado vem de uma fonte só (D-45). */
+  source: string | null;
+  /** Quilometragem máxima (inclusive); com ela, vendas sem km informado ficam de fora. */
+  maxKm: ResearchMileage | null;
   /** Compara o grupo dos filtros com outro modelo e/ou outro estado; `null` sem comparação. */
   compare: ResearchComparison | null;
   metric: ResearchMetric;
 };
+
+/** Faixas de "Km até": as mesmas do catálogo, para o link "Ver lotes abertos" levar o filtro junto. */
+export const RESEARCH_MILEAGE_OPTIONS = MILEAGE_OPTIONS_KM;
+export type ResearchMileage = (typeof RESEARCH_MILEAGE_OPTIONS)[number];
 
 /** Anos-modelo aceitos na URL. */
 export const MODEL_YEAR_BOUNDS = { min: 1950, max: 2100 } as const;
@@ -112,6 +120,8 @@ export const DEFAULT_RESEARCH_FILTERS: ResearchFilters = {
   state: null,
   yearFrom: null,
   yearTo: null,
+  source: null,
+  maxKm: null,
   compare: null,
   metric: "ratio",
 };

@@ -73,6 +73,10 @@ type SalesScope = {
   condition?: boolean;
   /** Filtra o estado do filtro (o mapa mostra todos; o detalhe compara com o Brasil). */
   state?: boolean;
+  /** Filtra a fonte do filtro (a barra conta as vendas de cada fonte). */
+  source?: boolean;
+  /** Filtra o km máximo do filtro (a barra diz quantas vendas têm km). */
+  mileage?: boolean;
   /** Só vendas com valor de mercado e proporção dentro de `RATIO_BOUNDS`. */
   ratio?: boolean;
 };
@@ -84,7 +88,7 @@ function salesSince(): Date {
 /** Venda (mesmo critério da base do preço provável) dentro dos filtros pedidos. */
 function salesWhere(
   filters: ResearchFilters,
-  { category = true, condition = true, state = true, ratio = false }: SalesScope,
+  { category = true, condition = true, state = true, source = true, mileage = true, ratio = false }: SalesScope,
 ) {
   const parts = [sql`l.status = 'sold'`, sql`l.final_bid_cents > 0`, sql`l.ends_at >= ${salesSince()}`];
   if (category) parts.push(sql`l.category = ${CATEGORY_OF_KEY[filters.category]}`);
@@ -93,6 +97,8 @@ function salesWhere(
     parts.push(level === null ? sql`l.damage_level IS NULL` : sql`l.damage_level::text = ${level}`);
   }
   if (state && filters.state !== null) parts.push(sql`l.state = ${filters.state}`);
+  if (source && filters.source !== null) parts.push(sql`l.source_id = ${filters.source}`);
+  if (mileage && filters.maxKm !== null) parts.push(sql`l.mileage_km <= ${filters.maxKm}`);
   if (filters.vehicle !== null) {
     parts.push(sql`${VEHICLE_KEY} = ${`${filters.vehicle.brand}|${filters.vehicle.model}`}`);
     if (filters.yearFrom !== null) parts.push(sql`l.model_year >= ${filters.yearFrom}`);
@@ -171,7 +177,7 @@ const MODEL_SUGGESTIONS_LIMIT = 300;
 export async function getResearchFacets(filters: ResearchFilters): Promise<ResearchFacets> {
   await requireUser();
   const level = sql`coalesce(l.damage_level::text, 'unclassified')`;
-  const [byLevel, byCategory, byState, byYear, models] = await Promise.all([
+  const [byLevel, byCategory, byState, bySource, [mileage], byYear, models] = await Promise.all([
     rows(
       z.object({ level: levelSchema, n: z.number().int() }),
       sql`SELECT ${level} AS level, count(*)::int AS n FROM listings l
@@ -186,6 +192,16 @@ export async function getResearchFacets(filters: ResearchFilters): Promise<Resea
       z.object({ state: z.string().nullable(), n: z.number().int() }),
       sql`SELECT l.state::text AS state, count(*)::int AS n FROM listings l
         WHERE ${salesWhere(filters, { state: false })} GROUP BY 1`,
+    ),
+    rows(
+      z.object({ id: z.string(), name: z.string(), n: z.number().int() }),
+      sql`SELECT s.id, s.name, count(*)::int AS n FROM listings l JOIN sources s ON s.id = l.source_id
+        WHERE ${salesWhere(filters, { source: false })} GROUP BY s.id, s.name ORDER BY 3 DESC, 2`,
+    ),
+    rows(
+      z.object({ total: z.number().int(), known: z.number().int() }),
+      sql`SELECT count(*)::int AS total, count(l.mileage_km)::int AS known FROM listings l
+        WHERE ${salesWhere(filters, { mileage: false })}`,
     ),
     // Anos do modelo escolhido, sem o próprio filtro de ano (senão a lista encolheria para a faixa).
     filters.vehicle === null
@@ -225,6 +241,8 @@ export async function getResearchFacets(filters: ResearchFilters): Promise<Resea
       sucatas: ofCategory("sucatas"),
     },
     states: stateCounts,
+    sources: bySource.map(({ id, name, n }) => ({ id, name, sales: n })),
+    mileage: mileage ?? { total: 0, known: 0 },
     years: byYear.map(({ year, n }) => ({ year, sales: n })),
     models: models.flatMap(({ key, n }) => {
       const [brand = "", model = ""] = key.split("|");

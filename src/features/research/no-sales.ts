@@ -14,7 +14,7 @@ const total = (counts: readonly number[]) => counts.reduce((sum, count) => sum +
 /**
  * Saídas para o bloco sem vendas (DESIGN.md §15.8): cada uma afrouxa um filtro e diz quantas vendas aparecem. As
  * contagens são as da barra de filtros (cada uma com os outros filtros), então a saída só é oferecida quando há venda.
- * Ordem: o que mais amplia primeiro (estado, faixa de ano, modelo), depois a condição com mais vendas.
+ * Ordem: o que mais amplia primeiro (estado, faixa de ano, fonte, km, modelo), depois a condição com mais vendas.
  */
 export function noSalesSuggestions(filters: ResearchFilters, facets: ResearchFacets): NoSalesSuggestion[] {
   const suggestions: NoSalesSuggestion[] = [];
@@ -34,6 +34,23 @@ export function noSalesSuggestions(filters: ResearchFilters, facets: ResearchFac
         filters: { ...filters, yearFrom: null, yearTo: null },
       });
     }
+  }
+
+  if (filters.source !== null) {
+    const anySource = total(facets.sources.map(({ sales }) => sales));
+    if (anySource > 0) {
+      suggestions.push({
+        label: `Ver todas as fontes (${salesLabel(anySource)})`,
+        filters: { ...filters, source: null },
+      });
+    }
+  }
+
+  if (filters.maxKm !== null && facets.mileage.total > 0) {
+    suggestions.push({
+      label: `Tirar o limite de km (${salesLabel(facets.mileage.total)})`,
+      filters: { ...filters, maxKm: null },
+    });
   }
 
   if (filters.vehicle !== null) {

@@ -19,6 +19,8 @@ describe("parseResearchParams", () => {
         uf: "go",
         anode: "2018",
         anoate: "2020",
+        fonte: "superbid",
+        kmate: "100000",
         medida: "price",
       }),
     ).toEqual({
@@ -28,6 +30,8 @@ describe("parseResearchParams", () => {
       state: "GO",
       yearFrom: 2018,
       yearTo: 2020,
+      source: "superbid",
+      maxKm: 100_000,
       compare: null,
       metric: "price",
     } satisfies ResearchFilters);
@@ -68,6 +72,10 @@ describe("parseResearchParams", () => {
     expect(parseResearchParams({ uf: "SP", vsuf: "SP" }).compare).toBeNull();
   });
 
+  it("fonte com formato inválido e km fora das faixas viram ausentes", () => {
+    expect(parseResearchParams({ fonte: "Super Bid!", kmate: "70000" })).toMatchObject({ source: null, maxKm: null });
+  });
+
   it("ano sem modelo não filtra", () => {
     expect(parseResearchParams({ anode: "2018", anoate: "2020" })).toEqual(DEFAULT_RESEARCH_FILTERS);
   });
@@ -90,6 +98,8 @@ describe("researchParams", () => {
       state: "CE",
       yearFrom: 2015,
       yearTo: null,
+      source: "leilo",
+      maxKm: 50_000,
       compare: { vehicle: { brand: "FIAT", model: "TORO" }, state: "BA" },
       metric: "price",
     };

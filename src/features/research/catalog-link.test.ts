@@ -25,6 +25,15 @@ describe("catalogParams", () => {
     });
   });
 
+  it("leva o km máximo e a fonte", () => {
+    expect(
+      catalogParams({ ...DEFAULT_RESEARCH_FILTERS, vehicle: onix, maxKm: 100_000, source: "leilo" }),
+    ).toMatchObject({
+      kmAte: "100000",
+      fonte: "leilo",
+    });
+  });
+
   it("sucata não vira com-monta, que não a inclui: fica sem filtro de condição", () => {
     const params = catalogParams({ ...DEFAULT_RESEARCH_FILTERS, vehicle: onix, condition: "sucata" });
     expect(params?.condicao).toBe("qualquer");
