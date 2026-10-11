@@ -188,7 +188,7 @@ O parâmetro `id` representa uma análise, que sempre pertence a um lote. Uma no
 - Resumo com comissão, custos, custo total, margem e lance máximo.
 - Notas sobre premissas, danos, documentação e dúvidas.
 - Ações **Salvar rascunho** e **Fixar análise**.
-- Link **Ver vendas parecidas** no cabeçalho, para a Pesquisa filtrada pelo lote da análise.
+- Bloco **Concorrência** no resumo, abaixo da simulação: a faixa típica de arremate das vendas parecidas (o mesmo recorte do painel do lote) e onde o lance máximo e o lance simulado ficam entre elas ("fica abaixo de 14 das 18 vendas parecidas (P22)"). É descritivo e não muda o lance máximo, que vem do valor de venda. **Ver as vendas** abre o Avaliar com o lote como alvo.
 - Histórico das análises fixadas, com data e indicação da utilizada no resultado.
 - Versões fixadas em modo de leitura; revisões geram um novo rascunho.
 

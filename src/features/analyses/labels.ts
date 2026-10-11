@@ -1,4 +1,5 @@
 import type { AnalysisField } from "@/domain/finance/calculator";
+import type { LimitPosition } from "@/domain/research/evaluate";
 
 /** Nomes dos campos em pt-BR, usados na lista de pendências para fixar (SPEC §7.6). */
 export const FIELD_LABELS = {
@@ -40,3 +41,20 @@ export const FIXED_COST_LABELS = [
   ["serviceCost", "Revisão"],
   ["otherFees", "Outras taxas fixas"],
 ] as const;
+
+/**
+ * Onde um valor fica entre as vendas parecidas, em palavras (bloco Concorrência, docs/PLANO-MERCADO.md §8): "fica abaixo
+ * de 14 das 18 vendas parecidas (P22)". Descritivo: quem saiu acima é quem o limite não alcançaria.
+ */
+export function limitPositionText({ n, below, above, equal, percentile }: LimitPosition): string {
+  const all = n === 1 ? "da única venda parecida" : `de todas as ${n} vendas parecidas`;
+  const text =
+    equal === n
+      ? `empata com ${n === 1 ? "a única venda parecida" : `todas as ${n} vendas parecidas`}`
+      : above === n
+        ? `fica abaixo ${all}`
+        : below === n
+          ? `fica acima ${all}`
+          : `fica abaixo de ${above} das ${n} vendas parecidas${equal > 0 ? ` e empata com ${equal}` : ""}`;
+  return `${text} (P${percentile})`;
+}

@@ -1,5 +1,6 @@
 import { DataList, DataRow, Money, Section, SectionTitle } from "@/components/ui";
 import { completeInputs } from "@/domain/finance/calculator";
+import type { LotMarketReference } from "@/features/research/types";
 import { formatBps, formatCalendarDate, formatMonth } from "@/lib/format";
 
 import { FIXED_COST_LABELS } from "../labels";
@@ -8,7 +9,13 @@ import type { AnalysisDetail } from "../types";
 import { AnalysisSummary } from "./analysis-summary";
 
 /** Versão fixada em modo leitura (RF-05, DESIGN.md §15.4): premissas em linhas à esquerda, resumo ao lado. */
-export function AnalysisReadonly({ analysis }: { analysis: AnalysisDetail }) {
+export function AnalysisReadonly({
+  analysis,
+  market,
+}: {
+  analysis: AnalysisDetail;
+  market: LotMarketReference | null;
+}) {
   const { inputs, references, outputs } = analysis;
   const complete = completeInputs(inputs);
 
@@ -95,7 +102,14 @@ export function AnalysisReadonly({ analysis }: { analysis: AnalysisDetail }) {
         ) : null}
       </div>
 
-      {outputs ? <AnalysisSummary model={fixedSummary(inputs, outputs)} currentBid={analysis.lot.currentBid} /> : null}
+      {outputs ? (
+        <AnalysisSummary
+          model={fixedSummary(inputs, outputs)}
+          currentBid={analysis.lot.currentBid}
+          market={market}
+          marketNote="Vendas de hoje, não as da época da fixação."
+        />
+      ) : null}
     </div>
   );
 }

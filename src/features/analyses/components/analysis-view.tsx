@@ -1,11 +1,11 @@
 import { ArrowLeft, FilePen, GitBranchPlus } from "lucide-react";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
 
 import { BreadcrumbLink, BreadcrumbPage, Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert, AlertDescription, Badge, ButtonLink, Section, SectionTitle, Skeleton } from "@/components/ui";
 import { FORMULA_VERSION } from "@/domain/finance/calculator";
+import { getLotMarketReference } from "@/features/research/queries";
 import { formatDateTime } from "@/lib/format";
 
 import { getAnalysis, listLotAnalyses } from "../queries";
@@ -16,19 +16,15 @@ import { AnalysisReadonly } from "./analysis-readonly";
 import { CreateAnalysisButton } from "./create-analysis-button";
 
 /** Tela da análise (SPEC `/analise/[id]`): rascunho editável ou versão fixada em leitura, mais o histórico. */
-export async function AnalysisView({
-  params,
-  research,
-}: {
-  params: Promise<{ id: string }>;
-  /** Link para as vendas parecidas na Pesquisa, composto pela rota a partir do lote da análise. */
-  research?: (lotId: string) => React.ReactNode;
-}) {
+export async function AnalysisView({ params }: { params: Promise<{ id: string }> }) {
   const parsed = analysisIdSchema.safeParse((await params).id);
   if (!parsed.success) notFound();
   const analysis = await getAnalysis(parsed.data);
   if (!analysis) notFound();
-  const versions = await listLotAnalyses(analysis.lot.id);
+  const [versions, market] = await Promise.all([
+    listLotAnalyses(analysis.lot.id),
+    getLotMarketReference(analysis.lot.id),
+  ]);
 
   const isFixed = analysis.status === "fixed";
   const { lot } = analysis;
@@ -65,7 +61,6 @@ export async function AnalysisView({
               <ArrowLeft aria-hidden="true" />
               Ver lote
             </ButtonLink>
-            {research ? <Suspense fallback={null}>{research(lot.id)}</Suspense> : null}
             {isFixed ? (
               analysis.openDraftId ? (
                 <ButtonLink href={`/analise/${analysis.openDraftId}`}>
@@ -101,7 +96,11 @@ export async function AnalysisView({
         </Alert>
       ) : null}
 
-      {isFixed ? <AnalysisReadonly analysis={analysis} /> : <AnalysisEditor analysis={analysis} />}
+      {isFixed ? (
+        <AnalysisReadonly analysis={analysis} market={market} />
+      ) : (
+        <AnalysisEditor analysis={analysis} market={market} />
+      )}
 
       <Section aria-labelledby="analysis-history" className="border-t border-border pt-7">
         <SectionTitle id="analysis-history">Histórico de versões</SectionTitle>

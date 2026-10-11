@@ -5,7 +5,7 @@ import { calculateMaxBid, missingFields, simulateBid } from "@/domain/finance/ca
 import { cents } from "@/domain/money";
 
 import { defaultsInputFromListing, draftDefaults, draftSourceOf, UNKNOWN_VEHICLE } from "./draft-defaults";
-import { FORM_FIELD } from "./labels";
+import { FORM_FIELD, limitPositionText } from "./labels";
 import { readAnalysisInputs } from "./read-inputs";
 import { analysisFormSchema, toAnalysisInputs } from "./schemas";
 import { fixedSummary, liveSummary } from "./summary-model";
@@ -256,5 +256,27 @@ describe("draftDefaults", () => {
     const draft = draftDefaults(UNKNOWN_VEHICLE, null);
     expect(draft).toMatchObject({ marketValueCents: null, repairCostCents: null, tiresCostCents: 240_000 });
     expect(draft.notes).toMatch(/Estimar a partir da FIPE/);
+  });
+});
+
+describe("limitPositionText (bloco Concorrência)", () => {
+  const position = (below: number, above: number, equal = 0) => ({
+    n: below + above + equal,
+    below,
+    above,
+    equal,
+    percentile: Math.round(((below + equal / 2) / (below + above + equal)) * 100),
+  });
+
+  it("conta quem saiu acima, com o percentil", () => {
+    expect(limitPositionText(position(4, 14))).toBe("fica abaixo de 14 das 18 vendas parecidas (P22)");
+    expect(limitPositionText(position(2, 3, 1))).toBe("fica abaixo de 3 das 6 vendas parecidas e empata com 1 (P42)");
+  });
+
+  it("nas pontas, todas; com uma venda, a única", () => {
+    expect(limitPositionText(position(0, 5))).toBe("fica abaixo de todas as 5 vendas parecidas (P0)");
+    expect(limitPositionText(position(5, 0))).toBe("fica acima de todas as 5 vendas parecidas (P100)");
+    expect(limitPositionText(position(1, 0))).toBe("fica acima da única venda parecida (P100)");
+    expect(limitPositionText(position(0, 0, 2))).toBe("empata com todas as 2 vendas parecidas (P50)");
   });
 });

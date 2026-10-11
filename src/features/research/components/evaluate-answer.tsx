@@ -1,40 +1,15 @@
 import type { ReactNode } from "react";
 
 import { ButtonLink, Card } from "@/components/ui";
-import { type EvaluateFilters, familyLabel, loosened } from "@/domain/research/evaluate";
-import { vehicleLabel } from "@/domain/research/filters";
-import { ORIGIN_LABELS } from "@/features/listings/filter-labels";
+import { type EvaluateFilters, loosened } from "@/domain/research/evaluate";
 import { formatCompactBRL, formatDate, formatRatio } from "@/lib/format";
 
-import {
-  CONDITION_LABELS,
-  CONFIDENCE_SHORT_LABELS,
-  EVALUATE_LEVEL_LABELS,
-  loosenLabel,
-  mileageLabel,
-  salesLabel,
-  yearRangeLabel,
-} from "../labels";
+import { CONFIDENCE_SHORT_LABELS, EVALUATE_LEVEL_LABELS, evaluateScopeLabel, loosenLabel, salesLabel } from "../labels";
 import { evaluateHref } from "../search";
 import type { EvaluationView } from "../types";
 
 /** Com mais anos-modelo que isto sem filtro de ano, a faixa avisa que mistura anos. */
 const MIXED_YEARS = 3;
-
-/** O recorte em palavras: "Chevrolet Onix · família ONIX PLUS · 2022 a 2024 · Sem monta declarada". */
-export function evaluateScopeLabel(filters: EvaluateFilters, versionLabels: Readonly<Record<string, string>>): string {
-  return [
-    filters.vehicle === null ? null : vehicleLabel(filters.vehicle),
-    filters.version === null ? null : `versão ${versionLabels[filters.version] ?? filters.version}`,
-    filters.version !== null || filters.family === null ? null : `família ${familyLabel(filters.family)}`,
-    yearRangeLabel(filters),
-    filters.maxKm === null ? null : `até ${mileageLabel(filters.maxKm)}`,
-    CONDITION_LABELS[filters.condition],
-    filters.origin === null ? null : ORIGIN_LABELS[filters.origin],
-  ]
-    .filter((part) => part !== null)
-    .join(" · ");
-}
 
 /**
  * Resposta do Avaliar (docs/PLANO-MERCADO.md §5.1): a faixa típica de arremate em R$ antes de qualquer gráfico, com a

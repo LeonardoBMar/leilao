@@ -5,17 +5,23 @@ import { useState } from "react";
 import { Badge, Card, CurrencyInput, Money } from "@/components/ui";
 import { compareToLimit, differenceToLimit, simulateBid } from "@/domain/finance/calculator";
 import { type Cents, cents, parseBRL } from "@/domain/money";
+import type { LotMarketReference } from "@/features/research/types";
 import { formatBRL } from "@/lib/format";
 import { LIMIT_COMPARISON_LABELS, LIMIT_COMPARISON_VARIANTS } from "@/lib/limit-comparison";
 import { cn } from "@/lib/utils";
 
 import { FIELD_LABELS } from "../labels";
 import type { SummaryModel } from "../summary-model";
+import { CompetitionBlock } from "./competition-block";
 
 type AnalysisSummaryProps = {
   model: SummaryModel;
   /** Lance atual do lote: valor inicial da simulação. */
   currentBid: Cents | null;
+  /** Vendas parecidas do lote, para o bloco Concorrência; `null` sem marca e modelo reconhecidos. */
+  market: LotMarketReference | null;
+  /** Época das vendas do bloco Concorrência (análise fixada). */
+  marketNote?: string;
 };
 
 /**
@@ -23,7 +29,7 @@ type AnalysisSummaryProps = {
  * simulação de lance. A simulação é exploratória: não altera o lance atual do lote nem é gravada (SPEC RF-04).
  * Renderizar fora do <form> da análise, para o lance simulado nunca ser enviado.
  */
-export function AnalysisSummary({ model, currentBid }: AnalysisSummaryProps) {
+export function AnalysisSummary({ model, currentBid, market, marketNote }: AnalysisSummaryProps) {
   const { outcome, complete } = model;
   const [bidText, setBidText] = useState(currentBid === null ? "" : (currentBid / 100).toFixed(2).replace(".", ","));
   const parsedBid = bidText.trim() === "" ? null : parseBRL(bidText);
@@ -107,6 +113,15 @@ export function AnalysisSummary({ model, currentBid }: AnalysisSummaryProps) {
           </Badge>
         )}
       </section>
+
+      {market === null ? null : (
+        <CompetitionBlock
+          market={market}
+          maxBid={outcome.kind === "viable" ? outcome.maxBid : null}
+          bid={bid}
+          note={marketNote}
+        />
+      )}
     </Card>
   );
 }

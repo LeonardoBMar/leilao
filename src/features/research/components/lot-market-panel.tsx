@@ -5,11 +5,16 @@ import { ButtonLink, Section, SectionHeader, SectionTitle, Skeleton } from "@/co
 import { DEFAULT_EVALUATE_FILTERS, type EvaluateComparable, targetFilters } from "@/domain/research/evaluate";
 import { formatCompactBRL, formatDate, formatKm, formatRatio } from "@/lib/format";
 
-import { CONFIDENCE_SHORT_LABELS, EVALUATE_LEVEL_LABELS, salesLabel, SIMILARITY_LABELS } from "../labels";
+import {
+  CONFIDENCE_SHORT_LABELS,
+  EVALUATE_LEVEL_LABELS,
+  evaluateScopeLabel,
+  salesLabel,
+  SIMILARITY_LABELS,
+} from "../labels";
 import { getEvaluation, getLotTarget } from "../queries";
 import { evaluateHref } from "../search";
 import type { EvaluateSaleView } from "../types";
-import { evaluateScopeLabel } from "./evaluate-answer";
 
 /** Comparáveis mostrados na ficha; o resto fica no Avaliar. */
 const SHOWN = 5;

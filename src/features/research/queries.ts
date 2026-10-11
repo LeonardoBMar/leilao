@@ -9,7 +9,13 @@ import { type EstimateTarget, SALES_WINDOW_MS } from "@/domain/listings/estimate
 import { MARKET_VALUE_ORIGINS } from "@/domain/listings/fipe-match";
 import { VEHICLE_ORIGINS } from "@/domain/listings/origin";
 import { cents } from "@/domain/money";
-import { evaluate, type EvaluateFilters, inCut } from "@/domain/research/evaluate";
+import {
+  DEFAULT_EVALUATE_FILTERS,
+  evaluate,
+  type EvaluateFilters,
+  inCut,
+  targetFilters,
+} from "@/domain/research/evaluate";
 import {
   comparisonGroups,
   DAMAGE_OF_CONDITION,
@@ -45,6 +51,8 @@ import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
 import { vehicleKeySql } from "@/server/vehicle-key-sql";
 
+import { evaluateScopeLabel } from "./labels";
+import { evaluateHref } from "./search";
 import type {
   BidCurveView,
   ComparisonView,
@@ -52,6 +60,7 @@ import type {
   EvaluateOpenListing,
   EvaluateSaleView,
   EvaluationView,
+  LotMarketReference,
   LotTarget,
   ModelRanking,
   ModelSales,
@@ -693,6 +702,31 @@ export const getLotTarget = cache(async (lotId: string): Promise<LotTarget | nul
           ? null
           : cents(listing.marketValueCents),
     },
+  };
+});
+
+/**
+ * Mercado do lote para a análise (bloco Concorrência e snapshot da fixação, docs/PLANO-MERCADO.md §8): o mesmo recorte
+ * do preço provável e do painel da ficha. Lote de outro dono ou sem marca e modelo é `null`.
+ */
+export const getLotMarketReference = cache(async (lotId: string): Promise<LotMarketReference | null> => {
+  const lot = await getLotTarget(lotId);
+  if (lot === null) return null;
+  const filters = targetFilters(lot.target, lot.id, []);
+  const evaluation = await getEvaluation(filters, lot.target);
+  if (evaluation === null) return null;
+  const { answer } = evaluation;
+  return {
+    level: evaluation.level,
+    scope: evaluateScopeLabel(filters, evaluation.versionLabels),
+    href: evaluateHref({ ...DEFAULT_EVALUATE_FILTERS, lot: lot.id }),
+    sales: evaluation.comparables.flatMap(({ sale, excluded }) =>
+      excluded ? [] : [{ id: sale.id, finalBid: sale.finalBid }],
+    ),
+    band:
+      answer.kind === "band"
+        ? { low: answer.low, median: answer.median, high: answer.high, confidence: answer.confidence }
+        : null,
   };
 });
 

@@ -26,6 +26,7 @@ import {
 import type { CommissionMode } from "@/domain/finance/calculator";
 import { estimateFromFipe } from "@/domain/finance/defaults";
 import { parseBRL } from "@/domain/money";
+import type { LotMarketReference } from "@/features/research/types";
 import { fieldError, fieldValue, idleState } from "@/lib/action-state";
 import { toCalendarDateInput, toMonthInput } from "@/lib/dates";
 import { formatBps, formatTime } from "@/lib/format";
@@ -56,7 +57,7 @@ const bpsToInput = (value: number | null) =>
 type MoneyField = (typeof FIXED_COST_LABELS)[number][0] | "riskReserve" | "desiredMargin";
 
 /** Rascunho da análise (SPEC `/analise/[id]`, RF-04): formulário + resumo ao vivo. */
-export function AnalysisEditor({ analysis }: { analysis: AnalysisDetail }) {
+export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail; market: LotMarketReference | null }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, pending] = useActionState(saveAnalysisAction.bind(null, analysis.id), idleState);
   const [inputs, setInputs] = useState(analysis.inputs);
@@ -369,7 +370,7 @@ export function AnalysisEditor({ analysis }: { analysis: AnalysisDetail }) {
         </div>
       </form>
 
-      <AnalysisSummary model={liveSummary(inputs)} currentBid={analysis.lot.currentBid} />
+      <AnalysisSummary model={liveSummary(inputs)} currentBid={analysis.lot.currentBid} market={market} />
     </div>
   );
 }

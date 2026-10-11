@@ -1,7 +1,12 @@
 import type { ComparableLevel, EstimateConfidence, SimilarityReason } from "@/domain/listings/estimates";
 import { cents } from "@/domain/money";
-import type { BandPosition, EvaluateLoosen } from "@/domain/research/evaluate";
-import type { ResearchCategory, ResearchCondition, ResearchMetric } from "@/domain/research/filters";
+import { type BandPosition, type EvaluateFilters, type EvaluateLoosen, familyLabel } from "@/domain/research/evaluate";
+import {
+  type ResearchCategory,
+  type ResearchCondition,
+  type ResearchMetric,
+  vehicleLabel,
+} from "@/domain/research/filters";
 import {
   type ExcludedSales,
   type GroupSummary,
@@ -9,6 +14,7 @@ import {
   MIN_SAMPLE,
   RATIO_BOUNDS,
 } from "@/domain/research/summary";
+import { ORIGIN_LABELS } from "@/features/listings/filter-labels";
 import { formatCompactBRL, formatRatio } from "@/lib/format";
 
 export const CONDITION_LABELS = {
@@ -151,3 +157,18 @@ export const CONFIDENCE_SHORT_LABELS = {
   medium: "média",
   low: "baixa",
 } as const satisfies Record<EstimateConfidence, string>;
+
+/** O recorte em palavras: "Chevrolet Onix · família ONIX PLUS · 2022 a 2024 · Sem monta declarada". */
+export function evaluateScopeLabel(filters: EvaluateFilters, versionLabels: Readonly<Record<string, string>>): string {
+  return [
+    filters.vehicle === null ? null : vehicleLabel(filters.vehicle),
+    filters.version === null ? null : `versão ${versionLabels[filters.version] ?? filters.version}`,
+    filters.version !== null || filters.family === null ? null : `família ${familyLabel(filters.family)}`,
+    yearRangeLabel(filters),
+    filters.maxKm === null ? null : `até ${mileageLabel(filters.maxKm)}`,
+    CONDITION_LABELS[filters.condition],
+    filters.origin === null ? null : ORIGIN_LABELS[filters.origin],
+  ]
+    .filter((part) => part !== null)
+    .join(" · ");
+}

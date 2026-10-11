@@ -1,5 +1,7 @@
+import type { Route } from "next";
+
 import type { DamageLevel } from "@/domain/listings/condition";
-import type { EstimateSale, EstimateTarget } from "@/domain/listings/estimates";
+import type { ComparableLevel, EstimateConfidence, EstimateSale, EstimateTarget } from "@/domain/listings/estimates";
 import type { MarketValueOrigin } from "@/domain/listings/fipe-match";
 import type { Cents } from "@/domain/money";
 import type { Evaluation } from "@/domain/research/evaluate";
@@ -134,6 +136,22 @@ export type EvaluationView = Evaluation<EvaluateSaleView> & {
 
 /** Lote do usuário como alvo do Avaliar. */
 export type LotTarget = { id: string; label: string; target: EstimateTarget };
+
+/**
+ * Mercado do lote para a análise (docs/PLANO-MERCADO.md §8): as vendas do recorte do preço provável que entram na
+ * conta, a faixa e o recorte em palavras. Serializável: vai para o resumo da análise (client) e para o snapshot.
+ */
+export type LotMarketReference = {
+  level: ComparableLevel;
+  /** O recorte em palavras ("Chevrolet Onix · 2022 a 2024 · Sem monta declarada"). */
+  scope: string;
+  /** Avaliar com o lote como alvo. */
+  href: Route;
+  /** Vendas que entram na conta, com o lance final. */
+  sales: { id: string; finalBid: Cents }[];
+  /** Faixa típica; `null` com menos de 5 vendas. */
+  band: { low: Cents; median: Cents; high: Cents; confidence: EstimateConfidence } | null;
+};
 
 /** Lote aberto do recorte do Avaliar. */
 export type EvaluateOpenListing = {
