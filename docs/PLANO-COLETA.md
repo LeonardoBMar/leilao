@@ -95,7 +95,7 @@ Ainda não implementada; precisa de aprovação para virar etapa. Primeira da or
 
 ### 2.6 Candidata: Mega Leilões (levantamento de 2026-10-02)
 
-Ainda não implementada; precisa de aprovação. **Passa na regra do preço final.**
+**Leilões PB implementada em 11/10/2026 (D-67)**, para cobrir o Nordeste; Leilão Brasil e Gustavo Reis seguem sem adaptador. **Passa na regra do preço final.**
 
 | Item | Achado | Consequência |
 | --- | --- | --- |
@@ -107,7 +107,7 @@ Ainda não implementada; precisa de aprovação. **Passa na regra do preço fina
 
 ### 2.7 Candidata: plataforma Suporte Leilões (Leilão Brasil, Leilões PB, Gustavo Reis; levantamento de 2026-10-02)
 
-Ainda não implementada; precisa de aprovação. **Passa na regra do preço final.** Os três sites usam a mesma plataforma (fotos em `static.suporteleiloes.com.br`), então um adaptador valeria para os três.
+**Leilões PB implementada em 11/10/2026 (D-67)**, para cobrir o Nordeste; Leilão Brasil e Gustavo Reis seguem sem adaptador. **Passa na regra do preço final.** Os três sites usam a mesma plataforma (fotos em `static.suporteleiloes.com.br`), então um adaptador valeria para os três.
 
 | Item | Achado | Consequência |
 | --- | --- | --- |
@@ -117,6 +117,8 @@ Ainda não implementada; precisa de aprovação. **Passa na regra do preço fina
 | Dados do lote | Estado do lote em **JSON embutido na página**: situação numérica, lance inicial, avaliação, número de lances, data de fechamento (fuso `America/Fortaleza`), UF; endereço do bem; processo e comitente. Leilões PB mostra "valor médio de mercado" | Avaliação como valor de mercado rotulado (D-30) |
 | Resultado | Depois do fim o JSON mantém **`valorArremate`** no vendido (ex.: Renault Clio 2014/2015, R$ 8.805,10; VW Up 2014/2015, R$ 23.742,74) e `null` no sem lance | **Preço final disponível** |
 | Dados pessoais | O lance traz `autor` com id, cidade, UF e apelido de quem deu o lance; o lote judicial traz número do processo | `autor` e processo descartados antes de gravar; redação comum (D-40) |
+
+**Revisão de 11/10/2026 (cobertura do Nordeste).** O sistema não tinha nenhum lote em SE, AL, PE, PB e RN, e a **Leilões PB** passa a ser a candidata recomendada para a região: pátio em Bayeux/PB (Grande João Pessoa), ~75 lotes abertos e leilões de seguradora várias vezes por semana (HDI/Yelum, Mapfre, Tokio Marine, Porto, Zurich, Safra; eventos 2080 a 2100 em ~3 semanas). Num evento encerrado (HDI 2093, 48 lotes) o JSON trouxe `valorArremate` nos vendidos (`status` 100; ex.: Fiat Strada 2014/2015, R$ 24.800; Renault Duster 2025/2026, R$ 47.400) e `null` nos sem venda (`status` 8 e 99). O evento agrupa vários lotes (`/eventos/leilao/{id}/{slug}` lista `/lote/{loteId}`), diferente do evento por bem da Leilão Brasil. Para PE e RN, a Lance Certo (plataforma VIP) foi triada em [FONTES-PENDENTES](FONTES-PENDENTES.md) #30.
 
 ### 2.8 Candidata: Leilão Detran-MG (`leilao.detran.mg.gov.br`, levantamento de 2026-10-09)
 

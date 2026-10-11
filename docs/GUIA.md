@@ -109,7 +109,7 @@ Por que o dashboard não compara o lance atual com o histórico: o lance sobe at
 
 ## 9. Leilões, monitores e alertas
 
-O app coleta sozinho, de 2 em 2 horas, os lotes dos sites de leilão (hoje o Leilo, o Pátio Estadual São Carlos, a Freitas, o Detran-MG, o Leilão Online, os leilões do Detran-SC e o Superbid, só veículos e motos). Você não cadastra nada para isso. Os lotes de todos os sites aparecem juntos em Leilões, nos monitores e nas estimativas; o cartão diz de qual site veio cada um.
+O app coleta sozinho, de 2 em 2 horas, os lotes dos sites de leilão (hoje o Leilo, o Pátio Estadual São Carlos, a Freitas, o Detran-MG, o Leilão Online, os leilões do Detran-SC, o Superbid e a Leilões PB, da Paraíba, só veículos e motos). Você não cadastra nada para isso. Os lotes de todos os sites aparecem juntos em Leilões, nos monitores e nas estimativas; o cartão diz de qual site veio cada um.
 
 **Leilões** é o catálogo; **Minhas análises** são os lotes que você levou para análise (todos, ou agrupados por leilão em *Por leilão*), com os leilões que você cadastrou. Lá os filtros também aplicam na hora: busca, **Lance × limite** (abaixo, no limite, acima do seu limite, sem lance viável ou sem comparação), leilão próximo ou realizado e, em *Mais filtros*, análise fixada, resultado, acompanhados e arquivados. Em *Todos os lotes*, ordene por data do leilão, maior folga até o limite ou atualizados recentemente.
 

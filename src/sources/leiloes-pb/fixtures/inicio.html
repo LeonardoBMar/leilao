@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <link rel="shortcut icon" href="https://static.suporteleiloes.com.br/leiloespbcombr/arquivos-avulsos/1/file-6888ee3f9eb9b-6888ee3f9fdc6.png">
+    
+    <link rel="stylesheet" href="/libs/fontawesome/css/all.min.css">
+    <script type="text/javascript">
+        var isLogado = false;
+    </script>
+
+                
+            <title>Leilões PB - Casa de Leilões</title>
+    
+                <link rel="stylesheet" href="/build/app.11be32c1.css">
+        <style>
+            :root {
+                --main-color-primary: #0d1a1f;
+                --main-color-secondary: #c5a13c;
+            }
+            .logo {
+                background-image: url('https://static.suporteleiloes.com.br/leiloespbcombr/arquivos-avulsos/1/6888fb648ac79-6888fb64a86df.jpg');
+            }
+            @media screen and (max-width: 767px) {
+                                .logo {
+                    background-image: url('https://storage-cf.suporteleiloes.com.br/leiloespbcombr/banners/logot.png');
+                }
+                            }
+        </style>
+    
+    <link rel="stylesheet" href="/build/home.7f01fea9.css">
+
+        
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+<header>
+    <div class="center">
+        <div class="cont-logo">
+            <a href="/" class="logo">Leilões PB - Casa de Leilões</a>
+        </div>
+
+        <div class="cont-middle">
+            <div class="cont-left">
+                <div class="menu-mobile show-mobile">
+        <a href="/login" class="btn-auth-mobile">Entrar</a>
+        <a href="/buscador" class="btn-mobile-search">
+        <i class="fa-light fa-magnifying-glass"></i>
+    </a>
+    <a href="/agenda" class="btn-mobile-calendar">
+        <i class="fa-light fa-calendar-check"></i>
+    </a>
+    <a class="btn-mobile-menu">
+        <i class="fa-regular fa-bars closed"></i>
+        <i class="fa-solid fa-times opened"></i>
+    </a>
+
+    <div id="menu-mobile" class="menu-mobile-global">
+        <div class="menu-mobile-content">
+            <div class="auth">
+                                    <a href="https://arrematante.leiloespb.com.br/#/cadastro" class="btn-auth btn-conta">Criar conta</a>
+                    <a href="/login" class="btn-auth btn-login">Entrar</a>
+                            </div>
+            <h4>Site</h4>
+            <ul class="mobile-categorias">
+                <li>
+                    <a href="/agenda">Agenda</a>
+                </li>
+                <li>
+                    <a href="/quem-somos">Quem Somos</a>
+                </li>
+                <li>
+                    <a href="/fale-conosco">Contato</a>
+                </li>
+            </ul>
+            <h4>Busca por categoria</h4>
+            <ul class="mobile-categorias">
+                                    <li>
+                        <a href="/buscador?categoria=6">Diversos</a>
+                                                    <ul class="m2">
+                                                                    <li>
+                                        <a href="/buscador?subcategoria=35">Bens diversos</a>
+                                    </li>
+                                                            </ul>
+                                            </li>
+                                    <li>
+                        <a href="/buscador?categoria=2">Imóveis</a>
+                                                    <ul class="m2">
+                                                                    <li>
+                                        <a href="/buscador?subcategoria=15">Apartamento/Casa</a>
+                                    </li>
+                                                                    <li>
+                                        <a href="/buscador?subcategoria=19">Comercial</a>
+                                    </li>
+                                                                    <li>
+                                        <a href="/buscador?subcategoria=18">Terreno/Lote</a>
+                                    </li>
+                                                            </ul>
+                                            </li>
+                                    <li>
+                        <a href="/buscador?categoria=1">Veículos</a>
+                                                    <ul class="m2">
+                                                                    <li>
+                                        <a href="/buscador?subcategoria=8">Carros</a>
+                                    </li>
+                                                                    <li>
+                                        <a href="/buscador?subcategoria=14">Outros</a>
+                                    </li>
+                                                                    <li>
+                                        <a href="/buscador?subcategoria=37">Utilitário</a>
+                                    </li>
+                                                            </ul>
+                                            </li>
+                            </ul>
+        </div>
+    </div>
+
+</div>
+                <div class="cont-search">
+                    <form method="get" action="/buscador" id="globalBusca">
+                        <input type="text" name="busca" id="globalBuscaInput" placeholder="O que está buscando?" autocomplete="off">
+                        <button type="submit">
+                            <i class="fa-light fa-magnifying-glass"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <div class="cont-nav">
+                                        <div class="cont-navExplore">
+    <form id="buscadorHeaderForm" method="get" action="/buscador">
+        <div class="row-01">
+            <div class="c-input c-input-ad i-busca">
+                <label for="palavra-chave">Busca por palavra-chave</label>
+                <input id="palavra-chave" type="text" name="busca" value="" placeholder="Buscar por uma palavra específica">
+            </div><!---->
+<!--            <div class="c-input c-input-ad i-id">
+                <label for="palavra-chave">ID</label>
+                <input id="id" type="text" name="id" value="" placeholder="Buscar por uma palavra específica">
+            </div>-->
+
+            <div class="c-input c-input-ad i-categoria">
+                <label for="categoria">Categoria</label>
+                <select id="categoria" name="categoria">
+                    <option value="0" disabled selected>Todas as categorias</option>
+                </select>
+            </div><!---->
+
+            <div class="c-input c-input-ad i-subcategoria">
+                <label for="subcategoria">Subcategoria</label>
+                <select id="subcategoria" name="subcategoria">
+                    <option value="0" disabled selected>Todas as categorias</option>
+                </select>
+            </div><!---->
+
+            <div class="c-input c-input-ad i-estados">
+                <label for="uf">Estados</label>
+                <select id="uf" name="uf">
+                    <option value="0" disabled selected>Todos os estados</option>
+                </select>
+            </div><!---->
+
+            <div class="c-input c-input-ad i-cidades">
+                <label for="cidade">Cidade</label>
+                <select id="cidade" name="cidade">
+                    <option value="0" disabled selected>Todas as cidades</option>
+                </select>
+            </div><!---->
+        </div>
+
+        <div class="row-02">
+            <div class="c-input c-input-ad i-bairros">
+                <label for="bairro">Bairro</label>
+                <select id="bairro" name="bairro">
+                    <option value="0" disabled selected>Todos o bairros</option>
+                </select>
+            </div><!---->
+
+            <div class="c-input c-input-ad i-comitentes">
+                <label for="comitente">Comitente</label>
+                <select name="comitente" id="comitente">
+                    <option value="0" disabled selected>Todos os comitentes</option>
+                </select>
+            </div><!---->
+
+            <div class="c-input-ad c-checkbox">
+                <label>
+                    <input type="checkbox" name="judicial" value="1" >
+                    <span>Judiciais</span>
+                </label>
+
+                <label>
+                    <input type="checkbox" name="extrajudicial" value="1" >
+                    <span>Extrajudiciais</span>
+                </label>
+            </div><!---->
+
+            <div class="c-input c-input-ad i-valores">
+                <div class="v-1">
+                    <label for="valorInicial">Faixa de valor</label>
+                    <input id="valorInicial" type="text" name="valorInicial" placeholder="0,00"  value="">
+                    <small>R$</small>
+                </div>
+
+                <span>até</span>
+
+                <div class="v-2">
+                    <label for="valorFinal" class="label-reset">Faixa de valor</label>
+                    <input id="valorFinal" type="text" name="valorFinal" placeholder="0,00" value="">
+                    <small>R$</small>
+                </div>
+            </div><!---->
+        </div>
+
+        <div class="row-03 row-03-input">
+            <div class="c-input c-input-ad i-id">
+<!--                <label for="palavra-chave">BUSCAR POR ID:</label>-->
+                <input id="id" type="text" name="id" value="" placeholder="Buscar por ID de Lote ou Leilão">
+            </div>
+             <!-- @TODO -->
+            <button type="submit">Pesquisar</button>
+        </div>
+    </form>
+</div>                    
+                    <div class="cont-nav ps-r show-desktop">
+                        <div class="nav-item show-navCategorias">
+                            <a><!--<span>Explore por</span> -->Categorias</a>
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </div>
+
+                        <div class="cont-navCategoria">
+                            <ul class="menu">
+                                                                    <li>
+                                        <a href="/buscador?categoria=6">Diversos</a>
+                                                                                    <ul class="m2">
+                                                                                            <li>
+                                                    <a href="/buscador?subcategoria=35">Bens diversos</a>
+                                                </li>
+                                                                                        </ul>
+                                                                            </li>
+                                                                    <li>
+                                        <a href="/buscador?categoria=2">Imóveis</a>
+                                                                                    <ul class="m2">
+                                                                                            <li>
+                                                    <a href="/buscador?subcategoria=15">Apartamento/Casa</a>
+                                                </li>
+                                                                                            <li>
+                                                    <a href="/buscador?subcategoria=19">Comercial</a>
+                                                </li>
+                                                                                            <li>
+                                                    <a href="/buscador?subcategoria=18">Terreno/Lote</a>
+                                                </li>
+                                                                                        </ul>
+                                                                            </li>
+                                                                    <li>
+                                        <a href="/buscador?categoria=1">Veículos</a>
+                                                                                    <ul class="m2">
+                                                                                            <li>
+                                                    <a href="/buscador?subcategoria=8">Carros</a>
+                                                </li>
+                                                                                            <li>
+                                                    <a href="/buscador?subcategoria=14">Outros</a>
+                                                </li>
+                                                                                            <li>
+                                                    <a href="/buscador?subcategoria=37">Utilitário</a>
+                                                </li>
+                                                                                        </ul>
+                                                                            </li>
+                                                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cont-nav ps-r">
+                    <div class="nav-item itemLink">
+                        <a href="/quem-somos"><!--<span>Saiba</span> -->Quem Somos</a>
+                    </div>
+
+                    
+                    <div class="cont-navMore">
+                        <ul class="menu">
+                            <li class="nav-home">
+                                <a href="/">Home</a>
+                            </li>
+
+                            <li class="nav-quemSomos">
+                                <a href="#">Quem Somos</a>
+                            </li>
+
+                            <li class="nav-agenda">
+                                <a href="#eventos">Eventos</a>
+                            </li>
+
+                            
+                            <li class="nav-contato">
+                                <a href="/fale-conosco">Fale Conosco</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cont-right">
+                <div class="cont-actions">
+                    
+                                    </div>
+
+                <div class="cont-auth show-desktop">
+                                            <a href="/login" class="btn-auth btn-login">Entrar</a>
+                    <a href="https://arrematante.leiloespb.com.br/#/cadastro" class="btn-auth btn-conta">Criar conta</a>
+                                    </div>
+            </div>
+        </div>
+    </div><!-- END Center -->
+</header>
+<section class="section-banner">
+    <div class="slide-home">
+                <div class="item">
+            <a href="www.leiloespb.com.br">
+                <img src="https://static.suporteleiloes.com.br/leiloespbcombr/banners/sl-banner-217-6ac00a8168ddb-6ac00a8179c79.png" alt="">
+            </a>
+        </div><!-- END Unique -->
+                <div class="item">
+            <a href="https://t.me/+Dae3imr9CrE4YjA5">
+                <img src="https://static.suporteleiloes.com.br/leiloespbcombr/banners/sl-banner-64-6888e3a94959a-6888e3a95ccf0.png" alt="">
+            </a>
+        </div><!-- END Unique -->
+                <div class="item">
+            <a href="https://arrematante.leiloespb.com.br/#/cadastro">
+                <img src="https://static.suporteleiloes.com.br/leiloespbcombr/banners/sl-banner-181-6a4c0649a3c6d-6a4c0649ab903.png" alt="">
+            </a>
+        </div><!-- END Unique -->
+                <div class="item">
+            <a href="https://wa.me/558391379011">
+                <img src="https://static.suporteleiloes.com.br/leiloespbcombr/banners/sl-banner-191-68c01ba5cd363-68c01ba5d8803.png" alt="">
+            </a>
+        </div><!-- END Unique -->
+                <div class="item">
+            <a href="https://www.youtube.com/watch?v=dPF0fm210i4">
+                <img src="https://static.suporteleiloes.com.br/leiloespbcombr/banners/sl-banner-196-69bd634b4b6bf-69bd634b5e86f.png" alt="">
+            </a>
+        </div><!-- END Unique -->
+            </div>
+</section><!-- END Section Banner -->
+
+
+<section class="section-destaques">
+    <div class="center">
+        <div id="destaque-home-container">
+        
+
+
+
+    <div class="swiper swiper01 cont-cards">
+        <div class="swiper-wrapper">
+                    </div>
+    </div>
+
+
+        </div>
+    </div><!-- END Center -->
+</section><!-- END Section Destaques -->
+
+<section class="optionsFill" id="eventos">
+    <div class="center">
+        <div class="cont-rowOptions">
+                        <ul id="home-nav-cat">
+                <li class="option-01 option-todos" data-tipo="todos">
+                    <a href="?tipo=todos" class="ativo">Todos</a>
+                </li>
+
+                <li class="option-02 option-leilao" data-tipo="leilao">
+                    <a href="?tipo=leilao" class="">Leilão</a>
+                </li>
+
+                <li class="option-03 option-vendaDireta" data-tipo="vendaDireta">
+                    <a href="?tipo=vendaDireta" class="">Venda Direta</a>
+                </li>
+
+                <li class="option-04 option-judicial" data-tipo="judicial">
+                    <a href="?tipo=judicial" class="">Judicial</a>
+                </li>
+
+                <li class="option-05 option-extrajudicial" data-tipo="extrajudicial">
+                    <a href="?tipo=extrajudicial" class="">Extrajudicial</a>
+                </li>
+
+                
+                                <li class="option-07 option-encerrados" data-tipo="encerrados">
+                    <a href="?tipo=encerrados" class="">Encerrados</a>
+                </li>
+                            </ul>
+
+            <a class="show-more">
+                <i class="fa-solid fa-ellipsis"></i>Mais
+            </a>
+        </div><!---->
+    </div><!-- END Center -->
+</section><!-- END Section Destaques -->
+
+<!--<section class="section-eventos">
+    <div class="center">
+        <h2><span>Próximos</span>&nbsp;eventos</h2>
+    </div>
+</section>-->
+
+<div id="home-eventos">
+<section class="section-eventos">
+    <div class="center">
+        <div class="flex-cards">
+                            
+
+
+
+<article>
+        <div class="cont-picture">
+        <div class="h-card">
+            
+                    </div>
+
+        <a href="/eventos/leilao/2095/leilao-zurich-seguros">
+                        <img src="https://static.suporteleiloes.com.br/leiloespbcombr/leiloes/2095/6abba3752cc48-6abba3753088e.jpg" alt="LEILÃO ZURICH SEGUROS" class="img-evento">
+                    </a>
+    </div>
+
+    <div class="cont-infos">
+        <div class="flex-1">
+            <a href="/eventos/leilao/2095/leilao-zurich-seguros">
+                <div class="r1">
+                    <strong class="strong-cod"><span>COD.</span>&nbsp;2095 / 264/2026 <span class="evento-qtd-lotes">2 lotes</span></strong>
+
+                    <strong class="strong-status status-3">Aberto para lances</strong>
+                </div>
+
+                <h3>LEILÃO ZURICH SEGUROS</h3>
+
+                <div class="r2">
+                    <div class="c-left">
+                        <span>Online e Presencial</span>
+                    </div>
+
+                    <div class="c-right">
+                        <!-- @TODO: Correto é fazer loop e ter um efeito de transição entre os comitentes -->
+                        <!-- @TODO: Pensar em uma estratégia para a logomarca ficar elegante aqui, sem fundo. Talvez uma base de logomarcas de comitentes na SL -->
+                                                <img src="https://static.suporteleiloes.com.br/leiloespbcombr/comitentes/sl-c-40-69a8363fd8caa-69a8363fd8fe1.png" alt="">
+                                            </div>
+                </div>
+
+                                <ul class="cont-datas">
+                                        <li class="">
+                        <div class="line-1">
+                            <strong>Leilão</strong>
+                        </div>
+
+                            <div class="line-2">
+        <div class="col-line">
+            <strong>Data do encerramento</strong>
+            <span>09/10/2026</span>
+        </div>
+        <div class="col-line">
+            <strong>A partir das</strong>
+            <span>14:00</span>
+        </div>
+    </div>
+                    </li>
+
+                    <li style="opacity: 0;">
+                        <div class="line-1">
+                            <strong>Reset</strong>
+                        </div>
+
+                            <div class="line-2">
+        <div class="col-line">
+            <strong>Data do encerramento</strong>
+            <span>09/10/2026</span>
+        </div>
+        <div class="col-line">
+            <strong>A partir das</strong>
+            <span>14:00</span>
+        </div>
+    </div>
+                    </li>
+                    
+                    
+                    
+                                    </ul>
+                            </a>
+        </div>
+
+        <div class="f-card">
+            <ul class="list-itens">
+                                <li>
+                    <i class="fa-light fa-eye"></i>
+                    <span>6999</span>
+                </li>
+                
+                                                <li>
+                    <i class="fa-light fa-user i-10"></i>
+                    <span>16</span>
+                </li>
+                                
+                                <li>
+                    <i class="fa-light fa-file-pdf"></i>
+                    <span>1</span>
+                </li>
+                
+                                <li>
+                    <i class="fa-light fa-gavel"></i>
+                    <span>7</span>
+                </li>
+                            </ul>
+
+                            <div class="cont-actions">
+                    <a class="show-share"> <!-- @TODO -->
+                        <i class="fa-regular fa-share-nodes"></i>
+                    </a>
+
+                                        <div class="cont-share">
+                        <a href="https://api.whatsapp.com/send?text=LEILÃO ZURICH SEGUROS - https://leiloespb.com.br/eventos/leilao/2095/leilao-zurich-seguros" target="_blank">
+                            <i class="fa-brands fa-whatsapp"></i>WhatsApp
+                        </a>
+
+                        <a href="https://www.facebook.com/sharer/sharer.php?u=https://leiloespb.com.br/eventos/leilao/2095/leilao-zurich-seguros" type="_blank">
+                            <i class="fa-brands fa-facebook-f" style="font-size: 12px;"></i>Facebook
+                        </a>
+
+                        <a href="https://twitter.com/intent/tweet?text=LEILÃO ZURICH SEGUROS&url=https://leiloespb.com.br/eventos/leilao/2095/leilao-zurich-seguros" target="_blank">
+                            <i class="fa-brands fa-x-twitter"></i>Twitter
+                        </a>
+                        
+                        <a href="/cdn-cgi/l/email-protection">
+                            <i class="fa-regular fa-envelopes-bulk"></i>E-mail
+                        </a>
+                    </div>
+
+                    <a class="favico bind-fav-leiloes" data-id="2095"> <!-- @TODO -->
+                        <i class="fa-regular fa-star"></i>
+                    </a>
+                </div>
+                    </div>
+    </div>
+</article><!-- END Unique -->                            
+
+
+
+<article>
+        <div class="cont-picture">
+        <div class="h-card">
+            
+                    </div>
+
+        <a href="/eventos/leilao/2099/leilao-banco-safra">
+                        <img src="https://static.suporteleiloes.com.br/leiloespbcombr/leiloes/2099/6ac4d98bd066d-6ac4d98bd473b.jpg" alt="LEILÃO BANCO SAFRA" class="img-evento">
+                    </a>
+    </div>
+
+    <div class="cont-infos">
+        <div class="flex-1">
+            <a href="/eventos/leilao/2099/leilao-banco-safra">
+                <div class="r1">
+                    <strong class="strong-cod"><span>COD.</span>&nbsp;2099 / 268/2026 <span class="evento-qtd-lotes">8 lotes</span></strong>
+
+                    <strong class="strong-status status-3">Aberto para lances</strong>
+                </div>
+
+                <h3>LEILÃO BANCO SAFRA</h3>
+
+                <div class="r2">
+                    <div class="c-left">
+                        <span>Online e Presencial</span>
+                    </div>
+
+                    <div class="c-right">
+                        <!-- @TODO: Correto é fazer loop e ter um efeito de transição entre os comitentes -->
+                        <!-- @TODO: Pensar em uma estratégia para a logomarca ficar elegante aqui, sem fundo. Talvez uma base de logomarcas de comitentes na SL -->
+                                                <img src="https://static.suporteleiloes.com.br/leiloespbcombr/comitentes/sl-c-2-68cd81e26d506-68cd81e26d96a.png" alt="">
+                                            </div>
+                </div>
+
+                                <ul class="cont-datas">
+                                        <li class="">
+                        <div class="line-1">
+                            <strong>Leilão</strong>
+                        </div>
+
+                            <div class="line-2">
+        <div class="col-line">
+            <strong>Data do encerramento</strong>
+            <span>09/10/2026</span>
+        </div>
+        <div class="col-line">
+            <strong>A partir das</strong>
+            <span>14:00</span>
+        </div>
+    </div>
+                    </li>
+
+                    <li style="opacity: 0;">
+                        <div class="line-1">
+                            <strong>Reset</strong>
+                        </div>
+
+                            <div class="line-2">
+        <div class="col-line">
+            <strong>Data do encerramento</strong>
+            <span>09/10/2026</span>
+        </div>
+        <div class="col-line">
+            <strong>A partir das</strong>
+            <span>14:00</span>
+        </div>
+    </div>
+                    </li>
+                    
+                    
+                    
+                                    </ul>
+                            </a>
+        </div>
+
+        <div class="f-card">
+            <ul class="list-itens">
+                                <li>
+                    <i class="fa-light fa-eye"></i>
+                    <span>19573</span>
+                </li>
+                
+                                                <li>
+                    <i class="fa-light fa-user i-10"></i>
+                    <span>29</span>
+                </li>
+                                
+                                <li>
+                    <i class="fa-light fa-file-pdf"></i>
+                    <span>1</span>
+                </li>
+                
+                                <li>
+                    <i class="fa-light fa-gavel"></i>
+                    <span>1</span>
+                </li>
+                            </ul>
+
+                            <div class="cont-actions">
+                    <a class="show-share"> <!-- @TODO -->
+                        <i class="fa-regular fa-share-nodes"></i>
+                    </a>
+
+                                        <div class="cont-share">
+                        <a href="https://api.whatsapp.com/send?text=LEILÃO BANCO SAFRA - https://leiloespb.com.br/eventos/leilao/2099/leilao-banco-safra" target="_blank">
+                            <i class="fa-brands fa-whatsapp"></i>WhatsApp
+                        </a>
+
+                        <a href="https://www.facebook.com/sharer/sharer.php?u=https://leiloespb.com.br/eventos/leilao/2099/leilao-banco-safra" type="_blank">
+                            <i class="fa-brands fa-facebook-f" style="font-size: 12px;"></i>Facebook
+                        </a>
+
+                        <a href="https://twitter.com/intent/tweet?text=LEILÃO BANCO SAFRA&url=https://leiloespb.com.br/eventos/leilao/2099/leilao-banco-safra" target="_blank">
+                            <i class="fa-brands fa-x-twitter"></i>Twitter
+                        </a>
+                        
+                        <a href="/cdn-cgi/l/email-protection">
+                            <i class="fa-regular fa-envelopes-bulk"></i>E-mail
+                        </a>
+                    </div>
+
+                    <a class="favico bind-fav-leiloes" data-id="2099"> <!-- @TODO -->
+                        <i class="fa-regular fa-star"></i>
+                    </a>
+                </div>
+                    </div>
+    </div>
+</article><!-- END Unique -->                            
+
+
+
+<article>
+        <div class="cont-picture">
+        <div class="h-card">
+            
+                    </div>
+
+        <a href="/eventos/leilao/2100/leilao-hdi-yelum-aliro-e-indiana-seguros">
+                        <img src="https://static.suporteleiloes.com.br/leiloespbcombr/leiloes/2100/6ac4da24cc5d1-6ac4da24d03b1.jpg" alt="LEILÃO HDI, YELUM, ALIRO E INDIANA SEGUROS" class="img-evento">
+                    </a>
+    </div>
+
+    <div class="cont-infos">
+        <div class="flex-1">
+            <a href="/eventos/leilao/2100/leilao-hdi-yelum-aliro-e-indiana-seguros">
+                <div class="r1">
+                    <strong class="strong-cod"><span>COD.</span>&nbsp;2100 / 269/2026 <span class="evento-qtd-lotes">65 lotes</span></strong>
+
+                    <strong class="strong-status status-3">Aberto para lances</strong>
+                </div>
+
+                <h3>LEILÃO HDI, YELUM, ALIRO E INDIANA SEGUROS</h3>
+
+                <div class="r2">
+                    <div class="c-left">
+                        <span>Online e Presencial</span>
+                    </div>
+
+                    <div class="c-right">
+                        <!-- @TODO: Correto é fazer loop e ter um efeito de transição entre os comitentes -->
+                        <!-- @TODO: Pensar em uma estratégia para a logomarca ficar elegante aqui, sem fundo. Talvez uma base de logomarcas de comitentes na SL -->
+                                                <img src="https://static.suporteleiloes.com.br/leiloespbcombr/comitentes/sl-c-9-665f1f223b06f-665f1f223b212.png" alt="">
+                                            </div>
+                </div>
+
+                                <ul class="cont-datas">
+                                        <li class="">
+                        <div class="line-1">
+                            <strong>Leilão</strong>
+                        </div>
+
+                            <div class="line-2">
+        <div class="col-line">
+            <strong>Data do encerramento</strong>
+            <span>09/10/2026</span>
+        </div>
+        <div class="col-line">
+            <strong>A partir das</strong>
+            <span>14:00</span>
+        </div>
+    </div>
+                    </li>
+
+                    <li style="opacity: 0;">
+                        <div class="line-1">
+                            <strong>Reset</strong>
+                        </div>
+
+                            <div class="line-2">
+        <div class="col-line">
+            <strong>Data do encerramento</strong>
+            <span>09/10/2026</span>
+        </div>
+        <div class="col-line">
+            <strong>A partir das</strong>
+            <span>14:00</span>
+        </div>
+    </div>
+                    </li>
+                    
+                    
+                    
+                                    </ul>
+                            </a>
+        </div>
+
+        <div class="f-card">
+            <ul class="list-itens">
+                                <li>
+                    <i class="fa-light fa-eye"></i>
+                    <span>104369</span>
+                </li>
+                
+                                                <li>
+                    <i class="fa-light fa-user i-10"></i>
+                    <span>115</span>
+                </li>
+                                
+                                <li>
+                    <i class="fa-light fa-file-pdf"></i>
+                    <span>1</span>
+                </li>
+                
+                                <li>
+                    <i class="fa-light fa-gavel"></i>
+                    <span>118</span>
+                </li>
+                            </ul>
+
+                            <div class="cont-actions">
+                    <a class="show-share"> <!-- @TODO -->
+                        <i class="fa-regular fa-share-nodes"></i>
+                    </a>
+
+                                        <div class="cont-share">
+                        <a href="https://api.whatsapp.com/send?text=LEILÃO HDI, YELUM, ALIRO E INDIANA SEGUROS - https://leiloespb.com.br/eventos/leilao/2100/leilao-hdi-yelum-aliro-e-indiana-seguros" target="_blank">
+                            <i class="fa-brands fa-whatsapp"></i>WhatsApp
+                        </a>
+
+                        <a href="https://www.facebook.com/sharer/sharer.php?u=https://leiloespb.com.br/eventos/leilao/2100/leilao-hdi-yelum-aliro-e-indiana-seguros" type="_blank">
+                            <i class="fa-brands fa-facebook-f" style="font-size: 12px;"></i>Facebook
+                        </a>
+
+                        <a href="https://twitter.com/intent/tweet?text=LEILÃO HDI, YELUM, ALIRO E INDIANA SEGUROS&url=https://leiloespb.com.br/eventos/leilao/2100/leilao-hdi-yelum-aliro-e-indiana-seguros" target="_blank">
+                            <i class="fa-brands fa-x-twitter"></i>Twitter
+                        </a>
+                        
+                        <a href="/cdn-cgi/l/email-protection">
+                            <i class="fa-regular fa-envelopes-bulk"></i>E-mail
+                        </a>
+                    </div>
+
+                    <a class="favico bind-fav-leiloes" data-id="2100"> <!-- @TODO -->
+                        <i class="fa-regular fa-star"></i>
+                    </a>
+                </div>
+                    </div>
+    </div>
+</article><!-- END Unique -->                                
+
+
+
+<article>
+        <div class="cont-picture">
+        <div class="h-card">
+            
+                    </div>
+
+        <a href="/eventos/leilao/2073/alienacao-por-iniciativa-particular-aip-justica-federal-10%C2%AA-vara-campina-grande-pb/lote">
+                        <img src="https://static.suporteleiloes.com.br/leiloespbcombr/leiloes/2073/6aa83801cc9d3-6aa83801ceb78.jpg" alt="ALIENAÇÃO POR INICIATIVA PARTICULAR (AIP) - JUSTIÇA FEDERAL - 10ª VARA -  CAMPINA GRANDE-PB" class="img-evento">
+                    </a>
+    </div>
+
+    <div class="cont-infos">
+        <div class="flex-1">
+            <a href="/eventos/leilao/2073/alienacao-por-iniciativa-particular-aip-justica-federal-10%C2%AA-vara-campina-grande-pb/lote">
+                <div class="r1">
+                    <strong class="strong-cod"><span>COD.</span>&nbsp;2073 / 242/2026 </strong>
+
+                    <strong class="strong-status status-3">Aberto para lances</strong>
+                </div>
+
+                <h3>ALIENAÇÃO POR INICIATIVA PARTICULAR (AIP) - JUSTIÇA FEDERAL - 10ª VARA -  CAMPINA GRANDE-PB</h3>
+
+                <div class="r2">
+                    <div class="c-left">
+                        <span>Somente online</span>
+                    </div>
+
+                    <div class="c-right">
+                        <!-- @TODO: Correto é fazer loop e ter um efeito de transição entre os comitentes -->
+                        <!-- @TODO: Pensar em uma estratégia para a logomarca ficar elegante aqui, sem fundo. Talvez uma base de logomarcas de comitentes na SL -->
+                                                <img src="https://static.suporteleiloes.com.br/leiloespbcombr/comitentes/sl-c-7-665f37f210600-665f37f21074e.png" alt="">
+                                            </div>
+                </div>
+
+                                <ul class="cont-datas">
+                                        <li class="">
+                        <div class="line-1">
+                            <strong>Leilão</strong>
+                        </div>
+
+                            <div class="line-2">
+        <div class="col-line">
+            <strong>Abertura</strong>
+            <span>29/10/2026 14:00</span>
+        </div>
+
+        <div class="col-line">
+            <strong>Fechamento</strong>
+            <span>29/10/2026 14:00</span>
+        </div>
+    </div>
+                    </li>
+
+                    <li style="opacity: 0;">
+                        <div class="line-1">
+                            <strong>Reset</strong>
+                        </div>
+
+                            <div class="line-2">
+        <div class="col-line">
+            <strong>Abertura</strong>
+            <span>29/10/2026 14:00</span>
+        </div>
+
+        <div class="col-line">
+            <strong>Fechamento</strong>
+            <span>29/10/2026 14:00</span>
+        </div>
+    </div>
+                    </li>
+                    
+                    
+                    
+                                    </ul>
+                            </a>
+        </div>
+
+        <div class="f-card">
+            <ul class="list-itens">
+                                <li>
+                    <i class="fa-light fa-eye"></i>
+                    <span>17482</span>
+                </li>
+                
+                                                <li>
+                    <i class="fa-light fa-user i-10"></i>
+                    <span>9</span>
+                </li>
+                                
+                                <li>
+                    <i class="fa-light fa-file-pdf"></i>
+                    <span>0</span>
+                </li>
+                
+                                <li>
+                    <i class="fa-light fa-gavel"></i>
+                    <span>0</span>
+                </li>
+                            </ul>
+
+                            <div class="cont-actions">
+                    <a class="show-share"> <!-- @TODO -->
+                        <i class="fa-regular fa-share-nodes"></i>
+                    </a>
+
+                                        <div class="cont-share">
+                        <a href="https://api.whatsapp.com/send?text=ALIENAÇÃO POR INICIATIVA PARTICULAR (AIP) - JUSTIÇA FEDERAL - 10ª VARA -  CAMPINA GRANDE-PB - https://leiloespb.com.br/eventos/leilao/2073/alienacao-por-iniciativa-particular-aip-justica-federal-10%C2%AA-vara-campina-grande-pb/lote" target="_blank">
+                            <i class="fa-brands fa-whatsapp"></i>WhatsApp
+                        </a>
+
+                        <a href="https://www.facebook.com/sharer/sharer.php?u=https://leiloespb.com.br/eventos/leilao/2073/alienacao-por-iniciativa-particular-aip-justica-federal-10%C2%AA-vara-campina-grande-pb/lote" type="_blank">
+                            <i class="fa-brands fa-facebook-f" style="font-size: 12px;"></i>Facebook
+                        </a>
+
+                        <a href="https://twitter.com/intent/tweet?text=ALIENAÇÃO POR INICIATIVA PARTICULAR (AIP) - JUSTIÇA FEDERAL - 10ª VARA -  CAMPINA GRANDE-PB&url=https://leiloespb.com.br/eventos/leilao/2073/alienacao-por-iniciativa-particular-aip-justica-federal-10%C2%AA-vara-campina-grande-pb/lote" target="_blank">
+                            <i class="fa-brands fa-x-twitter"></i>Twitter
+                        </a>
+                        
+                        <a href="/cdn-cgi/l/email-protection">
+                            <i class="fa-regular fa-envelopes-bulk"></i>E-mail
+                        </a>
+                    </div>
+
+                    <a class="favico bind-fav-leiloes" data-id="2073"> <!-- @TODO -->
+                        <i class="fa-regular fa-star"></i>
+                    </a>
+                </div>
+                    </div>
+    </div>
+</article><!-- END Unique -->                            
+
+
+
+<article>
+        <div class="cont-picture">
+        <div class="h-card">
+            
+                    </div>
+
+        <a href="/eventos/leilao/2085/leilao-trt-13%C2%AA-imoveis-veiculos-e-materiais-diversos">
+                        <img src="https://static.suporteleiloes.com.br/leiloespbcombr/leiloes/2085/6ab664eebae8d-6ab664eebf630.jpg" alt="LEILÃO TRT 13ª - IMÓVEIS, VEÍCULOS E MATERIAIS DIVERSOS" class="img-evento">
+                    </a>
+    </div>
+
+    <div class="cont-infos">
+        <div class="flex-1">
+            <a href="/eventos/leilao/2085/leilao-trt-13%C2%AA-imoveis-veiculos-e-materiais-diversos">
+                <div class="r1">
+                    <strong class="strong-cod"><span>COD.</span>&nbsp;2085 / 254/2026 <span class="evento-qtd-lotes">10 lotes</span></strong>
+
+                    <strong class="strong-status status-3">Aberto para lances</strong>
+                </div>
+
+                <h3>LEILÃO TRT 13ª - IMÓVEIS, VEÍCULOS E MATERIAIS DIVERSOS</h3>
+
+                <div class="r2">
+                    <div class="c-left">
+                        <span>Somente online</span>
+                    </div>
+
+                    <div class="c-right">
+                        <!-- @TODO: Correto é fazer loop e ter um efeito de transição entre os comitentes -->
+                        <!-- @TODO: Pensar em uma estratégia para a logomarca ficar elegante aqui, sem fundo. Talvez uma base de logomarcas de comitentes na SL -->
+                                            </div>
+                </div>
+
+                                <ul class="cont-datas">
+                                        <li class="">
+                        <div class="line-1">
+                            <strong>Leilão</strong>
+                        </div>
+
+                            <div class="line-2">
+        <div class="col-line">
+            <strong>Abertura</strong>
+            <span>30/10/2026 14:00</span>
+        </div>
+
+        <div class="col-line">
+            <strong>Fechamento</strong>
+            <span>30/10/2026 17:00</span>
+        </div>
+    </div>
+                    </li>
+
+                    <li style="opacity: 0;">
+                        <div class="line-1">
+                            <strong>Reset</strong>
+                        </div>
+
+                            <div class="line-2">
+        <div class="col-line">
+            <strong>Abertura</strong>
+            <span>30/10/2026 14:00</span>
+        </div>
+
+        <div class="col-line">
+            <strong>Fechamento</strong>
+            <span>30/10/2026 17:00</span>
+        </div>
+    </div>
+                    </li>
+                    
+                    
+                    
+                                    </ul>
+                            </a>
+        </div>
+
+        <div class="f-card">
+            <ul class="list-itens">
+                                <li>
+                    <i class="fa-light fa-eye"></i>
+                    <span>13893</span>
+                </li>
+                
+                                                <li>
+                    <i class="fa-light fa-user i-10"></i>
+                    <span>13</span>
+                </li>
+                                
+                                <li>
+                    <i class="fa-light fa-file-pdf"></i>
+                    <span>0</span>
+                </li>
+                
+                                <li>
+                    <i class="fa-light fa-gavel"></i>
+                    <span>2</span>
+                </li>
+                            </ul>
+
+                            <div class="cont-actions">
+                    <a class="show-share"> <!-- @TODO -->
+                        <i class="fa-regular fa-share-nodes"></i>
+                    </a>
+
+                                        <div class="cont-share">
+                        <a href="https://api.whatsapp.com/send?text=LEILÃO TRT 13ª - IMÓVEIS, VEÍCULOS E MATERIAIS DIVERSOS - https://leiloespb.com.br/eventos/leilao/2085/leilao-trt-13%C2%AA-imoveis-veiculos-e-materiais-diversos" target="_blank">
+                            <i class="fa-brands fa-whatsapp"></i>WhatsApp
+                        </a>
+
+                        <a href="https://www.facebook.com/sharer/sharer.php?u=https://leiloespb.com.br/eventos/leilao/2085/leilao-trt-13%C2%AA-imoveis-veiculos-e-materiais-diversos" type="_blank">
+                            <i class="fa-brands fa-facebook-f" style="font-size: 12px;"></i>Facebook
+                        </a>
+
+                        <a href="https://twitter.com/intent/tweet?text=LEILÃO TRT 13ª - IMÓVEIS, VEÍCULOS E MATERIAIS DIVERSOS&url=https://leiloespb.com.br/eventos/leilao/2085/leilao-trt-13%C2%AA-imoveis-veiculos-e-materiais-diversos" target="_blank">
+                            <i class="fa-brands fa-x-twitter"></i>Twitter
+                        </a>
+                        
+                        <a href="/cdn-cgi/l/email-protection">
+                            <i class="fa-regular fa-envelopes-bulk"></i>E-mail
+                        </a>
+                    </div>
+
+                    <a class="favico bind-fav-leiloes" data-id="2085"> <!-- @TODO -->
+                        <i class="fa-regular fa-star"></i>
+                    </a>
+                </div>
+                    </div>
+    </div>
+</article><!-- END Unique -->                                
+
+
+
+<article>
+        <div class="cont-picture">
+        <div class="h-card">
+            
+                    </div>
+
+        <a href="/eventos/leilao/2078/alienacao-por-iniciativa-particular-11%C2%AA-vara-federal-de-monteiro-pb/lote">
+                        <img src="https://static.suporteleiloes.com.br/leiloespbcombr/leiloes/2078/6aaafc9cba3ac-6aaafc9cbc6f8.jpg" alt="ALIENAÇÃO POR INICIATIVA PARTICULAR  - 11ª  VARA FEDERAL DE MONTEIRO - PB" class="img-evento">
+                    </a>
+    </div>
+
+    <div class="cont-infos">
+        <div class="flex-1">
+            <a href="/eventos/leilao/2078/alienacao-por-iniciativa-particular-11%C2%AA-vara-federal-de-monteiro-pb/lote">
+                <div class="r1">
+                    <strong class="strong-cod"><span>COD.</span>&nbsp;2078 / 247/2026 </strong>
+
+                    <strong class="strong-status status-3">Aberto para lances</strong>
+                </div>
+
+                <h3>ALIENAÇÃO POR INICIATIVA PARTICULAR  - 11ª  VARA FEDERAL DE MONTEIRO - PB</h3>
+
+                <div class="r2">
+                    <div class="c-left">
+                        <span>Somente online</span>
+                    </div>
+
+                    <div class="c-right">
+                        <!-- @TODO: Correto é fazer loop e ter um efeito de transição entre os comitentes -->
+                        <!-- @TODO: Pensar em uma estratégia para a logomarca ficar elegante aqui, sem fundo. Talvez uma base de logomarcas de comitentes na SL -->
+                                                <img src="https://static.suporteleiloes.com.br/leiloespbcombr/comitentes/sl-c-42-62a89dbb382a3-62a89dbb38450.png" alt="">
+                                            </div>
+                </div>
+
+                                <ul class="cont-datas">
+                                        <li class="">
+                        <div class="line-1">
+                            <strong>Leilão</strong>
+                        </div>
+
+                            <div class="line-2">
+        <div class="col-line">
+            <strong>Abertura</strong>
+            <span>02/11/2026 14:00</span>
+        </div>
+
+        <div class="col-line">
+            <strong>Fechamento</strong>
+            <span>02/11/2026 14:00</span>
+        </div>
+    </div>
+                    </li>
+
+                    <li style="opacity: 0;">
+                        <div class="line-1">
+                            <strong>Reset</strong>
+                        </div>
+
+                            <div class="line-2">
+        <div class="col-line">
+            <strong>Abertura</strong>
+            <span>02/11/2026 14:00</span>
+        </div>
+
+        <div class="col-line">
+            <strong>Fechamento</strong>
+            <span>02/11/2026 14:00</span>
+        </div>
+    </div>
+                    </li>
+                    
+                    
+                    
+                                    </ul>
+                            </a>
+        </div>
+
+        <div class="f-card">
+            <ul class="list-itens">
+                                <li>
+                    <i class="fa-light fa-eye"></i>
+                    <span>15593</span>
+                </li>
+                
+                                                <li>
+                    <i class="fa-light fa-user i-10"></i>
+                    <span>12</span>
+                </li>
+                                
+                                <li>
+                    <i class="fa-light fa-file-pdf"></i>
+                    <span>0</span>
+                </li>
+                
+                                <li>
+                    <i class="fa-light fa-gavel"></i>
+                    <span>0</span>
+                </li>
+                            </ul>
+
+                            <div class="cont-actions">
+                    <a class="show-share"> <!-- @TODO -->
+                        <i class="fa-regular fa-share-nodes"></i>
+                    </a>
+
+                                        <div class="cont-share">
+                        <a href="https://api.whatsapp.com/send?text=ALIENAÇÃO POR INICIATIVA PARTICULAR  - 11ª  VARA FEDERAL DE MONTEIRO - PB - https://leiloespb.com.br/eventos/leilao/2078/alienacao-por-iniciativa-particular-11%C2%AA-vara-federal-de-monteiro-pb/lote" target="_blank">
+                            <i class="fa-brands fa-whatsapp"></i>WhatsApp
+                        </a>
+
+                        <a href="https://www.facebook.com/sharer/sharer.php?u=https://leiloespb.com.br/eventos/leilao/2078/alienacao-por-iniciativa-particular-11%C2%AA-vara-federal-de-monteiro-pb/lote" type="_blank">
+                            <i class="fa-brands fa-facebook-f" style="font-size: 12px;"></i>Facebook
+                        </a>
+
+                        <a href="https://twitter.com/intent/tweet?text=ALIENAÇÃO POR INICIATIVA PARTICULAR  - 11ª  VARA FEDERAL DE MONTEIRO - PB&url=https://leiloespb.com.br/eventos/leilao/2078/alienacao-por-iniciativa-particular-11%C2%AA-vara-federal-de-monteiro-pb/lote" target="_blank">
+                            <i class="fa-brands fa-x-twitter"></i>Twitter
+                        </a>
+                        
+                        <a href="/cdn-cgi/l/email-protection">
+                            <i class="fa-regular fa-envelopes-bulk"></i>E-mail
+                        </a>
+                    </div>
+
+                    <a class="favico bind-fav-leiloes" data-id="2078"> <!-- @TODO -->
+                        <i class="fa-regular fa-star"></i>
+                    </a>
+                </div>
+                    </div>
+    </div>
+</article><!-- END Unique -->                                </div>
+    </div><!-- END Center -->
+</section><!-- END Section Eventos -->
+</div>
+<section class="section-vendedores">
+    <div class="center">
+        <h2>Vendedores</h2>
+
+        
+        <div class="swiper swiper04 cont-cards">
+            <div class="swiper-wrapper">
+                                                        <div class="swiper-slide">
+                        <article>
+                            <a href="/vendedor/1/proximos-eventos">
+                                <div class="cont-icon">
+                                                                        <img src="https://static.suporteleiloes.com.br/leiloespbcombr/comitentes/sl-c-1-69a82e84e4635-69a82e84e4798.png" alt="YLM SEGUROS S.A">
+                                                                    </div>
+
+                                <div class="cont-info">
+                                    <h3>YLM SEGUROS S.A</h3> <!-- @TODO: Limitar uma linha -->
+                                </div>
+                            </a>
+                        </article>
+                    </div><!-- END Unique -->
+                                                                            <div class="swiper-slide">
+                        <article>
+                            <a href="/vendedor/2/proximos-eventos">
+                                <div class="cont-icon">
+                                                                        <img src="https://static.suporteleiloes.com.br/leiloespbcombr/comitentes/sl-c-2-68cd81e26d506-68cd81e26d96a.png" alt="BANCO SAFRA">
+                                                                    </div>
+
+                                <div class="cont-info">
+                                    <h3>BANCO SAFRA</h3> <!-- @TODO: Limitar uma linha -->
+                                </div>
+                            </a>
+                        </article>
+                    </div><!-- END Unique -->
+                                                                                                                <div class="swiper-slide">
+                        <article>
+                            <a href="/vendedor/7/proximos-eventos">
+                                <div class="cont-icon">
+                                                                        <img src="https://static.suporteleiloes.com.br/leiloespbcombr/comitentes/sl-c-7-665f37f210600-665f37f21074e.png" alt="10 Vara de Campina Grande/PB">
+                                                                    </div>
+
+                                <div class="cont-info">
+                                    <h3>10 Vara de Campina Grande/PB</h3> <!-- @TODO: Limitar uma linha -->
+                                </div>
+                            </a>
+                        </article>
+                    </div><!-- END Unique -->
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                <div class="swiper-slide">
+                        <article>
+                            <a href="/vendedor/38/proximos-eventos">
+                                <div class="cont-icon">
+                                                                        <img src="https://static.suporteleiloes.com.br/sistemaleiloespbcombr/comitentes/sl-c-38-629605bd19ae2-629605bd19d96.jpg" alt="TRT 13">
+                                                                    </div>
+
+                                <div class="cont-info">
+                                    <h3>TRT 13</h3> <!-- @TODO: Limitar uma linha -->
+                                </div>
+                            </a>
+                        </article>
+                    </div><!-- END Unique -->
+                                                                                                                <div class="swiper-slide">
+                        <article>
+                            <a href="/vendedor/40/proximos-eventos">
+                                <div class="cont-icon">
+                                                                        <img src="https://static.suporteleiloes.com.br/leiloespbcombr/comitentes/sl-c-40-69a8363fd8caa-69a8363fd8fe1.png" alt="ZURICH SEGUROS">
+                                                                    </div>
+
+                                <div class="cont-info">
+                                    <h3>ZURICH SEGUROS</h3> <!-- @TODO: Limitar uma linha -->
+                                </div>
+                            </a>
+                        </article>
+                    </div><!-- END Unique -->
+                                                                                                                <div class="swiper-slide">
+                        <article>
+                            <a href="/vendedor/42/proximos-eventos">
+                                <div class="cont-icon">
+                                                                        <img src="https://static.suporteleiloes.com.br/leiloespbcombr/comitentes/sl-c-42-62a89dbb382a3-62a89dbb38450.png" alt="11º VARA FEDERAL MONTEIRO/PB">
+                                                                    </div>
+
+                                <div class="cont-info">
+                                    <h3>11º VARA FEDERAL MONTEIRO/PB</h3> <!-- @TODO: Limitar uma linha -->
+                                </div>
+                            </a>
+                        </article>
+                    </div><!-- END Unique -->
+                                                                            <div class="swiper-slide">
+                        <article>
+                            <a href="/vendedor/43/proximos-eventos">
+                                <div class="cont-icon">
+                                                                        <img src="https://static.suporteleiloes.com.br/leiloespbcombr/comitentes/sl-c-43-69d8edd287f6b-69d8edd288040.png" alt="HDI">
+                                                                    </div>
+
+                                <div class="cont-info">
+                                    <h3>HDI</h3> <!-- @TODO: Limitar uma linha -->
+                                </div>
+                            </a>
+                        </article>
+                    </div><!-- END Unique -->
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </div>
+        </div>
+    </div><!-- END Center -->
+</section><!-- END Section Vendedores -->
+
+<section class="section-newsletter">
+    <div class="center">
+        <div class="c-left">
+            <h4>Fique por dentro de todas as <strong>oportunidades</strong></h4>
+            <p>Receba notificações em tempo real sobre os melhores leilões. Não perca a chance de arrematar bens exclusivos com preços incríveis. Acompanhe os lotes, faça seus lances e garanta as melhores ofertas!</p>
+
+            <div class="show-social">
+                
+                                    <a href="https://www.instagram.com/leiloespb/" target="_blank" class="a-instagram">
+                        <div class="cont-icon">
+                            <img src="/build/images/i-instagram.664a9860.svg" alt="">
+                        </div>
+                        <div class="cont-text">
+                            <span>Siga-nos no</span>
+                            <strong>Instagram</strong>
+                        </div>
+                    </a>
+                            </div>
+        </div>
+
+        <div class="c-right">
+            <h3>Cadastre-se na nossa&nbsp;<br><strong>Newsletter</strong></h3>
+            <form method="post" action="/send-newsletter">
+                <input type="hidden" name="_token" value="791068782980f932e3d3a650c3ee15.vQoBjn6qKPRn9B-gPUjjk_Ypzg6i53xFCvPdbWFlTNI.1mRPywzEH7AXoV3Dbg6IvrpcryPo3jsLS6ntXzFTfIP5XVe2BNgZuVCQeA">
+                <div class="cont-input">
+                    <input id="news-nome" type="text" name="nome" placeholder="Nome" required>
+                </div>
+
+                <div class="cont-input">
+                    <input id="news-email" type="email" name="email" placeholder="E-mail" required>
+                </div>
+
+                <div class="cont-input">
+                    <input id="news-telefone" type="text" name="celular" placeholder="WhatsApp" class="br_celphones">
+                </div>
+
+                <button type="submit">Enviar</button>
+            </form>
+        </div>
+    </div><!-- END Center -->
+</section><!-- END Section Newsletter -->
+
+    <div class="c-left-whats">
+        <a href="https://wa.me/555583987063661" target="_blank">
+            <img src="/build/images/whats.22d66ffd.png">
+        </a>
+    </div>
+
+    <div class="c-right-whats">
+        <a href="https://wa.me/555583987063661" target="_blank">
+            <span>Precisa de ajuda?</span>
+            <small>Entre em contato conosco.</small>
+        </a>
+    </div>
+
+<footer>
+    <div class="center">
+        <div class="row-1">
+            <div class="c-left">
+                <div class="cont-logoFooter">
+                    <a href="/" class="logo-footer" style="background-image: url('https://static.suporteleiloes.com.br/leiloespbcombr/arquivos-avulsos/1/6888fb648ac79-6888fb64a86df.jpg');">Leilões PB - Casa de Leilões</a>
+                </div>
+            </div>
+
+            <div class="c-right">
+                <div class="col col-01">
+                    <h6>Institucional</h6>
+
+                    <ul class="ul-footer">
+                        <li>
+                            <a href="/quem-somos">Quem Somos</a>
+                        </li>
+
+                        <li>
+                            <a href="/duvidas-frequentes">Dúvidas Frequentes</a>
+                        </li>
+
+                        <li>
+                            <a href="/imprensa">Imprensa</a>
+                        </li>
+
+                        <li>
+                            <a href="/legislacao">Legislação</a>
+                        </li>
+                    </ul>
+                </div><!-- END Col 01 -->
+
+                <div class="col col-02">
+                    <h6>Leilões</h6>
+
+                    <ul class="ul-footer">
+                        <li>
+                            <a href="/leiloes-judiciais">Judiciais</a>
+                        </li>
+
+                        <li>
+                            <a href="/leiloes-extrajudiciais">Extrajudiciais</a>
+                        </li>
+
+                        <li>
+                            <a href="/agenda">Agenda</a>
+                        </li>
+
+                        <li>
+                            <a href="https://arrematante.leiloespb.com.br/#/live">Auditório virtual</a>
+                        </li>
+                    </ul>
+                </div><!-- END Col 02 -->
+
+                <div class="col col-03">
+                    <h6>Contato</h6>
+
+                    <ul class="ul-footer">
+                        <li>
+                            <a href="/fale-conosco">Fale Conosco</a>
+                        </li>
+
+                        <li>
+                            <a href="/trabalhe-conosco">Trabalhe Conosco</a>
+                        </li>
+                    </ul>
+                </div><!-- END Col 03 -->
+
+                <div class="col col-04">
+                                            <a href="https://wa.me/555583987063661" target="_blank" class="a1">
+                            5583987063661
+                            <i class="fa-brands fa-whatsapp"></i>
+                        </a>
+                    
+                                                                                                <a href="tel:8330459205" class="a1" style="margin-top: 8px;">
+                                (83) 3045-9205
+                                                                    <i class="fa-solid fa-phone" style="font-size: 14px;"></i>
+                                                            </a>
+                                            
+                    <br>
+
+                                                                                                <a href="/cdn-cgi/l/email-protection" class="a2"><span class="__cf_email__" data-cfemail="97f4f8f9e3f6e3f8d7fbf2fefbf8f2e4e7f5b9f4f8fab9f5e5">[email&#160;protected]</span></a>
+                                            
+                    <br>
+                                        
+                    <p class="p1">BR 101 KM 32.2, S/N, Manguinhos, Bayeux - PB&nbsp;<br>CEP 58111001</p>
+
+                    <p class="p2"><strong>Leilões PB – Pátio Feira de Santana/BA</strong></p>
+                    <p class="p1">
+                        Av. Deputado Luis Eduardo Magalhães, s/nº, KM 524<br>
+                        Subaé – Feira de Santana/BA<br>
+                        CEP: 44079-002
+                    </p>
+
+                    <p class="p2">
+                        <strong>Leiloeiro Oficial</strong>
+                        Cleber da Silva Melo | 07/2013
+                    </p>
+
+                    <div class="logo-desenvolvimento">
+                        <a href="https://www.suporteleiloes.com.br" class="logo-sl" target="_blank">Suporte Leilões</a>
+                    </div>
+                </div><!-- END Col 04 -->
+            </div>
+        </div><!---->
+
+        <div class="row-2">
+            <div class="f-left">
+                <p class="copy">&copy; 2026-present - Todos os direitos reservados</p>
+
+                <a href="/politica-de-privacidade">Política de Privacidade</a>
+                <a href="/aviso-de-cookies">Aviso de Cookies</a>
+                <a href="/termos-uso">Termos de Uso</a>
+            </div>
+
+            <div class="f-right">
+                <ul class="lista-social">
+                                        <li>
+                        <a href="https://www.instagram.com/leiloespb/" target="_blank">
+                            <i class="fa-brands fa-instagram"></i>
+                        </a>
+                    </li>
+                    
+                    
+                    
+                                    </ul>
+            </div>
+        </div><!---->
+    </div><!-- END Center -->
+</footer>
+<section class="cont-cookies cookie ativo" id="cookie-banner">
+    <div class="c-left">
+        <h5>Aviso de cookies</h5>
+
+        <p>Utilizamos cookies para que o site possa funcionar, para melhorar a sua navegação, personalizar conteúdo
+            apresentado a você, bem como para obter informações estatísticas sobre o uso do site. Saiba mais no <a
+                    href="/aviso-de-cookies">Aviso de Cookies</a></p>
+    </div>
+
+    <div class="c-right">
+        <a class="a-aceite" id="aceitarTodosCookies">Aceitar todos os cookies</a>
+        <a id="btnCookieDef" href="#" class="a-preferencias">Preferências de cookies</a>
+    </div>
+</section>
+
+<section class="cont-cookies definicoes" id="cookie-config">
+    <div class="c-left">
+        <h5>Configurações de cookies</h5>
+
+        <form id="cookie-form">
+            <div class="cookie-form-item">
+                <label>
+                    <input type="checkbox" checked disabled>
+                    Cookies Essenciais (obrigatórios)
+                </label>
+            </div>
+            <div class="cookie-form-item">
+                <label>
+                    <input type="checkbox" checked id="analytics">
+                    Cookies de Análise (Google Analytics, etc)
+                </label>
+            </div>
+            <div class="cookie-form-item">
+                <label>
+                    <input type="checkbox" checked id="marketing">
+                    Cookies de Marketing (Remarketing, Facebook Ads, etc)
+                </label>
+            </div>
+            <div class="cookie-buttons">
+                <button type="button" id="preferenciaCookiesBtn">Salvar Preferências</button>
+                <a href="#" class="fechar-janela-cookies">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</section>
+<section class="modal-redirectLeilao">
+	<div class="fundo"></div>
+
+	<div class="cont-redirectLeilao">
+		<div class="bg-panel">
+			<h6>Redirecionamento de site</h6>
+
+			<h5>Atenção:</h5>
+			<p>Você será redirecionado para o site responsável pelo leilão solicitado.</p>
+			<p>Sendo assim, para participar deste leilão, será necessário cadastrar-se e habilitar-se no site de destino.</p>
+
+			<div class="flex-actions">
+				<span class="cta cta-cancele">Cancelar</span>
+				<a class="cta btn-action">Continuar</a>
+			</div>
+		</div>
+	</div>
+</section>
+
+
+        <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="text/javascript">
+                    var SL_USER = null;
+            </script>
+    <script src="/build/runtime.7576e7bf.js"></script><script src="/build/0.a11e63ec.js"></script><script src="/build/1.6edd98df.js"></script><script src="/build/app.c60458b6.js"></script>
+            <link rel="stylesheet" href="/css/extra.css?version=1777955656">
+            <script type="text/javascript">
+        (function (d,w,s,e) {var z = d.createElement(s);z.src = e;z.async = true;d.body.appendChild(z);})(document,window,'script', 'https://static.suporteleiloes.com.br/stats/client.js');
+                var stat = function (entity, entityId, event = null) {
+            try {
+                if (!event) {
+                    event = SL_EVENT_TYPES.LOAD_PAGE
+                }
+                /* eslint-disable */
+                SLEventClient && SLEventClient(event, entity, entityId, window && window.location.href || document && document.URL, SL_USER ? SL_USER.id : null)
+            } catch (e) {
+                console.error(e)
+            }
+        }
+    </script>
+
+    <script type="text/javascript">
+        var isHome = true
+    </script>
+    <script src="/build/home.cd61045a.js"></script>
+</body>
+</html>
