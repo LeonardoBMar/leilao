@@ -7,19 +7,23 @@ import { formatRatio } from "@/lib/format";
 
 import { riseLabel, salesLabel } from "../labels";
 import { getBidCurve } from "../queries";
-import { ResearchBlock } from "./research-block";
-
-export const BID_CURVE_BLOCK_TITLE = "Como o lance sobe";
 
 /**
- * "Como o lance sobe" (D-45): o lance observado como % do lance final, de 48 h a 1 h antes do fim, com a faixa do
- * meio. Responde quanto um lote ainda costuma subir depois que o usuário o vê; a dica de cada marca diz quanto falta.
+ * "Como o lance sobe" (D-45), dentro de "Como lemos os dados": o lance observado como % do lance final, de 48 h a 1 h
+ * antes do fim, com a faixa do meio. Responde quanto um lote ainda costuma subir depois que o usuário o vê; a dica de
+ * cada marca diz quanto falta.
  */
-export async function BidCurveBlock({ filters }: { filters: ResearchFilters }) {
+export async function BidCurveSection({ filters }: { filters: ResearchFilters }) {
   const { points } = await getBidCurve(filters);
 
   return (
-    <ResearchBlock id="pesquisa-lance" title={BID_CURVE_BLOCK_TITLE} description="Lance visto em % do lance final.">
+    <section aria-labelledby="pesquisa-lance-titulo" className="grid min-w-0 content-start gap-4">
+      <div className="grid gap-1">
+        <h3 id="pesquisa-lance-titulo" className="text-heading-3 text-foreground">
+          Como o lance sobe
+        </h3>
+        <p className="text-body text-muted">Lance visto em % do lance final.</p>
+      </div>
       {points.length === 0 ? (
         <p className="text-body text-muted">
           Ainda não há {MIN_SAMPLE} vendas com lances vistos antes do fim com esses filtros.
@@ -46,7 +50,7 @@ export async function BidCurveBlock({ filters }: { filters: ResearchFilters }) {
           />
         </>
       )}
-    </ResearchBlock>
+    </section>
   );
 }
 

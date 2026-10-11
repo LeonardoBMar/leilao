@@ -3,19 +3,19 @@ import { type ReactNode, Suspense } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Skeleton } from "@/components/ui";
 import type { ResearchFilters } from "@/domain/research/filters";
-import { formatDate, formatRatio } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 
 import { salesLabel } from "../labels";
 import { noSalesSuggestions } from "../no-sales";
 import { getResearchFacets, getResearchOverview } from "../queries";
 import { parseResearchParams, researchParams } from "../schemas";
 import type { SearchParams } from "../search";
-import { BID_CURVE_BLOCK_TITLE, BidCurveBlock } from "./bid-curve-block";
 import { COMPARISON_BLOCK_TITLE, ComparisonBlock } from "./comparison-block";
 import { CONDITION_BLOCK_TITLE, ConditionBlock } from "./condition-block";
 import { ModelSalesBlock, modelSalesTitle } from "./model-sales-block";
 import { ORIGIN_BLOCK_TITLE, OriginBlock } from "./origin-block";
 import { RANKING_BLOCK_TITLE, RankingBlock } from "./ranking-block";
+import { READING_BLOCK_TITLE, ReadingBlock } from "./reading-block";
 import { NoSales, ResearchBlockSkeleton } from "./research-block";
 import { ResearchFilterBar } from "./research-filter-bar";
 import { ResearchShell } from "./research-shell";
@@ -25,16 +25,16 @@ import { TrendBlock } from "./trend-block";
 
 const HEADER_TITLE = "Mercado";
 
-/** Cabeçalho com o tamanho da base: "1.506 vendas arrematadas no catálogo desde 28/09/2026 · 62% com FIPE casado…". */
+/**
+ * Cabeçalho com o tamanho da base: "1.506 vendas arrematadas no catálogo desde 28/09/2026". De onde vem a FIPE fica em
+ * "Como lemos os dados".
+ */
 export async function ResearchHeader() {
-  const { sales, fipeMatched, since } = await getResearchOverview();
-  // Valor de mercado casado pelo sistema entra no % da FIPE (D-47); o cabeçalho diz quanto da base é assim.
-  const matched =
-    fipeMatched === 0 || sales === 0 ? "" : ` · ${formatRatio(fipeMatched / sales)} com valor FIPE casado pelo sistema`;
+  const { sales, since } = await getResearchOverview();
   return (
     <PageHeader
       title={HEADER_TITLE}
-      description={`${salesLabel(sales)} arrematadas no catálogo${since === null ? "" : ` desde ${formatDate(since)}`}${matched}.`}
+      description={`${salesLabel(sales)} arrematadas no catálogo${since === null ? "" : ` desde ${formatDate(since)}`}.`}
     />
   );
 }
@@ -100,8 +100,8 @@ export async function ResearchView({
       <Suspense fallback={<ResearchBlockSkeleton title={STATE_BLOCK_TITLE} className="h-96" />}>
         <StateBlock filters={filters} noSales={noSales} />
       </Suspense>
-      <Suspense fallback={<ResearchBlockSkeleton title={BID_CURVE_BLOCK_TITLE} />}>
-        <BidCurveBlock filters={filters} />
+      <Suspense fallback={<ResearchBlockSkeleton title={READING_BLOCK_TITLE} className="h-10" />}>
+        <ReadingBlock filters={filters} />
       </Suspense>
     </ResearchShell>
   );

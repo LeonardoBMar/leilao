@@ -206,7 +206,7 @@ Gráficos de preço sobre as vendas do catálogo: o que aconteceu, com amostra e
 - **Tendência:** mediana semanal do % da FIPE com a faixa do meio e o `n` de cada semana; só semanas com 50 vendas ou mais, e o bloco só aparece com 8 delas (D-75).
 - **Vendas do modelo:** lance final por ano-modelo ou por quilometragem (com um estado ou uma fonte em destaque) e a tabela das vendas, com miniatura e link para o anúncio, colunas ordenáveis e filtro rápido por estado.
 - **Do modelo para o catálogo:** com um modelo escolhido, o bloco de vendas traz **Ver lotes abertos deste modelo** (catálogo de Leilões já com busca, categoria, condição aproximada e faixa de ano, em qualquer distância) e **Acompanhar este modelo** (cria um monitor com os mesmos critérios).
-- **Como o lance sobe:** lance observado ÷ lance final de 48 h a 1 h antes do fim, com a faixa P25–P75. Os lances de uma venda abrem dentro das vendas do modelo.
+- **Como lemos os dados** (recolhido, no fim): como o lance sobe (lance observado ÷ lance final de 48 h a 1 h antes do fim, com a faixa P25–P75; os lances de uma venda abrem dentro das vendas do modelo), de onde vem a FIPE (quanto da base tem a FIPE casada pelo sistema e o que fica fora do %) e as regras de amostra. O cabeçalho diz só o tamanho da base.
 - **Regras de leitura:** a condição nunca é misturada; grupo com menos de 5 vendas não tem mediana nem cor, e as vendas aparecem uma a uma; de 5 a 14 vendas a mediana aparece marcada como "amostra pequena" (asterisco no mapa, faixa mais clara no ranking, aviso no texto); todo gráfico mostra `n` e desde quando há vendas; "sem monta declarada" quer dizer que a fonte não informou; a UF é a do pátio.
 
 ## 6. Requisitos funcionais
