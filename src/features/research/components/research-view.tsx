@@ -3,7 +3,7 @@ import { type ReactNode, Suspense } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Skeleton } from "@/components/ui";
 import type { ResearchFilters } from "@/domain/research/filters";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatRatio } from "@/lib/format";
 
 import { salesLabel } from "../labels";
 import { noSalesSuggestions } from "../no-sales";
@@ -23,24 +23,22 @@ import { STATE_BLOCK_TITLE, StateBlock } from "./state-block";
 
 const HEADER_TITLE = "Pesquisa";
 
-/** Cabeçalho com o tamanho da base: "Preços de arremate do catálogo: 1.506 vendas desde 28/09/2026". */
+/** Cabeçalho com o tamanho da base: "Arremates do catálogo: 1.506 vendas desde 28/09/2026 · 62% com FIPE do sistema". */
 export async function ResearchHeader() {
   const { sales, fipeMatched, since } = await getResearchOverview();
   // Valor de mercado casado pelo sistema entra no % do mercado (D-47); o cabeçalho diz quanto da base é assim.
   const matched =
-    fipeMatched === 0
-      ? ""
-      : ` ${fipeMatched.toLocaleString("pt-BR")} com valor de mercado da FIPE casado pelo sistema.`;
+    fipeMatched === 0 || sales === 0 ? "" : ` · ${formatRatio(fipeMatched / sales)} com valor FIPE casado pelo sistema`;
   return (
     <PageHeader
       title={HEADER_TITLE}
-      description={`Preços de arremate do catálogo: ${salesLabel(sales)}${since === null ? "" : ` desde ${formatDate(since)}`}.${matched}`}
+      description={`Arremates do catálogo: ${salesLabel(sales)}${since === null ? "" : ` desde ${formatDate(since)}`}${matched}.`}
     />
   );
 }
 
 export function ResearchHeaderSkeleton() {
-  return <PageHeader title={HEADER_TITLE} description="Preços de arremate do catálogo." />;
+  return <PageHeader title={HEADER_TITLE} description="Arremates do catálogo." />;
 }
 
 /**

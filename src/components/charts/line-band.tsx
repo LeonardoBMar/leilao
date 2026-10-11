@@ -1,7 +1,15 @@
 import { percentOf } from "./data-steps";
 import { PlotFrame } from "./plot-axes";
 
-export type LineBandPoint = { key: string; label: string; low: number; median: number; high: number };
+export type LineBandPoint = {
+  key: string;
+  label: string;
+  low: number;
+  median: number;
+  high: number;
+  /** Dica ao passar o mouse no ponto (ex.: a faixa e a amostra). */
+  title?: string;
+};
 
 type LineBandProps = {
   /** Em ordem, igualmente espaçados no eixo x. */
@@ -52,10 +60,11 @@ export function LineBand({ points, yDomain, yTicks, formatY, ariaLabel }: LineBa
       {points.map((point, index) => (
         <span
           key={point.key}
+          title={point.title}
           className="absolute flex -translate-x-1/2 translate-y-1/2 flex-col items-center"
           style={{ left: `${xAt(index)}%`, bottom: `${percentOf(point.median, yDomain)}%` }}
         >
-          <span className="size-2 rounded-full bg-data-4 ring-2 ring-surface" />
+          <span className="size-2.5 rounded-full bg-data-4 ring-2 ring-surface" />
           {labelled.has(index) ? (
             <span className="absolute bottom-3 text-caption leading-none font-semibold text-foreground tabular-nums">
               {formatY(point.median)}

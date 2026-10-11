@@ -11,6 +11,7 @@ import { LineBand } from "./line-band";
 import { MapLegend } from "./map-legend";
 import { RangeBars } from "./range-bars";
 import { ScatterPlot } from "./scatter-plot";
+import { StepLine } from "./step-line";
 
 const pct = (value: number) => `${Math.round(value * 100)}%`;
 
@@ -53,10 +54,28 @@ describe("DistributionChart", () => {
     expect(html).toMatch(/role="img" aria-label="Sem monta declarada: mediana 49%"/);
   });
 
-  it("desenha só as faixas com venda, e a mediana só com amostra", () => {
-    expect(html.match(/<rect/g)).toHaveLength(4);
+  it("desenha só as faixas com venda (barra e alvo da dica), e a mediana só com amostra", () => {
+    expect(html.match(/<rect/g)).toHaveLength(8);
     expect(html.match(/left:49%/g)).toHaveLength(1);
     expect(html).toContain(">49%<");
+  });
+
+  it("a dica de cada barra diz a faixa e quantas vendas", () => {
+    expect(html).toContain("<title>25% a 50%: 2 vendas</title>");
+    expect(html).toContain("<title>0% a 25%: 1 venda</title>");
+  });
+
+  it("o rótulo com href aplica o grupo", () => {
+    const linked = renderToStaticMarkup(
+      <DistributionChart
+        ariaLabel="x"
+        axisMax={1}
+        ticks={[0, 1]}
+        formatValue={pct}
+        rows={[{ key: "a", label: "Média monta", bins: [1], summary: null, href: "/mercado?condicao=media" }]}
+      />,
+    );
+    expect(linked).toContain('href="/mercado?condicao=media"');
   });
 });
 
@@ -191,7 +210,7 @@ describe("ScatterPlot", () => {
         points={[{ key: "a", x: 2019, y: 40, title: "a" }]}
       />,
     );
-    expect(html).toContain("Passe o mouse ou toque num ponto para ver a venda.");
+    expect(html).toContain("Toque ou passe o mouse num ponto para ver a venda.");
   });
 });
 
@@ -285,5 +304,32 @@ describe("ScatterPlot no celular", () => {
     );
     expect(html.match(/hidden sm:block/g)).toHaveLength(7);
     expect(html).toMatch(/class="absolute top-1\.5[^"]*tabular-nums"[^>]*>2026</);
+  });
+});
+
+describe("StepLine", () => {
+  const html = renderToStaticMarkup(
+    <StepLine
+      ariaLabel="Lances da venda"
+      xDomain={[-10, 0]}
+      xTicks={[{ value: -10, label: "−10 h" }]}
+      yDomain={[0, 100]}
+      yTicks={[{ value: 0, label: "0" }]}
+      reference={{ value: 80, label: "Valor de mercado" }}
+      endLabel="R$ 50"
+      points={[
+        { key: "a", x: -10, y: 20, title: "R$ 20" },
+        { key: "b", x: -5, y: 50, title: "R$ 50" },
+      ]}
+    />,
+  );
+
+  it("degraus sem interpolar, com o último valor até o fim do eixo", () => {
+    expect(html).toContain('points="0,80 50,80 50,50 100,50"');
+  });
+
+  it("referência tracejada e o valor final escrito", () => {
+    expect(html).toContain("Valor de mercado");
+    expect(html).toContain(">R$ 50<");
   });
 });

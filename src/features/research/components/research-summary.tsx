@@ -2,7 +2,7 @@ import { DataList, Skeleton, Stat } from "@/components/ui";
 import { cents } from "@/domain/money";
 import { type ResearchFilters, vehicleLabel } from "@/domain/research/filters";
 import { isSmallSample } from "@/domain/research/summary";
-import { formatBRL, formatRatio } from "@/lib/format";
+import { formatBRL, formatCompactBRL, formatRatio } from "@/lib/format";
 
 import {
   belowMarketLabel,
@@ -44,22 +44,18 @@ export async function ResearchSummary({ filters }: { filters: ResearchFilters })
 
   return (
     <section aria-label="Resumo" className="grid gap-3">
-      <p className="text-label text-muted">Resumo das vendas · {scope}</p>
+      <p className="text-label text-muted">{scope}</p>
       <DataList className="gap-x-8 gap-y-5 border-b-0 sm:grid-cols-2 lg:grid-cols-4">
         {selected.kind === "summary" ? (
           <Stat
-            label="Mediana do % do valor de mercado"
+            label="Mediana do % do mercado"
             size="heading-2"
-            note={`${belowMarketLabel(selected.median)} · faixa do meio ${formatRatio(selected.low)} a ${formatRatio(selected.high)}`}
+            note={`${belowMarketLabel(selected.median)} · metade do meio de ${formatRatio(selected.low)} a ${formatRatio(selected.high)}`}
           >
             {formatRatio(selected.median)}
           </Stat>
         ) : (
-          <Stat
-            label="Mediana do % do valor de mercado"
-            size="heading-3"
-            note="Menos vendas que o mínimo para uma mediana."
-          >
+          <Stat label="Mediana do % do mercado" size="heading-3" note="Poucas vendas para uma mediana.">
             {summaryDetail(selected)}
           </Stat>
         )}
@@ -76,16 +72,16 @@ export async function ResearchSummary({ filters }: { filters: ResearchFilters })
           <Stat
             label="Lance final mediano"
             size="heading-2"
-            note={`Faixa do meio ${formatBRL(cents(Math.round(price.low)))} a ${formatBRL(cents(Math.round(price.high)))} · ${salesLabel(price.n)}`}
+            note={`Metade do meio de ${formatCompactBRL(cents(Math.round(price.low)))} a ${formatCompactBRL(cents(Math.round(price.high)))}`}
           >
             {formatBRL(cents(Math.round(price.median)))}
           </Stat>
         ) : null}
         {rise === undefined ? null : (
           <Stat
-            label={`Ainda sobe depois de ${RISE_MARK_HOURS} h antes do fim`}
+            label={`Sobe nas últimas ${RISE_MARK_HOURS} h`}
             size="heading-2"
-            note={`Mediana de ${salesLabel(rise.n)} com lances observados.`}
+            note={`Mediana de ${salesLabel(rise.n)} com lances vistos.`}
           >
             {`+${formatRatio(1 / rise.median - 1)}`}
           </Stat>

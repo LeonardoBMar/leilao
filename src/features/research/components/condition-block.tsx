@@ -6,35 +6,30 @@ import type { ResearchFilters } from "@/domain/research/filters";
 import { niceTicks } from "@/lib/charts";
 import { formatRatio } from "@/lib/format";
 
-import { belowMarketLabel, CONDITION_LABELS, salesLabel, summaryDetail } from "../labels";
+import { CONDITION_LABELS, salesLabel, summaryDetail } from "../labels";
 import { getConditionDistribution } from "../queries";
+import { researchHref } from "../search";
 import { ResearchBlock } from "./research-block";
 
 export const CONDITION_BLOCK_TITLE = "Quanto se paga por condição";
 
 /**
  * "Quanto se paga por condição" (D-45): o histograma do % do valor de mercado de cada condição, com o resto dos
- * filtros. A condição do filtro fica em destaque e vira a frase de apoio; as vendas fora do % são ditas no resumo.
+ * filtros. A condição do filtro fica em destaque (a mediana dela está no resumo) e clicar noutra a aplica.
  */
 export async function ConditionBlock({ filters, noSales }: { filters: ResearchFilters; noSales: ReactNode }) {
   const { rows, axisMax, looksMixed } = await getConditionDistribution(filters);
-  const selected = rows.find((row) => row.condition === filters.condition)?.summary;
-  const headline =
-    selected?.kind === "summary"
-      ? `${CONDITION_LABELS[filters.condition]}: mediana de ${formatRatio(selected.median)}, ou ${belowMarketLabel(selected.median)} (${salesLabel(selected.n)}).`
-      : null;
 
   return (
     <ResearchBlock
       id="pesquisa-condicao"
       title={CONDITION_BLOCK_TITLE}
-      description="Lance final como % do valor de mercado (da fonte ou da tabela FIPE casado pelo sistema). A faixa clara reúne a metade do meio das vendas; o traço é a mediana."
+      description="Lance final em % do valor de mercado. Faixa clara: metade do meio das vendas; traço: mediana. Clique numa condição para aplicá-la."
     >
       {rows.every((row) => row.summary.kind === "none") ? (
         noSales
       ) : (
         <>
-          {headline ? <p className="text-body font-medium text-foreground">{headline}</p> : null}
           <DistributionChart
             ariaLabel={`Lance final em % do valor de mercado por condição. ${rows
               .map((row) =>
@@ -59,12 +54,15 @@ export async function ConditionBlock({ filters, noSales }: { filters: ResearchFi
                     ? { low: row.summary.low, median: row.summary.median, high: row.summary.high }
                     : null,
                 emphasis: row.condition === filters.condition,
+                href:
+                  row.condition === filters.condition
+                    ? undefined
+                    : researchHref({ ...filters, condition: row.condition, sale: null }),
               }))}
           />
           {looksMixed ? (
             <p className="text-label font-normal text-muted">
-              Sem monta declarada inclui veículos que a fonte não classificou: por isso a mediana fica perto da de
-              pequena monta.
+              Sem monta declarada inclui avariados que a fonte não classificou, por isso fica perto da pequena monta.
             </p>
           ) : null}
           <ChartDataTable

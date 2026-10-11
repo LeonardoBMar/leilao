@@ -29,7 +29,7 @@ export async function BidCurveBlock({ filters }: { filters: ResearchFilters }) {
     <ResearchBlock
       id="pesquisa-lance"
       title={BID_CURVE_BLOCK_TITLE}
-      description="Lance observado pelo coletor como % do lance final, nas horas antes do fim. A faixa clara reúne a metade do meio das vendas; a linha é a mediana."
+      description="Lance visto pelo coletor em % do lance final, nas horas antes do fim. Faixa: metade do meio das vendas; linha: mediana."
     >
       {sale === null ? null : <SaleBidsPanel bids={sale} closeHref={researchHref({ ...filters, sale: null })} />}
       {first === undefined ? (
@@ -82,6 +82,7 @@ function BidCurveChart({ points }: { points: Awaited<ReturnType<typeof getBidCur
       points={points.map(({ hours, summary }) => ({
         key: String(hours),
         label: `${hours} h`,
+        title: `${hours} h antes do fim: mediana ${formatRatio(summary.median)}, faixa ${formatRatio(summary.low)} a ${formatRatio(summary.high)} (${salesLabel(summary.n)})`,
         low: summary.low,
         median: summary.median,
         high: summary.high,

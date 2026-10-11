@@ -1,8 +1,8 @@
 "use client";
 
-import { LoaderCircle } from "lucide-react";
+import { GitCompareArrows, LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useId, useOptimistic, useRef } from "react";
+import { useId, useOptimistic, useRef, useState } from "react";
 
 import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import {
@@ -60,6 +60,10 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
   const statusRef = useRef<HTMLParagraphElement>(null);
   const { isPending, startTransition } = useResearchTransition();
   const [filters, setOptimisticFilters] = useOptimistic(parseResearchParams(params));
+  const compareRowId = useId();
+  // A linha "Comparar com" só aparece aberta pelo botão ou com uma comparação na URL.
+  const [compareOpen, setCompareOpen] = useState(false);
+  const showCompare = compareOpen || filters.compare !== null;
   const total = facets.conditions[filters.condition];
   const isDefault = Object.keys(params).length === 0;
 
@@ -175,37 +179,6 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
         </div>
       </div>
 
-      <div className="grid gap-3 md:flex md:flex-wrap md:items-center">
-        <span className="text-label text-muted">Comparar com</span>
-        {filters.vehicle === null ? null : (
-          <ModelPicker
-            label="Comparar com outro modelo"
-            placeholder="Outro modelo"
-            shortcut={false}
-            value={filters.compare?.vehicle ? vehicleLabel(filters.compare.vehicle) : null}
-            options={facets.models.filter(
-              (option) => option.brand !== filters.vehicle?.brand || option.model !== filters.vehicle.model,
-            )}
-            onChange={(option) =>
-              apply({
-                ...filters,
-                compare: {
-                  vehicle: option === null ? null : { brand: option.brand, model: option.model },
-                  state: filters.compare?.state ?? null,
-                },
-              })
-            }
-            className="md:min-w-64 md:flex-1"
-          />
-        )}
-        <CompareStateSelect
-          value={filters.compare?.state ?? null}
-          current={filters.state}
-          counts={facets.states}
-          onChange={(state) => apply({ ...filters, compare: { vehicle: filters.compare?.vehicle ?? null, state } })}
-        />
-      </div>
-
       <div className="grid grid-cols-2 gap-3 md:flex md:flex-wrap">
         <SourceSelect
           value={filters.source}
@@ -233,7 +206,56 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
             />
           </>
         )}
+        <Button
+          type="button"
+          variant="secondary"
+          className="col-span-2 h-10 md:col-span-1 md:ml-auto"
+          aria-expanded={showCompare}
+          aria-controls={compareRowId}
+          onClick={() => {
+            if (filters.compare !== null) {
+              setCompareOpen(false);
+              apply({ ...filters, compare: null });
+            } else setCompareOpen((open) => !open);
+          }}
+        >
+          <GitCompareArrows aria-hidden="true" />
+          {filters.compare !== null ? "Tirar comparação" : showCompare ? "Fechar comparação" : "Comparar"}
+        </Button>
       </div>
+
+      {showCompare ? (
+        <div id={compareRowId} className="grid gap-3 md:flex md:flex-wrap md:items-center">
+          <span className="text-label text-muted">Comparar com</span>
+          {filters.vehicle === null ? null : (
+            <ModelPicker
+              label="Comparar com outro modelo"
+              placeholder="Outro modelo"
+              shortcut={false}
+              value={filters.compare?.vehicle ? vehicleLabel(filters.compare.vehicle) : null}
+              options={facets.models.filter(
+                (option) => option.brand !== filters.vehicle?.brand || option.model !== filters.vehicle.model,
+              )}
+              onChange={(option) =>
+                apply({
+                  ...filters,
+                  compare: {
+                    vehicle: option === null ? null : { brand: option.brand, model: option.model },
+                    state: filters.compare?.state ?? null,
+                  },
+                })
+              }
+              className="md:min-w-64 md:flex-1"
+            />
+          )}
+          <CompareStateSelect
+            value={filters.compare?.state ?? null}
+            current={filters.state}
+            counts={facets.states}
+            onChange={(state) => apply({ ...filters, compare: { vehicle: filters.compare?.vehicle ?? null, state } })}
+          />
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <p

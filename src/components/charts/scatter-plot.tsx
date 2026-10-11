@@ -196,7 +196,7 @@ export function ScatterPlot({
             ) : null}
           </>
         ) : (
-          "Passe o mouse ou toque num ponto para ver a venda."
+          "Toque ou passe o mouse num ponto para ver a venda."
         )}
       </p>
     </div>

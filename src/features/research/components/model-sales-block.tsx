@@ -82,7 +82,7 @@ export async function ModelSalesBlock({
       id="pesquisa-vendas"
       title={title}
       actions={actions}
-      description={`Lance final de cada venda (${CONDITION_LABELS[filters.condition].toLowerCase()}) por ano-modelo ou quilometragem; o traço é a mediana do ano, com 5 vendas ou mais. Destaque um estado ou uma fonte para ver onde ele cai. Passe o mouse ou toque num ponto para ver a venda; todas estão na tabela.`}
+      description={`Cada ponto é uma venda (${CONDITION_LABELS[filters.condition].toLowerCase()}); o traço é a mediana do ano, com 5 vendas ou mais.`}
     >
       <ModelSalesScatter
         key={`dispersao:${recortKey}`}

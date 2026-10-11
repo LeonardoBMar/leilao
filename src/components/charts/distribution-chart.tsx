@@ -1,3 +1,5 @@
+import type { Route } from "next";
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
@@ -15,6 +17,8 @@ export type DistributionRow = {
   summary: { low: number; median: number; high: number } | null;
   /** Linha do filtro atual: rótulo em peso 600. */
   emphasis?: boolean;
+  /** Clicar no rótulo aplica o grupo (ex.: troca a condição do filtro). */
+  href?: Route;
 };
 
 type DistributionChartProps = {
@@ -30,7 +34,8 @@ type DistributionChartProps = {
 /**
  * Histogramas empilhados com a mesma escala horizontal (D-45, DESIGN.md §15.8): uma faixa por grupo, barras em
  * `data-3`, faixa P25–P75 em `data-1` e mediana em tinta com o valor escrito. Cada faixa usa a própria altura máxima:
- * compara onde as vendas se concentram, e o `n` está no rótulo.
+ * compara onde as vendas se concentram, e o `n` está no rótulo. Passar o mouse numa barra diz a faixa e quantas vendas
+ * caíram nela; o rótulo com `href` aplica o grupo.
  */
 export function DistributionChart({ rows, axisMax, ticks, formatValue, ariaLabel }: DistributionChartProps) {
   const domain = [0, axisMax] as const;
@@ -38,12 +43,32 @@ export function DistributionChart({ rows, axisMax, ticks, formatValue, ariaLabel
     <div role="img" aria-label={ariaLabel} className="grid gap-3">
       {rows.map((row) => {
         const peak = Math.max(1, ...row.bins);
+        const binWidth = axisMax / Math.max(1, row.bins.length);
+        const label = (
+          <>
+            <span className={cn("block truncate text-body text-foreground", row.emphasis && "font-semibold")}>
+              {row.label}
+            </span>
+            {row.detail ? <span className="block text-caption text-muted tabular-nums">{row.detail}</span> : null}
+          </>
+        );
         return (
           <div key={row.key} className="grid gap-1 md:grid-cols-[10rem_minmax(0,1fr)] md:items-end md:gap-4">
-            <div aria-hidden="true" className="min-w-0">
-              <p className={cn("truncate text-body text-foreground", row.emphasis && "font-semibold")}>{row.label}</p>
-              {row.detail ? <p className="text-caption text-muted tabular-nums">{row.detail}</p> : null}
-            </div>
+            {row.href ? (
+              <Link
+                href={row.href}
+                scroll={false}
+                tabIndex={-1}
+                aria-hidden="true"
+                className="-mx-2 min-w-0 rounded-sm px-2 py-1 transition-colors duration-120 hover:bg-background"
+              >
+                {label}
+              </Link>
+            ) : (
+              <div aria-hidden="true" className="min-w-0">
+                {label}
+              </div>
+            )}
             <div aria-hidden="true" className="relative h-14 pt-4">
               <svg
                 viewBox={`0 0 ${row.bins.length} 100`}
@@ -53,15 +78,18 @@ export function DistributionChart({ rows, axisMax, ticks, formatValue, ariaLabel
               >
                 {row.bins.map((count, index) =>
                   count > 0 ? (
-                    <rect
-                      // A posição é a identidade da faixa.
-                      key={index}
-                      x={index + 0.1}
-                      width={0.8}
-                      y={100 - (count / peak) * 100}
-                      height={(count / peak) * 100}
-                      className="fill-data-3"
-                    />
+                    <g key={index}>
+                      <title>{`${formatValue(index * binWidth)} a ${formatValue((index + 1) * binWidth)}: ${count.toLocaleString("pt-BR")} ${count === 1 ? "venda" : "vendas"}`}</title>
+                      {/* Alvo da dica na altura toda; a barra visível fica por cima. */}
+                      <rect x={index} width={1} y={0} height={100} className="fill-transparent" />
+                      <rect
+                        x={index + 0.1}
+                        width={0.8}
+                        y={100 - (count / peak) * 100}
+                        height={(count / peak) * 100}
+                        className="fill-data-3 transition-opacity duration-120 hover:opacity-70"
+                      />
+                    </g>
                   ) : null,
                 )}
               </svg>
