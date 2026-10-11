@@ -6,6 +6,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
 
+import { listingFipeOf } from "./draft-defaults";
 import type { AnalysisDetail, AnalysisVersion } from "./types";
 
 const money = (value: number | null) => (value === null ? null : cents(value));
@@ -85,7 +86,17 @@ export async function getAnalysis(id: string): Promise<AnalysisDetail | null> {
           auction: { select: { id: true, name: true } },
           analyses: { where: { status: "draft" }, select: { id: true } },
           _count: { select: { results: true } },
-          listing: { select: { category: true, damageLevel: true, conditionFlags: true } },
+          listing: {
+            select: {
+              category: true,
+              damageLevel: true,
+              conditionFlags: true,
+              marketValueCents: true,
+              marketValueOrigin: true,
+              marketValueRefMonth: true,
+              source: { select: { name: true } },
+            },
+          },
         },
       },
     },
@@ -135,6 +146,7 @@ export async function getAnalysis(id: string): Promise<AnalysisDetail | null> {
       hasResult: lot._count.results > 0,
       auction: lot.auction,
     },
+    listingFipe: lot.listing === null ? null : listingFipeOf(lot.listing),
     openDraftId: lot.analyses[0]?.id ?? null,
   };
 }

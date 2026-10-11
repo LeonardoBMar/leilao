@@ -5,6 +5,7 @@ import { calculateMaxBid, missingFields, simulateBid } from "@/domain/finance/ca
 import { cents } from "@/domain/money";
 
 import { defaultsInputFromListing, draftDefaults, draftSourceOf, UNKNOWN_VEHICLE } from "./draft-defaults";
+import { fipeFill } from "./fipe-fill";
 import { FORM_FIELD, limitPositionText } from "./labels";
 import { readAnalysisInputs } from "./read-inputs";
 import { analysisFormSchema, toAnalysisInputs } from "./schemas";
@@ -278,5 +279,33 @@ describe("limitPositionText (bloco Concorrência)", () => {
     expect(limitPositionText(position(5, 0))).toBe("fica acima de todas as 5 vendas parecidas (P100)");
     expect(limitPositionText(position(1, 0))).toBe("fica acima da única venda parecida (P100)");
     expect(limitPositionText(position(0, 0, 2))).toBe("empata com todas as 2 vendas parecidas (P50)");
+  });
+});
+
+describe("fipeFill (Usar FIPE do anúncio)", () => {
+  const fipe = {
+    value: cents(6_543_210),
+    refMonth: new Date(Date.UTC(2026, 9, 1)),
+    source: "Tabela FIPE (casada pelo sistema)",
+  };
+  const empty = { fipeValue: "", fipeReferenceMonth: "", fipeReferenceSource: "" };
+
+  it("preenche valor, mês e origem quando estão vazios", () => {
+    expect(fipeFill(empty, fipe)).toEqual({
+      fipeValue: "65432,10",
+      fipeReferenceMonth: "2026-10",
+      fipeReferenceSource: "Tabela FIPE (casada pelo sistema)",
+    });
+  });
+
+  it("não sobrescreve o que foi digitado", () => {
+    expect(fipeFill({ ...empty, fipeValue: "50.000,00", fipeReferenceSource: "minha consulta" }, fipe)).toEqual({
+      fipeReferenceMonth: "2026-10",
+    });
+    expect(fipeFill({ fipeValue: "1", fipeReferenceMonth: "2026-01", fipeReferenceSource: "x" }, fipe)).toEqual({});
+  });
+
+  it("sem mês no anúncio, o mês fica como está", () => {
+    expect(fipeFill(empty, { ...fipe, refMonth: null })).not.toHaveProperty("fipeReferenceMonth");
   });
 });

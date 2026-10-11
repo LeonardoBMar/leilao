@@ -12,6 +12,8 @@ import { type Bps, bps, type Cents, cents } from "@/domain/money";
 import { calendarDateToUtc, toCalendarDateInput } from "@/lib/dates";
 import { formatBps, formatBRL } from "@/lib/format";
 
+import type { ListingFipe } from "./fipe-fill";
+
 const DAMAGE_LABELS: Record<DamageLevel | "none", string> = {
   none: "sem sinistro declarado",
   small: "pequena monta",
@@ -106,7 +108,7 @@ export function draftSourceOf(listing: ListingForDefaults & { lastCheckedAt: Dat
 }
 
 /** Referência da FIPE no rascunho: informada pela fonte ou casada pelo sistema na tabela do mês. */
-function fipeReference(source: DraftSource | null) {
+function fipeReference(source: Pick<DraftSource, "name" | "marketValueOrigin" | "marketValueRefMonth"> | null) {
   if (source === null) return { fipeReferenceMonth: null, fipeReferenceSource: null };
   if (source.marketValueOrigin === "fipe_version" || source.marketValueOrigin === "fipe_family") {
     return {
@@ -118,6 +120,26 @@ function fipeReference(source: DraftSource | null) {
     };
   }
   return { fipeReferenceMonth: null, fipeReferenceSource: `${source.name} (informado no anúncio)` };
+}
+
+/** FIPE do anúncio ligado, para "Usar FIPE do anúncio" na análise; `null` sem valor de mercado. */
+export function listingFipeOf(listing: {
+  marketValueCents: number | null;
+  marketValueOrigin: MarketValueOrigin | null;
+  marketValueRefMonth: Date | null;
+  source: { name: string };
+}): ListingFipe | null {
+  if (listing.marketValueCents === null || listing.marketValueCents <= 0) return null;
+  const reference = fipeReference({
+    name: listing.source.name,
+    marketValueOrigin: listing.marketValueOrigin,
+    marketValueRefMonth: listing.marketValueRefMonth,
+  });
+  return {
+    value: cents(listing.marketValueCents),
+    refMonth: reference.fipeReferenceMonth,
+    source: reference.fipeReferenceSource ?? listing.source.name,
+  };
 }
 
 /**

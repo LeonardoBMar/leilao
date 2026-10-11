@@ -1,6 +1,6 @@
 "use client";
 
-import { Calculator, Lock, Save, Trash2 } from "lucide-react";
+import { Calculator, FileInput, Lock, Save, Trash2 } from "lucide-react";
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 
 import {
@@ -29,9 +29,10 @@ import { parseBRL } from "@/domain/money";
 import type { LotMarketReference } from "@/features/research/types";
 import { fieldError, fieldValue, idleState } from "@/lib/action-state";
 import { toCalendarDateInput, toMonthInput } from "@/lib/dates";
-import { formatBps, formatTime } from "@/lib/format";
+import { formatBps, formatBRL, formatTime } from "@/lib/format";
 
 import { autosaveDraftAction, discardDraftAction, saveAnalysisAction } from "../actions";
+import { fipeFill } from "../fipe-fill";
 import { FIXED_COST_LABELS } from "../labels";
 import { readAnalysisInputs } from "../read-inputs";
 import { liveSummary } from "../summary-model";
@@ -128,6 +129,37 @@ export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail;
     toast.success("Valor de venda e reparos estimados a partir da FIPE.");
   }
 
+  /** Referência FIPE do anúncio ligado, só nos campos vazios (nunca sobrescreve o que foi digitado). */
+  function applyListingFipe() {
+    if (!formRef.current || analysis.listingFipe === null) return;
+    const formData = new FormData(formRef.current);
+    const current: Record<string, string> = {};
+    for (const [key, entry] of formData) if (typeof entry === "string") current[key] = entry;
+    const fill = fipeFill(
+      {
+        fipeValue: current.fipeValue ?? "",
+        fipeReferenceMonth: current.fipeReferenceMonth ?? "",
+        fipeReferenceSource: current.fipeReferenceSource ?? "",
+      },
+      analysis.listingFipe,
+    );
+    if (Object.keys(fill).length === 0) {
+      toast.info("A referência FIPE já está preenchida. Apague o valor para usar a do anúncio.");
+      return;
+    }
+    const next = { ...current, ...fill };
+    for (const [key, entry] of Object.entries(next)) formData.set(key, entry);
+    setPrefill(next);
+    setFormKey((key) => key + 1);
+    setInputs(readAnalysisInputs(formData));
+    scheduleAutosave(next);
+    toast.success(
+      fill.fipeValue === undefined
+        ? "Mês e fonte da FIPE preenchidos com os do anúncio."
+        : "FIPE do anúncio preenchida.",
+    );
+  }
+
   const { inputs: saved, references } = analysis;
   const value = (field: string, stored?: string) => fieldValue(state, field) ?? prefill?.[field] ?? stored;
   const percent = (name: "riskReserveRate" | "desiredMarginRate", label: string, helperText: string) => (
@@ -180,8 +212,14 @@ export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail;
             defaultValue={value("fipeValue", centsToInput(references.fipeValue))}
             error={fieldError(state, "fipeValue")}
           />
-          <div>
-            <Button type="button" variant="secondary" className="md:mt-7" onClick={estimateSaleAndRepairs}>
+          <div className="flex flex-wrap gap-2 md:mt-7">
+            {analysis.listingFipe === null ? null : (
+              <Button type="button" variant="secondary" onClick={applyListingFipe}>
+                <FileInput aria-hidden="true" />
+                Usar FIPE do anúncio ({formatBRL(analysis.listingFipe.value)})
+              </Button>
+            )}
+            <Button type="button" variant="secondary" onClick={estimateSaleAndRepairs}>
               <Calculator aria-hidden="true" />
               Estimar a partir da FIPE
             </Button>
