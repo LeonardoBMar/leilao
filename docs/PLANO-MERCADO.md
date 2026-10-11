@@ -61,6 +61,8 @@ O `originOf` atual lê só o `recovery_type` e põe toda a Superbid em "outros".
 | Carros | 2.817 | 91,4% | 44,4% | 24,9% |
 | Motos | 2.433 | 93,3% | 45,5% | 14,5% |
 
+**Origem inferida (T0.3):** com o comitente e a fonte, 96% das vendas ganham origem: órgão público 71,8%, financiamento 16,4%, frota 4,7%, seguradora 3,1% e outros 4,0% (leiloeiros, pessoa física e comitentes sem sinal).
+
 Os comparáveis acertam a faixa menos que o esperado (41% contra 50%): a faixa é estreita para grupos que misturam versões. Nos carros, a mediana erra um quarto do lance.
 
 ## 3. Princípios
