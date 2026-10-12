@@ -147,6 +147,10 @@ npm run restore -- backups/<data>
 - **Qualidade do preço provável** (D-76): `npm run db:estimate-backtest -- --variant v1 --write` refaz o backtest (só leitura, alguns minutos) e grava `src/features/research/engine-quality.json`, que a aba Mercado → Calibração mostra com a data. Rode mensalmente ou depois de mudar o motor, e leve o arquivo no commit.
 - **Erros:** Vercel → Logs (as actions registram `console.error` sem dados pessoais).
 - **Supabase → Advisors** (Security e Performance): mensalmente e depois de cada migration.
+- **Performance do banco:** leia as métricas pelo MCP `supabase` (só leitura) ou pelo SQL Editor.
+  - **Consultas:** `select calls, round(mean_exec_time) ms, temp_blks_written, left(query, 200) from extensions.pg_stat_statements order by total_exec_time desc limit 20;` (troque a ordem por `temp_blks_written` para achar quem usa disco temporário). O histórico foi zerado em 12/10/2026 às 19:17 UTC.
+  - **Linha de base de 12/10/2026 (19:20 UTC):** `pg_stat_database.temp_bytes` = 97.743.567.128 desde 25/08 (sem dono conhecido; `log_temp_files` desligado); `listings` com 466 mil UPDATEs, 37% HOT, heap de 43 MB (5.517 páginas, 45,6% visíveis no mapa) e TOAST de 68 MB para 19 mil linhas; o índice das vendas buscava o heap em 45% das linhas.
+  - **Instância:** a mesma consulta, com o mesmo plano e os mesmos buffers em memória, levou 926 ms e depois 13 ms. Se isso se repetir, confira em Supabase → Reports → Database a CPU, a memória e o **swap** nas janelas da coleta; com swap ou CPU no teto, o caminho é subir o compute (decisão de custo).
 - **Dependências:** `npm audit` mensal. Atualizações do Next seguem o guia de upgrade em `node_modules/next/dist/docs/` e o `AGENTS.md`.
 - **Arquivos órfãos no Storage** (envio sem confirmação, ou falha ao remover): são inofensivos, porque ninguém os exibe. Para limpar, compare `storage.objects` com `lot_images.storage_path`.
 - **Senha do banco trocada:** atualize `DATABASE_URL` na Vercel, os dois segredos do GitHub Actions e `DATABASE_URL`/`DIRECT_URL` no `.env.local`.
