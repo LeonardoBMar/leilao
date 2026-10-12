@@ -39,12 +39,10 @@ export async function listWatches(): Promise<WatchListItem[]> {
   return Promise.all(
     rows.map(async (row) => {
       const watch = toWatchItem(row);
-      const { count, truncated } = await countOpenListings(watch.criteria);
       return {
         ...watch,
         description: describeCriteria(watch.criteria, sourceNames),
-        openMatches: count,
-        openMatchesTruncated: truncated,
+        openMatches: await countOpenListings(watch.criteria),
         unreadAlerts: unreadByWatch.get(row.id) ?? 0,
       };
     }),

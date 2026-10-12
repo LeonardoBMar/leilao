@@ -2,16 +2,9 @@ import {
   CATEGORY_KEYS,
   type CategoryKey,
   categoryKeyOf,
-  type FacetCriteria,
-  type FacetListing,
   FUEL_KEYS,
   type FuelKey,
   fuelOf,
-  matchesCategories,
-  matchesFuels,
-  matchesOrigins,
-  matchesSearch,
-  matchesSources,
   ORIGIN_KEYS,
   type OriginKey,
   toSearchText,
@@ -20,7 +13,7 @@ import {
 /**
  * Contagens dos chips de filtro (docs/PLANO-FILTROS.md §4): cada faceta é contada com todos os outros filtros
  * aplicados e sem ela mesma, para o número dizer quantos lotes a tela mostraria ao marcar aquele chip sozinho.
- * Recebe os anúncios já filtrados pelos critérios que não são faceta (ano, preço, distância…).
+ * O banco agrupa (uma consulta por faceta, já com os outros filtros); aqui os grupos viram as chaves da tela.
  */
 export type ListingFacets = {
   categories: Record<CategoryKey, number>;
@@ -33,37 +26,41 @@ export type ListingFacets = {
 
 export type SearchSuggestion = { label: string; count: number };
 
+/** Contagens agrupadas pelo banco, cada faceta sem o próprio filtro. */
+export type FacetGroups = {
+  categories: readonly { category: string | null; count: number }[];
+  sources: readonly { sourceId: string; count: number }[];
+  origins: readonly { origin: OriginKey; count: number }[];
+  fuels: readonly { fuel: string | null; count: number }[];
+  /** Marca e modelo como a fonte escreve, para as sugestões da busca. */
+  vehicles: readonly { brand: string | null; model: string | null; count: number }[];
+};
+
 /** Sugestões enviadas à tela; a busca filtra entre elas enquanto o usuário digita. */
 export const MAX_SUGGESTIONS = 300;
 
 const zeroes = <K extends string>(keys: readonly K[]) =>
   Object.fromEntries(keys.map((key) => [key, 0])) as Record<K, number>;
 
-export function computeFacets(rows: readonly FacetListing[], criteria: FacetCriteria): ListingFacets {
-  const passes = (row: FacetListing, skip: keyof FacetCriteria | null) =>
-    (skip === "search" || matchesSearch(criteria.search, row)) &&
-    (skip === "categories" || matchesCategories(criteria.categories, row)) &&
-    (skip === "sources" || matchesSources(criteria.sources, row)) &&
-    (skip === "origins" || matchesOrigins(criteria.origins, row)) &&
-    (skip === "fuels" || matchesFuels(criteria.fuels, row));
-
+export function facetsFromGroups(groups: FacetGroups): ListingFacets {
   const categories = zeroes(CATEGORY_KEYS);
-  const sources: Record<string, number> = {};
-  const origins = zeroes(ORIGIN_KEYS);
-  const fuels = zeroes(FUEL_KEYS);
-  const suggestions = new Map<string, number>();
+  for (const { category, count } of groups.categories) categories[categoryKeyOf(category)] += count;
 
-  for (const row of rows) {
-    if (passes(row, "categories")) categories[categoryKeyOf(row.category)] += 1;
-    if (passes(row, "sources")) sources[row.sourceId] = (sources[row.sourceId] ?? 0) + 1;
-    if (passes(row, "origins")) origins[row.origin] += 1;
-    if (passes(row, "fuels")) {
-      const fuel = fuelOf(row.fuel);
-      if (fuel !== null) fuels[fuel] += 1;
-    }
-    if (passes(row, "search")) {
-      for (const label of suggestionLabels(row)) suggestions.set(label, (suggestions.get(label) ?? 0) + 1);
-    }
+  const sources: Record<string, number> = {};
+  for (const { sourceId, count } of groups.sources) sources[sourceId] = (sources[sourceId] ?? 0) + count;
+
+  const origins = zeroes(ORIGIN_KEYS);
+  for (const { origin, count } of groups.origins) origins[origin] += count;
+
+  const fuels = zeroes(FUEL_KEYS);
+  for (const { fuel, count } of groups.fuels) {
+    const key = fuelOf(fuel);
+    if (key !== null) fuels[key] += count;
+  }
+
+  const suggestions = new Map<string, number>();
+  for (const { count, ...vehicle } of groups.vehicles) {
+    for (const label of suggestionLabels(vehicle)) suggestions.set(label, (suggestions.get(label) ?? 0) + count);
   }
 
   return {
@@ -79,10 +76,10 @@ export function computeFacets(rows: readonly FacetListing[], criteria: FacetCrit
 }
 
 /** "FORD" e "FORD KA" para marca "FORD" e modelo "KA SE 1.0 HA". Sem marca, nada. */
-function suggestionLabels(row: FacetListing): string[] {
-  const brand = toSearchText(row.brand ?? "");
+function suggestionLabels(vehicle: { brand: string | null; model: string | null }): string[] {
+  const brand = toSearchText(vehicle.brand ?? "");
   if (!brand) return [];
-  const [model] = toSearchText(row.model ?? "").split(" ");
+  const [model] = toSearchText(vehicle.model ?? "").split(" ");
   return model && model !== brand ? [brand, `${brand} ${model}`] : [brand];
 }
 

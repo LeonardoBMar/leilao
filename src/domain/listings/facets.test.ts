@@ -1,57 +1,61 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_CRITERIA, type FacetCriteria, type FacetListing } from "./criteria";
-import { computeFacets, matchSuggestions } from "./facets";
+import { type FacetGroups, facetsFromGroups, matchSuggestions } from "./facets";
 
-const row = (overrides: Partial<FacetListing> = {}): FacetListing => ({
-  sourceId: "leilo",
-  title: "VW/FOX 1.0",
-  brand: "VW",
-  model: "FOX 1.0",
-  fipeName: null,
-  category: "Carros",
-  origin: "financiamento",
-  fuel: "Flex",
-  ...overrides,
-});
+const empty: FacetGroups = { categories: [], sources: [], origins: [], fuels: [], vehicles: [] };
 
-const none: FacetCriteria = { search: null, categories: null, sources: [], origins: [], fuels: [] };
-
-const rows = [
-  row(),
-  row({ sourceId: "patio", brand: "HONDA", model: "CG 160 FAN", title: "HONDA CG 160", category: "Motos" }),
-  row({ sourceId: "patio", origin: "seguradora", fuel: "DIESEL", category: "Pesados", brand: "FORD" }),
-  row({ category: null, fuel: null, brand: null }),
-];
-
-describe("computeFacets", () => {
-  it("sem filtro de faceta: conta todos os anúncios em cada chip", () => {
-    const facets = computeFacets(rows, none);
-    expect(facets.categories).toEqual({ carros: 1, motos: 1, utilitarios: 0, pesados: 1, sucatas: 0, outros: 1 });
-    expect(facets.sources).toEqual({ leilo: 2, patio: 2 });
-    expect(facets.origins).toEqual({ financiamento: 3, seguradora: 1, frota: 0, orgao_publico: 0, outros: 0 });
-    expect(facets.fuels).toEqual({ flex: 2, gasolina: 0, diesel: 1, eletrico: 0 });
+describe("facetsFromGroups", () => {
+  it("leva os grupos do banco às chaves da tela, com zero nas que não apareceram", () => {
+    const facets = facetsFromGroups({
+      ...empty,
+      categories: [
+        { category: "Carros", count: 3 },
+        { category: "Motos", count: 1 },
+        // Fora do vocabulário e sem categoria caem juntos em "outros".
+        { category: "Diversos", count: 2 },
+        { category: null, count: 1 },
+      ],
+      sources: [
+        { sourceId: "leilo", count: 2 },
+        { sourceId: "patio", count: 5 },
+      ],
+      origins: [{ origin: "seguradora", count: 4 }],
+    });
+    expect(facets.categories).toEqual({ carros: 3, motos: 1, utilitarios: 0, pesados: 0, sucatas: 0, outros: 3 });
+    expect(facets.sources).toEqual({ leilo: 2, patio: 5 });
+    expect(facets.origins).toEqual({ financiamento: 0, seguradora: 4, frota: 0, orgao_publico: 0, outros: 0 });
   });
 
-  it("cada faceta conta com as outras aplicadas e sem ela mesma", () => {
-    const facets = computeFacets(rows, { ...none, sources: ["patio"], categories: ["motos"] });
-    // Categorias: só a fonte vale (2 do Pátio, uma moto e um pesado).
-    expect(facets.categories).toMatchObject({ motos: 1, pesados: 1, carros: 0 });
-    // Fontes: só a categoria vale (a moto é do Pátio).
-    expect(facets.sources).toEqual({ patio: 1 });
+  it("combustível: soma as grafias de cada chave e ignora as não reconhecidas", () => {
+    const facets = facetsFromGroups({
+      ...empty,
+      fuels: [
+        { fuel: "Flex", count: 2 },
+        { fuel: "ÁLCOOL/GASOLINA", count: 1 },
+        { fuel: "DIESEL", count: 1 },
+        { fuel: "???", count: 7 },
+        { fuel: null, count: 3 },
+      ],
+    });
+    expect(facets.fuels).toEqual({ flex: 3, gasolina: 0, diesel: 1, eletrico: 0 });
   });
 
-  it("sugestões: marca e marca + primeira palavra do modelo, das mais frequentes, sem a própria busca", () => {
-    const facets = computeFacets([...rows, row()], { ...none, search: "fox" });
-    expect(facets.suggestions.slice(0, 2)).toEqual([
-      { label: "VW", count: 2 },
-      { label: "VW FOX", count: 2 },
+  it("sugestões: marca e marca + primeira palavra do modelo, somadas e das mais frequentes", () => {
+    const facets = facetsFromGroups({
+      ...empty,
+      vehicles: [
+        { brand: "VW", model: "FOX 1.0", count: 2 },
+        { brand: "VW", model: "FOX CONNECT", count: 1 },
+        { brand: "HONDA", model: "CG 160 FAN", count: 1 },
+        { brand: null, model: "SEM MARCA", count: 9 },
+      ],
+    });
+    expect(facets.suggestions).toEqual([
+      { label: "VW", count: 3 },
+      { label: "VW FOX", count: 3 },
+      { label: "HONDA", count: 1 },
+      { label: "HONDA CG", count: 1 },
     ]);
-    expect(facets.suggestions.map((suggestion) => suggestion.label)).toContain("HONDA CG");
-  });
-
-  it("aceita os critérios padrão", () => {
-    expect(computeFacets(rows, DEFAULT_CRITERIA).categories.pesados).toBe(1);
   });
 });
 

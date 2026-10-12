@@ -78,8 +78,6 @@ export type CatalogAuctionPage = {
   total: number;
   page: number;
   pageSize: number;
-  /** Mais candidatos que o teto da busca por raio: as contagens são parciais e a tela avisa. */
-  truncated: boolean;
 };
 
 /** Leilão do catálogo na home: `matching` = lotes no filtro que encerram em 7 dias; `fitting` = quantos cabem. */

@@ -37,8 +37,8 @@ import {
   limitMaxBid,
   SALES_WINDOW_MS,
 } from "@/domain/listings/estimates";
-import { computeFacets } from "@/domain/listings/facets";
-import { boundingBox, distanceKm } from "@/domain/listings/geo";
+import { facetsFromGroups } from "@/domain/listings/facets";
+import { distanceKm } from "@/domain/listings/geo";
 import { collectorHealth, overallHealth } from "@/domain/listings/health";
 import { DEFAULT_REGION } from "@/domain/listings/region";
 import { trackerMissing } from "@/domain/listings/tracker";
@@ -47,9 +47,10 @@ import { defaultsInputFromListing } from "@/features/analyses/draft-defaults";
 import { analysisColumns, toInputs } from "@/features/analyses/queries";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
+import { fuelSpellings, municipalitiesWithin } from "@/server/catalog-values";
 import { storedCriteriaSelect } from "@/server/collector/alerts";
 import { db } from "@/server/db";
-import { estimateSaleSelect, soldSaleWhere, toEstimateSale } from "@/server/market/sold-sales";
+import { loadRecentSales } from "@/server/market/sold-sales";
 
 import {
   CATALOG_AUCTIONS_PAGE_SIZE,
@@ -76,7 +77,7 @@ import type {
  * O que é do usuário (monitores, alertas, lotes) continua filtrado por `ownerId` nas outras features.
  */
 
-/** Teto de candidatos lidos antes do filtro exato de distância: o retângulo já corta quase tudo. */
+/** Teto de anúncios lidos para ordenar por distância (a ordem é calculada aqui, não no banco). */
 const MAX_CANDIDATES = 2_000;
 
 /** Campos do cartão de anúncio; reusado pelos alertas. Traz o lote do usuário ligado ao anúncio, se houver. */
@@ -134,17 +135,14 @@ const toCents = (value: number | null) => (value === null ? null : cents(value))
 
 /**
  * Base das estimativas (etapa 5, D-36): vendas do catálogo no último ano e a análise fixada mais recente de cada lote
- * do usuário. Carregada uma vez por tela e usada em todos os cartões.
+ * do usuário. As vendas vêm do cache do catálogo (D-78); as análises, do banco a cada tela.
  */
 export type EstimateContext = { index: EstimateIndex; analyses: AnalysisSample[]; now: Date };
 
 export async function loadEstimateContext(now: Date): Promise<EstimateContext> {
   const user = await requireUser();
   const [sales, lots] = await Promise.all([
-    db.listing.findMany({
-      where: { ...soldSaleWhere, endsAt: { gte: new Date(now.getTime() - SALES_WINDOW_MS) } },
-      select: estimateSaleSelect,
-    }),
+    loadRecentSales(),
     db.lot.findMany({
       where: { ownerId: user.id, analyses: { some: { status: "fixed" } } },
       select: {
@@ -157,7 +155,8 @@ export async function loadEstimateContext(now: Date): Promise<EstimateContext> {
   ]);
 
   return {
-    index: buildEstimateIndex(sales.flatMap((sale) => toEstimateSale(sale) ?? [])),
+    // O cache pode ter alguns minutos: a janela é refeita contra `now`.
+    index: buildEstimateIndex(sales.filter((sale) => sale.endsAt.getTime() >= now.getTime() - SALES_WINDOW_MS)),
     analyses: lots.flatMap(({ analyses, ...lot }) =>
       analyses.map((analysis) => ({ ...lot, inputs: toInputs(analysis) })),
     ),
@@ -228,16 +227,9 @@ export function toListItem(row: ListingCardRow, estimates: EstimateContext | nul
   };
 }
 
-/** Pré-filtro de distância no banco (retângulo sobre as coordenadas do município). */
-function withinBox(radiusKm: number | null): Prisma.ListingWhereInput {
-  if (radiusKm === null) return {};
-  const box = boundingBox(DEFAULT_REGION.center, radiusKm);
-  return {
-    municipality: {
-      latitude: { gte: box.minLatitude, lte: box.maxLatitude },
-      longitude: { gte: box.minLongitude, lte: box.maxLongitude },
-    },
-  };
+/** Distância exata no banco: o município do anúncio está entre os do raio (`municipalitiesWithin`). */
+function radiusWhere(nearby: readonly number[] | null): Prisma.ListingWhereInput {
+  return nearby === null ? {} : { municipalityId: { in: [...nearby] } };
 }
 
 /** Chaves de categoria → categorias do vocabulário comum; "outros" é o resto, inclusive o anúncio sem categoria. */
@@ -290,22 +282,25 @@ function searchWhere(search: string | null): Prisma.ListingWhereInput {
 }
 
 /**
- * Grafias de combustível presentes no catálogo (poucas dezenas). A classificação é do domínio (`fuelOf`); no banco o
- * filtro vira `in` sobre as grafias que caem em cada chave. A origem já está gravada no anúncio (D-73).
+ * O que os critérios precisam do catálogo para virar filtro no banco (com cache, D-78): as grafias de combustível
+ * (a classificação é do domínio, `fuelOf`; no banco o filtro vira `in` sobre as grafias de cada chave) e os municípios
+ * do raio. A origem já está gravada no anúncio (D-73).
  */
-type TextValues = { fuels: string[] };
+type CriteriaValues = { fuels: string[]; nearby: number[] | null };
 
-async function loadTextValues(criteria: ListingCriteria): Promise<TextValues> {
-  const fuels =
-    criteria.fuels.length === 0 ? [] : await db.listing.findMany({ distinct: ["fuel"], select: { fuel: true } });
-  return { fuels: fuels.flatMap(({ fuel }) => (fuel === null ? [] : [fuel])) };
+async function loadCriteriaValues(criteria: ListingCriteria): Promise<CriteriaValues> {
+  const [fuels, nearby] = await Promise.all([
+    criteria.fuels.length === 0 ? [] : fuelSpellings(),
+    criteria.radiusKm === null ? null : municipalitiesWithin(criteria.radiusKm),
+  ]);
+  return { fuels, nearby };
 }
 
 function originWhere(origins: readonly OriginKey[]): Prisma.ListingWhereInput {
   return origins.length === 0 ? {} : { vehicleOrigin: { in: [...origins] } };
 }
 
-function fuelWhere(fuels: readonly FuelKey[], values: TextValues): Prisma.ListingWhereInput {
+function fuelWhere(fuels: readonly FuelKey[], values: CriteriaValues): Prisma.ListingWhereInput {
   if (fuels.length === 0) return {};
   return {
     fuel: {
@@ -323,13 +318,13 @@ function openWhere(now: Date): Prisma.ListingWhereInput {
 }
 
 /**
- * Critérios no banco, exceto a distância exata (o retângulo só pré-filtra; `withinRadius` completa). Mesma regra de
- * `matchesCriteria`; preço e % do mercado usam as colunas geradas (`price_cents`, `market_ratio_bps`).
+ * Critérios no banco, inclusive a distância. Mesma regra de `matchesCriteria`; preço e % do mercado usam as colunas
+ * geradas (`price_cents`, `market_ratio_bps`).
  */
-function criteriaWhere(criteria: ListingCriteria, values: TextValues): Prisma.ListingWhereInput {
+function criteriaWhere(criteria: ListingCriteria, values: CriteriaValues): Prisma.ListingWhereInput {
   return {
     AND: [
-      withinBox(criteria.radiusKm),
+      radiusWhere(values.nearby),
       categoriesWhere(criteria.categories),
       conditionWhere(criteria.condition),
       hideWhere(criteria.hide),
@@ -367,22 +362,19 @@ function screenWhere(filters: ListingFilters, ownerId: string, now: Date): Prism
   };
 }
 
-const withinRadius = (radiusKm: number | null) => (item: { distanceKm: number | null }) =>
-  radiusKm === null || (item.distanceKm !== null && item.distanceKm <= radiusKm);
-
 const auctionWhere = ({ sourceId, externalId }: CatalogAuctionKey): Prisma.ListingWhereInput => ({
   sourceId,
   auctionExternalId: externalId,
 });
 
 /** Tudo o que a tela filtra no banco: situação, critérios e filtros da tela; com `auction`, só aquele leilão. */
-async function listingsWhere(
+function listingsWhere(
   filters: ListingFilters,
+  values: CriteriaValues,
   ownerId: string,
   now: Date,
   auction?: CatalogAuctionKey,
-): Promise<Prisma.ListingWhereInput> {
-  const values = await loadTextValues(filters.criteria);
+): Prisma.ListingWhereInput {
   return {
     AND: [
       auction ? auctionWhere(auction) : {},
@@ -421,13 +413,12 @@ export async function listListings(
   // Encerrados já têm lance final: sem estimativa, sem carregar a base.
   const estimates = filters.ended ? Promise.resolve(null) : loadEstimateContext(now);
   const withEstimates = (context: EstimateContext | null) => (row: ListingCardRow) => toListItem(row, context);
-  const where = await listingsWhere(filters, user.id, now, scope.auction);
+  const where = listingsWhere(filters, await loadCriteriaValues(filters.criteria), user.id, now, scope.auction);
   const orderBy = listingsOrderBy(filters);
   const start = (filters.page - 1) * LISTINGS_PAGE_SIZE;
-  const radius = filters.criteria.radiusKm;
 
-  // Sem raio e sem ordem por distância, tudo é filtrável e ordenável no banco: pagina lá.
-  if (radius === null && filters.sort !== "perto") {
+  // Fora a ordem por distância, tudo é filtrável e ordenável no banco: pagina lá.
+  if (filters.sort !== "perto") {
     const [rows, total, context] = await Promise.all([
       db.listing.findMany({ where, orderBy, skip: start, take: LISTINGS_PAGE_SIZE, select }),
       db.listing.count({ where }),
@@ -442,15 +433,14 @@ export async function listListings(
     };
   }
 
-  // Com raio, o retângulo corta no banco e a distância exata filtra aqui, sobre no máximo MAX_CANDIDATES.
+  // "Mais perto": a distância é calculada aqui, sobre no máximo MAX_CANDIDATES.
   const [rows, context] = await Promise.all([
     db.listing.findMany({ where, orderBy, take: MAX_CANDIDATES + 1, select }),
     estimates,
   ]);
   const truncated = rows.length > MAX_CANDIDATES;
-  const items = rows.slice(0, MAX_CANDIDATES).map(withEstimates(context)).filter(withinRadius(radius));
   // Ordenação estável: empates na distância mantêm a ordem do banco.
-  if (filters.sort === "perto") items.sort(byDistance);
+  const items = rows.slice(0, MAX_CANDIDATES).map(withEstimates(context)).sort(byDistance);
 
   return {
     items: items.slice(start, start + LISTINGS_PAGE_SIZE),
@@ -461,12 +451,14 @@ export async function listListings(
   };
 }
 
-/** Teto de anúncios lidos para facetas e sugestões; acima dele as contagens ficam parciais. */
-const MAX_FACET_ROWS = 10_000;
+/** Grupos de marca e modelo lidos para as sugestões da busca: os mais frequentes bastam. */
+const MAX_SUGGESTION_GROUPS = 3_000;
+
+type FacetKey = "search" | "categories" | "sources" | "origins" | "fuels";
 
 /**
- * Contagens dos chips (categoria, fonte, origem, combustível) e sugestões da busca (docs/PLANO-FILTROS.md §4):
- * os anúncios no filtro sem os critérios de faceta, contados em `computeFacets`.
+ * Contagens dos chips (categoria, fonte, origem, combustível) e sugestões da busca (docs/PLANO-FILTROS.md §4), no
+ * banco: uma consulta agrupada por faceta, com os filtros da tela e as outras facetas aplicados, sem a própria.
  */
 export async function getListingFacets(
   filters: ListingFilters,
@@ -474,40 +466,49 @@ export async function getListingFacets(
 ): Promise<ListingFacetsView> {
   const user = await requireUser();
   const now = new Date();
+  const { criteria } = filters;
+  const values = await loadCriteriaValues(criteria);
   const withoutFacets: ListingFilters = {
     ...filters,
-    criteria: { ...filters.criteria, search: null, categories: null, sources: [], origins: [], fuels: [] },
+    criteria: { ...criteria, search: null, categories: null, sources: [], origins: [], fuels: [] },
   };
-  const [rows, sources] = await Promise.all([
-    db.listing.findMany({
-      where: await listingsWhere(withoutFacets, user.id, now, scope.auction),
-      take: MAX_FACET_ROWS,
-      select: {
-        sourceId: true,
-        title: true,
-        brand: true,
-        model: true,
-        fipeName: true,
-        category: true,
-        vehicleOrigin: true,
-        fuel: true,
-        municipality: { select: { latitude: true, longitude: true } },
-      },
+  const base = listingsWhere(withoutFacets, values, user.id, now, scope.auction);
+  const facetWheres: Record<FacetKey, Prisma.ListingWhereInput> = {
+    search: searchWhere(criteria.search),
+    categories: categoriesWhere(criteria.categories),
+    sources: criteria.sources.length === 0 ? {} : { sourceId: { in: [...criteria.sources] } },
+    origins: originWhere(criteria.origins),
+    fuels: fuelWhere(criteria.fuels, values),
+  };
+  const without = (facet: FacetKey): Prisma.ListingWhereInput => ({
+    AND: [base, ...Object.entries(facetWheres).flatMap(([key, where]) => (key === facet ? [] : [where]))],
+  });
+
+  const [categories, sources, origins, fuels, vehicles, activeSources] = await Promise.all([
+    db.listing.groupBy({ by: ["category"], where: without("categories"), _count: { _all: true } }),
+    db.listing.groupBy({ by: ["sourceId"], where: without("sources"), _count: { _all: true } }),
+    db.listing.groupBy({ by: ["vehicleOrigin"], where: without("origins"), _count: { _all: true } }),
+    db.listing.groupBy({ by: ["fuel"], where: without("fuels"), _count: { _all: true } }),
+    db.listing.groupBy({
+      by: ["brand", "model"],
+      where: { AND: [without("search"), { brand: { not: null } }] },
+      _count: { _all: true },
+      orderBy: { _count: { brand: "desc" } },
+      take: MAX_SUGGESTION_GROUPS,
     }),
     db.source.findMany({ where: { active: true }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
   ]);
-  const inRadius = rows
-    .map(({ municipality, vehicleOrigin, ...row }) => ({
-      ...row,
-      origin: vehicleOrigin,
-      distanceKm: municipality ? distanceKm(DEFAULT_REGION.center, municipality) : null,
-    }))
-    .filter(withinRadius(filters.criteria.radiusKm));
-  const facets = computeFacets(inRadius, filters.criteria);
+  const facets = facetsFromGroups({
+    categories: categories.map(({ category, _count }) => ({ category, count: _count._all })),
+    sources: sources.map(({ sourceId, _count }) => ({ sourceId, count: _count._all })),
+    origins: origins.map(({ vehicleOrigin, _count }) => ({ origin: vehicleOrigin, count: _count._all })),
+    fuels: fuels.map(({ fuel, _count }) => ({ fuel, count: _count._all })),
+    vehicles: vehicles.map(({ brand, model, _count }) => ({ brand, model, count: _count._all })),
+  });
 
   return {
     ...facets,
-    sources: sources.map((source) => ({ ...source, count: facets.sources[source.id] ?? 0 })),
+    sources: activeSources.map((source) => ({ ...source, count: facets.sources[source.id] ?? 0 })),
   };
 }
 
@@ -537,38 +538,13 @@ export async function listCatalogAuctions(filters: ListingFilters): Promise<Cata
     AND: [
       { auctionExternalId: { not: null } },
       filters.ended ? {} : openWhere(now),
-      criteriaWhere(filters.criteria, await loadTextValues(filters.criteria)),
+      criteriaWhere(filters.criteria, await loadCriteriaValues(filters.criteria)),
       screenWhere(filters, user.id, now),
     ],
   };
 
-  let matching: ReturnType<typeof countByAuction>;
-  let truncated = false;
-  if (filters.criteria.radiusKm === null) {
-    const groups = await db.listing.groupBy({ by: ["sourceId", "auctionExternalId"], where, _count: { _all: true } });
-    matching = countByAuction(groups.map((group) => ({ ...group, count: group._count._all })));
-  } else {
-    // Com raio, mesma regra da lista de anúncios: retângulo no banco, distância exata aqui.
-    const rows = await db.listing.findMany({
-      where,
-      take: MAX_CANDIDATES + 1,
-      select: {
-        sourceId: true,
-        auctionExternalId: true,
-        municipality: { select: { latitude: true, longitude: true } },
-      },
-    });
-    truncated = rows.length > MAX_CANDIDATES;
-    matching = countByAuction(
-      rows
-        .slice(0, MAX_CANDIDATES)
-        .map((row) => ({
-          ...row,
-          distanceKm: row.municipality ? distanceKm(DEFAULT_REGION.center, row.municipality) : null,
-        }))
-        .filter(withinRadius(filters.criteria.radiusKm)),
-    );
-  }
+  const groups = await db.listing.groupBy({ by: ["sourceId", "auctionExternalId"], where, _count: { _all: true } });
+  const matching = countByAuction(groups.map((group) => ({ ...group, count: group._count._all })));
 
   const stats = await loadCatalogAuctionStats(user.id, [...matching.values()], now);
   const selected = selectCatalogAuctions(
@@ -582,7 +558,6 @@ export async function listCatalogAuctions(filters: ListingFilters): Promise<Cata
     total: selected.length,
     page: filters.page,
     pageSize: CATALOG_AUCTIONS_PAGE_SIZE,
-    truncated,
   };
 }
 
@@ -622,11 +597,11 @@ export const getRegionOverview = cache(async (): Promise<RegionOverview> => {
   ]);
   const criteriaList = [DEFAULT_CRITERIA, ...watches.map(criteriaFromStored)];
   const wheres = await Promise.all(
-    criteriaList.map(async (criteria) => criteriaWhere(criteria, await loadTextValues(criteria))),
+    criteriaList.map(async (criteria) => criteriaWhere(criteria, await loadCriteriaValues(criteria))),
   );
 
   const rows = await db.listing.findMany({
-    // O banco pré-filtra (retângulo de cada critério); `matchesCriteria` aplica a regra exata, inclusive a distância.
+    // O banco filtra por cada critério; `matchesCriteria` confere a regra exata (a busca compara o texto normalizado).
     where: { AND: [openWhere(now), { auctionExternalId: { not: null } }, { OR: wheres }] },
     orderBy: [{ endsAt: "asc" }, { id: "asc" }],
     take: MAX_CANDIDATES + 1,
@@ -783,25 +758,12 @@ export async function listActiveSources(): Promise<{ id: string; name: string }[
 }
 
 /** Quantos anúncios abertos atendem aos critérios agora (ex.: "12 lotes combinam com este monitor"). */
-export async function countOpenListings(criteria: ListingCriteria): Promise<{ count: number; truncated: boolean }> {
+export async function countOpenListings(criteria: ListingCriteria): Promise<number> {
   await requireUser();
   const where: Prisma.ListingWhereInput = {
-    AND: [openWhere(new Date()), criteriaWhere(criteria, await loadTextValues(criteria))],
+    AND: [openWhere(new Date()), criteriaWhere(criteria, await loadCriteriaValues(criteria))],
   };
-  if (criteria.radiusKm === null) return { count: await db.listing.count({ where }), truncated: false };
-
-  const rows = await db.listing.findMany({
-    where,
-    take: MAX_CANDIDATES + 1,
-    select: { municipality: { select: { latitude: true, longitude: true } } },
-  });
-  const count = rows
-    .slice(0, MAX_CANDIDATES)
-    .map(({ municipality }) => ({
-      distanceKm: municipality ? distanceKm(DEFAULT_REGION.center, municipality) : null,
-    }))
-    .filter(withinRadius(criteria.radiusKm)).length;
-  return { count, truncated: rows.length > MAX_CANDIDATES };
+  return db.listing.count({ where });
 }
 
 /** Saúde do coletor para o dashboard e para "Leilões": última execução de cada fonte e abertos na região. */
@@ -809,7 +771,7 @@ export async function getCollectorStatus(): Promise<CollectorStatus> {
   await requireUser();
   const now = new Date();
 
-  const [sources, openCandidates] = await Promise.all([
+  const [sources, openInRegion] = await Promise.all([
     // Última execução de cada fonte ativa (D-37): uma fonte parada não fica escondida atrás das outras.
     db.source.findMany({
       where: { active: true },
@@ -822,17 +784,10 @@ export async function getCollectorStatus(): Promise<CollectorStatus> {
         },
       },
     }),
-    db.listing.findMany({
-      where: { AND: [openWhere(now), withinBox(DEFAULT_REGION.radiusKm), categoriesWhere(DEFAULT_CATEGORIES)] },
-      select: { municipality: { select: { latitude: true, longitude: true } } },
-      take: MAX_CANDIDATES,
-    }),
+    municipalitiesWithin(DEFAULT_REGION.radiusKm).then((nearby) =>
+      db.listing.count({ where: { AND: [openWhere(now), radiusWhere(nearby), categoriesWhere(DEFAULT_CATEGORIES)] } }),
+    ),
   ]);
-
-  const openInRegion = openCandidates.filter(
-    ({ municipality }) =>
-      municipality !== null && distanceKm(DEFAULT_REGION.center, municipality) <= DEFAULT_REGION.radiusKm,
-  ).length;
   const runs = sources.flatMap(({ name, runs: [run] }) =>
     run ? [{ ...run, name, health: collectorHealth(run, now) }] : [],
   );

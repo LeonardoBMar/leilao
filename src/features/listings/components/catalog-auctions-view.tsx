@@ -2,7 +2,7 @@ import { Gavel } from "lucide-react";
 import Link from "next/link";
 
 import { ListPagination } from "@/components/layout/list-pagination";
-import { Alert, AlertDescription, ButtonLink, EmptyState, Skeleton } from "@/components/ui";
+import { ButtonLink, EmptyState, Skeleton } from "@/components/ui";
 import { DEFAULT_REGION } from "@/domain/listings/region";
 import { formatDateTime } from "@/lib/format";
 
@@ -50,13 +50,6 @@ export async function CatalogAuctionsView({ searchParams }: { searchParams: Sear
         />
       ) : (
         <section aria-label="Leilões" className="grid gap-4">
-          {page.truncated ? (
-            <Alert variant="info">
-              <AlertDescription>
-                Muitos lotes para esta busca: os números dos leilões são parciais. Refine a busca, o ano ou o preço.
-              </AlertDescription>
-            </Alert>
-          ) : null}
           <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {page.items.map((item) => (
               <li key={`${item.sourceId}/${item.externalId}`} className="flex">

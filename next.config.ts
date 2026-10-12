@@ -45,6 +45,10 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Modelo de renderização atual: dinâmico por padrão, cache explícito com "use cache" e streaming com <Suspense>.
   cacheComponents: true,
+  // Bases do catálogo global entre requisições (D-78): a coleta roda a cada 2 h, então 15 min de atraso não mudam nada.
+  cacheLife: {
+    catalog: { stale: 300, revalidate: 900, expire: 7200 },
+  },
   // Links e router.push validados contra as rotas existentes.
   typedRoutes: true,
   // Memoização automática; não escrever useMemo/useCallback/memo por desempenho.

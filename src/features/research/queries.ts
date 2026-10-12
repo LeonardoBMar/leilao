@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cacheLife } from "next/cache";
 import { cache } from "react";
 import { z } from "zod";
 
@@ -170,9 +171,15 @@ function toStats({ n, p25, median, p75 }: GroupStats): GroupStats {
   return { n, p25, median, p75 };
 }
 
-/** Uma vez por requisição (cabeçalho e blocos usam a mesma base). */
+/** Uma vez por requisição (cabeçalho e blocos usam a mesma base); entre requisições, o cache do catálogo (D-78). */
 export const getResearchOverview = cache(async (): Promise<ResearchOverview> => {
   await requireUser();
+  return loadResearchOverview();
+});
+
+async function loadResearchOverview(): Promise<ResearchOverview> {
+  "use cache";
+  cacheLife("catalog");
   const [row] = await rows(
     z.object({ sales: z.number().int(), fipeMatched: z.number().int(), since: z.date().nullable() }),
     sql`SELECT count(*)::int AS sales,
@@ -181,7 +188,7 @@ export const getResearchOverview = cache(async (): Promise<ResearchOverview> => 
       WHERE l.status = 'sold' AND l.final_bid_cents > 0 AND l.ends_at >= ${salesSince()}`,
   );
   return row ?? { sales: 0, fipeMatched: 0, since: null };
-});
+}
 
 /**
  * Até quantos modelos a busca conhece (os de mais vendas primeiro). Alto o bastante para a cauda longa do catálogo
@@ -1007,8 +1014,15 @@ export const getOpenListingsFor = cache(async (filters: EvaluateFilters): Promis
 });
 
 /** Modelos com venda no último ano, de qualquer categoria e condição, para a busca do Avaliar. */
-export const getEvaluateModels = cache(async (): Promise<ResearchModelOption[]> => {
+export async function getEvaluateModels(): Promise<ResearchModelOption[]> {
   await requireUser();
+  return loadEvaluateModels();
+}
+
+/** Igual para todos os usuários: cache do catálogo (D-78). */
+async function loadEvaluateModels(): Promise<ResearchModelOption[]> {
+  "use cache";
+  cacheLife("catalog");
   const models = await rows(
     z.object({ key: z.string(), n: z.number().int() }),
     sql`SELECT t.key, count(*)::int AS n
@@ -1020,7 +1034,7 @@ export const getEvaluateModels = cache(async (): Promise<ResearchModelOption[]> 
     const [brand = "", model = ""] = key.split("|");
     return brand && model ? [{ brand, model, label: vehicleLabel({ brand, model }), sales: n }] : [];
   });
-});
+}
 
 /** Quantos lotes o Avaliar oferece como atalho sem veículo escolhido. */
 const LOT_SHORTCUTS = 6;

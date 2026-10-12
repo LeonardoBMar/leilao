@@ -42,7 +42,6 @@ export async function WatchList() {
 
 function WatchCard({ watch }: { watch: WatchListItem }) {
   const title = watchTitle(watch.name, watch.criteria);
-  const matches = `${watch.openMatches}${watch.openMatchesTruncated ? "+" : ""}`;
 
   return (
     <article className="grid gap-3 border-t border-border py-4.5 md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-6">
@@ -55,7 +54,9 @@ function WatchCard({ watch }: { watch: WatchListItem }) {
         <ul className="flex flex-wrap gap-x-4 gap-y-1 text-label font-normal text-foreground-secondary">
           <li>
             <Link href={discoveredHref(watch.criteria)} className="text-accent hover:underline">
-              {watch.openMatches === 1 ? "1 lote aberto combina agora" : `${matches} lotes abertos combinam agora`}
+              {watch.openMatches === 1
+                ? "1 lote aberto combina agora"
+                : `${watch.openMatches} lotes abertos combinam agora`}
             </Link>
           </li>
           <li>
