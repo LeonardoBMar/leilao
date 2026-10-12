@@ -60,7 +60,6 @@ import {
 import { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
-import { vehicleKeySql } from "@/server/vehicle-key-sql";
 
 import { evaluateScopeLabel } from "./labels";
 import { evaluateHref } from "./search";
@@ -98,7 +97,8 @@ export const MODEL_SALES_LIMIT = 500;
 
 const sql = Prisma.sql;
 const RATIO = sql`(l.final_bid_cents::float8 / l.market_value_cents)`;
-const VEHICLE_KEY = vehicleKeySql(sql`l.brand`, sql`l.model`);
+/** Chave do veículo gravada pela coleta (D-77): filtrar e agrupar por ela usa o índice e evita a regra por linha. */
+const VEHICLE_KEY = sql`l.vehicle_key`;
 
 type SalesScope = {
   /** Filtra a categoria do filtro (a barra conta as vendas de cada categoria). */

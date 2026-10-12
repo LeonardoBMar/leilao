@@ -8,6 +8,7 @@ import { municipalityKey } from "@/domain/listings/place";
 import { DEFAULT_REGION } from "@/domain/listings/region";
 import { nextCheckAt, retryAfterFailure, TRACKED_REFRESH_MS } from "@/domain/listings/schedule";
 import type { ListingInput } from "@/domain/listings/types";
+import { vehicleKey } from "@/domain/listings/vehicle-key";
 import type { Prisma } from "@/generated/prisma/client";
 
 import { db } from "../db";
@@ -125,6 +126,7 @@ export async function saveListing(
       sellerName: input.sellerName,
       sourceId,
     }),
+    vehicleKey: vehicleKey(input.vehicle.brand, input.vehicle.model),
     description: input.description,
     damageLevel: input.condition.damageLevel,
     conditionFlags: input.condition.flags,

@@ -2,7 +2,8 @@ import { normalizePlaceName } from "./place";
 
 /**
  * Chave do veículo para agrupar vendas e análises (D-36, D-45): marca por extenso e modelo base. Puro. Usada pelas
- * estimativas, pela Pesquisa e pelo casamento FIPE; `vehicleKeySql` (src/server) a repete em SQL.
+ * estimativas, pelo Mercado e pelo casamento FIPE. Gravada no anúncio pela coleta (`vehicle_key`, D-77); depois de
+ * mudar a regra, `npm run db:vehicle-keys` refaz o catálogo.
  */
 
 /** Grafias da mesma marca: a fonte escreve o nome completo, o usuário às vezes abrevia. */
@@ -37,7 +38,7 @@ export function vehicleKey(brand: string | null, model: string | null): string |
 /**
  * Modelos que a fonte escreve com o nome da família antiga e o mercado conhece por outro: "CORSA CLASSIC" (e "CORSA
  * SEDAN CLASSIC") é o Chevrolet Classic, que sem isso ficaria em dois grupos. Só a chave de agrupamento usa a troca; o
- * casamento da FIPE segue `baseModelOf`. `vehicleKeySql` repete a regra.
+ * casamento da FIPE segue `baseModelOf`.
  */
 export const MODEL_RENAMES: readonly { brand: string; base: string; word: string; name: string }[] = [
   { brand: "CHEVROLET", base: "CORSA", word: "CLASSIC", name: "CLASSIC" },

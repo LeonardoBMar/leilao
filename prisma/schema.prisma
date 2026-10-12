@@ -414,6 +414,9 @@ model Listing {
   sellerName           String?            @map("seller_name")
   /// Origem inferida (D-73): a coleta grava a cada visita; `npm run db:origins` refaz depois de mudar a regra.
   vehicleOrigin        VehicleOrigin      @default(outros) @map("vehicle_origin")
+  /// Chave "MARCA|MODELO" de `vehicleKey` (D-77): a coleta grava a cada visita; `npm run db:vehicle-keys` refaz depois
+  /// de mudar a regra. Nula sem marca ou modelo. O Mercado filtra e agrupa por ela.
+  vehicleKey           String?            @map("vehicle_key")
   /// Texto do leiloeiro sobre o lote, sem HTML.
   description          String?
   /// Condição declarada pela fonte (src/domain/listings/condition.ts). Nula: a fonte não classificou.
@@ -493,6 +496,8 @@ model Listing {
   /// Pendentes de casamento na FIPE (D-47).
   @@index([marketValueCheckedAt])
   @@index([fipeMatchId])
+  /// Vendas de um modelo no Mercado (D-77).
+  @@index([vehicleKey, status, endsAt])
   @@map("listings")
 }
 
