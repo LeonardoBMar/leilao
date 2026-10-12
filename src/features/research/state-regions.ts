@@ -164,9 +164,9 @@ export function stateRangeRows(
 }
 
 /** Linhas de estado e fonte visíveis no bloco "Onde"; as demais são contadas numa nota. */
-export const WHERE_PLACES_VISIBLE = 8;
+const WHERE_PLACES_VISIBLE = 8;
 
-export const DISTANCE_LABELS = {
+const DISTANCE_LABELS = {
   ate100: "Até 100 km",
   ate300: "De 100 a 300 km",
   mais300: "Mais de 300 km",

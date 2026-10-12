@@ -9,7 +9,7 @@ import { salesLabel } from "../labels";
 import { getWeeklyTrend } from "../queries";
 import { ResearchBlock } from "./research-block";
 
-export const TREND_BLOCK_TITLE = "Tendência";
+const TREND_BLOCK_TITLE = "Tendência";
 
 /**
  * "Tendência" (D-75): a mediana semanal do % da FIPE com a faixa do meio e o `n` de cada semana. Só aparece com

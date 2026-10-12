@@ -11,15 +11,13 @@ import { evaluateParams, researchParams } from "./schemas";
 export const MARKET_PATH = "/mercado";
 export const PANORAMA_PATH = "/mercado/panorama";
 export const CALIBRATION_PATH = "/mercado/calibracao";
-/** Os filtros da Pesquisa (D-45) moram no Panorama. */
-export const RESEARCH_PATH = PANORAMA_PATH;
 
 export type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 /** Endereço do Panorama com estes filtros (sem os padrões). */
 export function researchHref(filters: ResearchFilters): Route {
   const query = new URLSearchParams(researchParams(filters)).toString();
-  return (query ? `${RESEARCH_PATH}?${query}` : RESEARCH_PATH) as Route;
+  return (query ? `${PANORAMA_PATH}?${query}` : PANORAMA_PATH) as Route;
 }
 
 /** Endereço do Avaliar com este recorte (sem os padrões). */

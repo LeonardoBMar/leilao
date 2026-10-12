@@ -81,14 +81,6 @@ export type DistanceBand = (typeof DISTANCE_BANDS)[number];
 /** Maior distância (km) de cada faixa, exceto a última; o SQL usa os mesmos limites. */
 export const DISTANCE_BAND_LIMITS = { ate100: 100, ate300: 300 } as const;
 
-/** Faixa de idade de uma venda; sem ano-modelo, `null`. */
-export function ageBandOf(modelYear: number | null, saleYear: number): AgeBand | null {
-  if (modelYear === null) return null;
-  const age = saleYear - modelYear;
-  if (age <= AGE_BAND_LIMITS.ate5) return "ate5";
-  return age <= AGE_BAND_LIMITS["6a10"] ? "6a10" : "mais10";
-}
-
 /** Contexto de um grupo do ranking: o ano-modelo e o lance final (centavos) medianos. */
 export type RankingContext = { medianYear: number | null; medianBid: number };
 

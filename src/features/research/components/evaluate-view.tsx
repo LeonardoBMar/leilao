@@ -17,7 +17,7 @@ import { ResearchBlockSkeleton } from "./research-block";
 import { ResearchShell } from "./research-shell";
 
 /** Recorte em vigor: o da URL ou, com `?lote=<id>` e sem modelo, o do lote (o mesmo do preço provável). */
-export async function resolveEvaluation(
+async function resolveEvaluation(
   searchParams: SearchParams,
 ): Promise<{ filters: EvaluateFilters; lot: LotTarget | null }> {
   const fromUrl = parseEvaluateParams(await searchParams);

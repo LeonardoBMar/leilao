@@ -9,7 +9,7 @@ import { RangeBars } from "@/components/charts/range-bars";
 import { ScatterPlot } from "@/components/charts/scatter-plot";
 import { STATE_NAMES } from "@/domain/research/states";
 
-/** Gráficos da Pesquisa (D-45) com dados de exemplo próximos da medição de 08/10/2026. */
+/** Gráficos do Mercado (D-45, D-71) com dados de exemplo próximos da medição de 08/10/2026. */
 const bins = (peaks: Record<number, number>) => Array.from({ length: 50 }, (_, index) => peaks[index] ?? 0);
 
 const SAMPLE_REGIONS: MapRegion[] = (
@@ -34,7 +34,7 @@ export function ChartShowcase() {
   return (
     <section aria-labelledby="charts-title" className="grid gap-8">
       <h2 id="charts-title" className="text-heading-3">
-        Gráficos (Pesquisa)
+        Gráficos (Mercado)
       </h2>
 
       <div className="grid gap-3">
@@ -145,6 +145,42 @@ export function ChartShowcase() {
       </div>
 
       <div className="grid gap-8 md:grid-cols-2">
+        <div className="grid gap-3">
+          <h3 className="text-label text-muted">ScatterPlot com faixa e lotes abertos (Avaliar)</h3>
+          <ScatterPlot
+            ariaLabel="Exemplo de vendas e lotes abertos com a faixa típica"
+            xValues={[2018, 2019, 2020]}
+            yDomain={[0, 60_000]}
+            yTicks={[0, 20_000, 40_000, 60_000].map((value) => ({ value, label: `${value / 1000} mil` }))}
+            band={{ low: 30_000, high: 41_000, label: "faixa típica" }}
+            points={[
+              { key: "v1", x: 2018, y: 29_000, title: "2018: R$ 29.000" },
+              { key: "v2", x: 2019, y: 35_500, title: "2019: R$ 35.500" },
+              { key: "v3", x: 2019, y: 38_000, title: "2019: R$ 38.000" },
+              { key: "v4", x: 2020, y: 44_000, title: "2020: R$ 44.000, fora da conta", muted: true },
+              { key: "a1", x: 2020, y: 22_000, title: "2020: aberto, R$ 22.000", hollow: true, guideTo: 36_000 },
+            ]}
+          />
+        </div>
+        <div className="grid gap-3">
+          <h3 className="text-label text-muted">ScatterPlot com diagonal (Calibração)</h3>
+          <ScatterPlot
+            ariaLabel="Exemplo de limite fixado × arremate"
+            xAxis={{
+              domain: [20_000, 60_000],
+              ticks: [20_000, 40_000, 60_000].map((value) => ({ value, label: `${value / 1000} mil` })),
+            }}
+            yDomain={[20_000, 60_000]}
+            yTicks={[20_000, 40_000, 60_000].map((value) => ({ value, label: `${value / 1000} mil` }))}
+            diagonal={{ label: "limite = arremate" }}
+            points={[
+              [30_000, 34_000],
+              [42_000, 39_500],
+              [48_000, 55_000],
+              [25_000, 27_500],
+            ].map(([x = 0, y = 0], index) => ({ key: String(index), x, y, title: `limite ${x}, arremate ${y}` }))}
+          />
+        </div>
         <div className="grid gap-3">
           <h3 className="text-label text-muted">ScatterPlot</h3>
           <ScatterPlot

@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  ageBandOf,
   bidCurve,
   fillHistogram,
   type GroupStats,
@@ -190,17 +189,6 @@ describe("rankModels por idade", () => {
     ]);
     expect(Object.keys(ranked?.byAge ?? {})).toEqual(["6a10", "mais10"]);
     expect(ranked?.byAge["6a10"]?.context.medianYear).toBe(2017);
-  });
-});
-
-describe("ageBandOf", () => {
-  it.each([
-    [2021, 2026, "ate5"],
-    [2016, 2026, "6a10"],
-    [2015, 2026, "mais10"],
-    [null, 2026, null],
-  ] as const)("ano-modelo %s vendido em %s", (modelYear, saleYear, band) => {
-    expect(ageBandOf(modelYear, saleYear)).toBe(band);
   });
 });
 
