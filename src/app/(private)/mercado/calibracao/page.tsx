@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
-import { CalibrationView, CalibrationViewSkeleton } from "@/features/research/components/calibration-view";
+import {
+  CalibrationView,
+  CalibrationViewSkeleton,
+  EngineQualityBlock,
+} from "@/features/research/components/calibration-view";
 import { MarketTabs } from "@/features/research/components/market-tabs";
 import { ResearchHeader, ResearchHeaderSkeleton } from "@/features/research/components/research-view";
 
@@ -17,6 +21,7 @@ export default function CalibrationPage() {
       <Suspense fallback={<CalibrationViewSkeleton />}>
         <CalibrationView />
       </Suspense>
+      <EngineQualityBlock />
     </div>
   );
 }

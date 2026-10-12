@@ -5,6 +5,11 @@
 // Opções:
 //   --from <aaaa-mm-dd>  primeira data dos alvos (padrão: 2026-09-15, quando a base passou de mil vendas)
 //   --variant <nome>     só uma variante (v1, v2, v2-origem); sem ela, todas
+//   --write              grava o resumo do motor das telas (v1) em src/features/research/engine-quality.json, que a
+//                        aba Calibração mostra (D-76); o arquivo vai no commit
+
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
 
 import { loadEnvConfig } from "@next/env";
 
@@ -22,6 +27,7 @@ async function main() {
     "v2-origem": { levels: COMPARABLE_LEVELS, preferOrigin: true },
   } as const;
   const only = readFlag("--variant");
+  const write = process.argv.includes("--write");
   const from = new Date(`${readFlag("--from") ?? "2026-09-15"}T00:00:00-03:00`);
   const sales = await loadSoldSales();
 
@@ -46,6 +52,26 @@ async function main() {
       },
       { from, windowMs: SALES_WINDOW_MS },
     );
+    if (write && name === "v1") {
+      const byConfidence = summarizeBacktestBy(outcomes, ({ estimate }) =>
+        estimate.kind === "insufficient" ? "none" : estimate.confidence,
+      );
+      const quality = {
+        version: 1,
+        computedAt: new Date().toISOString(),
+        from: from.toISOString(),
+        total: summarizeBacktest(outcomes),
+        byConfidence: Object.fromEntries(
+          (["high", "medium", "low"] as const).flatMap((level) => {
+            const summary = byConfidence.get(level);
+            return summary === undefined ? [] : [[level, summary]];
+          }),
+        ),
+      };
+      const path = join(process.cwd(), "src/features/research/engine-quality.json");
+      writeFileSync(path, `${JSON.stringify(quality, null, 2)}\n`);
+      process.stdout.write(`resumo gravado em ${path}\n`);
+    }
     process.stdout.write(`\n== ${name}\n${header}`);
     process.stdout.write(line("total", summarizeBacktest(outcomes)));
     const groups = [

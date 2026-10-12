@@ -26,9 +26,17 @@ import {
 import { getCalibration } from "@/features/analyses/queries";
 import type { CalibrationItem } from "@/features/analyses/types";
 import { niceRange } from "@/lib/charts";
-import { formatBRL, formatCalendarDate, formatCompactBRL, formatRatio } from "@/lib/format";
+import { formatBRL, formatCompactBRL, formatDate, formatRatio } from "@/lib/format";
 
-import { BAND_PLACEMENT_LABELS, bandHitSentence, deviationLabel, limitSentence, listingCategoryLabel } from "../labels";
+import { readEngineQuality } from "../engine-quality";
+import {
+  BAND_PLACEMENT_LABELS,
+  bandHitSentence,
+  CONFIDENCE_SHORT_LABELS,
+  deviationLabel,
+  limitSentence,
+  listingCategoryLabel,
+} from "../labels";
 import { ResearchBlock } from "./research-block";
 
 /**
@@ -141,7 +149,7 @@ export async function CalibrationView() {
                 </TableCell>
                 <TableCell className="tabular-nums">
                   <Link href={`/analise/${item.analysisId}`} className="hover:text-foreground hover:underline">
-                    {formatCalendarDate(item.fixedAt)}
+                    {formatDate(item.fixedAt)}
                   </Link>
                 </TableCell>
                 <TableCell className="text-right tabular-nums">
@@ -215,6 +223,61 @@ function LimitChart({ items }: { items: readonly CalibrationItem[] }) {
           title: `${item.label}: limite ${formatBRL(limit)}, arremate ${formatBRL(item.finalBid)}`,
         }))}
       />
+    </ResearchBlock>
+  );
+}
+
+/**
+ * Qualidade do motor (D-76): o backtest do preço provável em linguagem simples, com a data do arquivo gravado pelo
+ * script. Independe dos resultados do usuário.
+ */
+export function EngineQualityBlock() {
+  const quality = readEngineQuality();
+  if (quality === null) return null;
+  const { total, byConfidence } = quality;
+  const { hitRate, medianAbsError } = total;
+  if (hitRate === null || medianAbsError === null) return null;
+  const levels = (["high", "medium", "low"] as const).flatMap((level) => {
+    const summary = byConfidence[level];
+    if (summary === undefined || summary.hitRate === null || summary.medianAbsError === null) return [];
+    return [{ level, estimated: summary.estimated, hitRate: summary.hitRate, error: summary.medianAbsError }];
+  });
+
+  return (
+    <ResearchBlock
+      id="calibracao-motor"
+      title="Qualidade do preço provável"
+      description={`Teste com as vendas do catálogo desde ${formatDate(quality.from)}, atualizado em ${formatDate(quality.computedAt)}.`}
+    >
+      <p className="max-w-3xl text-body text-foreground">
+        Cada venda foi estimada só com as vendas de dias anteriores a ela. O preço provável saiu em{" "}
+        {formatRatio(total.estimated / Math.max(1, total.total))} de {total.total.toLocaleString("pt-BR")} vendas; o
+        arremate caiu dentro da faixa típica em {formatRatio(hitRate)} delas (o esperado é{" "}
+        {formatRatio(EXPECTED_BAND_HIT_RATE)}), e o valor do meio da faixa errou, na mediana,{" "}
+        {formatRatio(medianAbsError)} do lance.
+      </p>
+      {levels.length === 0 ? null : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Confiança</TableHead>
+              <TableHead className="text-right">Vendas</TableHead>
+              <TableHead className="text-right">Dentro da faixa</TableHead>
+              <TableHead className="text-right">Erro da mediana</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {levels.map(({ level, estimated, hitRate: rate, error }) => (
+              <TableRow key={level}>
+                <TableCell className="capitalize">{CONFIDENCE_SHORT_LABELS[level]}</TableCell>
+                <TableCell className="text-right tabular-nums">{estimated.toLocaleString("pt-BR")}</TableCell>
+                <TableCell className="text-right tabular-nums">{formatRatio(rate)}</TableCell>
+                <TableCell className="text-right tabular-nums">{formatRatio(error)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </ResearchBlock>
   );
 }

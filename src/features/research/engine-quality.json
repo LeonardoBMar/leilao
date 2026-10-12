@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "computedAt": "2026-10-12T00:00:56.705Z",
+  "from": "2026-09-15T03:00:00.000Z",
+  "total": {
+    "total": 6404,
+    "estimated": 5255,
+    "hitRate": 0.4804947668886774,
+    "medianAbsError": 0.19353913885535906
+  },
+  "byConfidence": {
+    "high": {
+      "total": 1079,
+      "estimated": 1079,
+      "hitRate": 0.5032437442075997,
+      "medianAbsError": 0.12544906898706623
+    },
+    "medium": {
+      "total": 1269,
+      "estimated": 1269,
+      "hitRate": 0.4318360914105595,
+      "medianAbsError": 0.17987853569470763
+    },
+    "low": {
+      "total": 2907,
+      "estimated": 2907,
+      "hitRate": 0.4932920536635707,
+      "medianAbsError": 0.2410369553226696
+    }
+  }
+}
