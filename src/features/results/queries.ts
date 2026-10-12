@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cache } from "react";
+
 import { listingOutcome } from "@/domain/listings/outcome";
 import { cents } from "@/domain/money";
 import { suggestedAnalysis } from "@/domain/results/results";
@@ -61,8 +63,11 @@ function toRevision({ finalBidCents, analysis, ...row }: RevisionRow): ResultRev
   return { ...row, finalBid: money(finalBidCents), analysis: analysis ? toLinkedAnalysis(analysis) : null };
 }
 
-/** Tudo que a ficha e o formulário de resultado precisam. `null` para lote inexistente ou de outro dono. */
-export async function getLotResultContext(lotId: string): Promise<LotResultContext | null> {
+/**
+ * Tudo que a ficha e o formulário de resultado precisam. `null` para lote inexistente ou de outro dono. Memo por
+ * requisição (D-44): na ficha, o painel de resultado, o próximo passo e o botão de registrar leem o mesmo contexto.
+ */
+export const getLotResultContext = cache(async (lotId: string): Promise<LotResultContext | null> => {
   const user = await requireUser();
   const lot = await db.lot.findFirst({
     where: { id: lotId, ownerId: user.id },
@@ -124,7 +129,7 @@ export async function getLotResultContext(lotId: string): Promise<LotResultConte
     tracking,
     prefill: revisions.length === 0 && tracking ? prefillFrom(tracking) : null,
   };
-}
+});
 
 /** Desfecho da fonte → valores iniciais do formulário, com a origem descrita (o usuário revisa e salva). */
 function prefillFrom({ sourceName, url, outcome }: ResultTracking): ResultPrefill | null {

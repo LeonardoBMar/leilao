@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cache } from "react";
+
 import type { AnalysisInputs } from "@/domain/finance/calculator";
 import { bps, cents } from "@/domain/money";
 import { getLotMarketReference } from "@/features/research/queries";
@@ -155,8 +157,11 @@ export async function getAnalysis(id: string): Promise<AnalysisDetail | null> {
   };
 }
 
-/** Todas as versões de um lote, da mais recente para a mais antiga (RF-05). */
-export async function listLotAnalyses(lotId: string): Promise<AnalysisVersion[]> {
+/**
+ * Todas as versões de um lote, da mais recente para a mais antiga (RF-05). Memo por requisição (D-44): na ficha do lote,
+ * o painel de análises e o próximo passo leem a mesma lista.
+ */
+export const listLotAnalyses = cache(async (lotId: string): Promise<AnalysisVersion[]> => {
   const user = await requireUser();
   const rows = await db.analysis.findMany({
     where: { lotId, ownerId: user.id },
@@ -173,7 +178,7 @@ export async function listLotAnalyses(lotId: string): Promise<AnalysisVersion[]>
     },
   });
   return rows.map(({ maxBidCents, ...row }) => ({ ...row, maxBid: money(maxBidCents) }));
-}
+});
 
 /**
  * Calibração (docs/PLANO-MERCADO.md §7): a revisão vigente de cada lote do usuário, quando o lote foi arrematado com
