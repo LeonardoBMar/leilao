@@ -12,13 +12,14 @@ import { vehicleKey } from "@/domain/listings/vehicle-key";
 import type { Prisma } from "@/generated/prisma/client";
 
 import { db } from "../db";
+import { changedFields } from "./changes";
 
 /**
  * Gravação do catálogo global (D-25). Roda sem usuário (D-26): só o coletor chama estas funções,
  * e elas só gravam nas tabelas do catálogo (`findTrackedVisits` também lê `lots`).
  */
 
-/** A transação faz três idas ao banco; com latência alta (ex.: máquina local → EUA) o padrão de 5 s não basta. */
+/** A transação faz até três idas ao banco; com latência alta (ex.: máquina local → EUA) o padrão de 5 s não basta. */
 const TRANSACTION_OPTIONS = { maxWait: 10_000, timeout: 15_000 };
 
 type Place = Coordinates & { ibgeCode: number };
@@ -92,6 +93,64 @@ export async function findTrackedVisits(sourceId: string, now: Date, limit: numb
   });
 }
 
+/** O anúncio gravado, para comparar com a leitura nova: toda coluna que `saveListing` grava, menos as da visita. */
+const storedListingSelect = {
+  id: true,
+  url: true,
+  lotNumber: true,
+  title: true,
+  brand: true,
+  model: true,
+  fipeCode: true,
+  fipeName: true,
+  modelYear: true,
+  manufactureYear: true,
+  mileageKm: true,
+  fuel: true,
+  color: true,
+  category: true,
+  recoveryType: true,
+  hasKey: true,
+  sellerName: true,
+  vehicleOrigin: true,
+  vehicleKey: true,
+  description: true,
+  damageLevel: true,
+  conditionFlags: true,
+  inspectionResult: true,
+  inspectionNotes: true,
+  auctionExternalId: true,
+  auctionName: true,
+  auctionStartsAt: true,
+  startsAt: true,
+  endsAt: true,
+  yardName: true,
+  city: true,
+  state: true,
+  address: true,
+  municipalityId: true,
+  status: true,
+  sourceStatus: true,
+  currentBidCents: true,
+  minimumBidCents: true,
+  bidCount: true,
+  finalBidCents: true,
+  commissionBps: true,
+  dispatcherFeeCents: true,
+  removalFeeCents: true,
+  storageFeeCents: true,
+  inspectionFeeCents: true,
+  otherFeesCents: true,
+  photoUrls: true,
+  raw: true,
+  marketValueCents: true,
+  marketValueOrigin: true,
+  marketValueFipeCode: true,
+  marketValueRefMonth: true,
+  marketValueCheckedAt: true,
+  fipeMatchId: true,
+} satisfies Prisma.ListingSelect;
+
 /**
  * Cria ou atualiza o anúncio (único por fonte + id na fonte) e grava uma observação quando lance
  * ou situação mudam. Tudo numa transação: anúncio e histórico nunca divergem.
@@ -156,6 +215,9 @@ export async function saveListing(
     otherFeesCents: input.costs.otherFees,
     photoUrls: input.photoUrls,
     raw: toJson(input.raw),
+  } satisfies Prisma.ListingUncheckedUpdateInput;
+  // Mudam a cada visita: sempre gravadas.
+  const visit = {
     lastCheckedAt: now,
     nextCheckAt: nextCheckAt({
       status: input.status,
@@ -170,16 +232,7 @@ export async function saveListing(
   return db.$transaction(async (tx) => {
     const previous = await tx.listing.findUnique({
       where: { sourceId_externalId: { sourceId, externalId: input.externalId } },
-      select: {
-        status: true,
-        currentBidCents: true,
-        bidCount: true,
-        brand: true,
-        model: true,
-        modelYear: true,
-        category: true,
-        marketValueOrigin: true,
-      },
+      select: storedListingSelect,
     });
     const marketValue = marketValueFields(
       marketValueOnSave(previous && { ...previous, origin: previous.marketValueOrigin }, {
@@ -187,12 +240,27 @@ export async function saveListing(
         marketValue: input.marketValue,
       }),
     );
-    const listing = await tx.listing.upsert({
-      where: { sourceId_externalId: { sourceId, externalId: input.externalId } },
-      create: { ...fields, ...marketValue, sourceId, externalId: input.externalId, firstSeenAt: now, lastSeenAt: now },
-      update: { ...fields, ...marketValue },
-      select: { id: true },
-    });
+    const listing = previous
+      ? await tx.listing.update({
+          where: { id: previous.id },
+          // Só o que mudou (D-81): a maioria das revisitas não muda lance nem situação.
+          data: { ...changedFields(previous, { ...fields, ...marketValue }), ...visit },
+          select: { id: true },
+        })
+      : await tx.listing.upsert({
+          where: { sourceId_externalId: { sourceId, externalId: input.externalId } },
+          create: {
+            ...fields,
+            ...marketValue,
+            ...visit,
+            sourceId,
+            externalId: input.externalId,
+            firstSeenAt: now,
+            lastSeenAt: now,
+          },
+          update: { ...fields, ...marketValue, ...visit },
+          select: { id: true },
+        });
     const next = { status: input.status, bidCents: input.currentBid, bidCount: input.bidCount };
     const before = previous && {
       status: previous.status,
