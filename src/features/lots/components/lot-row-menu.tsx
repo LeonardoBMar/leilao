@@ -18,14 +18,16 @@ import {
   DropdownMenuTrigger,
   toast,
 } from "@/components/ui";
+import type { Cents } from "@/domain/money";
 import { type ActionState, fieldError, fieldValue, idleState } from "@/lib/action-state";
+import { formatMoneyInput } from "@/lib/format";
 
 import { setLotArchivedAction, setLotFollowedAction, updateCurrentBidAction } from "../actions";
 
 type LotRowMenuProps = {
   lotId: string;
   lotLabel: string;
-  currentBid: number | null;
+  currentBid: Cents | null;
   isFollowed: boolean;
   isArchived: boolean;
 };
@@ -80,7 +82,7 @@ export function LotRowMenu({ lotId, lotLabel, currentBid, isFollowed, isArchived
   );
 }
 
-function BidForm({ lotId, currentBid, onSaved }: { lotId: string; currentBid: number | null; onSaved: () => void }) {
+function BidForm({ lotId, currentBid, onSaved }: { lotId: string; currentBid: Cents | null; onSaved: () => void }) {
   const [state, formAction, pending] = useActionState<ActionState, FormData>(async (prev, formData) => {
     const next = await updateCurrentBidAction(lotId, prev, formData);
     if (next.status === "success") {
@@ -90,7 +92,7 @@ function BidForm({ lotId, currentBid, onSaved }: { lotId: string; currentBid: nu
     return next;
   }, idleState);
 
-  const saved = currentBid === null ? undefined : (currentBid / 100).toFixed(2).replace(".", ",");
+  const saved = currentBid === null ? undefined : formatMoneyInput(currentBid);
 
   return (
     <form action={formAction} className="grid gap-5">

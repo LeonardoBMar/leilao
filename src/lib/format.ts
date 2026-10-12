@@ -24,6 +24,11 @@ export function formatBRL(value: Cents): string {
   return brl.format(value / 100);
 }
 
+/** Valor para um campo de dinheiro, que `parseBRL` lê de volta: "1234,50" (sem milhar nem "R$"). */
+export function formatMoneyInput(value: Cents): string {
+  return (value / 100).toFixed(2).replace(".", ",");
+}
+
 /** Valor curto para gráficos: "R$ 32,5 mil", "R$ 1,3 mi". */
 export function formatCompactBRL(value: Cents): string {
   return compactBrl.format(value / 100);

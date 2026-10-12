@@ -22,10 +22,11 @@ import {
   SelectField,
   toast,
 } from "@/components/ui";
+import type { Cents } from "@/domain/money";
 import { LOT_OUTCOMES, type LotOutcome, PERSONAL_OUTCOMES, type PersonalOutcome } from "@/domain/results/results";
 import { type ActionState, fieldError, fieldValue, idleState } from "@/lib/action-state";
 import { toZonedDateInput } from "@/lib/dates";
-import { formatBRL, formatDate } from "@/lib/format";
+import { formatBRL, formatDate, formatMoneyInput } from "@/lib/format";
 
 import type { LotResultContext } from "../types";
 
@@ -55,8 +56,7 @@ const SHORT_PERSONAL_LABELS = {
   won: "Arrematei",
 } satisfies Record<PersonalOutcome, string>;
 
-const centsToInput = (value: number | null) =>
-  value === null ? undefined : (value / 100).toFixed(2).replace(".", ",");
+const centsToInput = (value: Cents | null) => (value === null ? undefined : formatMoneyInput(value));
 
 /**
  * Registro ou correção do resultado num modal, sem sair da tela (D-54; SPEC RF-06). Pede só desfecho, preço e dia;

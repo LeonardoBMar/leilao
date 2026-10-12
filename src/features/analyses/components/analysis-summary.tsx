@@ -6,7 +6,7 @@ import { Badge, Card, CurrencyInput, Money } from "@/components/ui";
 import { compareToLimit, differenceToLimit, simulateBid } from "@/domain/finance/calculator";
 import { type Cents, cents, parseBRL } from "@/domain/money";
 import type { LotMarketReference } from "@/features/research/types";
-import { formatBRL } from "@/lib/format";
+import { formatBRL, formatMoneyInput } from "@/lib/format";
 import { LIMIT_COMPARISON_LABELS, LIMIT_COMPARISON_VARIANTS } from "@/lib/limit-comparison";
 import { cn } from "@/lib/utils";
 
@@ -31,7 +31,7 @@ type AnalysisSummaryProps = {
  */
 export function AnalysisSummary({ model, currentBid, market, marketNote }: AnalysisSummaryProps) {
   const { outcome, complete } = model;
-  const [bidText, setBidText] = useState(currentBid === null ? "" : (currentBid / 100).toFixed(2).replace(".", ","));
+  const [bidText, setBidText] = useState(currentBid === null ? "" : formatMoneyInput(currentBid));
   const parsedBid = bidText.trim() === "" ? null : parseBRL(bidText);
   const bid = parsedBid !== null && parsedBid >= 0 ? parsedBid : null;
   const simulation = complete && bid !== null ? simulateBid(complete, bid) : null;

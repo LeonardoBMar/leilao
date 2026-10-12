@@ -4,14 +4,16 @@ import { Pencil } from "lucide-react";
 import { useActionState, useState } from "react";
 
 import { Button, CurrencyInput, Popover, PopoverContent, PopoverTrigger, toast } from "@/components/ui";
+import type { Cents } from "@/domain/money";
 import { type ActionState, fieldError, fieldValue, idleState } from "@/lib/action-state";
+import { formatMoneyInput } from "@/lib/format";
 
 type BidAction = (prev: ActionState, formData: FormData) => Promise<ActionState>;
 
 type CurrentBidFormProps = {
   action: BidAction;
   /** Valor atual em centavos, para preencher o campo. */
-  currentBid: number | null;
+  currentBid: Cents | null;
   /** Lance mantido pelo coletor: o botão vira "Corrigir". */
   isTracked: boolean;
 };
@@ -40,7 +42,7 @@ function BidForm({
   onSaved,
 }: {
   action: BidAction;
-  currentBid: number | null;
+  currentBid: Cents | null;
   onSaved: () => void;
 }) {
   const [state, formAction, pending] = useActionState<ActionState, FormData>(async (prev, formData) => {
@@ -52,7 +54,7 @@ function BidForm({
     return next;
   }, idleState);
 
-  const saved = currentBid === null ? undefined : (currentBid / 100).toFixed(2).replace(".", ",");
+  const saved = currentBid === null ? undefined : formatMoneyInput(currentBid);
 
   return (
     <form action={formAction} className="grid gap-3">

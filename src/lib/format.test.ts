@@ -1,8 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { cents } from "@/domain/money";
+import { cents, parseBRL } from "@/domain/money";
 
-import { formatCalendarDayMonth, formatCompactBRL, formatDayParts, formatShortDateTime, formatTime } from "./format";
+import {
+  formatCalendarDayMonth,
+  formatCompactBRL,
+  formatDayParts,
+  formatMoneyInput,
+  formatShortDateTime,
+  formatTime,
+} from "./format";
 
 describe("formatadores de agenda", () => {
   // 13:00 UTC = 10:00 em São Paulo.
@@ -33,5 +40,13 @@ describe("formatCompactBRL", () => {
 describe("formatCalendarDayMonth", () => {
   it("dia e mês em UTC, sem voltar um dia", () => {
     expect(formatCalendarDayMonth(new Date("2026-10-05T00:00:00Z"))).toBe("05/10");
+  });
+});
+
+describe("formatMoneyInput", () => {
+  it("escreve o valor do campo sem milhar, e parseBRL lê de volta", () => {
+    expect(formatMoneyInput(cents(123_450))).toBe("1234,50");
+    expect(formatMoneyInput(cents(0))).toBe("0,00");
+    expect(parseBRL(formatMoneyInput(cents(9_876_543)))).toBe(9_876_543);
   });
 });

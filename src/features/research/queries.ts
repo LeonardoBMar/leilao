@@ -623,7 +623,7 @@ export async function getModelRanking(filters: ResearchFilters): Promise<ModelRa
       brand,
       model,
       stats: toStats(group),
-      context: { medianYear: group.median_year, medianBid: group.median_bid },
+      context: { medianYear: group.median_year, medianBid: cents(Math.round(group.median_bid)) },
       byAge: {},
     });
   }
@@ -632,7 +632,7 @@ export async function getModelRanking(filters: ResearchFilters): Promise<ModelRa
     if (group.all_ages === 1 || group.age === null || model === undefined) continue;
     model.byAge[group.age] = {
       stats: toStats(group),
-      context: { medianYear: group.median_year, medianBid: group.median_bid },
+      context: { medianYear: group.median_year, medianBid: cents(Math.round(group.median_bid)) },
     };
   }
   return {

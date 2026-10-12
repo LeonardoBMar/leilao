@@ -80,7 +80,9 @@ src/
       minhas-analises/leiloes/[id]/page.tsx
       lotes/[id]/page.tsx
       analise/[id]/page.tsx
-      pesquisa/page.tsx           # gráficos de preço do catálogo (D-45)
+      mercado/page.tsx            # Mercado, aba Avaliar: quanto um veículo costuma sair (D-71)
+      mercado/panorama/page.tsx   # aba Panorama: o catálogo inteiro (a antiga Pesquisa, D-45)
+      mercado/calibracao/page.tsx # aba Calibração: limites fixados × arremate (D-74, D-76)
       error.tsx                   # boundary da área privada
     not-found.tsx
     global-error.tsx
@@ -101,7 +103,7 @@ src/
   domain/
     money.ts                      # Cents, parseBRL, roundCents
     finance/                      # calculadora (SPEC §7), versionada por FORMULA_VERSION
-    research/                     # da agregação à tela da Pesquisa: amostra mínima, faixas de cor, estados (D-45)
+    research/                     # da agregação às telas do Mercado: amostra mínima, faixas, recorte do Avaliar, calibração (D-45, D-71)
   server/
     db.ts                         # PrismaClient singleton
     auth.ts                       # getCurrentUser / requireUser / signIn / signOut (DAL de sessão)
@@ -109,6 +111,7 @@ src/
     env.ts                        # variáveis secretas validadas por Zod
     storage.ts                    # URLs assinadas
     collector/                    # coletor agendado: rede educada, gravação do catálogo, registro das execuções (D-26); carga avulsa (D-60)
+    market/                       # vendas do catálogo (base das estimativas) e recálculo da origem gravada (D-28, D-73)
     fipe/                         # tabela FIPE do mês (dataset), catálogo, correlações e casamento do valor (D-47, D-49, D-51)
   sources/
     index.ts                      # SOURCES: as fontes coletadas (D-37)

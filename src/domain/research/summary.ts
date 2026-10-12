@@ -1,4 +1,5 @@
 import { MIN_COMPARABLES } from "../listings/estimates";
+import type { Cents } from "../money";
 import type { ResearchCondition, ResearchVehicle } from "./filters";
 
 /**
@@ -82,7 +83,7 @@ export type DistanceBand = (typeof DISTANCE_BANDS)[number];
 export const DISTANCE_BAND_LIMITS = { ate100: 100, ate300: 300 } as const;
 
 /** Contexto de um grupo do ranking: o ano-modelo e o lance final (centavos) medianos. */
-export type RankingContext = { medianYear: number | null; medianBid: number };
+export type RankingContext = { medianYear: number | null; medianBid: Cents };
 
 type ModelGroup = { stats: GroupStats; context: RankingContext };
 export type ModelStats = ResearchVehicle & ModelGroup & { byAge: Partial<Record<AgeBand, ModelGroup>> };

@@ -1,6 +1,5 @@
 import type { Route } from "next";
 
-import { cents } from "@/domain/money";
 import { DEFAULT_EVALUATE_FILTERS } from "@/domain/research/evaluate";
 import { type ResearchFilters, type ResearchVehicle, vehicleLabel } from "@/domain/research/filters";
 import {
@@ -38,7 +37,7 @@ function statsOf({ summary, context }: Group, weeks: number): RankingStats {
     median: summary.median,
     high: summary.high,
     year: context.medianYear,
-    bid: cents(Math.round(context.medianBid)),
+    bid: context.medianBid,
     perWeek: summary.n / weeks,
   };
 }

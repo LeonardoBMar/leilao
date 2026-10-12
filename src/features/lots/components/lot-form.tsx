@@ -17,7 +17,9 @@ import {
   Textarea,
   toast,
 } from "@/components/ui";
+import type { Cents } from "@/domain/money";
 import { type ActionState, fieldError, fieldValue, idleState } from "@/lib/action-state";
+import { formatMoneyInput } from "@/lib/format";
 
 import type { LotDetail } from "../types";
 
@@ -32,8 +34,8 @@ type LotFormProps = {
 );
 
 /** Centavos → texto no formato do CurrencyInput ("1234,56"), sem separador de milhar para facilitar a edição. */
-function centsToInput(value: number | null | undefined): string | undefined {
-  return value == null ? undefined : (value / 100).toFixed(2).replace(".", ",");
+function centsToInput(value: Cents | null | undefined): string | undefined {
+  return value == null ? undefined : formatMoneyInput(value);
 }
 
 export function LotForm(props: LotFormProps) {

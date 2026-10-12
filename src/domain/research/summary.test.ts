@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { cents } from "../money";
 import {
   bidCurve,
   fillHistogram,
@@ -18,7 +19,7 @@ import {
 } from "./summary";
 
 const stats = (n: number, median = 0.5): GroupStats => ({ n, p25: median - 0.05, median, p75: median + 0.05 });
-const context = { medianYear: 2015, medianBid: 2_000_000 };
+const context = { medianYear: 2015, medianBid: cents(2_000_000) };
 const model = (brand: string, name: string, groupStats: GroupStats) => ({
   brand,
   model: name,
@@ -182,7 +183,7 @@ describe("rankModels por idade", () => {
         ...model("FIAT", "UNO", stats(30, 0.4)),
         byAge: {
           ate5: { stats: stats(4, 0.8), context },
-          "6a10": { stats: stats(10, 0.5), context: { medianYear: 2017, medianBid: 2_500_000 } },
+          "6a10": { stats: stats(10, 0.5), context: { medianYear: 2017, medianBid: cents(2_500_000) } },
           mais10: { stats: stats(16, 0.3), context },
         },
       },

@@ -5,6 +5,7 @@ import { useActionState, useState } from "react";
 
 import { Alert, AlertDescription, Button, FieldError, Input } from "@/components/ui";
 import { DEFAULT_CRITERIA, type ListingCriteria } from "@/domain/listings/criteria";
+import type { Cents } from "@/domain/money";
 import {
   CategoryField,
   ConditionFields,
@@ -18,6 +19,7 @@ import {
   YearFields,
 } from "@/features/listings/components/filters/criteria-controls";
 import { type ActionState, fieldError, fieldValue, idleState } from "@/lib/action-state";
+import { formatMoneyInput } from "@/lib/format";
 
 import type { WatchItem } from "../types";
 
@@ -32,7 +34,7 @@ type WatchFormProps = {
   submitLabel: string;
 };
 
-const reaisField = (value: number | null) => (value === null ? "" : (value / 100).toFixed(2).replace(".", ","));
+const reaisField = (value: Cents | null) => (value === null ? "" : formatMoneyInput(value));
 const csv = (items: readonly string[] | null) => (items ?? []).join(",");
 
 /**

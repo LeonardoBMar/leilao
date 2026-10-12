@@ -25,11 +25,11 @@ import {
 } from "@/components/ui";
 import type { CommissionMode } from "@/domain/finance/calculator";
 import { estimateFromFipe } from "@/domain/finance/defaults";
-import { parseBRL } from "@/domain/money";
+import { type Cents, parseBRL } from "@/domain/money";
 import type { LotMarketReference } from "@/features/research/types";
 import { fieldError, fieldValue, idleState } from "@/lib/action-state";
 import { toCalendarDateInput, toMonthInput } from "@/lib/dates";
-import { formatBps, formatBRL, formatTime } from "@/lib/format";
+import { formatBps, formatBRL, formatMoneyInput, formatTime } from "@/lib/format";
 
 import { autosaveDraftAction, discardDraftAction, saveAnalysisAction } from "../actions";
 import { fipeFill } from "../fipe-fill";
@@ -45,8 +45,7 @@ const AUTOSAVE_DELAY_MS = 1500;
 type AutosaveStatus =
   { kind: "idle" } | { kind: "saving" } | { kind: "saved"; at: Date } | { kind: "invalid" | "failed" };
 
-const centsToInput = (value: number | null) =>
-  value === null ? undefined : (value / 100).toFixed(2).replace(".", ",");
+const centsToInput = (value: Cents | null) => (value === null ? undefined : formatMoneyInput(value));
 const bpsToInput = (value: number | null) =>
   value === null
     ? undefined
