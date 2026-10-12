@@ -5,6 +5,7 @@ import { formatCompactBRL, formatDate, formatDateTime } from "@/lib/format";
 import { getOpenListingsFor } from "../queries";
 import type { EvaluationView } from "../types";
 import { EvaluateChart } from "./evaluate-chart";
+import { OPEN_LISTINGS_SHOWN } from "./evaluate-open-listings";
 import { ResearchBlock } from "./research-block";
 
 export const EVALUATE_CHART_TITLE = "Vendas e lotes abertos";
@@ -17,13 +18,19 @@ export async function EvaluateChartBlock({
   filters: EvaluateFilters;
   evaluation: EvaluationView;
 }) {
-  const open = await getOpenListingsFor(filters);
+  const listings = await getOpenListingsFor(filters);
+  // Só os que encerram primeiro (os da lista aberta): com dezenas de abertos, o gráfico viraria uma nuvem.
+  const open = listings.slice(0, OPEN_LISTINGS_SHOWN);
   const { answer } = evaluation;
   return (
     <ResearchBlock
       id="vendas"
       title={EVALUATE_CHART_TITLE}
-      description="Cada ponto cheio é uma venda do recorte; os vazados são lotes abertos, no lance atual."
+      description={
+        listings.length > open.length
+          ? `Cada ponto cheio é uma venda do recorte; os vazados são os ${open.length} lotes abertos que encerram primeiro, no lance atual.`
+          : "Cada ponto cheio é uma venda do recorte; os vazados são lotes abertos, no lance atual."
+      }
     >
       <EvaluateChart
         subject={filters.vehicle === null ? "modelo" : vehicleLabel(filters.vehicle)}
