@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { excludedLabel, mileageLabel, perWeekLabel, riseLabel } from "./labels";
+import {
+  bandHitSentence,
+  deviationLabel,
+  excludedLabel,
+  limitSentence,
+  listingCategoryLabel,
+  mileageLabel,
+  perWeekLabel,
+  riseLabel,
+} from "./labels";
 
 describe("riseLabel", () => {
   it("sobe com mais, cai com menos", () => {
@@ -32,5 +41,34 @@ describe("perWeekLabel", () => {
     expect(perWeekLabel(3.46)).toBe("3,5 por semana");
     expect(perWeekLabel(12)).toBe("12 por semana");
     expect(perWeekLabel(0.4)).toBe("menos de 1 por semana");
+  });
+});
+
+describe("frases da Calibração", () => {
+  const summary = {
+    n: 26,
+    band: { n: 26, inside: 11, rate: 11 / 26 },
+    limit: { n: 24, medianDeviation: -0.123, reached: 5 },
+  };
+
+  it("taxa dentro da faixa e desvio do limite", () => {
+    expect(bandHitSentence(summary)).toBe("Em 26 resultados, o arremate caiu dentro da faixa típica 11 vezes (42%).");
+    expect(limitSentence(summary)).toBe("Seu limite ficou, na mediana, 12% abaixo do arremate.");
+  });
+
+  it("sem faixa ou sem limite, sem frase", () => {
+    const empty = { n: 0, band: { n: 0, inside: 0, rate: null }, limit: { n: 0, medianDeviation: null, reached: 0 } };
+    expect(bandHitSentence(empty)).toBeNull();
+    expect(limitSentence(empty)).toBeNull();
+  });
+
+  it("desvio acima, abaixo e igual", () => {
+    expect(deviationLabel(0.05)).toBe("5% acima do arremate");
+    expect(deviationLabel(-0.004)).toBe("igual ao arremate");
+  });
+
+  it("categoria do anúncio", () => {
+    expect(listingCategoryLabel("Utilitarios")).toBe("Utilitários");
+    expect(listingCategoryLabel(null)).toBe("Sem anúncio");
   });
 });

@@ -141,7 +141,9 @@ O app coleta sozinho, de 2 em 2 horas, os lotes dos sites de leilão (hoje o Lei
 - **Como lemos os dados** (no fim, clique em Mostrar): a curva do lance, de onde vem a FIPE de cada venda e as regras de amostra. **Como o lance sobe** diz quanto do lance final já estava dado 48 h, 24 h ou 1 h antes do fim. Ajuda a não achar barato um lote que ainda vai subir.
 - **Lances de uma venda:** na lista de vendas do modelo (ou ao tocar num ponto do gráfico), o ícone "Ver lances" mostra os lances que o app viu nas 48 h antes do fim daquela venda, em degraus. Só aparece quando o app viu pelo menos dois lances diferentes; entre duas visitas, o lance pode ter mudado sem registro.
 
-A base começa em 28/09/2026, quando a coleta começou, e cresce a cada coleta. Por isso ainda não há filtro de período.
+**Calibração** compara o limite das suas análises fixadas antes do leilão com o arremate: quantas vezes o arremate caiu dentro da faixa típica da época (o esperado é cerca de metade) e quanto o seu limite costuma ficar abaixo ou acima dele. A faixa da época só usa vendas encerradas antes da fixação. Para um lote entrar, fixe a análise antes do fim e registre o resultado com o preço.
+
+A base cresce a cada coleta; o filtro de período aparece quando ela cobre o período.
 
 ## 11. Backup
 

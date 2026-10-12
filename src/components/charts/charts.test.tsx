@@ -211,6 +211,22 @@ describe("ScatterPlot", () => {
     );
     expect(html).toContain("Toque ou passe o mouse num ponto para ver a venda.");
   });
+
+  it("desenha a diagonal y = x no trecho comum aos eixos", () => {
+    const html = renderToStaticMarkup(
+      <ScatterPlot
+        ariaLabel="Limite × arremate"
+        xAxis={{ domain: [0, 200], ticks: [] }}
+        yDomain={[100, 200]}
+        yTicks={[]}
+        points={[{ key: "a", x: 150, y: 160, title: "a" }]}
+        diagonal={{ label: "limite = arremate" }}
+      />,
+    );
+    // De x = y = 100 (50%, base) a x = y = 200 (100%, topo).
+    expect(html).toContain('x1="50" y1="100" x2="100" y2="0"');
+    expect(html).toContain("limite = arremate");
+  });
 });
 
 describe("LineBand", () => {

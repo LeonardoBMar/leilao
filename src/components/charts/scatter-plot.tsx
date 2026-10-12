@@ -49,6 +49,8 @@ type ScatterPlotProps = {
   reference?: { value: number; label: string };
   /** Faixa horizontal sombreada atrás dos pontos (ex.: a faixa típica de arremate), com o rótulo à esquerda. */
   band?: { low: number; high: number; label: string };
+  /** Diagonal tracejada y = x, com o rótulo no fim (ex.: limite igual ao arremate); pede `xAxis` na mesma unidade do y. */
+  diagonal?: { label: string };
   ariaLabel: string;
 };
 
@@ -72,6 +74,7 @@ export function ScatterPlot({
   yTicks,
   reference,
   band,
+  diagonal,
   ariaLabel,
 }: ScatterPlotProps) {
   const [activeKey, setActiveKey] = useState<string | null>(null);
@@ -89,6 +92,8 @@ export function ScatterPlot({
     return point.x - SPREAD + (2 * SPREAD * group.indexOf(point)) / (group.length - 1);
   };
   // Medianas ligadas na ordem do x: a tendência por ano aparece sem esconder os pontos.
+  // A diagonal liga os pontos em que x = y nas pontas do trecho comum aos dois eixos.
+  const diagonalEnds = [Math.max(xDomain[0], yDomain[0]), Math.min(xDomain[1], yDomain[1])] as const;
   const medianLine = medians
     .toSorted((a, b) => a.x - b.x)
     .map((median) => `${percentOf(median.x, xDomain)},${100 - percentOf(median.y, yDomain)}`)
@@ -145,6 +150,37 @@ export function ScatterPlot({
           >
             <span className="absolute right-0 bottom-1 text-caption leading-none text-muted">{reference.label}</span>
           </span>
+        ) : null}
+        {diagonal && diagonalEnds[0] < diagonalEnds[1] ? (
+          <>
+            <svg
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              className="pointer-events-none absolute inset-0 size-full overflow-visible"
+              focusable="false"
+              aria-hidden="true"
+            >
+              <line
+                x1={percentOf(diagonalEnds[0], xDomain)}
+                y1={100 - percentOf(diagonalEnds[0], yDomain)}
+                x2={percentOf(diagonalEnds[1], xDomain)}
+                y2={100 - percentOf(diagonalEnds[1], yDomain)}
+                className="stroke-border-strong"
+                strokeWidth={1}
+                strokeDasharray="4 4"
+                vectorEffect="non-scaling-stroke"
+              />
+            </svg>
+            <span
+              className="pointer-events-none absolute -translate-x-full text-caption leading-none text-muted"
+              style={{
+                left: `${percentOf(diagonalEnds[1], xDomain)}%`,
+                bottom: `${percentOf(diagonalEnds[1], yDomain)}%`,
+              }}
+            >
+              {diagonal.label}
+            </span>
+          </>
         ) : null}
         {medians.length > 1 ? (
           <svg

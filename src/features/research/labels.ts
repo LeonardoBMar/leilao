@@ -1,5 +1,7 @@
+import { categoryKeyOf } from "@/domain/listings/criteria";
 import type { ComparableLevel, EstimateConfidence, SimilarityReason } from "@/domain/listings/estimates";
 import { cents } from "@/domain/money";
+import type { BandPlacement, CalibrationSummary } from "@/domain/research/calibration";
 import { type BandPosition, type EvaluateFilters, type EvaluateLoosen, familyLabel } from "@/domain/research/evaluate";
 import {
   type ResearchCategory,
@@ -15,7 +17,7 @@ import {
   MIN_SAMPLE,
   RATIO_BOUNDS,
 } from "@/domain/research/summary";
-import { ORIGIN_LABELS } from "@/features/listings/filter-labels";
+import { CATEGORY_LABELS as LISTING_CATEGORY_LABELS, ORIGIN_LABELS } from "@/features/listings/filter-labels";
 import { formatCompactBRL, formatRatio } from "@/lib/format";
 
 export const CONDITION_LABELS = {
@@ -184,4 +186,35 @@ export function evaluateScopeLabel(filters: EvaluateFilters, versionLabels: Read
   ]
     .filter((part) => part !== null)
     .join(" · ");
+}
+
+/** "12% abaixo do arremate", "5% acima do arremate" ou "igual ao arremate" (desvio em fração do arremate). */
+export function deviationLabel(deviation: number): string {
+  const percent = Math.round(Math.abs(deviation) * 100);
+  if (percent === 0) return "igual ao arremate";
+  return `${percent}% ${deviation < 0 ? "abaixo" : "acima"} do arremate`;
+}
+
+/** "Em 26 resultados, o arremate caiu dentro da faixa típica 11 vezes (42%)."; `null` sem nenhum com faixa. */
+export function bandHitSentence({ band }: CalibrationSummary): string | null {
+  if (band.rate === null) return null;
+  const times = band.inside === 1 ? "1 vez" : `${band.inside} vezes`;
+  return `Em ${band.n} ${band.n === 1 ? "resultado" : "resultados"}, o arremate caiu dentro da faixa típica ${times} (${formatRatio(band.rate)}).`;
+}
+
+/** "Seu limite ficou, na mediana, 12% abaixo do arremate."; `null` sem limite viável. */
+export function limitSentence({ limit }: CalibrationSummary): string | null {
+  if (limit.medianDeviation === null) return null;
+  return `Seu limite ficou, na mediana, ${deviationLabel(limit.medianDeviation)}.`;
+}
+
+export const BAND_PLACEMENT_LABELS = {
+  below: "Abaixo da faixa",
+  inside: "Dentro da faixa",
+  above: "Acima da faixa",
+} as const satisfies Record<BandPlacement, string>;
+
+/** Categoria do anúncio ligado ao lote; sem anúncio, "Sem anúncio". */
+export function listingCategoryLabel(category: string | null): string {
+  return category === null ? "Sem anúncio" : LISTING_CATEGORY_LABELS[categoryKeyOf(category)];
 }
