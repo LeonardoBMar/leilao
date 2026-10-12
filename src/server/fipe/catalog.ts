@@ -1,5 +1,7 @@
 import "server-only";
 
+import { z } from "zod";
+
 import type { FipeOption, FipeTable, FipeValue, FipeVehicleType } from "@/domain/listings/fipe-match";
 import { cents } from "@/domain/money";
 
@@ -28,6 +30,24 @@ export type FipeCatalog = {
   ) => Promise<Map<string, FipeValue>>;
 };
 
+/**
+ * Meses importados, do mais novo ao mais antigo. Salta de mês em mês pela PK (que começa pelo mês), em vez de agrupar
+ * a tabela inteira: cada mês tem ~49 mil preços (D-79).
+ */
+export async function importedMonths(): Promise<Date[]> {
+  const rows = await db.$queryRaw<unknown[]>`WITH RECURSIVE m AS (
+      SELECT max(reference_month) AS month FROM fipe_prices
+      UNION ALL
+      SELECT (SELECT max(p.reference_month) FROM fipe_prices p WHERE p.reference_month < m.month) FROM m
+      WHERE m.month IS NOT NULL
+    )
+    SELECT month FROM m WHERE month IS NOT NULL ORDER BY month DESC`;
+  return z
+    .array(z.object({ month: z.date() }))
+    .parse(rows)
+    .map((row) => row.month);
+}
+
 /** Código da tabela do mês no catálogo: "2026-10". */
 export function fipeTableCode(month: Date): string {
   return month.toISOString().slice(0, 7);
@@ -48,8 +68,8 @@ export function createFipeCatalog(): FipeCatalog {
 
   return {
     async tables() {
-      const rows = await db.fipePrice.groupBy({ by: ["referenceMonth"], orderBy: { referenceMonth: "desc" } });
-      return rows.map(({ referenceMonth }) => ({ code: fipeTableCode(referenceMonth), month: referenceMonth }));
+      const months = await importedMonths();
+      return months.map((month) => ({ code: fipeTableCode(month), month }));
     },
     brands(table, type) {
       return remember(`marcas:${table.code}:${type}`, async () => {

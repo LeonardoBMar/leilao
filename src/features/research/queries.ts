@@ -767,6 +767,7 @@ export const getBidCurve = cache(async (filters: ResearchFilters): Promise<BidCu
 const EVALUATE_SALES_LIMIT = 5000;
 
 const evaluateSaleRow = z.object({
+  vehicle_key: z.string(),
   id: z.string(),
   url: z.string(),
   title: z.string(),
@@ -787,33 +788,31 @@ const evaluateSaleRow = z.object({
   photo_url: z.string().nullable(),
 });
 
+const keyOfVehicle = (vehicle: { brand: string; model: string }) => `${vehicle.brand}|${vehicle.model}`;
+
+type KeyedSale = { vehicleKey: string; sale: EvaluateSaleView };
+
 /**
- * Avaliar (D-71, docs/PLANO-MERCADO.md §5): as vendas do modelo base no último ano (o banco filtra o modelo, como a
- * Pesquisa) e o recorte, a faixa e as contagens calculados no domínio (`evaluate`), com o mesmo critério do preço
- * provável. Uma vez por requisição: a resposta, a lista e o gráfico usam o mesmo resultado.
+ * Vendas dos modelos base (`keys`) encerradas em `[since, until)`, das mais recentes. Sem teto: quem chama corta a
+ * janela e o limite de cada modelo.
  */
-export const getEvaluation = cache(
-  async (
-    filters: EvaluateFilters,
-    target: EstimateTarget | null,
-    // Só vendas encerradas antes desta data (a Calibração recalcula a faixa da época sem vendas posteriores).
-    until: Date | null = null,
-  ): Promise<EvaluationView | null> => {
-    await requireUser();
-    if (filters.vehicle === null) return null;
-    const rowsFound = await rows(
-      evaluateSaleRow,
-      sql`SELECT l.id::text AS id, l.url, l.title, l.ends_at, l.state::text AS state, l.city, l.brand, l.model,
-          l.model_year::int AS model_year, l.mileage_km, l.category, l.damage_level::text AS damage_level,
-          coalesce(l.fipe_code, l.market_value_fipe_code) AS fipe_code, l.vehicle_origin::text AS vehicle_origin,
-          l.final_bid_cents, l.market_value_cents, s.name AS source, l.photo_urls[1] AS photo_url
-        FROM listings l JOIN sources s ON s.id = l.source_id
-        WHERE l.status = 'sold' AND l.final_bid_cents > 0 AND l.ends_at >= ${salesSince(until)}
-          AND ${until === null ? sql`TRUE` : sql`l.ends_at < ${until}`}
-          AND ${VEHICLE_KEY} = ${`${filters.vehicle.brand}|${filters.vehicle.model}`}
-        ORDER BY l.ends_at DESC, l.id LIMIT ${EVALUATE_SALES_LIMIT}`,
-    );
-    const sales = rowsFound.map((row): EvaluateSaleView => ({
+async function loadModelSales(keys: readonly string[], since: Date, until: Date | null): Promise<KeyedSale[]> {
+  if (keys.length === 0) return [];
+  const found = await rows(
+    evaluateSaleRow,
+    sql`SELECT ${VEHICLE_KEY} AS vehicle_key, l.id::text AS id, l.url, l.title, l.ends_at, l.state::text AS state, l.city,
+        l.brand, l.model, l.model_year::int AS model_year, l.mileage_km, l.category, l.damage_level::text AS damage_level,
+        coalesce(l.fipe_code, l.market_value_fipe_code) AS fipe_code, l.vehicle_origin::text AS vehicle_origin,
+        l.final_bid_cents, l.market_value_cents, s.name AS source, l.photo_urls[1] AS photo_url
+      FROM listings l JOIN sources s ON s.id = l.source_id
+      WHERE l.status = 'sold' AND l.final_bid_cents > 0 AND l.ends_at >= ${since}
+        AND ${until === null ? sql`TRUE` : sql`l.ends_at < ${until}`}
+        AND ${VEHICLE_KEY} IN (${Prisma.join(keys)})
+      ORDER BY l.ends_at DESC, l.id`,
+  );
+  return found.map((row) => ({
+    vehicleKey: row.vehicle_key,
+    sale: {
       id: row.id,
       endsAt: row.ends_at,
       url: row.url,
@@ -832,7 +831,37 @@ export const getEvaluation = cache(
       marketValue: row.market_value_cents !== null && row.market_value_cents > 0 ? cents(row.market_value_cents) : null,
       source: row.source,
       photoUrl: row.photo_url,
-    }));
+    },
+  }));
+}
+
+/** As vendas de um modelo na janela das estimativas que termina em `until` (ou agora), até o teto do Avaliar. */
+function salesInWindow(sales: readonly KeyedSale[], key: string, until: Date | null): EvaluateSaleView[] {
+  const since = salesSince(until);
+  return sales
+    .filter(
+      (item) => item.vehicleKey === key && item.sale.endsAt >= since && (until === null || item.sale.endsAt < until),
+    )
+    .slice(0, EVALUATE_SALES_LIMIT)
+    .map((item) => item.sale);
+}
+
+/**
+ * Avaliar (D-71, docs/PLANO-MERCADO.md §5): as vendas do modelo base no último ano (o banco filtra o modelo, como a
+ * Pesquisa) e o recorte, a faixa e as contagens calculados no domínio (`evaluate`), com o mesmo critério do preço
+ * provável. Uma vez por requisição: a resposta, a lista e o gráfico usam o mesmo resultado.
+ */
+export const getEvaluation = cache(
+  async (
+    filters: EvaluateFilters,
+    target: EstimateTarget | null,
+    // Só vendas encerradas antes desta data (a Calibração recalcula a faixa da época sem vendas posteriores).
+    until: Date | null = null,
+  ): Promise<EvaluationView | null> => {
+    await requireUser();
+    if (filters.vehicle === null) return null;
+    const key = keyOfVehicle(filters.vehicle);
+    const sales = salesInWindow(await loadModelSales([key], salesSince(until), until), key, until);
     const evaluation = evaluate(sales, filters, target);
     const codes = evaluation.versions.map((option) => option.value);
     const labels =
@@ -857,31 +886,33 @@ export const getEvaluation = cache(
  */
 export const getLotTarget = cache(async (lotId: string): Promise<LotTarget | null> => {
   const user = await requireUser();
-  const lot = await db.lot.findFirst({
-    where: { id: lotId, ownerId: user.id },
+  const lot = await db.lot.findFirst({ where: { id: lotId, ownerId: user.id }, select: lotTargetSelect });
+  return lot === null ? null : toLotTarget(lot);
+});
+
+const lotTargetSelect = {
+  id: true,
+  lotNumber: true,
+  brand: true,
+  model: true,
+  modelYear: true,
+  mileageKm: true,
+  listing: {
     select: {
-      id: true,
-      lotNumber: true,
-      brand: true,
-      model: true,
-      modelYear: true,
       mileageKm: true,
-      listing: {
-        select: {
-          mileageKm: true,
-          category: true,
-          damageLevel: true,
-          fipeCode: true,
-          marketValueFipeCode: true,
-          vehicleOrigin: true,
-          marketValueCents: true,
-          status: true,
-          endsAt: true,
-        },
-      },
+      category: true,
+      damageLevel: true,
+      fipeCode: true,
+      marketValueFipeCode: true,
+      vehicleOrigin: true,
+      marketValueCents: true,
+      status: true,
+      endsAt: true,
     },
-  });
-  if (lot === null) return null;
+  },
+} satisfies Prisma.LotSelect;
+
+function toLotTarget(lot: Prisma.LotGetPayload<{ select: typeof lotTargetSelect }>): LotTarget {
   const { listing } = lot;
   return {
     id: lot.id,
@@ -902,7 +933,7 @@ export const getLotTarget = cache(async (lotId: string): Promise<LotTarget | nul
           : cents(listing.marketValueCents),
     },
   };
-});
+}
 
 /**
  * Mercado do lote para a análise (bloco Concorrência e snapshot da fixação, docs/PLANO-MERCADO.md §8): o mesmo recorte
@@ -924,13 +955,54 @@ export const getLotMarketReference = cache(
       sales: evaluation.comparables.flatMap(({ sale, excluded }) =>
         excluded ? [] : [{ id: sale.id, finalBid: sale.finalBid }],
       ),
-      band:
-        answer.kind === "band"
-          ? { low: answer.low, median: answer.median, high: answer.high, confidence: answer.confidence }
-          : null,
+      band: bandOf(answer),
     };
   },
 );
+
+function bandOf(answer: EvaluationView["answer"]): LotMarketReference["band"] {
+  return answer.kind === "band"
+    ? { low: answer.low, median: answer.median, high: answer.high, confidence: answer.confidence }
+    : null;
+}
+
+/**
+ * Faixa da época de vários lotes do usuário (Calibração): a mesma de `getLotMarketReference` com `until`, mas com os
+ * lotes numa consulta e as vendas de todos os modelos noutra, em vez de três consultas por lote (D-79). Lote de outro
+ * dono, sem marca e modelo ou com menos de 5 vendas fica sem faixa.
+ */
+export async function getLotMarketBands(
+  items: readonly { lotId: string; until: Date }[],
+): Promise<Map<string, LotMarketReference["band"]>> {
+  const user = await requireUser();
+  if (items.length === 0) return new Map();
+  const lots = await db.lot.findMany({
+    where: { id: { in: items.map((item) => item.lotId) }, ownerId: user.id },
+    select: lotTargetSelect,
+  });
+  const targets = new Map(lots.map((lot) => [lot.id, toLotTarget(lot)]));
+  const wanted = items.flatMap(({ lotId, until }) => {
+    const lot = targets.get(lotId);
+    if (lot === undefined) return [];
+    const filters = targetFilters(lot.target, lot.id, []);
+    return filters.vehicle === null
+      ? []
+      : [{ lotId, until, target: lot.target, filters, key: keyOfVehicle(filters.vehicle) }];
+  });
+  if (wanted.length === 0) return new Map();
+  const untils = wanted.map((item) => item.until.getTime());
+  const sales = await loadModelSales(
+    [...new Set(wanted.map((item) => item.key))],
+    salesSince(new Date(Math.min(...untils))),
+    new Date(Math.max(...untils)),
+  );
+  return new Map(
+    wanted.map(({ lotId, until, target, filters, key }) => [
+      lotId,
+      bandOf(evaluate(salesInWindow(sales, key, until), filters, target).answer),
+    ]),
+  );
+}
 
 /** Teto de lotes abertos de um modelo no Avaliar. */
 const OPEN_LISTINGS_LIMIT = 200;

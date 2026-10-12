@@ -4,7 +4,7 @@ import { cache } from "react";
 
 import type { AnalysisInputs } from "@/domain/finance/calculator";
 import { bps, cents } from "@/domain/money";
-import { getLotMarketReference } from "@/features/research/queries";
+import { getLotMarketBands } from "@/features/research/queries";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
@@ -205,28 +205,40 @@ export async function getCalibration(): Promise<CalibrationItem[]> {
       },
     },
   });
-  const items = await Promise.all(
-    current.map(async (result): Promise<CalibrationItem | null> => {
-      const { analysis, lot } = result;
-      if (result.outcome !== "sold" || result.finalBidCents === null || result.analysisTiming !== "prior") return null;
-      if (analysis === null || analysis.status !== "fixed" || analysis.fixedAt === null) return null;
-      const snapshot = readMarketSnapshot(analysis.marketSnapshot);
-      const band =
-        snapshot === null
-          ? ((await getLotMarketReference(result.lotId, analysis.fixedAt))?.band ?? null)
-          : snapshot.band;
+  const eligible = current.flatMap((result) => {
+    const { analysis, lot } = result;
+    if (result.outcome !== "sold" || result.finalBidCents === null || result.analysisTiming !== "prior") return [];
+    if (analysis === null || analysis.status !== "fixed" || analysis.fixedAt === null) return [];
+    const fixedAt = analysis.fixedAt;
+    return [
+      {
+        result,
+        analysis,
+        lot,
+        fixedAt,
+        finalBid: cents(result.finalBidCents),
+        snapshot: readMarketSnapshot(analysis.marketSnapshot),
+      },
+    ];
+  });
+  // Fixadas antes do snapshot (D-74): a faixa da época é recalculada, todas de uma vez (D-79).
+  const recomputed = await getLotMarketBands(
+    eligible.flatMap((item) => (item.snapshot === null ? [{ lotId: item.result.lotId, until: item.fixedAt }] : [])),
+  );
+  return eligible
+    .map(({ result, analysis, lot, fixedAt, finalBid, snapshot }): CalibrationItem => {
+      const band = snapshot === null ? (recomputed.get(result.lotId) ?? null) : snapshot.band;
       return {
         lotId: result.lotId,
         analysisId: analysis.id,
         label: `Lote ${lot.lotNumber} · ${lot.brand} ${lot.model} ${lot.modelYear}`,
         category: lot.listing?.category ?? null,
-        fixedAt: analysis.fixedAt,
+        fixedAt,
         limit: analysis.isViable && analysis.maxBidCents !== null ? cents(analysis.maxBidCents) : null,
-        finalBid: cents(result.finalBidCents),
+        finalBid,
         band: band === null ? null : { low: band.low, median: band.median, high: band.high },
         bandSource: snapshot === null ? "recomputed" : "snapshot",
       };
-    }),
-  );
-  return items.filter((item) => item !== null).toSorted((a, b) => b.fixedAt.getTime() - a.fixedAt.getTime());
+    })
+    .toSorted((a, b) => b.fixedAt.getTime() - a.fixedAt.getTime());
 }

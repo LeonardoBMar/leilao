@@ -493,11 +493,13 @@ model Listing {
   @@index([brand, model, modelYear])
   /// Leilões do catálogo (D-42): agrupamento por fonte e leilão.
   @@index([sourceId, auctionExternalId])
-  /// Pendentes de casamento na FIPE (D-47).
-  @@index([marketValueCheckedAt])
+  /// Fila do casamento na FIPE (D-47, D-79): só os pendentes, na ordem de `enrichMarketValues`.
+  @@index([status, firstSeenAt(sort: Desc)], map: "listings_fipe_pending_idx", where: { marketValueCheckedAt: null })
   @@index([fipeMatchId])
   /// Vendas de um modelo no Mercado (D-77).
   @@index([vehicleKey, status, endsAt])
+  /// Vendas da Pesquisa e do Avaliar (D-79): as colunas que os filtros e agregados leem, para varrer só o índice.
+  @@index([endsAt, category, damageLevel, state, sourceId, vehicleKey, modelYear, mileageKm, finalBidCents, marketValueCents, marketValueOrigin, vehicleOrigin, municipalityId, id], map: "listings_sales_idx", where: { status: "sold" })
   @@map("listings")
 }
 
@@ -547,6 +549,8 @@ model FipePrice {
 
   @@id([referenceMonth, fipeCode, modelYear, fuelCode])
   @@index([referenceMonth, vehicleType, brandName, modelYear, fuelCode])
+  /// Nome mais recente de cada versão (Avaliar, D-79): a PK começa pelo mês e não serve à busca por código.
+  @@index([fipeCode, referenceMonth(sort: Desc)])
   @@map("fipe_prices")
 }
 
@@ -642,7 +646,6 @@ model Watch {
 
   @@unique([id, ownerId])
   @@index([ownerId, createdAt])
-  @@index([active])
   @@map("watches")
 }
 

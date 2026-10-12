@@ -5,7 +5,7 @@ import { monthOf } from "@/domain/listings/fipe-match";
 
 import { COLLECTOR_USER_AGENT } from "../collector/http";
 import { db } from "../db";
-import { fipeTableCode } from "./catalog";
+import { fipeTableCode, importedMonths } from "./catalog";
 import { notFromSource } from "./matches";
 
 /**
@@ -45,8 +45,7 @@ export async function ensureFipeCatalog(input: {
   const { now, maxMonths = 2, fetcher = fetch } = input;
   let present: Set<number>;
   try {
-    const rows = await db.fipePrice.groupBy({ by: ["referenceMonth"] });
-    present = new Set(rows.map((row) => row.referenceMonth.getTime()));
+    present = new Set((await importedMonths()).map((month) => month.getTime()));
   } catch (error) {
     return [{ kind: "failed", month: fipeTableCode(monthOf(now)), error: describe(error) }];
   }
