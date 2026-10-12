@@ -487,7 +487,8 @@ model Listing {
   dismissals   ListingDismissal[]
 
   @@unique([sourceId, externalId])
-  @@index([nextCheckAt])
+  /// Fila de revisitas do coletor por fonte (D-80): só os agendados.
+  @@index([sourceId, nextCheckAt], map: "listings_source_next_check_idx", where: { nextCheckAt: { not: null } })
   @@index([status, endsAt])
   @@index([municipalityId])
   @@index([brand, model, modelYear])
