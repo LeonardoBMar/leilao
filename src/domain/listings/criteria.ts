@@ -198,13 +198,13 @@ export function matchesSearch(search: string | null, listing: FacetListing): boo
   return tokens.every((token) => haystack.includes(token));
 }
 
-export const matchesCategories = (categories: FacetCriteria["categories"], listing: FacetListing) =>
+export const matchesCategories = (categories: FacetCriteria["categories"], listing: Pick<FacetListing, "category">) =>
   categories === null || categories.includes(categoryKeyOf(listing.category));
-export const matchesSources = (sources: FacetCriteria["sources"], listing: FacetListing) =>
+export const matchesSources = (sources: FacetCriteria["sources"], listing: Pick<FacetListing, "sourceId">) =>
   sources.length === 0 || sources.includes(listing.sourceId);
-export const matchesOrigins = (origins: FacetCriteria["origins"], listing: FacetListing) =>
+export const matchesOrigins = (origins: FacetCriteria["origins"], listing: Pick<FacetListing, "origin">) =>
   origins.length === 0 || origins.includes(listing.origin);
-export function matchesFuels(fuels: FacetCriteria["fuels"], listing: FacetListing): boolean {
+export function matchesFuels(fuels: FacetCriteria["fuels"], listing: Pick<FacetListing, "fuel">): boolean {
   if (fuels.length === 0) return true;
   const fuel = fuelOf(listing.fuel);
   return fuel !== null && fuels.includes(fuel);

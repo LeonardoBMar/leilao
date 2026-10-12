@@ -37,13 +37,17 @@ import {
   limitMaxBid,
   SALES_WINDOW_MS,
 } from "@/domain/listings/estimates";
-import { facetsFromGroups } from "@/domain/listings/facets";
+import { facetGroupsFromCombos, facetsFromGroups } from "@/domain/listings/facets";
 import { distanceKm } from "@/domain/listings/geo";
 import { collectorHealth, overallHealth } from "@/domain/listings/health";
 import { DEFAULT_REGION } from "@/domain/listings/region";
 import { trackerMissing } from "@/domain/listings/tracker";
 import { cents } from "@/domain/money";
-import { defaultsInputFromListing } from "@/features/analyses/draft-defaults";
+import {
+  defaultsInputFromListing,
+  type ListingForDefaults,
+  listingForDefaultsSelect,
+} from "@/features/analyses/draft-defaults";
 import { analysisColumns, toInputs } from "@/features/analyses/queries";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
@@ -173,8 +177,23 @@ export const getEstimateContext = cache(async (): Promise<EstimateContext> => {
   return loadEstimateContext(new Date());
 });
 
+/** O que a estimativa lê do anúncio: o cartão inteiro ou só os campos de um candidato da home. */
+type EstimateRow = ListingForDefaults &
+  Pick<
+    ListingCardRow,
+    | "status"
+    | "endsAt"
+    | "brand"
+    | "model"
+    | "modelYear"
+    | "mileageKm"
+    | "fipeCode"
+    | "marketValueFipeCode"
+    | "vehicleOrigin"
+  >;
+
 /** Só anúncio aberto: encerrado já tem o lance final. */
-function estimateFor(row: ListingCardRow, context: EstimateContext | null): ListingEstimate | null {
+function estimateFor(row: EstimateRow, context: EstimateContext | null): ListingEstimate | null {
   if (!context || row.status !== "open" || (row.endsAt !== null && row.endsAt <= context.now)) return null;
   const target = {
     brand: row.brand,
@@ -454,11 +473,11 @@ export async function listListings(
 /** Grupos de marca e modelo lidos para as sugestões da busca: os mais frequentes bastam. */
 const MAX_SUGGESTION_GROUPS = 3_000;
 
-type FacetKey = "search" | "categories" | "sources" | "origins" | "fuels";
-
 /**
  * Contagens dos chips (categoria, fonte, origem, combustível) e sugestões da busca (docs/PLANO-FILTROS.md §4), no
- * banco: uma consulta agrupada por faceta, com os filtros da tela e as outras facetas aplicados, sem a própria.
+ * banco (D-82): as combinações dos quatro chips numa consulta, com a busca e os filtros da tela aplicados, e as marcas e
+ * modelos das sugestões noutra, com os chips e sem a busca. Cada faceta conta sem o próprio chip
+ * (`facetGroupsFromCombos`).
  */
 export async function getListingFacets(
   filters: ListingFilters,
@@ -473,25 +492,24 @@ export async function getListingFacets(
     criteria: { ...criteria, search: null, categories: null, sources: [], origins: [], fuels: [] },
   };
   const base = listingsWhere(withoutFacets, values, user.id, now, scope.auction);
-  const facetWheres: Record<FacetKey, Prisma.ListingWhereInput> = {
-    search: searchWhere(criteria.search),
-    categories: categoriesWhere(criteria.categories),
-    sources: criteria.sources.length === 0 ? {} : { sourceId: { in: [...criteria.sources] } },
-    origins: originWhere(criteria.origins),
-    fuels: fuelWhere(criteria.fuels, values),
+  const chips: Prisma.ListingWhereInput = {
+    AND: [
+      categoriesWhere(criteria.categories),
+      criteria.sources.length === 0 ? {} : { sourceId: { in: [...criteria.sources] } },
+      originWhere(criteria.origins),
+      fuelWhere(criteria.fuels, values),
+    ],
   };
-  const without = (facet: FacetKey): Prisma.ListingWhereInput => ({
-    AND: [base, ...Object.entries(facetWheres).flatMap(([key, where]) => (key === facet ? [] : [where]))],
-  });
 
-  const [categories, sources, origins, fuels, vehicles, activeSources] = await Promise.all([
-    db.listing.groupBy({ by: ["category"], where: without("categories"), _count: { _all: true } }),
-    db.listing.groupBy({ by: ["sourceId"], where: without("sources"), _count: { _all: true } }),
-    db.listing.groupBy({ by: ["vehicleOrigin"], where: without("origins"), _count: { _all: true } }),
-    db.listing.groupBy({ by: ["fuel"], where: without("fuels"), _count: { _all: true } }),
+  const [combos, vehicles, activeSources] = await Promise.all([
+    db.listing.groupBy({
+      by: ["category", "sourceId", "vehicleOrigin", "fuel"],
+      where: { AND: [base, searchWhere(criteria.search)] },
+      _count: { _all: true },
+    }),
     db.listing.groupBy({
       by: ["brand", "model"],
-      where: { AND: [without("search"), { brand: { not: null } }] },
+      where: { AND: [base, chips, { brand: { not: null } }] },
       _count: { _all: true },
       orderBy: { _count: { brand: "desc" } },
       take: MAX_SUGGESTION_GROUPS,
@@ -499,10 +517,16 @@ export async function getListingFacets(
     db.source.findMany({ where: { active: true }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
   ]);
   const facets = facetsFromGroups({
-    categories: categories.map(({ category, _count }) => ({ category, count: _count._all })),
-    sources: sources.map(({ sourceId, _count }) => ({ sourceId, count: _count._all })),
-    origins: origins.map(({ vehicleOrigin, _count }) => ({ origin: vehicleOrigin, count: _count._all })),
-    fuels: fuels.map(({ fuel, _count }) => ({ fuel, count: _count._all })),
+    ...facetGroupsFromCombos(
+      combos.map(({ category, sourceId, vehicleOrigin, fuel, _count }) => ({
+        category,
+        sourceId,
+        origin: vehicleOrigin,
+        fuel,
+        count: _count._all,
+      })),
+      criteria,
+    ),
     vehicles: vehicles.map(({ brand, model, _count }) => ({ brand, model, count: _count._all })),
   });
 
@@ -580,7 +604,8 @@ const TO_ANALYZE_SHOWN = 6;
 const REGION_AUCTIONS_SHOWN = 5;
 const REGION_AUCTIONS_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
-const fits = (item: ListingListItem) => item.estimate?.fit === "comfortable" || item.estimate?.fit === "tight";
+const fitsEstimate = ({ estimate }: { estimate: ListingEstimate | null }) =>
+  estimate?.fit === "comfortable" || estimate?.fit === "tight";
 
 /**
  * O catálogo visto da home (D-44): anúncios abertos no filtro padrão (`DEFAULT_CRITERIA`) ou em algum monitor ligado
@@ -600,19 +625,24 @@ export const getRegionOverview = cache(async (): Promise<RegionOverview> => {
     criteriaList.map(async (criteria) => criteriaWhere(criteria, await loadCriteriaValues(criteria))),
   );
 
+  // Fase 1 (D-82): só o que o filtro exato e a estimativa leem, sem fotos e textos do cartão. Até 2 mil linhas por
+  // tela; o cartão completo vem depois, só para os exibidos.
   const rows = await db.listing.findMany({
     // O banco filtra por cada critério; `matchesCriteria` confere a regra exata (a busca compara o texto normalizado).
     where: { AND: [openWhere(now), { auctionExternalId: { not: null } }, { OR: wheres }] },
     orderBy: [{ endsAt: "asc" }, { id: "asc" }],
     take: MAX_CANDIDATES + 1,
-    select: { ...listingCardSelect(user.id), sourceId: true, fipeName: true, hasKey: true },
+    select: regionCandidateSelect(user.id),
   });
   const truncated = rows.length > MAX_CANDIDATES;
   const matching = rows
     .slice(0, MAX_CANDIDATES)
-    .map((row) => ({ row, item: toListItem(row, context) }))
-    .filter(({ row, item }) => {
-      const listing = toMatchable(row, item.distanceKm);
+    .map((row) => {
+      const distance = row.municipality ? distanceKm(DEFAULT_REGION.center, row.municipality) : null;
+      return { row, distance, estimate: estimateFor(row, context) };
+    })
+    .filter(({ row, distance }) => {
+      const listing = toMatchable(row, distance);
       return criteriaList.some((criteria) => matchesCriteria(criteria, listing, now));
     });
 
@@ -625,21 +655,33 @@ export const getRegionOverview = cache(async (): Promise<RegionOverview> => {
       })
     ).map(({ listingId }) => listingId),
   );
-  const toAnalyze = matching
-    .flatMap(({ item }) =>
-      item.trackedLotId === null && !dismissed.has(item.id) && item.estimate && fits(item)
-        ? [{ item, candidate: { ...item.estimate, endsAt: item.endsAt } }]
+  const toAnalyzeIds = matching
+    .flatMap((candidate) =>
+      candidate.row.lots.length === 0 &&
+      !dismissed.has(candidate.row.id) &&
+      candidate.estimate &&
+      fitsEstimate(candidate)
+        ? [{ id: candidate.row.id, candidate: { ...candidate.estimate, endsAt: candidate.row.endsAt } }]
         : [],
     )
     .sort((a, b) => byAnalysisPriority(a.candidate, b.candidate))
-    .map(({ item }) => item);
+    .map(({ id }) => id);
+
+  // Fase 2: o cartão completo só dos exibidos, na ordem da prioridade.
+  const shownIds = toAnalyzeIds.slice(0, TO_ANALYZE_SHOWN);
+  const cards = await db.listing.findMany({ where: { id: { in: shownIds } }, select: listingCardSelect(user.id) });
+  const cardById = new Map(cards.map((row) => [row.id, row]));
+  const toAnalyze = shownIds.flatMap((id) => {
+    const row = cardById.get(id);
+    return row ? [toListItem(row, context)] : [];
+  });
 
   // Leilões: só anúncios que encerram nos próximos 7 dias.
   const soon = matching.filter(
     ({ row }) => row.endsAt !== null && row.endsAt.getTime() - now.getTime() <= REGION_AUCTIONS_WINDOW_MS,
   );
   const inFilter = countByAuction(soon.map(({ row }) => row));
-  const fitting = countByAuction(soon.filter(({ item }) => fits(item)).map(({ row }) => row));
+  const fitting = countByAuction(soon.filter(fitsEstimate).map(({ row }) => row));
   const stats = await loadCatalogAuctionStats(user.id, [...inFilter.values()], now);
   const auctions = selectCatalogAuctions(
     stats.map((item) => ({ ...item, matching: inFilter.get(keyOf(item.sourceId, item.externalId))?.count ?? 0 })),
@@ -649,17 +691,43 @@ export const getRegionOverview = cache(async (): Promise<RegionOverview> => {
     .map((item) => ({ ...item, fitting: fitting.get(keyOf(item.sourceId, item.externalId))?.count ?? 0 }));
 
   return {
-    toAnalyze: toAnalyze.slice(0, TO_ANALYZE_SHOWN),
-    toAnalyzeTotal: toAnalyze.length,
+    toAnalyze,
+    toAnalyzeTotal: toAnalyzeIds.length,
     auctions,
     auctionsTotal: inFilter.size,
     truncated,
   };
 });
 
-type MatchableRow = ListingCardRow & { sourceId: string; fipeName: string | null; hasKey: boolean | null };
+/** Campos de um candidato da home (D-82): o que `matchesCriteria` e a estimativa leem, mais o lote do usuário. */
+const regionCandidateSelect = (ownerId: string) =>
+  ({
+    ...listingForDefaultsSelect,
+    id: true,
+    sourceId: true,
+    auctionExternalId: true,
+    title: true,
+    brand: true,
+    model: true,
+    fipeName: true,
+    fipeCode: true,
+    marketValueFipeCode: true,
+    modelYear: true,
+    mileageKm: true,
+    fuel: true,
+    vehicleOrigin: true,
+    hasKey: true,
+    inspectionResult: true,
+    status: true,
+    endsAt: true,
+    currentBidCents: true,
+    minimumBidCents: true,
+    lots: { where: { ownerId }, select: { id: true }, take: 1 },
+  }) satisfies Prisma.ListingSelect;
 
-function toMatchable(row: MatchableRow, distance: number | null): MatchableListing {
+type RegionCandidateRow = Prisma.ListingGetPayload<{ select: ReturnType<typeof regionCandidateSelect> }>;
+
+function toMatchable(row: RegionCandidateRow, distance: number | null): MatchableListing {
   return {
     sourceId: row.sourceId,
     title: row.title,

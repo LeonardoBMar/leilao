@@ -2,9 +2,14 @@ import {
   CATEGORY_KEYS,
   type CategoryKey,
   categoryKeyOf,
+  type FacetCriteria,
   FUEL_KEYS,
   type FuelKey,
   fuelOf,
+  matchesCategories,
+  matchesFuels,
+  matchesOrigins,
+  matchesSources,
   ORIGIN_KEYS,
   type OriginKey,
   toSearchText,
@@ -13,7 +18,7 @@ import {
 /**
  * Contagens dos chips de filtro (docs/PLANO-FILTROS.md §4): cada faceta é contada com todos os outros filtros
  * aplicados e sem ela mesma, para o número dizer quantos lotes a tela mostraria ao marcar aquele chip sozinho.
- * O banco agrupa (uma consulta por faceta, já com os outros filtros); aqui os grupos viram as chaves da tela.
+ * O banco agrupa (as combinações dos chips numa consulta, as sugestões noutra); aqui os grupos viram as chaves da tela.
  */
 export type ListingFacets = {
   categories: Record<CategoryKey, number>;
@@ -35,6 +40,44 @@ export type FacetGroups = {
   /** Marca e modelo como a fonte escreve, para as sugestões da busca. */
   vehicles: readonly { brand: string | null; model: string | null; count: number }[];
 };
+
+/** Contagem de uma combinação de categoria, fonte, origem e combustível, com os filtros que não são chips aplicados. */
+export type FacetCombo = {
+  category: string | null;
+  sourceId: string;
+  origin: OriginKey;
+  fuel: string | null;
+  count: number;
+};
+
+/**
+ * As quatro facetas de chips a partir das combinações (D-82): cada combinação conta na faceta se atende aos outros três
+ * chips. Mesmas regras de `matchesCriteria`; a busca já veio aplicada pelo banco, como na lista.
+ */
+export function facetGroupsFromCombos(
+  combos: readonly FacetCombo[],
+  criteria: Pick<FacetCriteria, "categories" | "sources" | "origins" | "fuels">,
+): Omit<FacetGroups, "vehicles"> {
+  const passes = (combo: FacetCombo) => ({
+    categories: matchesCategories(criteria.categories, combo),
+    sources: matchesSources(criteria.sources, combo),
+    origins: matchesOrigins(criteria.origins, combo),
+    fuels: matchesFuels(criteria.fuels, combo),
+  });
+  const categories: FacetGroups["categories"][number][] = [];
+  const sources: FacetGroups["sources"][number][] = [];
+  const origins: FacetGroups["origins"][number][] = [];
+  const fuels: FacetGroups["fuels"][number][] = [];
+  for (const combo of combos) {
+    const ok = passes(combo);
+    const { category, sourceId, origin, fuel, count } = combo;
+    if (ok.sources && ok.origins && ok.fuels) categories.push({ category, count });
+    if (ok.categories && ok.origins && ok.fuels) sources.push({ sourceId, count });
+    if (ok.categories && ok.sources && ok.fuels) origins.push({ origin, count });
+    if (ok.categories && ok.sources && ok.origins) fuels.push({ fuel, count });
+  }
+  return { categories, sources, origins, fuels };
+}
 
 /** Sugestões enviadas à tela; a busca filtra entre elas enquanto o usuário digita. */
 export const MAX_SUGGESTIONS = 300;
