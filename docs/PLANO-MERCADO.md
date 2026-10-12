@@ -329,3 +329,15 @@ Cada fase termina num estado publicável.
 - **Uso na decisão:** mais de 80% das análises fixadas novas com snapshot de mercado.
 - **Tempo:** o tempo do lote aberto ao limite fixado cai.
 - **Clareza:** o preço provável do lote nunca aparece sem o nível e o `n`.
+
+### Medição no fechamento (T6.4, 11/10/2026)
+
+O plano foi entregue inteiro em 11/10/2026; a revisão de resultado de T6.4 pede duas semanas de uso e fica para **25/10/2026**. Linha de base para ela:
+
+| Métrica | Hoje | Como medir em 25/10 |
+| --- | --- | --- |
+| Arremate dentro da faixa (backtest, motor das telas) | 48,0% de 5.255 vendas estimadas (6.404 alvos desde 15/09); alta 50,3%, média 43,2%, baixa 49,3% | `npm run db:estimate-backtest -- --variant v1 --write`; a Calibração mostra o novo número |
+| Erro mediano da mediana (backtest) | 19,4% (alta 12,5%, média 18,0%, baixa 24,1%) | o mesmo comando |
+| Análises fixadas com snapshot de mercado | 0 de 75 (todas fixadas antes da migration de D-74; a última em 11/10 00:40 UTC) | fixadas depois de 11/10 com `market_snapshot` não nulo ÷ fixadas depois de 11/10; meta acima de 80% |
+| Tempo do lote ao limite fixado | mediana de 29 s, dominada pelos lotes dos testes E2E, que nascem e são fixados no mesmo minuto | mediana de `fixed_at − lots.created_at` sem os lotes dos testes E2E; a base de hoje não serve de comparação |
+| Calibração | 10 resultados `prior` do usuário de desenvolvimento, todos de lotes E2E e sem faixa da época | resultados reais registrados depois de 11/10, com a faixa do snapshot |
