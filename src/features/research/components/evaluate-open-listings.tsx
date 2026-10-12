@@ -2,6 +2,7 @@ import { ExternalLink } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Badge } from "@/components/ui";
+import type { Cents } from "@/domain/money";
 import type { EvaluateFilters } from "@/domain/research/evaluate";
 import { bandPosition } from "@/domain/research/evaluate";
 import { formatCompactBRL, formatDateTime, formatKm } from "@/lib/format";
@@ -72,7 +73,7 @@ function OpenListingRow({
   action,
 }: {
   listing: EvaluateOpenListing;
-  band: { low: number; high: number } | null;
+  band: { low: Cents; high: Cents } | null;
   action: OpenListingAction;
 }) {
   const position = band === null || listing.currentBid === null ? null : bandPosition(listing.currentBid, band);
