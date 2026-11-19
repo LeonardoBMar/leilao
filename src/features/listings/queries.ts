@@ -840,7 +840,7 @@ export async function countOpenListings(criteria: ListingCriteria): Promise<numb
 }
 
 /** Saúde do coletor para o dashboard e para "Leilões": última execução de cada fonte e abertos na região. */
-export async function getCollectorStatus(): Promise<CollectorStatus> {
+export const getCollectorStatus = cache(async (): Promise<CollectorStatus> => {
   await requireUser();
   const now = new Date();
 
@@ -875,4 +875,4 @@ export async function getCollectorStatus(): Promise<CollectorStatus> {
     regionLabel: DEFAULT_REGION.label,
     radiusKm: DEFAULT_REGION.radiusKm,
   };
-}
+});
