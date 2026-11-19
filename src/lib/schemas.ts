@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { parseBRL } from "@/domain/money";
+import { MAX_CENTS, parseBRL } from "@/domain/money";
 
 import { zonedDateTimeToUtc } from "./dates";
 
@@ -20,7 +20,7 @@ export const optionalText = () =>
 export const brlAmount = (message = "Informe um valor em reais válido.") =>
   z.string().transform((value, ctx) => {
     const parsed = parseBRL(value);
-    if (parsed === null || parsed < 0) {
+    if (parsed === null || parsed < 0 || parsed > MAX_CENTS) {
       ctx.addIssue({ code: "custom", message });
       return z.NEVER;
     }

@@ -15,7 +15,7 @@ import {
   ORIGIN_KEYS,
   RADIUS_OPTIONS_KM,
 } from "@/domain/listings/criteria";
-import { cents } from "@/domain/money";
+import { cents, MAX_CENTS } from "@/domain/money";
 
 export const LISTINGS_PAGE_SIZE = 24;
 export const CATALOG_AUCTIONS_PAGE_SIZE = 24;
@@ -58,8 +58,14 @@ const text = z
   .optional()
   .catch(undefined);
 const year = z.coerce.number().int().min(1900).max(2100).optional().catch(undefined);
-/** Reais inteiros. */
-const reais = z.coerce.number().int().positive().max(100_000_000).optional().catch(undefined);
+/** Reais inteiros dentro do limite de `int4` em centavos. */
+const reais = z.coerce
+  .number()
+  .int()
+  .positive()
+  .max(Math.floor(MAX_CENTS / 100))
+  .optional()
+  .catch(undefined);
 const flag = z
   .literal("1")
   .optional()

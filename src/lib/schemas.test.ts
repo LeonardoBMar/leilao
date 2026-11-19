@@ -20,7 +20,7 @@ describe("form field schemas", () => {
     });
   });
 
-  it("rejeita valores inválidos com mensagens em pt-BR", () => {
+  it("rejeita valores inválidos e acima do teto int4 com mensagens em pt-BR", () => {
     const result = schema.safeParse({ name: " ", notes: "", price: "-10", fee: "abc" });
 
     expect(result.success).toBe(false);
@@ -29,5 +29,9 @@ describe("form field schemas", () => {
       price: ["Informe um valor em reais válido."],
       fee: ["Informe um valor em reais válido."],
     });
+
+    expect(schema.safeParse({ name: "Lote", notes: "", price: "21.474.836,47", fee: "" }).success).toBe(true);
+    expect(schema.safeParse({ name: "Lote", notes: "", price: "21.474.836,48", fee: "" }).success).toBe(false);
+    expect(schema.safeParse({ name: "Lote", notes: "", price: "9999999999999999", fee: "" }).success).toBe(false);
   });
 });

@@ -2,6 +2,9 @@
  * Valor monetário em centavos inteiros. A marca impede misturar reais e centavos por engano:
  * um `number` qualquer só vira `Cents` pelas funções deste módulo.
  */
+/** Maior valor em centavos aceito pelo `integer` (int4) do PostgreSQL: R$ 21.474.836,47 (D-15). */
+export const MAX_CENTS = 2_147_483_647;
+
 export type Cents = number & { readonly __brand: "Cents" };
 
 export function cents(value: number): Cents {
@@ -18,7 +21,8 @@ export function parseBRL(input: string): Cents | null {
   if (!/^-?\d+(\.\d{1,2})?$/.test(normalized)) return null;
   const [whole = "0", fraction = ""] = normalized.replace("-", "").split(".");
   const value = Number(whole) * 100 + Number(fraction.padEnd(2, "0"));
-  return cents(normalized.startsWith("-") ? -value : value);
+  const signed = normalized.startsWith("-") ? -value : value;
+  return Number.isSafeInteger(signed) ? cents(signed) : null;
 }
 
 /** Arredondamento half-up para o centavo mais próximo, usado em produtos como taxa × lance. */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { applyRate, bps, cents, parseBRL, parsePercent, roundCents, sumCents } from "./money";
+import { applyRate, bps, cents, MAX_CENTS, parseBRL, parsePercent, roundCents, sumCents } from "./money";
 
 describe("parsePercent", () => {
   it.each([
@@ -51,8 +51,12 @@ describe("parseBRL", () => {
     expect(parseBRL(input)).toBe(expected);
   });
 
-  it.each(["", "abc", "1,234", "1,2,3"])("rejeita %s", (input) => {
+  it.each(["", "abc", "1,234", "1,2,3", "9999999999999999", "-9999999999999999"])("rejeita %s sem lançar", (input) => {
     expect(parseBRL(input)).toBeNull();
+  });
+
+  it("aceita o teto int4 e representa valores inteiros seguros", () => {
+    expect(parseBRL("21.474.836,47")).toBe(MAX_CENTS);
   });
 });
 

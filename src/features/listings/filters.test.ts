@@ -48,6 +48,14 @@ describe("parseListingParams", () => {
     });
   });
 
+  it("preço em reais acima do teto int4 é ignorado sem erro", () => {
+    expect(parseListingParams({ precoAte: "30000000", precoDe: "21474837" }).criteria).toMatchObject({
+      minPrice: null,
+      maxPrice: null,
+    });
+    expect(parseListingParams({ precoAte: "21474836" }).criteria.maxPrice).toBe(2_147_483_600);
+  });
+
   it("opções fora da lista viram o padrão; prazo some nos encerrados", () => {
     const filters = parseListingParams({ mercado: "55", kmAte: "100000", encerra: "48h", ordem: "x" });
     expect(filters.criteria).toMatchObject({ maxMarketPct: null, maxMileageKm: 100_000 });
