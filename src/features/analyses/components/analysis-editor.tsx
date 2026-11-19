@@ -33,7 +33,7 @@ import { formatBps, formatBRL, formatMoneyInput, formatTime } from "@/lib/format
 
 import { autosaveDraftAction, discardDraftAction, saveAnalysisAction } from "../actions";
 import { fipeFill } from "../fipe-fill";
-import { FIELD_LABELS, FIXED_COST_LABELS } from "../labels";
+import { FIELD_LABELS, FIXED_COST_LABELS, FORM_FIELD } from "../labels";
 import { readAnalysisInputs } from "../read-inputs";
 import { liveSummary, type SummaryModel } from "../summary-model";
 import type { AnalysisDetail } from "../types";
@@ -208,6 +208,25 @@ export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail;
   );
 
   const summaryModel = liveSummary(inputs);
+  const missingFields = summaryModel.outcome.kind === "incomplete" ? summaryModel.outcome.missing : [];
+
+  /** Impede ida desnecessária ao servidor quando faltam campos obrigatórios, focando o primeiro pendente. */
+  function handleFixClick(event: React.MouseEvent<HTMLButtonElement>) {
+    setIntent("fix");
+    const firstMissing = missingFields[0];
+    if (!firstMissing || !formRef.current) return;
+    event.preventDefault();
+    const fieldName = FORM_FIELD[firstMissing];
+    const target =
+      firstMissing === "commissionMode"
+        ? formRef.current.querySelector<HTMLElement>('[role="radiogroup"] [role="radio"]')
+        : formRef.current.elements.namedItem(fieldName);
+    if (target instanceof HTMLElement) {
+      target.focus();
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    toast.warning(`Preencha “${FIELD_LABELS[firstMissing]}” antes de fixar a análise.`);
+  }
 
   return (
     <div className="grid items-start gap-9 pb-24 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-10 lg:pb-0 xl:grid-cols-[minmax(0,1fr)_28.75rem] xl:gap-14">
@@ -406,34 +425,41 @@ export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail;
           />
         </fieldset>
 
-        <div className="flex flex-col-reverse gap-3 border-t border-border pt-6 md:flex-row md:items-center">
-          <DiscardDraftButton analysisId={analysis.id} />
-          <AutosaveText status={autosave} />
-          <div className="flex flex-col-reverse gap-3 md:ml-auto md:flex-row">
-            <Button
-              type="submit"
-              name="intent"
-              value="draft"
-              variant="secondary"
-              onClick={() => setIntent("draft")}
-              loading={pending && intent === "draft"}
-              loadingLabel="Salvando…"
-            >
-              <Save aria-hidden="true" />
-              Salvar rascunho
-            </Button>
-            {/* Fixar é seguro sem confirmação: "Revisar premissas" cria a próxima versão. */}
-            <Button
-              type="submit"
-              name="intent"
-              value="fix"
-              onClick={() => setIntent("fix")}
-              loading={pending && intent === "fix"}
-              loadingLabel="Fixando…"
-            >
-              <Lock aria-hidden="true" />
-              Fixar análise
-            </Button>
+        <div className="grid gap-3 border-t border-border pt-6">
+          {missingFields.length > 0 ? (
+            <p className="text-caption text-warning" role="status">
+              Falta para fixar: {missingFields.map((field) => FIELD_LABELS[field]).join(", ")}.
+            </p>
+          ) : null}
+          <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center">
+            <DiscardDraftButton analysisId={analysis.id} />
+            <AutosaveText status={autosave} />
+            <div className="flex flex-col-reverse gap-3 md:ml-auto md:flex-row">
+              <Button
+                type="submit"
+                name="intent"
+                value="draft"
+                variant="secondary"
+                onClick={() => setIntent("draft")}
+                loading={pending && intent === "draft"}
+                loadingLabel="Salvando…"
+              >
+                <Save aria-hidden="true" />
+                Salvar rascunho
+              </Button>
+              {/* Fixar é seguro sem confirmação: "Revisar premissas" cria a próxima versão. */}
+              <Button
+                type="submit"
+                name="intent"
+                value="fix"
+                onClick={handleFixClick}
+                loading={pending && intent === "fix"}
+                loadingLabel="Fixando…"
+              >
+                <Lock aria-hidden="true" />
+                Fixar análise
+              </Button>
+            </div>
           </div>
         </div>
       </form>
