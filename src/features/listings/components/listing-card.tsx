@@ -16,11 +16,11 @@ import {
   LISTING_STATUS_LABELS,
   LISTING_STATUS_VARIANTS,
   marketValueOriginLabel,
-  priceBasisLabel,
   priceEvidenceLabel,
 } from "../labels";
-import type { ListingEstimate, ListingListItem } from "../types";
+import type { ListingListItem } from "../types";
 import { AddToTrackerButton } from "./add-to-tracker-button";
+import { ListingQuickDrawer } from "./listing-quick-drawer";
 
 type ListingCardProps = {
   item: ListingListItem;
@@ -91,30 +91,48 @@ export function ListingCard({ item, header, footer, eager = false, compact = fal
 
       <ConditionBadges item={item} />
 
-      <div className="grid gap-1">
-        <dl className="flex items-end justify-between gap-4">
-          <div className="grid gap-0.5">
-            <dt className="text-caption text-muted">
-              {isOpen ? (item.currentBid ? "Lance atual" : "Lance inicial") : "Lance final"}
-            </dt>
-            <dd className="text-heading-2 font-semibold text-foreground">
-              <Money value={bid} />
-            </dd>
-          </div>
-          {fit === null ? null : (
-            <div className="grid justify-items-end">
-              <dt className="sr-only">Provável × limite</dt>
-              <dd>
-                <Badge variant={LIMIT_FIT_VARIANTS[fit]}>{LIMIT_FIT_LABELS[fit]}</Badge>
-              </dd>
-            </div>
-          )}
-        </dl>
-        {item.marketValue !== null ? (
-          <p className="text-caption text-muted tabular-nums">
-            Mercado{marketOrigin ? ` ${marketOrigin}` : ""} <Money value={item.marketValue} />
-            {ratio !== null ? ` · lance em ${formatRatio(ratio)}` : null}
+      <div className="grid gap-3 rounded-md bg-background p-3 sm:grid-cols-2">
+        <div className="grid content-start gap-0.5">
+          <p className="text-caption text-muted">
+            {isOpen ? (item.currentBid ? "Lance atual" : "Lance inicial") : "Lance final"}
           </p>
+          <p className="text-heading-2 font-semibold text-foreground tabular-nums">
+            <Money value={bid} />
+          </p>
+          {item.marketValue !== null ? (
+            <p className="text-caption text-muted tabular-nums">
+              {marketOrigin ? `${marketOrigin} ` : "Mercado "}
+              <Money value={item.marketValue} />
+              {ratio !== null ? ` · ${formatRatio(ratio)}` : null}
+            </p>
+          ) : null}
+        </div>
+
+        {item.estimate ? (
+          <div className="grid content-start gap-0.5 border-t border-border-strong pt-2.5 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-3">
+            <p className="text-caption text-muted">Estimativa</p>
+            <p className="text-body-lg font-semibold text-foreground tabular-nums">
+              {item.estimate.price.kind === "insufficient" ? (
+                <span className="text-caption font-normal text-muted">
+                  Sem base ({item.estimate.price.comparables}/{item.estimate.price.needed})
+                </span>
+              ) : (
+                <Money value={item.estimate.price.median} />
+              )}
+            </p>
+            <div className="flex flex-wrap items-center gap-1.5 text-caption text-muted tabular-nums">
+              {item.estimate.limit.kind === "insufficient" ? (
+                <span>Sem limite</span>
+              ) : item.estimate.limit.maxBid === null ? (
+                <span>Sem lance viável</span>
+              ) : (
+                <span>
+                  Lim. <Money value={item.estimate.limit.maxBid} className="font-medium text-foreground-secondary" />
+                </span>
+              )}
+              {fit === null ? null : <Badge variant={LIMIT_FIT_VARIANTS[fit]}>{LIMIT_FIT_LABELS[fit]}</Badge>}
+            </div>
+          </div>
         ) : null}
       </div>
 
@@ -130,17 +148,16 @@ export function ListingCard({ item, header, footer, eager = false, compact = fal
         </span>
       </p>
 
-      {item.estimate ? <EstimateLines estimate={item.estimate} /> : null}
-
       <div className="flex flex-wrap items-center gap-2">
         <TrackerAction item={item} />
+        <ListingQuickDrawer item={item} />
         <a
           href={item.url}
           target="_blank"
           rel="noopener noreferrer"
           className="ml-auto inline-flex items-center gap-1 text-label text-accent hover:underline"
         >
-          Ver lote no {item.sourceName}
+          {item.sourceName}
           <ExternalLink aria-hidden="true" className="size-3.5" />
           <span className="sr-only">(abre em nova aba)</span>
         </a>
@@ -150,82 +167,8 @@ export function ListingCard({ item, header, footer, eager = false, compact = fal
   );
 }
 
-/**
- * Estimativas com dados do sistema (etapa 5, D-36), sempre com o número de casos. Sem base, diz o que falta em vez de
- * inventar um número. O limite sem análises parecidas vem das premissas padrão, e a situação compara o provável com
- * ele (D-44).
- */
-function EstimateLines({ estimate }: { estimate: ListingEstimate }) {
-  const { price, limit } = estimate;
-  return (
-    <section aria-label="Estimativas do sistema" className="rounded-md bg-background px-3 py-2.5 text-caption">
-      <dl className="grid gap-2">
-        <div className="grid grid-cols-[auto_1fr] gap-x-2">
-          <dt className="text-muted">Provável</dt>
-          <dd className="text-right">
-            {price.kind === "insufficient" ? (
-              <span className="text-muted">
-                Sem base suficiente ({price.comparables} de {price.needed})
-              </span>
-            ) : (
-              <>
-                <Money value={price.median} className="font-semibold text-foreground" />{" "}
-                <span className="text-muted">({priceEvidenceLabel(price)})</span>
-              </>
-            )}
-          </dd>
-        </div>
-        <div className="grid grid-cols-[auto_1fr] gap-x-2">
-          <dt className="text-muted">Limite estimado</dt>
-          <dd className="text-right">
-            {limit.kind === "insufficient" ? (
-              <span className="text-muted">
-                Sem FIPE no anúncio e {limit.analyses} de {limit.needed} análises parecidas
-              </span>
-            ) : (
-              <>
-                {limit.maxBid === null ? (
-                  <span className="text-foreground">Sem lance viável</span>
-                ) : (
-                  <Money value={limit.maxBid} className="font-semibold text-foreground" />
-                )}
-              </>
-            )}
-          </dd>
-        </div>
-      </dl>
-      <details className="mt-1.5">
-        <summary className="cursor-pointer text-muted hover:text-foreground">Como foi estimado</summary>
-        <ul className="mt-1.5 grid gap-1 text-muted">
-          {price.kind === "comparables" ? (
-            <li>
-              Provável: {priceBasisLabel(price)}. Metade das próximas vendas deve ficar entre{" "}
-              <Money value={price.low} /> e <Money value={price.high} />.
-            </li>
-          ) : null}
-          {price.kind === "market_ratio" ? (
-            <li>
-              Provável: {formatRatio(price.ratio.median)} do mercado, como vendas na mesma categoria e condição (faixa{" "}
-              {formatRatio(price.ratio.low)} a {formatRatio(price.ratio.high)}; n={price.n}).
-            </li>
-          ) : null}
-          {limit.kind === "insufficient" ? null : (
-            <li>
-              Limite:{" "}
-              {limit.kind === "defaults"
-                ? "premissas padrão"
-                : `${limit.n} análises parecidas${limit.marketValueFrom === "listing" ? ", venda pela FIPE do anúncio" : ""}`}
-              .
-            </li>
-          )}
-        </ul>
-      </details>
-    </section>
-  );
-}
-
-/** Já no Tracker: leva ao lote. Senão, "Adicionar à análise" (só com marca, modelo e ano). */
-function TrackerAction({ item }: { item: ListingListItem }) {
+/** Já no Tracker: leva ao lote. Senão, adiciona à análise ou abre direto o rascunho. */
+function TrackerAction({ item, openDirectly = false }: { item: ListingListItem; openDirectly?: boolean }) {
   if (item.trackedLotId) {
     return (
       <ButtonLink href={`/lotes/${item.trackedLotId}`} variant="secondary" size="sm" className="w-fit">
@@ -234,7 +177,9 @@ function TrackerAction({ item }: { item: ListingListItem }) {
       </ButtonLink>
     );
   }
-  return item.trackable ? <AddToTrackerButton listingId={item.id} /> : null;
+  return item.trackable ? (
+    <AddToTrackerButton listingId={item.id} mode={openDirectly ? "open" : "stay"} />
+  ) : null;
 }
 
 /** Condição declarada pelo leiloeiro. Sem nada declarado, não mostra nada (não afirma "sem dano"). */
@@ -303,7 +248,8 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
         </p>
       </div>
       <div className="col-start-2 flex flex-wrap items-center gap-2">
-        <TrackerAction item={item} />
+        <TrackerAction item={item} openDirectly />
+        <ListingQuickDrawer item={item} />
         <a
           href={item.url}
           target="_blank"
