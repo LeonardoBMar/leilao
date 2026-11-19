@@ -27,7 +27,6 @@ import {
   LISTING_STATUS_LABELS,
   LISTING_STATUS_VARIANTS,
   marketValueOriginLabel,
-  priceEvidenceLabel,
 } from "../labels";
 import type { ListingListItem } from "../types";
 import { AddToTrackerButton } from "./add-to-tracker-button";
@@ -252,7 +251,7 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
           </span>
           {price && price.kind !== "insufficient" ? (
             <span>
-              · provável <Money value={price.median} /> ({priceEvidenceLabel(price)})
+              · provável <Money value={price.median} />
             </span>
           ) : null}
           {fit !== null && FitIcon ? (
