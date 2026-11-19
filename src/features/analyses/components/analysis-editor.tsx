@@ -33,9 +33,9 @@ import { formatBps, formatBRL, formatMoneyInput, formatTime } from "@/lib/format
 
 import { autosaveDraftAction, discardDraftAction, saveAnalysisAction } from "../actions";
 import { fipeFill } from "../fipe-fill";
-import { FIXED_COST_LABELS } from "../labels";
+import { FIELD_LABELS, FIXED_COST_LABELS } from "../labels";
 import { readAnalysisInputs } from "../read-inputs";
-import { liveSummary } from "../summary-model";
+import { liveSummary, type SummaryModel } from "../summary-model";
 import type { AnalysisDetail } from "../types";
 import { AnalysisSummary } from "./analysis-summary";
 
@@ -185,8 +185,10 @@ export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail;
     />
   );
 
+  const summaryModel = liveSummary(inputs);
+
   return (
-    <div className="grid items-start gap-9 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_28.75rem] xl:gap-14">
+    <div className="grid items-start gap-9 pb-24 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-10 lg:pb-0 xl:grid-cols-[minmax(0,1fr)_28.75rem] xl:gap-14">
       <form
         key={formKey}
         ref={formRef}
@@ -407,7 +409,57 @@ export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail;
         </div>
       </form>
 
-      <AnalysisSummary model={liveSummary(inputs)} currentBid={analysis.lot.currentBid} market={market} />
+      <AnalysisSummary model={summaryModel} currentBid={analysis.lot.currentBid} market={market} />
+
+      <MobileMaxBidBar
+        model={summaryModel}
+        pending={pending && intent === "fix"}
+        onFix={() => {
+          setIntent("fix");
+          const fixButton = formRef.current?.querySelector<HTMLButtonElement>('button[name="intent"][value="fix"]');
+          fixButton?.click();
+        }}
+      />
+    </div>
+  );
+}
+
+/** Barra inferior fixa em telas abaixo de `lg` (DESIGN.md §10): mantém o lance máximo visível durante a edição. */
+function MobileMaxBidBar({
+  model,
+  pending,
+  onFix,
+}: {
+  model: SummaryModel;
+  pending: boolean;
+  onFix: () => void;
+}) {
+  const { outcome } = model;
+  return (
+    <div
+      aria-label="Resumo rápido da análise"
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-border-strong bg-surface px-4 py-3 shadow-md lg:hidden"
+    >
+      <div className="mx-auto flex max-w-360 items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-caption text-muted">Lance máximo</p>
+          {outcome.kind === "viable" ? (
+            <p className="truncate text-heading-2 font-semibold text-foreground tabular-nums">
+              {formatBRL(outcome.maxBid)}
+            </p>
+          ) : outcome.kind === "not_viable" ? (
+            <p className="truncate text-label font-semibold text-warning">Sem lance viável</p>
+          ) : (
+            <p className="truncate text-label text-muted">
+              Falta: {outcome.missing.map((field) => FIELD_LABELS[field]).join(", ")}
+            </p>
+          )}
+        </div>
+        <Button type="button" size="sm" onClick={onFix} loading={pending} loadingLabel="Fixando…">
+          <Lock aria-hidden="true" />
+          Fixar análise
+        </Button>
+      </div>
     </div>
   );
 }
