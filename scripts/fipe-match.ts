@@ -11,19 +11,17 @@
 //
 // `set` e `auto` só mostram o efeito; acrescente --apply para gravar.
 
-import { loadEnvConfig } from "@next/env";
-
 import type { FipeVehicleType } from "@/domain/listings/fipe-match";
 
+import { hasFlag, readFlag, runCli } from "./lib/cli";
+
 async function main() {
-  // As variáveis precisam existir antes de importar o banco (src/server/env.ts valida ao carregar).
-  loadEnvConfig(process.cwd(), false, { info: () => undefined, error: console.error });
   const matches = await import("@/server/fipe/matches");
   const { createFipeCatalog } = await import("@/server/fipe/catalog");
   const { fipeFuelCodes, pickFipeTable } = await import("@/domain/listings/fipe-match");
 
   const [command, id] = process.argv.slice(2);
-  const apply = process.argv.includes("--apply");
+  const apply = hasFlag("--apply");
   const describe = (match: Awaited<ReturnType<typeof matches.getFipeMatch>> & {}) => {
     const chosen =
       match.kind === "none" ? `nenhuma (${match.reason ?? "—"})` : match.models.map((m) => m.label).join(" | ");
@@ -84,7 +82,7 @@ async function main() {
 
   if (command === "set") {
     let choice: Parameters<typeof matches.setManualMatch>[1];
-    if (process.argv.includes("--none")) {
+    if (hasFlag("--none")) {
       choice = { kind: "none", reason: "manual", vehicleType: match.vehicleType, brandCode: match.brandCode };
     } else {
       const codes = (readFlag("--models") ?? "").split(",").filter(Boolean);
@@ -122,14 +120,4 @@ async function main() {
   throw new Error("Comando desconhecido: use list, show, set ou auto.");
 }
 
-function readFlag(name: string): string | undefined {
-  const index = process.argv.indexOf(name);
-  return index >= 0 ? process.argv[index + 1] : undefined;
-}
-
-main()
-  .catch((error: unknown) => {
-    console.error(error instanceof Error ? error.message : error);
-    process.exitCode = 1;
-  })
-  .finally(() => setTimeout(() => process.exit(), 100).unref());
+runCli(main, { messageOnly: true });

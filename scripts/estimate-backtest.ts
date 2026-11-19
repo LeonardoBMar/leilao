@@ -11,11 +11,9 @@
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { loadEnvConfig } from "@next/env";
+import { hasFlag, readFlag, runCli } from "./lib/cli";
 
 async function main() {
-  // As variáveis precisam existir antes de importar o banco (src/server/env.ts valida ao carregar).
-  loadEnvConfig(process.cwd(), false, { info: () => undefined, error: console.error });
   const { loadSoldSales } = await import("@/server/market/sold-sales");
   const { runBacktest, summarizeBacktest, summarizeBacktestBy } = await import("@/domain/listings/backtest");
   const { buildEstimateIndex, COMPARABLE_LEVELS, estimatePrice, SALES_WINDOW_MS } =
@@ -27,7 +25,7 @@ async function main() {
     "v2-origem": { levels: COMPARABLE_LEVELS, preferOrigin: true },
   } as const;
   const only = readFlag("--variant");
-  const write = process.argv.includes("--write");
+  const write = hasFlag("--write");
   const from = new Date(`${readFlag("--from") ?? "2026-09-15"}T00:00:00-03:00`);
   const sales = await loadSoldSales();
 
@@ -91,14 +89,4 @@ async function main() {
   }
 }
 
-function readFlag(name: string): string | undefined {
-  const index = process.argv.indexOf(name);
-  return index === -1 ? undefined : process.argv[index + 1];
-}
-
-main()
-  .catch((error: unknown) => {
-    console.error(error);
-    process.exitCode = 1;
-  })
-  .finally(() => setTimeout(() => process.exit(), 100).unref());
+runCli(main);

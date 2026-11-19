@@ -3,6 +3,8 @@ import "server-only";
 import { inferOrigin, type VehicleOrigin } from "@/domain/listings/origin";
 import { db } from "@/server/db";
 
+const QUERY_CHUNK = 500;
+
 /**
  * Recalcula a origem gravada (`vehicle_origin`, D-73) de todo o catálogo: a coleta grava a cada visita, e isto refaz
  * os anúncios que ela não visita mais depois de uma mudança na regra (`inferOrigin`). Idempotente: só atualiza o
@@ -28,11 +30,15 @@ export async function backfillOrigins(): Promise<Record<VehicleOrigin, number>> 
     outros: 0,
   };
   for (const [origin, items] of byOrigin) {
-    const { count } = await db.listing.updateMany({
-      where: { vehicleOrigin: { not: origin }, OR: items },
-      data: { vehicleOrigin: origin },
-    });
-    updated[origin] = count;
+    let total = 0;
+    for (let start = 0; start < items.length; start += QUERY_CHUNK) {
+      const { count } = await db.listing.updateMany({
+        where: { vehicleOrigin: { not: origin }, OR: items.slice(start, start + QUERY_CHUNK) },
+        data: { vehicleOrigin: origin },
+      });
+      total += count;
+    }
+    updated[origin] = total;
   }
   return updated;
 }

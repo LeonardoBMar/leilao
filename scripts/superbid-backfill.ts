@@ -6,13 +6,11 @@
 //   npm run db:superbid-backfill -- --days 7         outra janela
 //   npm run db:superbid-backfill -- --dry-run        só conta, sem visitar nem gravar
 
-import { loadEnvConfig } from "@next/env";
+import { hasFlag, readNumberFlag, runCli } from "./lib/cli";
 
 const DAY_MS = 86_400_000;
 
 async function main() {
-  // As variáveis precisam existir antes de importar o banco (src/server/env.ts valida ao carregar).
-  loadEnvConfig(process.cwd(), false, { info: () => undefined, error: console.error });
   const { backfillListings } = await import("@/server/collector/backfill");
   const { createPoliteFetcher } = await import("@/server/collector/http");
   const { discoverRecentlyClosed, superbidSource } = await import("@/sources/superbid");
@@ -27,7 +25,7 @@ async function main() {
     process.stdout.write(`  lista incompleta: ${closed.error.url} → ${closed.error.error}\n`);
     process.exitCode = 1;
   }
-  if (process.argv.includes("--dry-run")) return;
+  if (hasFlag("--dry-run")) return;
 
   const summary = await backfillListings({
     source: superbidSource,
@@ -45,16 +43,4 @@ async function main() {
   if (summary.stopped) process.exitCode = 1;
 }
 
-function readNumberFlag(name: string): number | undefined {
-  const index = process.argv.indexOf(name);
-  const value = index >= 0 ? Number(process.argv[index + 1]) : Number.NaN;
-  return Number.isInteger(value) && value > 0 ? value : undefined;
-}
-
-main()
-  .catch((error: unknown) => {
-    console.error(error);
-    process.exitCode = 1;
-  })
-  // O cliente do banco mantém conexões abertas; encerra quando a carga termina.
-  .finally(() => setTimeout(() => process.exit(), 100).unref());
+runCli(main);

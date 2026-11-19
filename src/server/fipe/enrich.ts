@@ -105,15 +105,26 @@ export async function enrichMarketValues(input: {
   deadline: number;
   /** Máximo de anúncios nesta chamada. */
   limit?: number;
+  /** Chaves de veículo processadas em paralelo (padrão 8; menor durante a coleta paralela para poupar conexões). */
+  concurrency?: number;
   /** Só calcula e devolve as amostras, sem gravar (conferência manual). */
   dryRun?: boolean;
   /** Só os anúncios desta fonte. */
   sourceId?: string;
   onSample?: (sample: MatchSample) => void;
 }): Promise<EnrichSummary> {
-  const { catalog, now, deadline, limit = Number.POSITIVE_INFINITY, dryRun = false, sourceId, onSample } = input;
+  const {
+    catalog,
+    now,
+    deadline,
+    limit = Number.POSITIVE_INFINITY,
+    concurrency = CONCURRENCY,
+    dryRun = false,
+    sourceId,
+    onSample,
+  } = input;
   const summary: EnrichSummary = { checked: 0, matched: { version: 0, family: 0 }, stoppedBy: null };
-  // Já vistos nesta chamada ficam de fora (no `dryRun` nada é gravado e eles continuariam pendentes).
+  // Só no `dryRun` (nada é gravado, então os anúncios continuariam pendentes na query).
   const seen = new Set<string>();
   const tables = await catalog.tables();
   if (tables.length === 0) {
@@ -125,7 +136,7 @@ export async function enrichMarketValues(input: {
   while (summary.checked < limit) {
     const batch: PendingListing[] = await db.listing.findMany({
       where: {
-        id: { notIn: [...seen] },
+        ...(dryRun && seen.size > 0 ? { id: { notIn: [...seen] } } : {}),
         ...(sourceId === undefined ? {} : { sourceId }),
         marketValueCheckedAt: null,
         ...notFromSource,
@@ -140,13 +151,13 @@ export async function enrichMarketValues(input: {
     });
     if (batch.length === 0) break;
 
-    await runByKey(batch, identityKeyOf, CONCURRENCY, async (listing) => {
+    await runByKey(batch, identityKeyOf, concurrency, async (listing) => {
       if (summary.stoppedBy) return;
       if (now().getTime() >= deadline) {
         summary.stoppedBy = { kind: "time", message: "tempo esgotado" };
         return;
       }
-      seen.add(listing.id);
+      if (dryRun) seen.add(listing.id);
       const sample = await evaluateListing(catalog, tables, listing, { dryRun });
       summary.checked++;
       if (sample.match) summary.matched[sample.match.origin === "fipe_version" ? "version" : "family"]++;

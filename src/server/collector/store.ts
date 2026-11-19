@@ -38,17 +38,25 @@ export async function loadPlaceLookup(): Promise<PlaceLookup> {
   };
 }
 
+/** Tamanho dos lotes para consultas `IN (...)` e atualizações em massa no coletor. */
+const ID_CHUNK = 500;
+
 export async function hasOpenListings(sourceId: string): Promise<boolean> {
   const row = await db.listing.findFirst({ where: { sourceId, status: "open" }, select: { id: true } });
   return row !== null;
 }
 
 export async function findKnownIds(sourceId: string, externalIds: readonly string[]): Promise<Set<string>> {
-  const rows = await db.listing.findMany({
-    where: { sourceId, externalId: { in: [...externalIds] } },
-    select: { externalId: true },
-  });
-  return new Set(rows.map((row) => row.externalId));
+  const known = new Set<string>();
+  for (let start = 0; start < externalIds.length; start += ID_CHUNK) {
+    const chunk = externalIds.slice(start, start + ID_CHUNK);
+    const rows = await db.listing.findMany({
+      where: { sourceId, externalId: { in: chunk } },
+      select: { externalId: true },
+    });
+    for (const row of rows) known.add(row.externalId);
+  }
+  return known;
 }
 
 /** Dado bruto da última leitura (`listings.raw`), para a fonte que precisa dele na revisita (D-48). */
@@ -60,13 +68,16 @@ export async function findStoredRaw(sourceId: string, externalId: string): Promi
   return row?.raw ?? null;
 }
 
-/** Anúncios ainda no sitemap: atualiza "visto por último" sem baixar a página. */
+/** Anúncios ainda no sitemap: atualiza "visto por último" em lotes ordenados para evitar locks longos. */
 export async function markSeen(sourceId: string, externalIds: readonly string[], now: Date): Promise<void> {
   if (externalIds.length === 0) return;
-  await db.listing.updateMany({
-    where: { sourceId, externalId: { in: [...externalIds] } },
-    data: { lastSeenAt: now },
-  });
+  const sorted = [...externalIds].sort();
+  for (let start = 0; start < sorted.length; start += ID_CHUNK) {
+    await db.listing.updateMany({
+      where: { sourceId, externalId: { in: sorted.slice(start, start + ID_CHUNK) } },
+      data: { lastSeenAt: now },
+    });
+  }
 }
 
 /** Revisitas vencidas, da mais antiga para a mais nova. */

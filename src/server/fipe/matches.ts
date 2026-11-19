@@ -9,7 +9,7 @@ import {
   MATCHER_VERSION,
   rematchAllBelow,
 } from "@/domain/listings/fipe-match";
-import type { FipeMatchKind, FipeMatchOrigin } from "@/generated/prisma/client";
+import { type FipeMatchKind, type FipeMatchOrigin, Prisma } from "@/generated/prisma/client";
 
 import { db } from "../db";
 
@@ -99,23 +99,57 @@ function choiceData(choice: FipeMatchChoice) {
       };
 }
 
+const matchRowSchema = z.object({
+  id: z.string(),
+  kind: z.enum(["version", "family", "none"]),
+  reason: z.string().nullable(),
+  vehicleType: z.number().int().nullable(),
+  brandCode: z.string().nullable(),
+  models: z.unknown(),
+  origin: z.enum(["auto", "manual"]),
+  matcherVersion: z.number().int(),
+});
+
 /**
- * Grava a escolha da regra. Correlação manual existente fica como está e é a devolvida: alguém a corrigiu enquanto a
- * regra rodava, ou a chave já era manual.
+ * Grava a escolha da regra em uma única ida ao banco. Correlação manual existente fica como está e é devolvida:
+ * alguém a corrigiu enquanto a regra rodava, ou a chave já era manual.
  */
 export async function saveAutoMatch(identity: FipeVehicleIdentity, choice: FipeMatchChoice): Promise<StoredFipeMatch> {
-  const data = { ...choiceData(choice), origin: "auto" as const, matcherVersion: MATCHER_VERSION };
-  const vehicle = {
-    vehicleKey: identity.key,
-    brand: identity.brand,
-    model: identity.model,
-    modelYear: identity.modelYear,
-    fuel: identity.fuel,
-    category: identity.category,
-  };
-  await db.fipeMatch.upsert({ where: { vehicleKey: identity.key }, create: { ...vehicle, ...data }, update: {} });
-  await db.fipeMatch.updateMany({ where: { vehicleKey: identity.key, origin: "auto" }, data });
-  const row = await db.fipeMatch.findUniqueOrThrow({ where: { vehicleKey: identity.key }, select: matchSelect });
+  const data = choiceData(choice);
+  const rows = await db.$queryRaw<unknown[]>(Prisma.sql`
+    WITH upserted AS (
+      INSERT INTO fipe_matches (
+        id, vehicle_key, brand, model, model_year, fuel, category,
+        kind, reason, vehicle_type, brand_code, models, origin, matcher_version, updated_at
+      )
+      VALUES (
+        ${crypto.randomUUID()}::uuid, ${identity.key}, ${identity.brand}, ${identity.model},
+        ${identity.modelYear}::smallint, ${identity.fuel}, ${identity.category},
+        ${data.kind}::fipe_match_kind, ${data.reason}, ${data.vehicleType}::smallint, ${data.brandCode},
+        ${JSON.stringify(data.models)}::jsonb, 'auto'::fipe_match_origin, ${MATCHER_VERSION}::smallint, CURRENT_TIMESTAMP
+      )
+      ON CONFLICT (vehicle_key) DO UPDATE SET
+        kind = EXCLUDED.kind,
+        reason = EXCLUDED.reason,
+        vehicle_type = EXCLUDED.vehicle_type,
+        brand_code = EXCLUDED.brand_code,
+        models = EXCLUDED.models,
+        matcher_version = EXCLUDED.matcher_version,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE fipe_matches.origin = 'auto'::fipe_match_origin
+      RETURNING id::text AS id, kind::text AS kind, reason, vehicle_type::int AS "vehicleType",
+        brand_code AS "brandCode", models, origin::text AS origin, matcher_version::int AS "matcherVersion"
+    )
+    SELECT id, kind, reason, "vehicleType", "brandCode", models, origin, "matcherVersion" FROM upserted
+    UNION ALL
+    SELECT id::text AS id, kind::text AS kind, reason, vehicle_type::int AS "vehicleType",
+      brand_code AS "brandCode", models, origin::text AS origin, matcher_version::int AS "matcherVersion"
+    FROM fipe_matches
+    WHERE vehicle_key = ${identity.key} AND NOT EXISTS (SELECT 1 FROM upserted)
+    LIMIT 1
+  `);
+  const [row] = z.array(matchRowSchema).min(1).parse(rows);
+  if (!row) throw new Error(`Falha ao gravar correlação FIPE para ${identity.key}`);
   return toStoredMatch(row);
 }
 

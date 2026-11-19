@@ -7,11 +7,9 @@
 //   npm run db:freire-backfill -- --from 1140 --to 1182 outra faixa
 //   npm run db:freire-backfill -- --dry-run             só conta, sem gravar
 
-import { loadEnvConfig } from "@next/env";
+import { hasFlag, readNumberFlag, runCli } from "./lib/cli";
 
 async function main() {
-  // As variáveis precisam existir antes de importar o banco (src/server/env.ts valida ao carregar).
-  loadEnvConfig(process.cwd(), false, { info: () => undefined, error: console.error });
   const { backfillListings } = await import("@/server/collector/backfill");
   const { createPoliteFetcher } = await import("@/server/collector/http");
   const { leiloesFreireSource, lotsOfAuction } = await import("@/sources/leiloes-freire");
@@ -40,7 +38,7 @@ async function main() {
     if (vehicles.length > 0) process.stdout.write(`  leilão ${auction}: ${vehicles.length} veículos\n`);
   }
   process.stdout.write(`Leilões ${from} a ${to}: ${ids.length} lotes de veículo\n`);
-  if (process.argv.includes("--dry-run")) return;
+  if (hasFlag("--dry-run")) return;
 
   // Mesmo `fetcher` da varredura: os lotes já lidos saem do cache da fonte, sem nova requisição.
   const summary = await backfillListings({
@@ -59,16 +57,4 @@ async function main() {
   if (summary.stopped) process.exitCode = 1;
 }
 
-function readNumberFlag(name: string): number | undefined {
-  const index = process.argv.indexOf(name);
-  const value = index >= 0 ? Number(process.argv[index + 1]) : Number.NaN;
-  return Number.isInteger(value) && value > 0 ? value : undefined;
-}
-
-main()
-  .catch((error: unknown) => {
-    console.error(error);
-    process.exitCode = 1;
-  })
-  // O cliente do banco mantém conexões abertas; encerra quando a carga termina.
-  .finally(() => setTimeout(() => process.exit(), 100).unref());
+runCli(main);

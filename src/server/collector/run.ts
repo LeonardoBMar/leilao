@@ -142,11 +142,11 @@ export async function runCollection({
     },
   );
   let fipeStopped = false;
-  const enrich = async (until: number) => {
+  const enrich = async (until: number, concurrency: number) => {
     await imports;
     if (!catalog || fipeStopped) return 0;
     try {
-      const summary = await enrichMarketValues({ catalog, now, deadline: until });
+      const summary = await enrichMarketValues({ catalog, now, deadline: until, concurrency });
       if (summary.stoppedBy?.kind === "no_catalog") {
         fipeStopped = true;
         warn(`valor de mercado: ${summary.stoppedBy.message}`);
@@ -165,9 +165,9 @@ export async function runCollection({
         collectSource({ source, fetcher: createFetcher(source, deadline), maxVisits, deadline, place, now }),
       ),
     ),
-    enrich(deadline),
+    enrich(deadline, 3),
   ]);
-  const marketValuesMatched = matchedDuring + (await enrich(now().getTime() + FIPE_TAIL_MS));
+  const marketValuesMatched = matchedDuring + (await enrich(now().getTime() + FIPE_TAIL_MS, 8));
   const fipeImports = await imports;
 
   // Lance e resultado dos lotes ligados, com o que foi lido. Falha aqui não impede os alertas.
