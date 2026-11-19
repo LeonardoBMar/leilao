@@ -5,6 +5,7 @@ import { BreadcrumbLink, BreadcrumbPage, Breadcrumbs } from "@/components/layout
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert, AlertDescription, Badge, ButtonLink, Section, SectionTitle, Skeleton } from "@/components/ui";
 import { FORMULA_VERSION } from "@/domain/finance/calculator";
+import { listLotImages } from "@/features/lot-images/queries";
 import { getLotMarketReference } from "@/features/research/queries";
 import type { LotMarketReference } from "@/features/research/types";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -15,6 +16,7 @@ import type { AnalysisDetail } from "../types";
 import { AnalysisEditor } from "./analysis-editor";
 import { AnalysisHistory } from "./analysis-history";
 import { AnalysisReadonly } from "./analysis-readonly";
+import { AnalysisVehicleStrip } from "./analysis-vehicle-strip";
 import { CreateAnalysisButton } from "./create-analysis-button";
 
 /** Tela da análise (SPEC `/analise/[id]`): rascunho editável ou versão fixada em leitura, mais o histórico. */
@@ -23,13 +25,18 @@ export async function AnalysisView({ params }: { params: Promise<{ id: string }>
   if (!parsed.success) notFound();
   const analysis = await getAnalysis(parsed.data);
   if (!analysis) notFound();
-  const [versions, market] = await Promise.all([
+  const [versions, market, lotImages] = await Promise.all([
     listLotAnalyses(analysis.lot.id),
     getLotMarketReference(analysis.lot.id),
+    listLotImages(analysis.lot.id),
   ]);
 
   const isFixed = analysis.status === "fixed";
   const { lot } = analysis;
+  const photoUrls = [
+    ...lotImages.flatMap((image) => (image.url === null ? [] : [image.url])),
+    ...lot.context.listingPhotoUrls,
+  ];
 
   return (
     <div className="grid gap-7">
@@ -78,6 +85,13 @@ export async function AnalysisView({ params }: { params: Promise<{ id: string }>
             ) : null}
           </>
         }
+      />
+
+      <AnalysisVehicleStrip
+        title={lot.title}
+        currentBid={lot.currentBid}
+        context={lot.context}
+        photoUrls={photoUrls}
       />
 
       {analysis.references.knownResultAtCreation ? (
