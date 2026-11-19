@@ -12,6 +12,8 @@ import { createSupabaseServerClient } from "./supabase";
 
 /** Validade das URLs de leitura exibidas na galeria (SPEC §11: URLs temporárias). */
 const SIGNED_URL_SECONDS = 60 * 60;
+const INSPECT_TIMEOUT_MS = 10_000;
+const HEADER_BYTES = 16;
 
 async function bucket() {
   const supabase = await createSupabaseServerClient();
@@ -42,11 +44,35 @@ export async function inspectUpload(path: string): Promise<UploadedImage | null>
   const { data: signed } = await storage.createSignedUrl(path, 60);
   let detectedType: ImageMimeType | null = null;
   if (signed) {
-    const response = await fetch(signed.signedUrl, { headers: { Range: "bytes=0-15" }, cache: "no-store" });
-    if (response.ok) detectedType = detectImageType(new Uint8Array(await response.arrayBuffer()));
+    const response = await fetch(signed.signedUrl, {
+      headers: { Range: `bytes=0-${HEADER_BYTES - 1}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(INSPECT_TIMEOUT_MS),
+    });
+    if (response.ok) detectedType = detectImageType(await readHeaderBytes(response));
   }
 
   return { size: info.size ?? 0, declaredType: info.contentType ?? null, detectedType };
+}
+
+/** Lê no máximo `HEADER_BYTES` do stream, mesmo se o servidor ignorar o cabeçalho `Range`. */
+async function readHeaderBytes(response: Response): Promise<Uint8Array> {
+  const reader = response.body?.getReader();
+  if (!reader) return new Uint8Array();
+  const buffer = new Uint8Array(HEADER_BYTES);
+  let offset = 0;
+  try {
+    while (offset < HEADER_BYTES) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = value.subarray(0, HEADER_BYTES - offset);
+      buffer.set(chunk, offset);
+      offset += chunk.length;
+    }
+  } finally {
+    await reader.cancel().catch(() => {});
+  }
+  return buffer.subarray(0, offset);
 }
 
 /** URLs temporárias de leitura, na mesma ordem dos caminhos. Falha vira `null` (a galeria mostra aviso). */

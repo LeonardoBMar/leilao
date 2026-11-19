@@ -44,6 +44,40 @@ export async function requestImageUpload(
 
 export type ConfirmUploadError = "lot_not_found" | "invalid_path" | "not_uploaded" | "invalid_file" | "limit_reached";
 
+const UUID_PATTERN = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+
+async function insertLotImage(
+  lotId: string,
+  ownerId: string,
+  input: ConfirmUploadInput,
+  mimeType: string,
+  sizeBytes: number,
+  forceNotCover = false,
+): Promise<"ok" | "limit_reached"> {
+  return db.$transaction(async (tx) => {
+    const images = await tx.lotImage.findMany({
+      where: { lotId, ownerId },
+      select: { sortOrder: true, isCover: true },
+    });
+    if (images.length >= MAX_IMAGES_PER_LOT) return "limit_reached";
+
+    await tx.lotImage.create({
+      data: {
+        ownerId,
+        lotId,
+        storagePath: input.path,
+        originalFilename: input.fileName,
+        mimeType,
+        sizeBytes,
+        sortOrder: images.reduce((max, image) => Math.max(max, image.sortOrder + 1), 0),
+        // A primeira foto vira capa automaticamente, salvo em retentativa após corrida pela capa.
+        isCover: forceNotCover ? false : !images.some((image) => image.isCover),
+      },
+    });
+    return "ok";
+  });
+}
+
 /**
  * Registra a foto depois de conferir o arquivo que realmente chegou ao Storage (tamanho, tipo e assinatura
  * binária). Arquivo inválido é removido e nada é registrado (SPEC §11, CA-18).
@@ -54,7 +88,7 @@ export async function confirmImageUpload(
 ): Promise<Result<null, ConfirmUploadError>> {
   const user = await requireUser();
   // Só caminhos que este mesmo fluxo emitiria: pasta do dono e do lote, nome UUID e extensão permitida.
-  const expected = new RegExp(`^${user.id}/${lotId}/[0-9a-f-]{36}\\.(jpg|png|webp)$`);
+  const expected = new RegExp(`^${user.id}/${lotId}/${UUID_PATTERN}\\.(jpg|png|webp)$`);
   if (!expected.test(input.path)) return err("invalid_path");
 
   const lot = await db.lot.findFirst({ where: { id: lotId, ownerId: user.id }, select: { id: true } });
@@ -66,6 +100,7 @@ export async function confirmImageUpload(
   const isValid =
     uploaded.detectedType !== null &&
     uploaded.declaredType === uploaded.detectedType &&
+    input.path.endsWith(`.${IMAGE_TYPES[uploaded.detectedType]}`) &&
     uploaded.size > 0 &&
     uploaded.size <= MAX_IMAGE_BYTES;
   if (!isValid || uploaded.detectedType === null) {
@@ -75,37 +110,33 @@ export async function confirmImageUpload(
   const mimeType = uploaded.detectedType;
 
   try {
-    const outcome = await db.$transaction(async (tx) => {
-      const images = await tx.lotImage.findMany({
-        where: { lotId, ownerId: user.id },
-        select: { sortOrder: true, isCover: true },
-      });
-      if (images.length >= MAX_IMAGES_PER_LOT) return "limit_reached" as const;
-
-      await tx.lotImage.create({
-        data: {
-          ownerId: user.id,
-          lotId,
-          storagePath: input.path,
-          originalFilename: input.fileName,
-          mimeType,
-          sizeBytes: uploaded.size,
-          sortOrder: images.reduce((max, image) => Math.max(max, image.sortOrder + 1), 0),
-          // A primeira foto vira capa automaticamente.
-          isCover: !images.some((image) => image.isCover),
-        },
-      });
-      return "ok" as const;
-    });
+    const outcome = await insertLotImage(lotId, user.id, input, mimeType, uploaded.size);
     if (outcome === "limit_reached") {
       await removeObjects([input.path]);
       return err("limit_reached");
     }
     return ok(null);
   } catch (error) {
-    // Confirmação repetida do mesmo arquivo (storage_path único): já está registrado.
-    if (isUniqueViolation(error)) return ok(null);
-    throw error;
+    if (!isUniqueViolation(error)) throw error;
+    const existing = await db.lotImage.findFirst({
+      where: { storagePath: input.path, ownerId: user.id },
+      select: { id: true },
+    });
+    // Confirmação repetida do mesmo arquivo (`storage_path` único): já está registrado.
+    if (existing) return ok(null);
+
+    // Colisão concorrente pela capa única (`lot_images_one_cover_per_lot`): registra como foto comum.
+    try {
+      const retry = await insertLotImage(lotId, user.id, input, mimeType, uploaded.size, true);
+      if (retry === "limit_reached") {
+        await removeObjects([input.path]);
+        return err("limit_reached");
+      }
+      return ok(null);
+    } catch (retryError) {
+      if (isUniqueViolation(retryError)) return ok(null);
+      throw retryError;
+    }
   }
 }
 
@@ -156,23 +187,27 @@ export async function moveImage(imageId: string, direction: "up" | "down"): Prom
 /** Remove a foto do banco e depois o arquivo. Se era a capa, a próxima da galeria assume. */
 export async function deleteImage(imageId: string): Promise<Result<null, ImageError>> {
   const user = await requireUser();
-  const image = await db.lotImage.findFirst({
-    where: { id: imageId, ownerId: user.id },
-    select: { lotId: true, storagePath: true, isCover: true },
-  });
-  if (!image) return err("not_found");
-
-  await db.$transaction(async (tx) => {
-    await tx.lotImage.deleteMany({ where: { id: imageId, ownerId: user.id } });
-    if (!image.isCover) return;
-    const next = await tx.lotImage.findFirst({
-      where: { lotId: image.lotId, ownerId: user.id },
-      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-      select: { id: true },
+  const deleted = await db.$transaction(async (tx) => {
+    const image = await tx.lotImage.findFirst({
+      where: { id: imageId, ownerId: user.id },
+      select: { lotId: true, storagePath: true, isCover: true },
     });
-    if (next) await tx.lotImage.updateMany({ where: { id: next.id }, data: { isCover: true } });
+    if (!image) return null;
+
+    await tx.lotImage.deleteMany({ where: { id: imageId, ownerId: user.id } });
+    if (image.isCover) {
+      const next = await tx.lotImage.findFirst({
+        where: { lotId: image.lotId, ownerId: user.id },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+        select: { id: true },
+      });
+      if (next) await tx.lotImage.updateMany({ where: { id: next.id, ownerId: user.id }, data: { isCover: true } });
+    }
+    return image.storagePath;
   });
+  if (!deleted) return err("not_found");
+
   // Depois do banco: se o Storage falhar, sobra um arquivo órfão, nunca um registro apontando para o nada.
-  await removeObjects([image.storagePath]);
+  await removeObjects([deleted]);
   return ok(null);
 }
