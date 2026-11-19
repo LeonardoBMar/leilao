@@ -68,6 +68,9 @@ export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail;
   const [formKey, setFormKey] = useState(0);
   const [autosave, setAutosave] = useState<AutosaveStatus>({ kind: "idle" });
   const autosaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const autosaveSeqRef = useRef(0);
+  const hasPendingAutosaveRef = useRef(false);
+  const isSavingAutosave = autosave.kind === "saving";
 
   useEffect(() => {
     if (state.status === "success" && state.message) {
@@ -88,19 +91,55 @@ export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail;
     }
   }, [state]);
 
-  useEffect(() => () => clearTimeout(autosaveTimer.current), []);
+  useEffect(() => {
+    const seq = autosaveSeqRef;
+    const pendingFlag = hasPendingAutosaveRef;
+    return () => {
+      clearTimeout(autosaveTimer.current);
+      seq.current += 1;
+      pendingFlag.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    function warnUnsaved(event: BeforeUnloadEvent) {
+      if (!hasPendingAutosaveRef.current && !isSavingAutosave) return;
+      event.preventDefault();
+    }
+    window.addEventListener("beforeunload", warnUnsaved);
+    return () => window.removeEventListener("beforeunload", warnUnsaved);
+  }, [isSavingAutosave]);
+
+  function cancelAutosave() {
+    clearTimeout(autosaveTimer.current);
+    autosaveSeqRef.current += 1;
+    hasPendingAutosaveRef.current = false;
+  }
 
   /** Rascunho salvo sozinho após uma pausa na digitação, com o status discreto no rodapé. */
   function scheduleAutosave(overrides?: Record<string, string>) {
     clearTimeout(autosaveTimer.current);
+    hasPendingAutosaveRef.current = true;
     autosaveTimer.current = setTimeout(() => {
-      if (!formRef.current) return;
+      if (!formRef.current) {
+        hasPendingAutosaveRef.current = false;
+        return;
+      }
+      const seq = ++autosaveSeqRef.current;
       const formData = new FormData(formRef.current);
       for (const [key, value] of Object.entries(overrides ?? {})) formData.set(key, value);
       setAutosave({ kind: "saving" });
       void autosaveDraftAction(analysis.id, formData).then(
-        (result) => setAutosave(result === "saved" ? { kind: "saved", at: new Date() } : { kind: result }),
-        () => setAutosave({ kind: "failed" }),
+        (result) => {
+          if (seq !== autosaveSeqRef.current) return;
+          hasPendingAutosaveRef.current = false;
+          setAutosave(result === "saved" ? { kind: "saved", at: new Date() } : { kind: result });
+        },
+        () => {
+          if (seq !== autosaveSeqRef.current) return;
+          hasPendingAutosaveRef.current = false;
+          setAutosave({ kind: "failed" });
+        },
       );
     }, AUTOSAVE_DELAY_MS);
   }
@@ -233,7 +272,7 @@ export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail;
         ref={formRef}
         action={formAction}
         onInput={() => recompute()}
-        onSubmit={() => clearTimeout(autosaveTimer.current)}
+        onSubmit={() => cancelAutosave()}
         noValidate
         className="grid content-start gap-8"
       >
@@ -468,6 +507,7 @@ export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail;
         model={summaryModel}
         pending={pending && intent === "fix"}
         onFix={() => {
+          cancelAutosave();
           setIntent("fix");
           const fixButton = formRef.current?.querySelector<HTMLButtonElement>('button[name="intent"][value="fix"]');
           fixButton?.click();
