@@ -491,9 +491,10 @@ model Listing {
   @@index([sourceId, nextCheckAt], map: "listings_source_next_check_idx", where: { nextCheckAt: { not: null } })
   @@index([status, endsAt])
   @@index([municipalityId])
-  @@index([brand, model, modelYear])
-  /// Leilões do catálogo (D-42): agrupamento por fonte e leilão.
-  @@index([sourceId, auctionExternalId])
+  /// Leilões do catálogo (D-42, D-84): agrupamento por fonte/leilão e recência.
+  @@index([sourceId, auctionExternalId, lastSeenAt(sort: Desc)])
+  /// Catálogo "Recém-chegados" (D-84): só os abertos, ordenados por entrada.
+  @@index([firstSeenAt(sort: Desc)], map: "listings_open_first_seen_idx", where: { status: "open" })
   /// Fila do casamento na FIPE (D-47, D-79): só os pendentes, na ordem de `enrichMarketValues`.
   @@index([status, firstSeenAt(sort: Desc)], map: "listings_fipe_pending_idx", where: { marketValueCheckedAt: null })
   @@index([fipeMatchId])
@@ -516,6 +517,7 @@ model ListingObservation {
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   @@index([listingId, observedAt])
+  /// Índice parcial no SQL (`20261119193500_audit_performance_indexes`): `(listing_id, observed_at DESC) WHERE bid_cents > 0`.
   @@map("listing_observations")
 }
 

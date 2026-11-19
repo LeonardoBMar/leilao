@@ -7,7 +7,14 @@ import { Prisma, PrismaClient } from "@/generated/prisma/client";
 import { env } from "./env";
 
 function createClient() {
-  return new PrismaClient({ adapter: new PrismaPg({ connectionString: env.DATABASE_URL }) });
+  return new PrismaClient({
+    adapter: new PrismaPg({
+      connectionString: env.DATABASE_URL,
+      max: env.DB_POOL_MAX ?? 5,
+      connectionTimeoutMillis: 10_000,
+      idleTimeoutMillis: 20_000,
+    }),
+  });
 }
 
 // Reaproveita o cliente entre recargas do HMR em desenvolvimento.
