@@ -42,8 +42,8 @@ export default function PrivateLayout({ children }: LayoutProps<"/">) {
   return (
     // Direção A (DESIGN.md §9): menu no papel quente, conteúdo num painel branco embutido (no celular, tela cheia).
     <div className="min-h-dvh bg-background lg:grid lg:grid-cols-[248px_1fr]">
-      <aside className="sticky top-0 hidden h-dvh flex-col gap-7 overflow-y-auto px-3 pt-4 pb-3 lg:flex">
-        <div className="px-2">
+      <aside className="sticky top-0 hidden h-dvh flex-col gap-6 overflow-y-auto px-3 pt-4 pb-3 lg:flex">
+        <div className="px-2.5">
           <Brand />
         </div>
         <nav aria-label="Principal">
