@@ -234,9 +234,6 @@ export async function DecisionIndicator() {
           </div>
         </div>
       )}
-      <p className="border-t border-border pt-3 text-caption text-muted">
-        Arrematados com preço final e análise fixada antes do desfecho.
-      </p>
     </section>
   );
 }
