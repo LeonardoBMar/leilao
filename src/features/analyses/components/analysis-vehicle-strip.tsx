@@ -178,7 +178,9 @@ export function AnalysisVehicleStrip({ title, currentBid, context, photoUrls }: 
                       aria-current={isSelected ? "true" : undefined}
                       aria-label={`Ver foto ${index + 1} de ${photoUrls.length}`}
                       className={`relative h-14 w-20 overflow-hidden rounded-md border bg-surface-subtle outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-                        isSelected ? "border-accent ring-2 ring-accent/25" : "border-border opacity-75 hover:opacity-100"
+                        isSelected
+                          ? "border-accent ring-2 ring-accent/25"
+                          : "border-border opacity-75 hover:opacity-100"
                       }`}
                     >
                       <Image src={url} alt="" fill unoptimized sizes="5rem" className="object-cover" />

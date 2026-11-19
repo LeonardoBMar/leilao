@@ -173,9 +173,7 @@ export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail;
     if (filled === 0) return;
     recompute();
     toast.success(
-      filled === 1
-        ? "1 custo vazio preenchido com R$ 0,00."
-        : `${filled} custos vazios preenchidos com R$ 0,00.`,
+      filled === 1 ? "1 custo vazio preenchido com R$ 0,00." : `${filled} custos vazios preenchidos com R$ 0,00.`,
     );
   }
 
@@ -480,15 +478,7 @@ export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail;
 }
 
 /** Barra inferior fixa em telas abaixo de `lg` (DESIGN.md §10): mantém o lance máximo visível durante a edição. */
-function MobileMaxBidBar({
-  model,
-  pending,
-  onFix,
-}: {
-  model: SummaryModel;
-  pending: boolean;
-  onFix: () => void;
-}) {
+function MobileMaxBidBar({ model, pending, onFix }: { model: SummaryModel; pending: boolean; onFix: () => void }) {
   const { outcome } = model;
   return (
     <div

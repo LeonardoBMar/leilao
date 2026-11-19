@@ -177,9 +177,7 @@ function TrackerAction({ item, openDirectly = false }: { item: ListingListItem; 
       </ButtonLink>
     );
   }
-  return item.trackable ? (
-    <AddToTrackerButton listingId={item.id} mode={openDirectly ? "open" : "stay"} />
-  ) : null;
+  return item.trackable ? <AddToTrackerButton listingId={item.id} mode={openDirectly ? "open" : "stay"} /> : null;
 }
 
 /** Condição declarada pelo leiloeiro. Sem nada declarado, não mostra nada (não afirma "sem dano"). */

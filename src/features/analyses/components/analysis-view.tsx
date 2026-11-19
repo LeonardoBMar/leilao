@@ -87,12 +87,7 @@ export async function AnalysisView({ params }: { params: Promise<{ id: string }>
         }
       />
 
-      <AnalysisVehicleStrip
-        title={lot.title}
-        currentBid={lot.currentBid}
-        context={lot.context}
-        photoUrls={photoUrls}
-      />
+      <AnalysisVehicleStrip title={lot.title} currentBid={lot.currentBid} context={lot.context} photoUrls={photoUrls} />
 
       {analysis.references.knownResultAtCreation ? (
         <Alert variant="warning">

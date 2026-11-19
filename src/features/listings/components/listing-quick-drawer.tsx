@@ -55,11 +55,9 @@ export function ListingQuickDrawer({ item, trigger }: ListingQuickDrawerProps) {
   const marketOrigin = marketValueOriginLabel(item.marketValueOrigin, item.marketValueRefMonth);
   const estimate = item.estimate;
   const fit = estimate?.fit ?? null;
-  const details = [
-    item.mileageKm === null ? null : formatKm(item.mileageKm),
-    item.fuel,
-    item.recoveryType,
-  ].filter(Boolean);
+  const details = [item.mileageKm === null ? null : formatKm(item.mileageKm), item.fuel, item.recoveryType].filter(
+    Boolean,
+  );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -88,7 +86,14 @@ export function ListingQuickDrawer({ item, trigger }: ListingQuickDrawerProps) {
         <DrawerBody className="gap-5">
           <div className="relative aspect-4/3 w-full overflow-hidden rounded-lg bg-surface-subtle">
             {item.photoUrl ? (
-              <Image src={item.photoUrl} alt="" fill unoptimized sizes="(min-width: 768px) 32rem, 100vw" className="object-cover" />
+              <Image
+                src={item.photoUrl}
+                alt=""
+                fill
+                unoptimized
+                sizes="(min-width: 768px) 32rem, 100vw"
+                className="object-cover"
+              />
             ) : (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-subtle">
                 <Car aria-hidden="true" className="size-10" />
@@ -143,7 +148,9 @@ export function ListingQuickDrawer({ item, trigger }: ListingQuickDrawerProps) {
                 <p className="text-caption text-muted">Provável × limite estimado</p>
                 <p className="text-heading-2 font-semibold text-foreground tabular-nums">
                   {estimate.price.kind === "insufficient" ? (
-                    <span className="text-body font-normal text-muted">Sem base ({estimate.price.comparables}/{estimate.price.needed})</span>
+                    <span className="text-body font-normal text-muted">
+                      Sem base ({estimate.price.comparables}/{estimate.price.needed})
+                    </span>
                   ) : (
                     <Money value={estimate.price.median} />
                   )}
