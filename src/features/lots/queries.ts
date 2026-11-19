@@ -112,13 +112,11 @@ function byRoom(a: LotListItem, b: LotListItem): number {
 }
 
 /**
- * Ids dos lotes na posição pedida (lance × limite). A posição depende da análise fixada mais recente, então é
- * calculada aqui sobre os lotes do usuário que atendem aos outros filtros (poucas centenas), e volta ao banco como
- * `id in`. Sem filtro de posição: `null`.
+ * Ids dos lotes na posição pedida (lance × limite). Usado em `listLotsByAuction`, que pagina por leilão no banco.
  */
-async function positionWhere(ownerId: string, filters: LotFilters, auctionId?: string): Promise<Prisma.LotWhereInput> {
+async function positionWhere(ownerId: string, filters: LotFilters): Promise<Prisma.LotWhereInput> {
   if (!filters.position) return {};
-  const rows = await db.lot.findMany({ where: lotWhere(ownerId, filters, auctionId), select: listSelect });
+  const rows = await db.lot.findMany({ where: lotWhere(ownerId, filters), select: listSelect });
   const wanted = LOT_POSITION_COMPARISONS[filters.position];
   return {
     id: {
@@ -133,15 +131,30 @@ async function positionWhere(ownerId: string, filters: LotFilters, auctionId?: s
 /** Lista paginada de lotes (ver `lotWhere`). */
 export async function listLots(filters: LotFilters, scope: { auctionId?: string } = {}): Promise<LotPage> {
   const user = await requireUser();
-  const where: Prisma.LotWhereInput = {
-    AND: [lotWhere(user.id, filters, scope.auctionId), await positionWhere(user.id, filters, scope.auctionId)],
-  };
+  const where = lotWhere(user.id, filters, scope.auctionId);
   const start = (filters.page - 1) * LOTS_PAGE_SIZE;
+  const orderBy: Prisma.LotOrderByWithRelationInput[] =
+    filters.sort === "folga"
+      ? [{ id: "asc" }]
+      : filters.sort === "atualizados"
+        ? [{ updatedAt: "desc" }, { id: "asc" }]
+        : scope.auctionId
+          ? [{ lotNumber: "asc" }, { id: "asc" }]
+          : [
+              { auction: { startsAt: filters.timing === "proximos" ? "asc" : "desc" } },
+              { lotNumber: "asc" },
+              { id: "asc" },
+            ];
 
-  // Folga depende da análise fixada: ordena aqui, sobre os lotes do usuário no filtro.
-  if (filters.sort === "folga") {
-    const rows = await db.lot.findMany({ where, orderBy: [{ id: "asc" }], select: listSelect });
-    const items = rows.map(toListItem).sort(byRoom);
+  // Posição e folga dependem da análise fixada mais recente: busca os lotes uma única vez e filtra/ordena aqui.
+  if (filters.position || filters.sort === "folga") {
+    const rows = await db.lot.findMany({ where, orderBy, select: listSelect });
+    let items = rows.map(toListItem);
+    if (filters.position) {
+      const wanted = LOT_POSITION_COMPARISONS[filters.position];
+      items = items.filter((item) => positionOf(item) === wanted);
+    }
+    if (filters.sort === "folga") items = items.sort(byRoom);
     return {
       items: items.slice(start, start + LOTS_PAGE_SIZE),
       total: items.length,
@@ -149,17 +162,6 @@ export async function listLots(filters: LotFilters, scope: { auctionId?: string 
       pageSize: LOTS_PAGE_SIZE,
     };
   }
-
-  const orderBy: Prisma.LotOrderByWithRelationInput[] =
-    filters.sort === "atualizados"
-      ? [{ updatedAt: "desc" }, { id: "asc" }]
-      : scope.auctionId
-        ? [{ lotNumber: "asc" }, { id: "asc" }]
-        : [
-            { auction: { startsAt: filters.timing === "proximos" ? "asc" : "desc" } },
-            { lotNumber: "asc" },
-            { id: "asc" },
-          ];
 
   const [rows, total] = await Promise.all([
     db.lot.findMany({ where, orderBy, skip: start, take: LOTS_PAGE_SIZE, select: listSelect }),

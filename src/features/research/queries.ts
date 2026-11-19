@@ -203,33 +203,26 @@ const MODEL_SUGGESTIONS_LIMIT = 2000;
 export async function getResearchFacets(filters: ResearchFilters): Promise<ResearchFacets> {
   await requireUser();
   const level = sql`coalesce(l.damage_level::text, 'unclassified')`;
-  const [{ since }, byLevel, byCategory, byState, bySource, [mileage], byYear, models] = await Promise.all([
+  const withinKm = filters.maxKm === null ? sql`true` : sql`coalesce(l.mileage_km <= ${filters.maxKm}, false)`;
+  const [{ since }, facetRows, sourceRows, byYear, models] = await Promise.all([
     getResearchOverview(),
     rows(
-      z.object({ level: levelSchema, n: z.number().int() }),
-      sql`SELECT ${level} AS level, count(*)::int AS n FROM listings l
-        WHERE ${salesWhere(filters, { condition: false })} GROUP BY 1`,
+      z.object({
+        level: levelSchema,
+        category: z.string().nullable(),
+        state: z.string().nullable(),
+        source_id: z.string(),
+        within_km: z.boolean(),
+        n: z.number().int(),
+        known: z.number().int(),
+      }),
+      sql`SELECT ${level} AS level, l.category::text AS category, l.state::text AS state, l.source_id,
+          ${withinKm} AS within_km, count(*)::int AS n, count(l.mileage_km)::int AS known
+        FROM listings l
+        WHERE ${salesWhere(filters, { condition: false, category: false, state: false, source: false, mileage: false })}
+        GROUP BY 1, 2, 3, 4, 5`,
     ),
-    rows(
-      z.object({ category: z.string().nullable(), n: z.number().int() }),
-      sql`SELECT l.category::text AS category, count(*)::int AS n FROM listings l
-        WHERE ${salesWhere(filters, { category: false })} GROUP BY 1`,
-    ),
-    rows(
-      z.object({ state: z.string().nullable(), n: z.number().int() }),
-      sql`SELECT l.state::text AS state, count(*)::int AS n FROM listings l
-        WHERE ${salesWhere(filters, { state: false })} GROUP BY 1`,
-    ),
-    rows(
-      z.object({ id: z.string(), name: z.string(), n: z.number().int() }),
-      sql`SELECT s.id, s.name, count(*)::int AS n FROM listings l JOIN sources s ON s.id = l.source_id
-        WHERE ${salesWhere(filters, { source: false })} GROUP BY s.id, s.name ORDER BY 3 DESC, 2`,
-    ),
-    rows(
-      z.object({ total: z.number().int(), known: z.number().int() }),
-      sql`SELECT count(*)::int AS total, count(l.mileage_km)::int AS known FROM listings l
-        WHERE ${salesWhere(filters, { mileage: false })}`,
-    ),
+    db.source.findMany({ select: { id: true, name: true } }),
     // Anos do modelo escolhido, sem o próprio filtro de ano (senão a lista encolheria para a faixa).
     filters.vehicle === null
       ? Promise.resolve([])
@@ -247,12 +240,51 @@ export async function getResearchFacets(filters: ResearchFilters): Promise<Resea
         WHERE t.key IS NOT NULL GROUP BY t.key ORDER BY 2 DESC, 1 LIMIT ${MODEL_SUGGESTIONS_LIMIT}`,
     ),
   ]);
+
+  const targetCategory = CATEGORY_OF_KEY[filters.category];
+  const targetLevel = DAMAGE_OF_CONDITION[filters.condition] ?? "unclassified";
+  const levelCounts = new Map<string, number>();
+  const categoryCounts = new Map<string, number>();
   const stateCounts: Partial<Record<StateCode, number>> = {};
-  for (const row of byState) if (row.state !== null && isStateCode(row.state)) stateCounts[row.state] = row.n;
+  const sourceCounts = new Map<string, number>();
+  let mileageTotal = 0;
+  let mileageKnown = 0;
+
+  for (const row of facetRows) {
+    const matchCategory = row.category === targetCategory;
+    const matchCondition = row.level === targetLevel;
+    const matchState = filters.state === null || row.state === filters.state;
+    const matchSource = filters.source === null || row.source_id === filters.source;
+    const matchKm = filters.maxKm === null || row.within_km;
+
+    if (matchCategory && matchState && matchSource && matchKm) {
+      levelCounts.set(row.level, (levelCounts.get(row.level) ?? 0) + row.n);
+    }
+    if (matchCondition && matchState && matchSource && matchKm && row.category !== null) {
+      categoryCounts.set(row.category, (categoryCounts.get(row.category) ?? 0) + row.n);
+    }
+    if (matchCategory && matchCondition && matchSource && matchKm && row.state !== null && isStateCode(row.state)) {
+      stateCounts[row.state] = (stateCounts[row.state] ?? 0) + row.n;
+    }
+    if (matchCategory && matchCondition && matchState && matchKm) {
+      sourceCounts.set(row.source_id, (sourceCounts.get(row.source_id) ?? 0) + row.n);
+    }
+    if (matchCategory && matchCondition && matchState && matchSource) {
+      mileageTotal += row.n;
+      mileageKnown += row.known;
+    }
+  }
+
   const byCondition = (condition: ResearchCondition) =>
-    byLevel.find((row) => row.level === (DAMAGE_OF_CONDITION[condition] ?? "unclassified"))?.n ?? 0;
-  const ofCategory = (category: ResearchCategory) =>
-    byCategory.find((row) => row.category === CATEGORY_OF_KEY[category])?.n ?? 0;
+    levelCounts.get(DAMAGE_OF_CONDITION[condition] ?? "unclassified") ?? 0;
+  const ofCategory = (category: ResearchCategory) => categoryCounts.get(CATEGORY_OF_KEY[category]) ?? 0;
+  const sources = sourceRows
+    .flatMap(({ id, name }) => {
+      const sales = sourceCounts.get(id) ?? 0;
+      return sales > 0 ? [{ id, name, sales }] : [];
+    })
+    .toSorted((a, b) => b.sales - a.sales || a.name.localeCompare(b.name));
+
   return {
     conditions: {
       "sem-monta": byCondition("sem-monta"),
@@ -268,8 +300,8 @@ export async function getResearchFacets(filters: ResearchFilters): Promise<Resea
       sucatas: ofCategory("sucatas"),
     },
     states: stateCounts,
-    sources: bySource.map(({ id, name, n }) => ({ id, name, sales: n })),
-    mileage: mileage ?? { total: 0, known: 0 },
+    sources,
+    mileage: { total: mileageTotal, known: mileageKnown },
     years: byYear.map(({ year, n }) => ({ year, sales: n })),
     models: models.flatMap(({ key, n }) => {
       const [brand = "", model = ""] = key.split("|");
@@ -516,16 +548,30 @@ function toSale(row: z.infer<typeof saleRow>): ResearchSale {
 async function listSales(where: Prisma.Sql, limit: number): Promise<ResearchSale[]> {
   const sales = await rows(
     saleRow,
-    sql`SELECT l.id::text AS id, l.url, l.title, l.ends_at, l.state::text AS state, l.city, l.model_year::int AS model_year,
-        l.mileage_km, l.damage_level::text AS damage_level, l.final_bid_cents, l.market_value_cents,
-        l.market_value_origin::text AS market_value_origin, s.name AS source, l.photo_urls[1] AS photo_url,
-        (SELECT count(DISTINCT t.bid)::int FROM (
-          SELECT o.bid_cents AS bid FROM listing_observations o
-          WHERE o.listing_id = l.id AND o.bid_cents > 0 AND o.observed_at <= l.ends_at
-            AND o.observed_at >= l.ends_at - make_interval(hours => ${SALE_BIDS_WINDOW_HOURS}::int)
-          UNION SELECT l.final_bid_cents) t) AS bid_steps
-      FROM listings l JOIN sources s ON s.id = l.source_id
-      WHERE ${where} ORDER BY l.ends_at DESC, l.id LIMIT ${limit}`,
+    sql`WITH top_sales AS (
+        SELECT l.id, l.url, l.title, l.ends_at, l.state, l.city, l.model_year,
+          l.mileage_km, l.damage_level, l.final_bid_cents, l.market_value_cents,
+          l.market_value_origin, s.name AS source, l.photo_urls[1] AS photo_url
+        FROM listings l JOIN sources s ON s.id = l.source_id
+        WHERE ${where} ORDER BY l.ends_at DESC, l.id LIMIT ${limit}
+      ), steps AS (
+        SELECT bids.listing_id, count(DISTINCT bids.bid)::int AS bid_steps
+        FROM (
+          SELECT t.id AS listing_id, o.bid_cents AS bid
+          FROM top_sales t JOIN listing_observations o ON o.listing_id = t.id
+          WHERE o.bid_cents > 0 AND o.observed_at <= t.ends_at
+            AND o.observed_at >= t.ends_at - make_interval(hours => ${SALE_BIDS_WINDOW_HOURS}::int)
+          UNION ALL
+          SELECT t.id AS listing_id, t.final_bid_cents AS bid FROM top_sales t
+        ) bids
+        GROUP BY bids.listing_id
+      )
+      SELECT t.id::text AS id, t.url, t.title, t.ends_at, t.state::text AS state, t.city, t.model_year::int AS model_year,
+        t.mileage_km, t.damage_level::text AS damage_level, t.final_bid_cents, t.market_value_cents,
+        t.market_value_origin::text AS market_value_origin, t.source, t.photo_url,
+        coalesce(st.bid_steps, 1)::int AS bid_steps
+      FROM top_sales t LEFT JOIN steps st ON st.listing_id = t.id
+      ORDER BY t.ends_at DESC, t.id`,
   );
   return sales.map(toSale);
 }
@@ -653,27 +699,38 @@ export const getModelSales = cache(async (filters: ResearchFilters): Promise<Mod
   await requireUser();
   if (filters.vehicle === null) return null;
   const where = salesWhere(filters, {});
-  const yearShape = z.object({ year: z.number().int().nullable(), ...statsShape });
-  const [sales, byYear, ratioByYear] = await Promise.all([
+  const ratioSafe = sql`(l.final_bid_cents::float8 / NULLIF(l.market_value_cents, 0))`;
+  const ratioValid = sql`l.market_value_cents > 0 AND ${ratioSafe} BETWEEN ${RATIO_BOUNDS.min}::float8 AND ${RATIO_BOUNDS.max}::float8`;
+  const yearRow = z.object({
+    year: z.number().int().nullable(),
+    ...statsShape,
+    ratio_n: z.number().int(),
+    ratio_p25: z.number().nullable(),
+    ratio_median: z.number().nullable(),
+    ratio_p75: z.number().nullable(),
+  });
+  const [sales, byYear] = await Promise.all([
     listSales(where, MODEL_SALES_LIMIT),
     rows(
-      yearShape,
-      sql`SELECT l.model_year::int AS year, ${statsColumns(sql`l.final_bid_cents::float8`)} FROM listings l
-        WHERE ${where} GROUP BY 1 ORDER BY 1`,
-    ),
-    rows(
-      yearShape,
-      sql`SELECT l.model_year::int AS year, ${statsColumns(RATIO)} FROM listings l
-        WHERE ${salesWhere(filters, { ratio: true })} GROUP BY 1 ORDER BY 1`,
+      yearRow,
+      sql`SELECT l.model_year::int AS year, ${statsColumns(sql`l.final_bid_cents::float8`)},
+          count(*) FILTER (WHERE ${ratioValid})::int AS ratio_n,
+          percentile_cont(0.25) WITHIN GROUP (ORDER BY ${ratioSafe}) FILTER (WHERE ${ratioValid}) AS ratio_p25,
+          percentile_cont(0.5) WITHIN GROUP (ORDER BY ${ratioSafe}) FILTER (WHERE ${ratioValid}) AS ratio_median,
+          percentile_cont(0.75) WITHIN GROUP (ORDER BY ${ratioSafe}) FILTER (WHERE ${ratioValid}) AS ratio_p75
+        FROM listings l WHERE ${where} GROUP BY 1 ORDER BY 1`,
     ),
   ]);
   return {
     total: byYear.reduce((total, row) => total + row.n, 0),
     sales,
-    byYear: byYear.flatMap(({ year, ...row }) => {
+    byYear: byYear.flatMap(({ year, ratio_n, ratio_p25, ratio_median, ratio_p75, ...row }) => {
       if (year === null) return [];
-      const ratio = ratioByYear.find((other) => other.year === year);
-      return [{ year, summary: summarize(toStats(row)), ratio: summarize(ratio && toStats(ratio)) }];
+      const ratioStats =
+        ratio_n > 0 && ratio_p25 !== null && ratio_median !== null && ratio_p75 !== null
+          ? { n: ratio_n, p25: ratio_p25, median: ratio_median, p75: ratio_p75 }
+          : undefined;
+      return [{ year, summary: summarize(toStats(row)), ratio: summarize(ratioStats) }];
     }),
   };
 });

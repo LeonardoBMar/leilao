@@ -429,9 +429,6 @@ export async function listListings(
   const user = await requireUser();
   const select = listingCardSelect(user.id);
   const now = new Date();
-  // Encerrados já têm lance final: sem estimativa, sem carregar a base.
-  const estimates = filters.ended ? Promise.resolve(null) : loadEstimateContext(now);
-  const withEstimates = (context: EstimateContext | null) => (row: ListingCardRow) => toListItem(row, context);
   const where = listingsWhere(filters, await loadCriteriaValues(filters.criteria), user.id, now, scope.auction);
   const orderBy = listingsOrderBy(filters);
   const start = (filters.page - 1) * LISTINGS_PAGE_SIZE;
@@ -441,10 +438,11 @@ export async function listListings(
     const [rows, total, context] = await Promise.all([
       db.listing.findMany({ where, orderBy, skip: start, take: LISTINGS_PAGE_SIZE, select }),
       db.listing.count({ where }),
-      estimates,
+      // Encerrados já têm lance final: sem estimativa, sem carregar a base.
+      filters.ended ? Promise.resolve(null) : loadEstimateContext(now),
     ]);
     return {
-      items: rows.map(withEstimates(context)),
+      items: rows.map((row) => toListItem(row, context)),
       total,
       page: filters.page,
       pageSize: LISTINGS_PAGE_SIZE,
@@ -452,18 +450,46 @@ export async function listListings(
     };
   }
 
-  // "Mais perto": a distância é calculada aqui, sobre no máximo MAX_CANDIDATES.
-  const [rows, context] = await Promise.all([
-    db.listing.findMany({ where, orderBy, take: MAX_CANDIDATES + 1, select }),
-    estimates,
-  ]);
-  const truncated = rows.length > MAX_CANDIDATES;
+  // "Mais perto": ordena só id + coordenadas sobre no máximo MAX_CANDIDATES e busca os cartões só da página atual.
+  const candidates = await db.listing.findMany({
+    where,
+    orderBy,
+    take: MAX_CANDIDATES + 1,
+    select: { id: true, municipality: { select: { latitude: true, longitude: true } } },
+  });
+  const truncated = candidates.length > MAX_CANDIDATES;
   // Ordenação estável: empates na distância mantêm a ordem do banco.
-  const items = rows.slice(0, MAX_CANDIDATES).map(withEstimates(context)).sort(byDistance);
+  const sorted = candidates
+    .slice(0, MAX_CANDIDATES)
+    .map((row) => ({
+      id: row.id,
+      distanceKm: row.municipality ? distanceKm(DEFAULT_REGION.center, row.municipality) : null,
+    }))
+    .sort(byDistance);
+  const pageIds = sorted.slice(start, start + LISTINGS_PAGE_SIZE).map((item) => item.id);
+  if (pageIds.length === 0) {
+    return {
+      items: [],
+      total: sorted.length,
+      page: filters.page,
+      pageSize: LISTINGS_PAGE_SIZE,
+      truncated,
+    };
+  }
+
+  const [rows, context] = await Promise.all([
+    db.listing.findMany({ where: { id: { in: pageIds } }, select }),
+    filters.ended ? Promise.resolve(null) : loadEstimateContext(now),
+  ]);
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  const items = pageIds.flatMap((id) => {
+    const row = byId.get(id);
+    return row ? [toListItem(row, context)] : [];
+  });
 
   return {
-    items: items.slice(start, start + LISTINGS_PAGE_SIZE),
-    total: items.length,
+    items,
+    total: sorted.length,
     page: filters.page,
     pageSize: LISTINGS_PAGE_SIZE,
     truncated,
