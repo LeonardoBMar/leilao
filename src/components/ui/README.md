@@ -18,7 +18,7 @@ Esta pasta contém as primitivas reutilizáveis do Leilão Tracker. Os contratos
 | Ação | `Button`, `ButtonLink` | Ações primary, secondary, outline, ghost, destructive e link. Suporta loading. |
 | Formulário | `Input`, `Textarea`, `SelectField`, `Checkbox`, `RadioGroup`, `Switch`, `SegmentedControl`, `Slider` | Entrada acessível com label, descrição e erro. `SegmentedControl`: escolha única curta, todas visíveis. `Slider`: faixa com dois polegares (`thumbLabels`, `thumbValueTexts`). |
 | Filtro | `ToggleChip`, `RemovableChip` | Chip de escolha múltipla (`aria-pressed`) e chip de filtro ativo com “×”. |
-| Estrutura | `Section`, `SectionHeader`, `SectionTitle`, `DataList`, `DataRow`, `Stat`, `Card`, `Table`, `Tabs`, `LinkTabs`, `Pagination` | Seções com linhas finas (padrão da direção A), painéis em destaque e navegação local (`LinkTabs`: visões irmãs pela URL). `Stat`: rótulo pequeno sobre o valor, em grade. |
+| Estrutura | `Section`, `SectionHeader`, `SectionTitle`, `DataList`, `DataRow`, `Stat`, `Card`, `Table`, `Tabs`, `LinkTabs`, `MotionList`, `MotionListItem`, `Pagination` | Seções com linhas finas (padrão da direção A), painéis em destaque, listas com FLIP (`MotionList`) e navegação local (`LinkTabs`: visões irmãs pela URL). `Stat`: rótulo pequeno sobre o valor, em grade. |
 | Estado | `Badge`, `Alert`, `Skeleton`, `Spinner`, `EmptyState` | Estado semântico, carregamento e ausência de dados (`EmptyState variant="inline"` dentro de seções). |
 | Overlay | `Dialog`, `DrawerContent`, `DrawerBody`, `DrawerFooter`, `Popover`, `DropdownMenu`, `Tooltip` | Interações acessíveis providas por Radix. Drawer é um `Dialog` com `DrawerContent side="right" \| "bottom"`. |
 | Feedback | `Toaster`, `toast` | Confirmações e falhas globais breves. |

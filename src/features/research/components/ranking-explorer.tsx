@@ -9,6 +9,8 @@ import { percentOf } from "@/components/charts/data-steps";
 import {
   Button,
   Input,
+  MotionList,
+  MotionListItem,
   Select,
   SelectContent,
   SelectItem,
@@ -189,18 +191,19 @@ export function RankingExplorer({ rows, axisMax, ticks, overall }: RankingExplor
             <span />
             <span />
           </div>
-          <ol
+          <MotionList
+            as="ol"
             aria-label={`Modelos por ${RANKING_SORT_LABELS[sort].toLowerCase()}: ${shown
               .map((row) => `${row.label} ${formatRatio(row.median)}`)
               .join(", ")}`}
             className="grid"
           >
             {shown.map((row, index) => (
-              <li key={`${row.brand}|${row.model}`}>
+              <MotionListItem key={`${row.brand}|${row.model}`}>
                 <RankingRowLink row={row} position={index + 1} domain={domain} overall={overall} />
-              </li>
+              </MotionListItem>
             ))}
-          </ol>
+          </MotionList>
         </div>
       )}
 

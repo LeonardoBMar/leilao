@@ -1,6 +1,7 @@
 "use client";
 
 import { GitCompareArrows, LoaderCircle, SlidersHorizontal } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useId, useOptimistic, useRef, useState } from "react";
 
@@ -15,6 +16,8 @@ import {
   DrawerBody,
   DrawerContent,
   DrawerFooter,
+  MotionList,
+  MotionListItem,
   RemovableChip,
   Select,
   SelectContent,
@@ -37,6 +40,7 @@ import {
   vehicleLabel,
 } from "@/domain/research/filters";
 import { isStateCode, STATE_CODES, STATE_NAMES, type StateCode } from "@/domain/research/states";
+import { MOTION_ENTER_TRANSITION, MOTION_EXIT_TRANSITION } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 import { CATEGORY_LABELS, CONDITION_LABELS, mileageLabel, periodLabel, salesLabel, yearRangeLabel } from "../labels";
@@ -321,54 +325,63 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
       {chips.length > 0 || showCompare ? (
         <div className="-mt-3 grid gap-3">
           {chips.length > 0 ? (
-            <ul aria-label="Filtros ativos" className="flex flex-wrap items-center gap-2">
+            <MotionList aria-label="Filtros ativos" className="flex flex-wrap items-center gap-2">
               {chips.map((chip) => (
-                <li key={chip.id} className="flex max-w-full">
+                <MotionListItem key={chip.id} variant="chip" className="flex max-w-full">
                   <RemovableChip
                     removeLabel={`Remover filtro ${chip.label}`}
                     onRemove={() => apply(chip.without, { focusStatus: true })}
                   >
                     {chip.label}
                   </RemovableChip>
-                </li>
+                </MotionListItem>
               ))}
-            </ul>
+            </MotionList>
           ) : null}
-          {showCompare ? (
-            <div id={compareRowId} className="grid gap-3 md:flex md:flex-wrap md:items-center">
-              <span className="text-label text-muted">Comparar com</span>
-              {filters.vehicle === null ? null : (
-                <ModelPicker
-                  label="Comparar com outro modelo"
-                  placeholder="Outro modelo"
-                  shortcut={false}
-                  clearLabel="Tirar o modelo da comparação"
-                  value={filters.compare?.vehicle ? vehicleLabel(filters.compare.vehicle) : null}
-                  options={facets.models.filter(
-                    (option) => option.brand !== filters.vehicle?.brand || option.model !== filters.vehicle.model,
-                  )}
-                  onChange={(option) =>
-                    apply({
-                      ...filters,
-                      compare: {
-                        vehicle: option === null ? null : { brand: option.brand, model: option.model },
-                        state: filters.compare?.state ?? null,
-                      },
-                    })
+          <AnimatePresence initial={false}>
+            {showCompare ? (
+              <motion.div
+                key="compare-row"
+                id={compareRowId}
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0, transition: MOTION_ENTER_TRANSITION }}
+                exit={{ opacity: 0, y: -6, transition: MOTION_EXIT_TRANSITION }}
+                className="grid gap-3 md:flex md:flex-wrap md:items-center"
+              >
+                <span className="text-label text-muted">Comparar com</span>
+                {filters.vehicle === null ? null : (
+                  <ModelPicker
+                    label="Comparar com outro modelo"
+                    placeholder="Outro modelo"
+                    shortcut={false}
+                    clearLabel="Tirar o modelo da comparação"
+                    value={filters.compare?.vehicle ? vehicleLabel(filters.compare.vehicle) : null}
+                    options={facets.models.filter(
+                      (option) => option.brand !== filters.vehicle?.brand || option.model !== filters.vehicle.model,
+                    )}
+                    onChange={(option) =>
+                      apply({
+                        ...filters,
+                        compare: {
+                          vehicle: option === null ? null : { brand: option.brand, model: option.model },
+                          state: filters.compare?.state ?? null,
+                        },
+                      })
+                    }
+                    className="md:min-w-64 md:flex-1"
+                  />
+                )}
+                <CompareStateSelect
+                  value={filters.compare?.state ?? null}
+                  current={filters.state}
+                  counts={facets.states}
+                  onChange={(state) =>
+                    apply({ ...filters, compare: { vehicle: filters.compare?.vehicle ?? null, state } })
                   }
-                  className="md:min-w-64 md:flex-1"
                 />
-              )}
-              <CompareStateSelect
-                value={filters.compare?.state ?? null}
-                current={filters.state}
-                counts={facets.states}
-                onChange={(state) =>
-                  apply({ ...filters, compare: { vehicle: filters.compare?.vehicle ?? null, state } })
-                }
-              />
-            </div>
-          ) : null}
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
         </div>
       ) : null}
     </>

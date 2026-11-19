@@ -1,12 +1,14 @@
 "use client";
 
 import { BellRing, Calculator, ChartColumn, Gavel, LayoutDashboard, type LucideIcon } from "lucide-react";
+import { LayoutGroup, motion } from "motion/react";
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { type ReactNode, Suspense, useEffect, useSyncExternalStore } from "react";
+import { type ReactNode, Suspense, useEffect, useId, useSyncExternalStore } from "react";
 
 import { toast } from "@/components/ui";
+import { MOTION_SPRING } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 import {
@@ -69,53 +71,64 @@ function NavList({
   saved,
 }: NavLinksProps & { pathname: string | null; saved?: Readonly<Record<string, string>> }) {
   const router = useRouter();
+  const groupId = useId();
 
   return (
-    <ul className="grid gap-px">
-      {NAV_ITEMS.map(({ href, label, icon: Icon, sections = [] }) => {
-        const isActive =
-          pathname !== null &&
-          [href, ...sections].some((section) => pathname === section || pathname.startsWith(`${section}/`));
-        const target = savedHref(saved?.[href], href);
-        const hasRestoredQuery = !isActive && target !== href && target.includes("?");
-        return (
-          <li key={href}>
-            <Link
-              href={target}
-              onClick={() => {
-                onNavigate?.();
-                if (hasRestoredQuery) {
-                  toast.info(`Filtros anteriores restaurados em ${label}.`, {
-                    action: {
-                      label: "Limpar",
-                      onClick: () => {
-                        clearRememberedFilter(href);
-                        router.push(href);
+    <LayoutGroup id={groupId}>
+      <ul className="grid gap-px">
+        {NAV_ITEMS.map(({ href, label, icon: Icon, sections = [] }) => {
+          const isActive =
+            pathname !== null &&
+            [href, ...sections].some((section) => pathname === section || pathname.startsWith(`${section}/`));
+          const target = savedHref(saved?.[href], href);
+          const hasRestoredQuery = !isActive && target !== href && target.includes("?");
+          return (
+            <li key={href}>
+              <Link
+                href={target}
+                onClick={() => {
+                  onNavigate?.();
+                  if (hasRestoredQuery) {
+                    toast.info(`Filtros anteriores restaurados em ${label}.`, {
+                      action: {
+                        label: "Limpar",
+                        onClick: () => {
+                          clearRememberedFilter(href);
+                          router.push(href);
+                        },
                       },
-                    },
-                  });
-                }
-              }}
-              aria-current={isActive ? "page" : undefined}
-              className={cn(
-                "group flex min-h-10 items-center gap-2.5 rounded-md px-2.5 text-body font-medium text-foreground-secondary transition-colors duration-120 outline-none hover:bg-foreground/5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent",
-                isActive && "bg-surface font-semibold text-foreground shadow-sm hover:bg-surface",
-              )}
-            >
-              <Icon
-                aria-hidden="true"
+                    });
+                  }
+                }}
+                aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "size-4 shrink-0 text-muted-subtle transition-colors duration-120 group-hover:text-foreground",
-                  isActive && "text-foreground",
+                  "group relative flex min-h-10 items-center gap-2.5 rounded-md px-2.5 text-body font-medium text-foreground-secondary transition-colors duration-120 outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                  isActive ? "font-semibold text-foreground" : "hover:bg-foreground/5 hover:text-foreground",
                 )}
-              />
-              {label}
-              {badges?.[href]}
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
+              >
+                {isActive ? (
+                  <motion.span
+                    aria-hidden="true"
+                    layoutId="nav-active-pill"
+                    transition={MOTION_SPRING}
+                    className="pointer-events-none absolute inset-0 rounded-md bg-surface shadow-sm"
+                  />
+                ) : null}
+                <Icon
+                  aria-hidden="true"
+                  className={cn(
+                    "relative z-10 size-4 shrink-0 text-muted-subtle transition-colors duration-120 group-hover:text-foreground",
+                    isActive && "text-foreground",
+                  )}
+                />
+                <span className="relative z-10">{label}</span>
+                {badges?.[href] ? <span className="relative z-10 ml-auto empty:hidden">{badges[href]}</span> : null}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </LayoutGroup>
   );
 }
 

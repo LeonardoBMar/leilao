@@ -3,5 +3,3 @@ export const tabListClass = "flex w-full gap-5 overflow-x-auto border-b border-b
 
 export const tabTriggerClass =
   "relative min-h-10 shrink-0 border-b-2 border-transparent px-0.5 text-body font-medium text-muted transition-colors duration-120 outline-none hover:text-foreground focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2";
-
-export const tabActiveClass = "border-foreground font-semibold text-foreground";

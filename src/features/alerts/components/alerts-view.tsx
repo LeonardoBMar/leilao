@@ -3,7 +3,7 @@ import type { Route } from "next";
 import Link from "next/link";
 
 import { ListPagination } from "@/components/layout/list-pagination";
-import { ButtonLink, EmptyState, LinkTabs, Skeleton } from "@/components/ui";
+import { ButtonLink, EmptyState, LinkTabs, MotionList, MotionListItem, Skeleton } from "@/components/ui";
 
 import { listAlerts } from "../queries";
 import { alertFiltersSchema } from "../schemas";
@@ -72,13 +72,13 @@ export async function AlertsView({ searchParams }: { searchParams: SearchParams 
         />
       ) : (
         <section aria-label="Alertas" className="grid gap-4">
-          <ul className="grid gap-x-7 gap-y-11 sm:grid-cols-2 xl:grid-cols-3">
+          <MotionList className="grid gap-x-7 gap-y-11 sm:grid-cols-2 xl:grid-cols-3">
             {page.items.map((alert, index) => (
-              <li key={alert.id}>
+              <MotionListItem key={alert.id}>
                 <AlertCard alert={alert} eager={index < FIRST_ROW} />
-              </li>
+              </MotionListItem>
             ))}
-          </ul>
+          </MotionList>
           <ListPagination
             basePath="/alertas"
             params={{ monitor: filters.watchId, situacao: filters.unreadOnly ? undefined : "todos" }}

@@ -1,7 +1,7 @@
 import { Radar } from "lucide-react";
 
 import { ListPagination } from "@/components/layout/list-pagination";
-import { Alert, AlertDescription, ButtonLink, EmptyState, Skeleton } from "@/components/ui";
+import { Alert, AlertDescription, ButtonLink, EmptyState, MotionList, MotionListItem, Skeleton } from "@/components/ui";
 import { DEFAULT_REGION } from "@/domain/listings/region";
 
 import { activeFilters, clearedFilters } from "../filter-labels";
@@ -72,13 +72,13 @@ export async function ListingsView({ searchParams, basePath, auction }: Listings
               </AlertDescription>
             </Alert>
           ) : null}
-          <ul className="grid gap-x-7 gap-y-11 sm:grid-cols-2 xl:grid-cols-3">
+          <MotionList className="grid gap-x-7 gap-y-11 sm:grid-cols-2 xl:grid-cols-3">
             {page.items.map((item, index) => (
-              <li key={item.id}>
+              <MotionListItem key={item.id}>
                 <ListingCard item={item} eager={index < FIRST_ROW} />
-              </li>
+              </MotionListItem>
             ))}
-          </ul>
+          </MotionList>
           <ListPagination
             basePath={basePath}
             params={params}

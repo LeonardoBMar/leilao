@@ -14,6 +14,7 @@ export * from "./field";
 export * from "./input";
 export * from "./link-tabs";
 export * from "./money";
+export * from "./motion-list";
 export * from "./pagination";
 export * from "./popover";
 export * from "./radio-group";

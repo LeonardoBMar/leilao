@@ -1,6 +1,7 @@
 "use client";
 
 import { CalendarRange, ChevronDown, LoaderCircle, MapPin, Plus, SlidersHorizontal, Wallet } from "lucide-react";
+import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useId, useOptimistic, useRef, useTransition } from "react";
 
@@ -29,6 +30,7 @@ import {
 } from "@/components/ui";
 import type { ListingCriteria } from "@/domain/listings/criteria";
 import { SaveWatchButton } from "@/features/watches/components/save-watch-button";
+import { MOTION_EXIT_TRANSITION, MOTION_LAYOUT_TRANSITION } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 import {
@@ -285,48 +287,81 @@ export function ListingFilterBar({
       </div>
 
       {chips.length > 0 || shortcuts.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-2">
-          {chips.length > 0 ? (
-            <ul aria-label="Filtros ativos" className="contents">
-              {chips.map((chip) => (
-                <li key={chip.id} className="flex max-w-full">
-                  <RemovableChip
-                    removeLabel={`Remover filtro ${chip.label}`}
-                    onRemove={() => applyAndFocusStatus(chip.without)}
+        <LayoutGroup>
+          <div className="relative flex flex-wrap items-center gap-2">
+            {chips.length > 0 ? (
+              <ul aria-label="Filtros ativos" className="contents">
+                <AnimatePresence mode="popLayout" initial={false}>
+                  {chips.map((chip) => (
+                    <motion.li
+                      key={chip.id}
+                      layout="position"
+                      initial={{ opacity: 0, scale: 0.94 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.94, transition: MOTION_EXIT_TRANSITION }}
+                      transition={MOTION_LAYOUT_TRANSITION}
+                      className="flex max-w-full"
+                    >
+                      <RemovableChip
+                        removeLabel={`Remover filtro ${chip.label}`}
+                        onRemove={() => applyAndFocusStatus(chip.without)}
+                      >
+                        {chip.label}
+                      </RemovableChip>
+                    </motion.li>
+                  ))}
+                </AnimatePresence>
+              </ul>
+            ) : null}
+            <AnimatePresence mode="popLayout" initial={false}>
+              {chips.length > 1 ? (
+                <motion.div
+                  key="clear-all"
+                  layout="position"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0, transition: MOTION_EXIT_TRANSITION }}
+                  transition={MOTION_LAYOUT_TRANSITION}
+                >
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="h-10 px-1"
+                    onClick={() => applyAndFocusStatus(clearedFilters(filters))}
                   >
-                    {chip.label}
-                  </RemovableChip>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          {chips.length > 1 ? (
-            <Button
-              variant="link"
-              size="sm"
-              className="h-10 px-1"
-              onClick={() => applyAndFocusStatus(clearedFilters(filters))}
-            >
-              Limpar tudo
-            </Button>
-          ) : null}
-          {shortcuts.length > 0 ? (
-            <ul aria-label="Atalhos de filtro" className="contents">
-              {shortcuts.map((shortcut) => (
-                <li key={shortcut.label} className="flex">
-                  <button
-                    type="button"
-                    onClick={() => applyAndFocusStatus(shortcut.next)}
-                    className="inline-flex min-h-10 items-center gap-1 rounded-full border border-dashed border-control-border px-3 text-caption font-medium text-foreground-secondary transition-colors duration-120 outline-none hover:border-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent"
-                  >
-                    <Plus aria-hidden="true" className="size-3.5" />
-                    {shortcut.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </div>
+                    Limpar tudo
+                  </Button>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+            {shortcuts.length > 0 ? (
+              <ul aria-label="Atalhos de filtro" className="contents">
+                <AnimatePresence mode="popLayout" initial={false}>
+                  {shortcuts.map((shortcut) => (
+                    <motion.li
+                      key={shortcut.label}
+                      layout="position"
+                      initial={{ opacity: 0, scale: 0.94 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.94, transition: MOTION_EXIT_TRANSITION }}
+                      transition={MOTION_LAYOUT_TRANSITION}
+                      className="flex"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => applyAndFocusStatus(shortcut.next)}
+                        className="inline-flex min-h-10 items-center gap-1 rounded-full border border-dashed border-control-border px-3 text-caption font-medium text-foreground-secondary transition-colors duration-120 outline-none hover:border-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent"
+                      >
+                        <Plus aria-hidden="true" className="size-3.5" />
+                        {shortcut.label}
+                      </button>
+                    </motion.li>
+                  ))}
+                </AnimatePresence>
+              </ul>
+            ) : null}
+          </div>
+        </LayoutGroup>
       ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">

@@ -1,8 +1,9 @@
 "use client";
 
 import { Car, ChevronDown, ChevronUp, Clock, ExternalLink, Images, KeyRound, MapPin } from "lucide-react";
+import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import Image from "next/image";
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import { Badge, Button, Money } from "@/components/ui";
 import type { Cents } from "@/domain/money";
@@ -14,6 +15,7 @@ import {
   INSPECTION_VARIANTS,
 } from "@/features/listings/labels";
 import { formatDateTime, formatKm } from "@/lib/format";
+import { MOTION_ENTER_TRANSITION, MOTION_EXIT_TRANSITION, MOTION_SPRING } from "@/lib/motion";
 
 import type { AnalysisVehicleContext } from "../types";
 
@@ -32,6 +34,7 @@ type AnalysisVehicleStripProps = {
 export function AnalysisVehicleStrip({ title, currentBid, context, photoUrls }: AnalysisVehicleStripProps) {
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const thumbsGroupId = useId();
   const coverUrl = photoUrls[0] ?? null;
   const activeUrl = photoUrls[selectedIndex] ?? coverUrl;
 
@@ -154,44 +157,60 @@ export function AnalysisVehicleStrip({ title, currentBid, context, photoUrls }: 
         </div>
       </div>
 
-      {galleryOpen && activeUrl ? (
-        <div className="grid gap-3 border-t border-border pt-4">
-          <div className="relative aspect-16/10 max-h-96 w-full overflow-hidden rounded-lg bg-surface-subtle">
-            <Image
-              src={activeUrl}
-              alt={`Foto ${selectedIndex + 1} de ${photoUrls.length} — ${title}`}
-              fill
-              unoptimized
-              sizes="(min-width: 1024px) 60vw, 100vw"
-              className="object-contain"
-            />
-          </div>
-          {photoUrls.length > 1 ? (
-            <ul className="flex gap-2 overflow-x-auto pb-1" aria-label="Miniaturas das fotos">
-              {photoUrls.map((url, index) => {
-                const isSelected = index === selectedIndex;
-                return (
-                  <li key={`${url}-${index}`} className="shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedIndex(index)}
-                      aria-current={isSelected ? "true" : undefined}
-                      aria-label={`Ver foto ${index + 1} de ${photoUrls.length}`}
-                      className={`relative h-14 w-20 overflow-hidden rounded-md border bg-surface-subtle outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-                        isSelected
-                          ? "border-accent ring-2 ring-accent/25"
-                          : "border-border opacity-75 hover:opacity-100"
-                      }`}
-                    >
-                      <Image src={url} alt="" fill unoptimized sizes="5rem" className="object-cover" />
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : null}
-        </div>
-      ) : null}
+      <AnimatePresence initial={false}>
+        {galleryOpen && activeUrl ? (
+          <motion.div
+            key="vehicle-gallery"
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0, transition: MOTION_ENTER_TRANSITION }}
+            exit={{ opacity: 0, y: -6, transition: MOTION_EXIT_TRANSITION }}
+            className="grid gap-3 border-t border-border pt-4"
+          >
+            <div className="relative aspect-16/10 max-h-96 w-full overflow-hidden rounded-lg bg-surface-subtle">
+              <Image
+                src={activeUrl}
+                alt={`Foto ${selectedIndex + 1} de ${photoUrls.length} — ${title}`}
+                fill
+                unoptimized
+                sizes="(min-width: 1024px) 60vw, 100vw"
+                className="object-contain"
+              />
+            </div>
+            {photoUrls.length > 1 ? (
+              <LayoutGroup id={thumbsGroupId}>
+                <ul className="flex gap-2 overflow-x-auto pb-1" aria-label="Miniaturas das fotos">
+                  {photoUrls.map((url, index) => {
+                    const isSelected = index === selectedIndex;
+                    return (
+                      <li key={`${url}-${index}`} className="shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedIndex(index)}
+                          aria-current={isSelected ? "true" : undefined}
+                          aria-label={`Ver foto ${index + 1} de ${photoUrls.length}`}
+                          className={`relative h-14 w-20 overflow-hidden rounded-md border bg-surface-subtle transition-opacity duration-120 outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                            isSelected ? "border-transparent" : "border-border opacity-75 hover:opacity-100"
+                          }`}
+                        >
+                          <Image src={url} alt="" fill unoptimized sizes="5rem" className="object-cover" />
+                          {isSelected ? (
+                            <motion.span
+                              aria-hidden="true"
+                              layoutId="vehicle-thumb-active"
+                              transition={MOTION_SPRING}
+                              className="pointer-events-none absolute inset-0 rounded-md border-2 border-accent"
+                            />
+                          ) : null}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </LayoutGroup>
+            ) : null}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </section>
   );
 }

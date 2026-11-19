@@ -13,6 +13,7 @@ export function CatalogTabs({
   return (
     <LinkTabs
       label="Visões de leilões"
+      layoutId="catalog-tabs"
       tabs={[
         { href: withQuery(CATALOG_AUCTIONS_PATH, params), label: "Por leilão", active: active === "auctions" },
         { href: withQuery(CATALOG_LISTINGS_PATH, params), label: "Todos os veículos", active: active === "listings" },

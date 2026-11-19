@@ -1,29 +1,69 @@
 "use client";
 
 import * as TabsPrimitive from "@radix-ui/react-tabs";
+import { LayoutGroup, motion } from "motion/react";
+import { createContext, use, useId, useState } from "react";
 
+import { MOTION_SPRING } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 import { tabListClass, tabTriggerClass } from "./tab-styles";
 
-function Tabs({ className, ...props }: TabsPrimitive.TabsProps) {
-  return <TabsPrimitive.Root className={cn("w-full min-w-0", className)} {...props} />;
+const TabsContext = createContext<string | undefined>(undefined);
+
+function Tabs({ className, value, defaultValue, onValueChange, ...props }: TabsPrimitive.TabsProps) {
+  const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
+  const activeValue = value !== undefined ? value : uncontrolledValue;
+
+  return (
+    <TabsContext value={activeValue}>
+      <TabsPrimitive.Root
+        className={cn("w-full min-w-0", className)}
+        value={value}
+        defaultValue={defaultValue}
+        onValueChange={(next) => {
+          if (value === undefined) setUncontrolledValue(next);
+          onValueChange?.(next);
+        }}
+        {...props}
+      />
+    </TabsContext>
+  );
 }
 
 function TabsList({ className, ...props }: TabsPrimitive.TabsListProps) {
-  return <TabsPrimitive.List className={cn(tabListClass, className)} {...props} />;
+  const groupId = useId();
+  return (
+    <LayoutGroup id={groupId}>
+      <TabsPrimitive.List className={cn(tabListClass, className)} {...props} />
+    </LayoutGroup>
+  );
 }
 
-function TabsTrigger({ className, ...props }: TabsPrimitive.TabsTriggerProps) {
+function TabsTrigger({ className, value, children, ...props }: TabsPrimitive.TabsTriggerProps) {
+  const activeValue = use(TabsContext);
+  const isActive = activeValue === value;
+
   return (
     <TabsPrimitive.Trigger
+      value={value}
       className={cn(
         tabTriggerClass,
-        "disabled:cursor-not-allowed disabled:text-muted-subtle data-[state=active]:border-foreground data-[state=active]:font-semibold data-[state=active]:text-foreground",
+        "disabled:cursor-not-allowed disabled:text-muted-subtle data-[state=active]:font-semibold data-[state=active]:text-foreground",
         className,
       )}
       {...props}
-    />
+    >
+      {children}
+      {isActive ? (
+        <motion.span
+          aria-hidden="true"
+          layoutId="tabs-indicator"
+          transition={MOTION_SPRING}
+          className="pointer-events-none absolute inset-x-0 -bottom-0.5 h-0.5 bg-foreground"
+        />
+      ) : null}
+    </TabsPrimitive.Trigger>
   );
 }
 

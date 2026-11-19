@@ -2,7 +2,7 @@ import { BellRing, Plus } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 
-import { Badge, ButtonLink, EmptyState, Skeleton } from "@/components/ui";
+import { Badge, ButtonLink, EmptyState, MotionList, MotionListItem, Skeleton } from "@/components/ui";
 
 import { listWatches } from "../queries";
 import { discoveredHref, watchTitle } from "../summary";
@@ -30,13 +30,13 @@ export async function WatchList() {
   }
 
   return (
-    <ul className="border-b border-border">
+    <MotionList className="border-b border-border">
       {watches.map((watch) => (
-        <li key={watch.id}>
+        <MotionListItem key={watch.id}>
           <WatchCard watch={watch} />
-        </li>
+        </MotionListItem>
       ))}
-    </ul>
+    </MotionList>
   );
 }
 

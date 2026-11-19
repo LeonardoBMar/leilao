@@ -1,8 +1,10 @@
 "use client";
 
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
+import { LayoutGroup, motion } from "motion/react";
 import { useId } from "react";
 
+import { MOTION_SPRING } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 export type SegmentedOption<T extends string> = { value: T; label: React.ReactNode };
@@ -33,32 +35,46 @@ function SegmentedControl<T extends string>({
   className,
 }: SegmentedControlProps<T>) {
   const labelId = useId();
+  const groupId = useId();
   return (
     <div className={cn("grid min-w-0 gap-2", className)}>
       <span id={labelId} className={hideLabel ? "sr-only" : "text-label text-foreground"}>
         {label}
       </span>
-      <RadioGroupPrimitive.Root
-        aria-labelledby={labelId}
-        name={name}
-        value={value}
-        onValueChange={(next) => {
-          const option = options.find((item) => item.value === next);
-          if (option) onValueChange(option.value);
-        }}
-        orientation="horizontal"
-        className="flex w-full gap-0.5 rounded-md bg-surface-subtle p-0.5"
-      >
-        {options.map((option) => (
-          <RadioGroupPrimitive.Item
-            key={option.value}
-            value={option.value}
-            className="flex min-h-10 min-w-0 flex-1 items-center justify-center rounded-sm px-2 py-1 text-center text-caption leading-tight font-medium text-foreground-secondary transition-colors duration-120 outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent data-[state=checked]:bg-surface data-[state=checked]:font-semibold data-[state=checked]:text-foreground data-[state=checked]:shadow-sm"
-          >
-            {option.label}
-          </RadioGroupPrimitive.Item>
-        ))}
-      </RadioGroupPrimitive.Root>
+      <LayoutGroup id={groupId}>
+        <RadioGroupPrimitive.Root
+          aria-labelledby={labelId}
+          name={name}
+          value={value}
+          onValueChange={(next) => {
+            const option = options.find((item) => item.value === next);
+            if (option) onValueChange(option.value);
+          }}
+          orientation="horizontal"
+          className="flex w-full gap-0.5 rounded-md bg-surface-subtle p-0.5"
+        >
+          {options.map((option) => {
+            const isSelected = option.value === value;
+            return (
+              <RadioGroupPrimitive.Item
+                key={option.value}
+                value={option.value}
+                className="relative flex min-h-10 min-w-0 flex-1 items-center justify-center rounded-sm px-2 py-1 text-center text-caption leading-tight font-medium text-foreground-secondary transition-colors duration-120 outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent data-[state=checked]:font-semibold data-[state=checked]:text-foreground"
+              >
+                {isSelected ? (
+                  <motion.span
+                    aria-hidden="true"
+                    layoutId="segmented-indicator"
+                    transition={MOTION_SPRING}
+                    className="pointer-events-none absolute inset-0 rounded-sm bg-surface shadow-sm"
+                  />
+                ) : null}
+                <span className="relative z-10">{option.label}</span>
+              </RadioGroupPrimitive.Item>
+            );
+          })}
+        </RadioGroupPrimitive.Root>
+      </LayoutGroup>
     </div>
   );
 }

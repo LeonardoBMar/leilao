@@ -13,6 +13,7 @@ export function MarketTabs({ active }: { active: MarketTab }) {
   return (
     <LinkTabs
       label="Visões do mercado"
+      layoutId="market-tabs"
       tabs={[
         { href: MARKET_PATH, label: "Avaliar", active: active === "evaluate" },
         { href: PANORAMA_PATH, label: "Panorama", active: active === "panorama" },

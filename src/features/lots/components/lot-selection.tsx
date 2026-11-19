@@ -1,9 +1,11 @@
 "use client";
 
 import { Archive, ArchiveRestore, Eye, EyeOff, X } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { createContext, use, useState, useTransition } from "react";
 
 import { Button, Checkbox, toast } from "@/components/ui";
+import { MOTION_ENTER_TRANSITION, MOTION_EXIT_TRANSITION } from "@/lib/motion";
 
 import { bulkLotAction, type BulkLotOperation } from "../actions";
 
@@ -83,47 +85,55 @@ export function LotBulkBar() {
   const selection = useSelection();
   const [isPending, startTransition] = useTransition();
   const [running, setRunning] = useState<BulkLotOperation | null>(null);
-  if (!selection || selection.selected.size === 0) return null;
-  const { selected, clear } = selection;
+  const count = selection?.selected.size ?? 0;
 
   function run(operation: BulkLotOperation) {
+    if (!selection) return;
     setRunning(operation);
     startTransition(async () => {
-      const result = await bulkLotAction([...selected], operation);
+      const result = await bulkLotAction([...selection.selected], operation);
       if (result.status === "error") toast.error(result.message);
       else {
         if (result.status === "success" && result.message) toast.success(result.message);
-        clear();
+        selection.clear();
       }
     });
   }
 
   return (
-    <div
-      role="toolbar"
-      aria-label="Ações nos lotes selecionados"
-      className="sticky top-16 z-10 flex flex-wrap items-center gap-2 rounded-lg border border-border bg-surface p-2 shadow-sm lg:top-2"
-    >
-      <p className="px-2 text-label text-foreground">
-        {selected.size} {selected.size === 1 ? "selecionado" : "selecionados"}
-      </p>
-      {OPERATIONS.map(({ operation, label, icon: Icon }) => (
-        <Button
-          key={operation}
-          variant="ghost"
-          size="sm"
-          disabled={isPending}
-          loading={isPending && running === operation}
-          onClick={() => run(operation)}
+    <AnimatePresence initial={false}>
+      {selection && count > 0 ? (
+        <motion.div
+          key="bulk-bar"
+          role="toolbar"
+          aria-label="Ações nos lotes selecionados"
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0, transition: MOTION_ENTER_TRANSITION }}
+          exit={{ opacity: 0, y: -6, transition: MOTION_EXIT_TRANSITION }}
+          className="sticky top-16 z-10 flex flex-wrap items-center gap-2 rounded-lg border border-border bg-surface p-2 shadow-sm lg:top-2"
         >
-          <Icon aria-hidden="true" />
-          {label}
-        </Button>
-      ))}
-      <Button variant="ghost" size="sm" className="ml-auto" onClick={clear} disabled={isPending}>
-        <X aria-hidden="true" />
-        Limpar seleção
-      </Button>
-    </div>
+          <p className="px-2 text-label text-foreground tabular-nums">
+            {count} {count === 1 ? "selecionado" : "selecionados"}
+          </p>
+          {OPERATIONS.map(({ operation, label, icon: Icon }) => (
+            <Button
+              key={operation}
+              variant="ghost"
+              size="sm"
+              disabled={isPending}
+              loading={isPending && running === operation}
+              onClick={() => run(operation)}
+            >
+              <Icon aria-hidden="true" />
+              {label}
+            </Button>
+          ))}
+          <Button variant="ghost" size="sm" className="ml-auto" onClick={selection.clear} disabled={isPending}>
+            <X aria-hidden="true" />
+            Limpar seleção
+          </Button>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
   );
 }
