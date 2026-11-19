@@ -23,7 +23,7 @@ export function AnalysisReadonly({
   const complete = completeInputs(inputs);
 
   return (
-    <div className="grid items-start gap-9 xl:grid-cols-[minmax(0,1fr)_28.75rem] xl:gap-14">
+    <div className="grid items-start gap-9 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_28.75rem] xl:gap-14">
       <div className="grid content-start gap-8">
         <Section className="gap-2.5">
           <SectionTitle>Referências de preço</SectionTitle>
