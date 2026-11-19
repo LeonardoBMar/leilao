@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Badge, cardVariants } from "@/components/ui";
 import { FixAllDraftsButton } from "@/features/analyses/components/fix-all-drafts-button";
 import { RecordResultButton } from "@/features/results/components/record-result-button";
-import { formatDate, formatDateTime } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 import { getPendingItems } from "../queries";
@@ -49,15 +49,12 @@ export async function PendingItems() {
           {awaitingResult.map((item) => (
             <li key={item.lotId} className="flex items-center justify-between gap-3">
               <span className="grid min-w-0 gap-0.5">
-                <span className="flex flex-wrap items-center gap-2">
-                  <Link
-                    href={`/lotes/${item.lotId}`}
-                    className="min-w-0 truncate font-semibold text-foreground hover:underline"
-                  >
-                    {item.lotLabel}
-                  </Link>
-                  {item.toConfirm ? <Badge variant="warning">A confirmar</Badge> : null}
-                </span>
+                <Link
+                  href={`/lotes/${item.lotId}`}
+                  className="min-w-0 truncate font-semibold text-foreground hover:underline"
+                >
+                  {item.lotLabel}
+                </Link>
                 <span className="truncate text-caption text-muted">
                   {item.auctionName} · {formatDate(item.startsAt)}
                 </span>
@@ -95,7 +92,9 @@ export async function PendingItems() {
                     </span>
                     {!draft.canFix ? <Badge variant="outline">Incompleto</Badge> : null}
                   </span>
-                  <span className="text-caption text-muted">Atualizado em {formatDateTime(draft.updatedAt)}</span>
+                  <span className="truncate text-caption text-muted">
+                    {draft.auctionName} · {formatDate(draft.startsAt)}
+                  </span>
                 </span>
                 <ChevronRight
                   aria-hidden="true"

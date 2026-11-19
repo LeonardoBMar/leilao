@@ -69,9 +69,16 @@ export const getPendingItems = cache(async (): Promise<PendingItems> => {
       select: {
         id: true,
         version: true,
-        updatedAt: true,
         ...analysisColumns,
-        lot: { select: { id: true, lotNumber: true, brand: true, model: true } },
+        lot: {
+          select: {
+            id: true,
+            lotNumber: true,
+            brand: true,
+            model: true,
+            auction: { select: { name: true, startsAt: true } },
+          },
+        },
       },
     }),
     db.lot.findMany({
@@ -109,43 +116,37 @@ export const getPendingItems = cache(async (): Promise<PendingItems> => {
     version: draft.version,
     lotId: draft.lot.id,
     lotLabel: `Lote ${draft.lot.lotNumber} · ${draft.lot.brand} ${draft.lot.model}`,
-    updatedAt: draft.updatedAt,
+    auctionName: draft.lot.auction.name,
+    startsAt: draft.lot.auction.startsAt,
     canFix: prepareFixedAnalysis(toInputs(draft)).ok,
   }));
 
   // Lote ligado a anúncio (etapa 4): só é pendência quando o desfecho é ambíguo ("a confirmar").
-  const pendingAwaiting = awaiting
-    .map((lot) => {
-      const outcome =
-        lot.listing &&
-        listingOutcome(
-          {
-            status: lot.listing.status,
-            currentBid: toCents(lot.listing.currentBidCents),
-            finalBid: toCents(lot.listing.finalBidCents),
-            endsAt: lot.listing.endsAt,
-            checking: lot.listing.nextCheckAt !== null,
-          },
-          now,
-        );
-      return {
-        lot,
-        toConfirm: outcome?.kind === "to_confirm",
-        automatic: outcome !== null && outcome.kind !== "to_confirm",
-      };
-    })
-    .filter((item) => !item.automatic);
+  const pendingAwaiting = awaiting.filter((lot) => {
+    const outcome =
+      lot.listing &&
+      listingOutcome(
+        {
+          status: lot.listing.status,
+          currentBid: toCents(lot.listing.currentBidCents),
+          finalBid: toCents(lot.listing.finalBidCents),
+          endsAt: lot.listing.endsAt,
+          checking: lot.listing.nextCheckAt !== null,
+        },
+        now,
+      );
+    return outcome === null || outcome.kind === "to_confirm";
+  });
 
   return {
     drafts: allDrafts.slice(0, PENDING_LIMIT),
     draftsTotal: allDrafts.length,
     fixableDraftsTotal: allDrafts.filter((draft) => draft.canFix).length,
-    awaitingResult: pendingAwaiting.slice(0, PENDING_LIMIT).map(({ lot, toConfirm }) => ({
+    awaitingResult: pendingAwaiting.slice(0, PENDING_LIMIT).map((lot) => ({
       lotId: lot.id,
       lotLabel: `Lote ${lot.lotNumber} · ${lot.brand} ${lot.model}`,
       auctionName: lot.auction.name,
       startsAt: lot.auction.startsAt,
-      toConfirm,
     })),
     awaitingResultTotal: pendingAwaiting.length,
   };
