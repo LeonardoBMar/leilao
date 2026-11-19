@@ -1,6 +1,6 @@
 "use client";
 
-import { BellRing, Calculator, ChartColumn, Gavel, LayoutDashboard, type LucideIcon, ScanSearch } from "lucide-react";
+import { BellRing, Calculator, ChartColumn, Gavel, LayoutDashboard, type LucideIcon } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -18,8 +18,7 @@ const NAV_ITEMS: readonly NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/leiloes", label: "Leilões", icon: Gavel },
   { href: "/minhas-analises", label: "Minhas análises", icon: Calculator, sections: ["/lotes", "/analise"] },
-  { href: "/monitores", label: "Monitores", icon: ScanSearch },
-  { href: "/alertas", label: "Alertas", icon: BellRing },
+  { href: "/alertas", label: "Alertas", icon: BellRing, sections: ["/monitores"] },
   { href: "/mercado", label: "Mercado", icon: ChartColumn },
 ];
 
