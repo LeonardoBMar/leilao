@@ -599,9 +599,8 @@ export async function getCatalogAuction(key: CatalogAuctionKey): Promise<Catalog
   return { ...stats, date: catalogAuctionDate(stats), isOpen: stats.open > 0, userAuctionId: userAuction?.id ?? null };
 }
 
-/** Cartões em "Para analisar agora" e leilões em "Próximos leilões na região" (D-44). */
-/** Quantos anúncios completos carregamos para "Para analisar agora" (6 iniciais + expansão inline). */
-const TO_ANALYZE_SHOWN = 24;
+/** Cartões em "Para analisar agora" (os 4 melhores da fila) e leilões em "Próximos leilões na região" (D-44). */
+const TO_ANALYZE_SHOWN = 4;
 const REGION_AUCTIONS_SHOWN = 5;
 const REGION_AUCTIONS_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -671,7 +670,10 @@ export const getRegionOverview = cache(async (): Promise<RegionOverview> => {
 
   // Fase 2: o cartão completo só dos exibidos, na ordem da prioridade.
   const shownIds = toAnalyzeIds.slice(0, TO_ANALYZE_SHOWN);
-  const cards = await db.listing.findMany({ where: { id: { in: shownIds } }, select: listingCardSelect(user.id) });
+  const cards =
+    shownIds.length === 0
+      ? []
+      : await db.listing.findMany({ where: { id: { in: shownIds } }, select: listingCardSelect(user.id) });
   const cardById = new Map(cards.map((row) => [row.id, row]));
   const toAnalyze = shownIds.flatMap((id) => {
     const row = cardById.get(id);
