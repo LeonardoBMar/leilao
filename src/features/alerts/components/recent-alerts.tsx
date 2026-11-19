@@ -1,4 +1,4 @@
-import { BellRing } from "lucide-react";
+import { BellRing, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 import { ButtonLink, cardVariants } from "@/components/ui";
@@ -19,27 +19,37 @@ export async function RecentAlerts() {
   return (
     <section
       aria-labelledby="recent-alerts"
-      className={cn(cardVariants({ variant: "summary" }), "flex flex-wrap items-center gap-x-5 gap-y-2 px-5 py-4")}
+      className={cn(
+        cardVariants({ variant: "summary" }),
+        "flex flex-wrap items-center gap-x-5 gap-y-2 border-l-2 border-l-accent px-5 py-4",
+      )}
     >
-      <h2 id="recent-alerts" className="flex items-center gap-2 text-body font-semibold text-foreground">
-        <BellRing aria-hidden="true" className="size-4 text-accent" />
+      <h2 id="recent-alerts" className="flex items-center gap-2.5 text-body font-semibold text-foreground">
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-accent">
+          <BellRing aria-hidden="true" className="size-4" />
+        </span>
         {total === 1 ? "1 alerta não lido" : `${total} alertas não lidos`}
       </h2>
-      <ul className="flex min-w-0 flex-1 flex-wrap gap-x-4 gap-y-1 text-caption text-muted">
-        {items.map((alert) => (
-          <li key={alert.id} className="min-w-0 truncate">
+      <ul className="flex min-w-0 flex-1 flex-wrap gap-x-3 gap-y-1 text-caption text-muted">
+        {items.map((alert, index) => (
+          <li key={alert.id} className="flex min-w-0 items-center gap-2">
+            {index > 0 ? <span aria-hidden="true" className="size-1 shrink-0 rounded-full bg-border-strong" /> : null}
             {alert.listing.trackedLotId ? (
-              <Link href={`/lotes/${alert.listing.trackedLotId}`} className="hover:text-foreground hover:underline">
+              <Link
+                href={`/lotes/${alert.listing.trackedLotId}`}
+                className="min-w-0 truncate hover:text-foreground hover:underline"
+              >
                 {alert.listing.title}
               </Link>
             ) : (
-              alert.listing.title
+              <span className="min-w-0 truncate">{alert.listing.title}</span>
             )}
           </li>
         ))}
       </ul>
       <ButtonLink href="/alertas" variant="secondary" size="sm">
         Ver alertas
+        <ChevronRight aria-hidden="true" />
       </ButtonLink>
     </section>
   );
