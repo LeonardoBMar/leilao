@@ -159,6 +159,28 @@ export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail;
     );
   }
 
+  /** Preenche apenas os custos fixos ainda vazios com 0,00, mediante ação explícita do usuário (SPEC §7.6). */
+  function zeroEmptyFixedCosts() {
+    if (!formRef.current) return;
+    let filled = 0;
+    for (const [name] of FIXED_COST_LABELS) {
+      const input = formRef.current.elements.namedItem(name);
+      if (input instanceof HTMLInputElement && input.value.trim() === "") {
+        input.value = "0,00";
+        filled += 1;
+      }
+    }
+    if (filled === 0) return;
+    recompute();
+    toast.success(
+      filled === 1
+        ? "1 custo vazio preenchido com R$ 0,00."
+        : `${filled} custos vazios preenchidos com R$ 0,00.`,
+    );
+  }
+
+  const emptyFixedCostCount = FIXED_COST_LABELS.filter(([name]) => inputs[name] === null).length;
+
   const { inputs: saved, references } = analysis;
   const value = (field: string, stored?: string) => fieldValue(state, field) ?? prefill?.[field] ?? stored;
   const percent = (name: "riskReserveRate" | "desiredMarginRate", label: string, helperText: string) => (
@@ -285,9 +307,16 @@ export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail;
 
         <fieldset className="grid gap-4 md:grid-cols-2 md:gap-6">
           <legend className="mb-4 text-heading-3 text-foreground">Custos fixos</legend>
-          <p className="-mt-2 text-caption text-muted md:col-span-2">
-            Informe 0 quando não houver o custo. Campo vazio significa “não informado” e impede a fixação.
-          </p>
+          <div className="-mt-2 flex flex-wrap items-center justify-between gap-2 md:col-span-2">
+            <p className="text-caption text-muted">
+              Informe 0 quando não houver o custo. Campo vazio significa “não informado” e impede a fixação.
+            </p>
+            {emptyFixedCostCount > 0 ? (
+              <Button type="button" variant="outline" size="sm" onClick={zeroEmptyFixedCosts}>
+                Preencher vazios com R$ 0 ({emptyFixedCostCount})
+              </Button>
+            ) : null}
+          </div>
           {FIXED_COST_LABELS.map(([name, label]) => (
             <div key={name}>{money(name, label)}</div>
           ))}
