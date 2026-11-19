@@ -33,7 +33,7 @@ import { formatBps, formatBRL, formatMoneyInput, formatTime } from "@/lib/format
 
 import { autosaveDraftAction, discardDraftAction, saveAnalysisAction } from "../actions";
 import { fipeFill } from "../fipe-fill";
-import { FIELD_LABELS, FIXED_COST_LABELS, FORM_FIELD } from "../labels";
+import { FIELD_LABELS, FIXED_COST_LABELS } from "../labels";
 import { readAnalysisInputs } from "../read-inputs";
 import { liveSummary, type SummaryModel } from "../summary-model";
 import type { AnalysisDetail } from "../types";
@@ -70,7 +70,22 @@ export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail;
   const autosaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
-    if (state.status === "success" && state.message) toast.success(state.message);
+    if (state.status === "success" && state.message) {
+      toast.success(state.message);
+      return;
+    }
+    if (state.status === "error" && state.fieldErrors && formRef.current) {
+      const firstErrorField = Object.keys(state.fieldErrors)[0];
+      if (!firstErrorField) return;
+      const target =
+        firstErrorField === "commissionMode"
+          ? formRef.current.querySelector<HTMLElement>('[role="radiogroup"] [role="radio"]')
+          : formRef.current.elements.namedItem(firstErrorField);
+      if (target instanceof HTMLElement) {
+        target.focus();
+        target.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
   }, [state]);
 
   useEffect(() => () => clearTimeout(autosaveTimer.current), []);
@@ -170,7 +185,10 @@ export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail;
         filled += 1;
       }
     }
-    if (filled === 0) return;
+    if (filled === 0) {
+      toast.info("Nenhum custo vazio encontrado; revise valores inválidos.");
+      return;
+    }
     recompute();
     toast.success(
       filled === 1 ? "1 custo vazio preenchido com R$ 0,00." : `${filled} custos vazios preenchidos com R$ 0,00.`,
@@ -207,24 +225,6 @@ export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail;
 
   const summaryModel = liveSummary(inputs);
   const missingFields = summaryModel.outcome.kind === "incomplete" ? summaryModel.outcome.missing : [];
-
-  /** Impede ida desnecessária ao servidor quando faltam campos obrigatórios, focando o primeiro pendente. */
-  function handleFixClick(event: React.MouseEvent<HTMLButtonElement>) {
-    setIntent("fix");
-    const firstMissing = missingFields[0];
-    if (!firstMissing || !formRef.current) return;
-    event.preventDefault();
-    const fieldName = FORM_FIELD[firstMissing];
-    const target =
-      firstMissing === "commissionMode"
-        ? formRef.current.querySelector<HTMLElement>('[role="radiogroup"] [role="radio"]')
-        : formRef.current.elements.namedItem(fieldName);
-    if (target instanceof HTMLElement) {
-      target.focus();
-      target.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-    toast.warning(`Preencha “${FIELD_LABELS[firstMissing]}” antes de fixar a análise.`);
-  }
 
   return (
     <div className="grid items-start gap-9 pb-24 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-10 lg:pb-0 xl:grid-cols-[minmax(0,1fr)_28.75rem] xl:gap-14">
@@ -450,7 +450,7 @@ export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail;
                 type="submit"
                 name="intent"
                 value="fix"
-                onClick={handleFixClick}
+                onClick={() => setIntent("fix")}
                 loading={pending && intent === "fix"}
                 loadingLabel="Fixando…"
               >
