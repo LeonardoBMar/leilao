@@ -1,3 +1,4 @@
+import { Eye } from "lucide-react";
 import Link from "next/link";
 
 import { compareToFixedLimit, type LimitComparison } from "@/domain/finance/calculator";
@@ -37,7 +38,8 @@ export async function FollowedLotsNav() {
 
   return (
     <section aria-labelledby="nav-followed" className="grid grid-cols-1 gap-1.5">
-      <h2 id="nav-followed" className="px-2.5 text-caption font-medium text-muted">
+      <h2 id="nav-followed" className="flex items-center gap-1.5 px-2.5 text-caption font-medium text-muted">
+        <Eye aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
         Acompanhando
       </h2>
       <ul className="grid grid-cols-1 gap-px">
@@ -69,7 +71,7 @@ export async function FollowedLotsNav() {
           href="/minhas-analises?acompanhados=1&resultado=sem"
           className="px-2.5 text-caption text-muted hover:text-foreground hover:underline"
         >
-          Ver os {page.total}
+          Ver todos
         </Link>
       ) : null}
     </section>
