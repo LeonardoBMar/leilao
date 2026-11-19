@@ -1,25 +1,47 @@
 "use client";
 
-import { ClipboardPlus } from "lucide-react";
+import { ArrowRight, ClipboardPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 
-import { Button, toast } from "@/components/ui";
+import { Button, type ButtonProps, toast } from "@/components/ui";
 
 import { addListingToTrackerAction } from "../actions";
 
-/** Cria leilão, lote e rascunho a partir do anúncio sem sair da lista; o toast leva ao rascunho (etapa 3). */
-export function AddToTrackerButton({ listingId }: { listingId: string }) {
+type AddToTrackerButtonProps = {
+  listingId: string;
+  /** `"stay"` (padrão) adiciona sem sair da lista; `"open"` já abre o rascunho criado. */
+  mode?: "stay" | "open";
+  label?: string;
+  variant?: ButtonProps["variant"];
+  size?: ButtonProps["size"];
+  className?: string;
+  onAdded?: () => void;
+};
+
+/** Cria leilão, lote e rascunho a partir do anúncio: fica na lista ou abre direto o rascunho (etapa 3). */
+export function AddToTrackerButton({
+  listingId,
+  mode = "stay",
+  label,
+  variant,
+  size = "sm",
+  className = "w-fit",
+  onAdded,
+}: AddToTrackerButtonProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const isOpenMode = mode === "open";
+  const resolvedVariant = variant ?? (isOpenMode ? "primary" : "secondary");
+  const resolvedLabel = label ?? (isOpenMode ? "Analisar agora" : "Adicionar à análise");
 
   return (
     <Button
-      size="sm"
-      variant="secondary"
-      className="w-fit"
+      size={size}
+      variant={resolvedVariant}
+      className={className}
       loading={isPending}
-      loadingLabel="Adicionando…"
+      loadingLabel={isOpenMode ? "Abrindo…" : "Adicionando…"}
       onClick={() =>
         startTransition(async () => {
           const result = await addListingToTrackerAction(listingId);
@@ -27,13 +49,27 @@ export function AddToTrackerButton({ listingId }: { listingId: string }) {
             toast.error(result.message);
             return;
           }
+          onAdded?.();
           const { href } = result;
+          if (isOpenMode) {
+            router.push(href);
+            return;
+          }
           toast.success(result.message, { action: { label: "Abrir análise", onClick: () => router.push(href) } });
         })
       }
     >
-      <ClipboardPlus aria-hidden="true" />
-      Adicionar à análise
+      {isOpenMode ? (
+        <>
+          {resolvedLabel}
+          <ArrowRight aria-hidden="true" />
+        </>
+      ) : (
+        <>
+          <ClipboardPlus aria-hidden="true" />
+          {resolvedLabel}
+        </>
+      )}
     </Button>
   );
 }
