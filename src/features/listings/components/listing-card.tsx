@@ -230,7 +230,7 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
   const FitIcon = fit ? COMPACT_FIT_ICONS[fit] : null;
   const price = item.estimate?.price;
   return (
-    <article className="grid w-full grid-cols-[6.5rem_minmax(0,1fr)] gap-x-4 gap-y-2 sm:grid-cols-[8rem_minmax(0,1fr)]">
+    <article className="grid w-full grid-cols-[6.5rem_minmax(0,1fr)] gap-x-3.5 gap-y-2">
       <div className="relative row-span-2 aspect-4/3 overflow-hidden rounded-md bg-surface-subtle">
         {item.photoUrl ? (
           <Image src={item.photoUrl} alt="" fill unoptimized loading="lazy" sizes="8rem" className="object-cover" />
