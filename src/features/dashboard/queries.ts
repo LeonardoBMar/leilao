@@ -2,10 +2,11 @@ import "server-only";
 
 import { cache } from "react";
 
-import type { FixedLimit } from "@/domain/finance/calculator";
+import { type FixedLimit, prepareFixedAnalysis } from "@/domain/finance/calculator";
 import { listingOutcome } from "@/domain/listings/outcome";
 import { cents } from "@/domain/money";
 import { compareResult, limitIndicator } from "@/domain/results/results";
+import { analysisColumns, toInputs } from "@/features/analyses/queries";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
 
@@ -61,15 +62,15 @@ export const getPendingItems = cache(async (): Promise<PendingItems> => {
   const now = new Date();
   const activeLot = { archivedAt: null, auction: { archivedAt: null } };
 
-  const [drafts, awaiting] = await Promise.all([
+  const [rawDrafts, awaiting] = await Promise.all([
     db.analysis.findMany({
       where: { ownerId: user.id, status: "draft", lot: activeLot },
       orderBy: { updatedAt: "desc" },
-      take: PENDING_LIMIT,
       select: {
         id: true,
         version: true,
         updatedAt: true,
+        ...analysisColumns,
         lot: { select: { id: true, lotNumber: true, brand: true, model: true } },
       },
     }),
@@ -103,8 +104,17 @@ export const getPendingItems = cache(async (): Promise<PendingItems> => {
     }),
   ]);
 
+  const allDrafts = rawDrafts.map((draft) => ({
+    analysisId: draft.id,
+    version: draft.version,
+    lotId: draft.lot.id,
+    lotLabel: `Lote ${draft.lot.lotNumber} · ${draft.lot.brand} ${draft.lot.model}`,
+    updatedAt: draft.updatedAt,
+    canFix: prepareFixedAnalysis(toInputs(draft)).ok,
+  }));
+
   // Lote ligado a anúncio (etapa 4): só é pendência quando o desfecho é ambíguo ("a confirmar").
-  const awaitingResult = awaiting
+  const pendingAwaiting = awaiting
     .map((lot) => {
       const outcome =
         lot.listing &&
@@ -124,23 +134,19 @@ export const getPendingItems = cache(async (): Promise<PendingItems> => {
         automatic: outcome !== null && outcome.kind !== "to_confirm",
       };
     })
-    .filter((item) => !item.automatic)
-    .slice(0, PENDING_LIMIT);
+    .filter((item) => !item.automatic);
 
   return {
-    drafts: drafts.map(({ id, version, updatedAt, lot }) => ({
-      analysisId: id,
-      version,
-      lotId: lot.id,
-      lotLabel: `Lote ${lot.lotNumber} · ${lot.brand} ${lot.model}`,
-      updatedAt,
-    })),
-    awaitingResult: awaitingResult.map(({ lot, toConfirm }) => ({
+    drafts: allDrafts.slice(0, PENDING_LIMIT),
+    draftsTotal: allDrafts.length,
+    fixableDraftsTotal: allDrafts.filter((draft) => draft.canFix).length,
+    awaitingResult: pendingAwaiting.slice(0, PENDING_LIMIT).map(({ lot, toConfirm }) => ({
       lotId: lot.id,
       lotLabel: `Lote ${lot.lotNumber} · ${lot.brand} ${lot.model}`,
       auctionName: lot.auction.name,
       startsAt: lot.auction.startsAt,
       toConfirm,
     })),
+    awaitingResultTotal: pendingAwaiting.length,
   };
 });
