@@ -1,3 +1,4 @@
+import { ChevronRight, ClipboardList, FilePen, type LucideIcon, Trophy } from "lucide-react";
 import Link from "next/link";
 
 import { Badge, cardVariants } from "@/components/ui";
@@ -19,7 +20,8 @@ export async function PendingItems() {
       className={cn(cardVariants({ variant: "summary" }), "grid gap-4 px-6 py-5.5")}
     >
       <div className="flex items-center justify-between gap-3">
-        <h2 id="pending-items" className="text-heading-3 text-foreground">
+        <h2 id="pending-items" className="flex scroll-mt-20 items-center gap-2 text-heading-3 text-foreground">
+          <ClipboardList aria-hidden="true" className="size-4 shrink-0 text-warning" />
           Registros pendentes
         </h2>
         <Badge variant="warning" className="tabular-nums">
@@ -28,7 +30,7 @@ export async function PendingItems() {
       </div>
 
       {awaitingResult.length > 0 ? (
-        <Group id="pending-results" title="Aguardando resultado">
+        <Group id="pending-results" title="Aguardando resultado" icon={Trophy}>
           {awaitingResult.map((item) => (
             <li key={item.lotId} className="flex items-center justify-between gap-3">
               <span className="grid min-w-0 gap-0.5">
@@ -52,16 +54,24 @@ export async function PendingItems() {
       ) : null}
 
       {drafts.length > 0 ? (
-        <Group id="pending-drafts" title="Rascunhos de análise">
+        <Group id="pending-drafts" title="Rascunhos de análise" icon={FilePen}>
           {drafts.map((draft) => (
-            <li key={draft.analysisId} className="grid gap-0.5">
+            <li key={draft.analysisId}>
               <Link
                 href={`/analise/${draft.analysisId}`}
-                className="truncate font-semibold text-foreground hover:underline"
+                className="group flex items-center justify-between gap-3 rounded-md py-0.5"
               >
-                {draft.lotLabel} · v{draft.version}
+                <span className="grid min-w-0 gap-0.5">
+                  <span className="truncate font-semibold text-foreground group-hover:underline">
+                    {draft.lotLabel} · v{draft.version}
+                  </span>
+                  <span className="text-caption text-muted">Atualizado em {formatDateTime(draft.updatedAt)}</span>
+                </span>
+                <ChevronRight
+                  aria-hidden="true"
+                  className="size-4 shrink-0 text-muted-subtle transition-transform duration-120 group-hover:translate-x-0.5 group-hover:text-foreground"
+                />
               </Link>
-              <span className="text-caption text-muted">Atualizado em {formatDateTime(draft.updatedAt)}</span>
             </li>
           ))}
         </Group>
@@ -70,10 +80,21 @@ export async function PendingItems() {
   );
 }
 
-function Group({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
+function Group({
+  id,
+  title,
+  icon: Icon,
+  children,
+}: {
+  id: string;
+  title: string;
+  icon: LucideIcon;
+  children: React.ReactNode;
+}) {
   return (
     <section aria-labelledby={id} className="grid gap-2.5 border-t border-border-strong pt-3.5">
-      <h3 id={id} className="text-caption text-muted">
+      <h3 id={id} className="flex items-center gap-1.5 text-caption text-muted">
+        <Icon aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
         {title}
       </h3>
       <ul className="grid gap-3 text-body">{children}</ul>
