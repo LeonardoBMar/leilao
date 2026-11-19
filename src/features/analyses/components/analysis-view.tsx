@@ -33,10 +33,12 @@ export async function AnalysisView({ params }: { params: Promise<{ id: string }>
 
   const isFixed = analysis.status === "fixed";
   const { lot } = analysis;
-  const photoUrls = [
-    ...lotImages.flatMap((image) => (image.url === null ? [] : [image.url])),
-    ...lot.context.listingPhotoUrls,
-  ];
+  const photoUrls = Array.from(
+    new Set([
+      ...lotImages.flatMap((image) => (image.url === null ? [] : [image.url])),
+      ...lot.context.listingPhotoUrls,
+    ]),
+  );
 
   return (
     <div className="grid gap-7">
