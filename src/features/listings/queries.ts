@@ -600,7 +600,8 @@ export async function getCatalogAuction(key: CatalogAuctionKey): Promise<Catalog
 }
 
 /** Cartões em "Para analisar agora" e leilões em "Próximos leilões na região" (D-44). */
-const TO_ANALYZE_SHOWN = 6;
+/** Quantos anúncios completos carregamos para "Para analisar agora" (6 iniciais + expansão inline). */
+const TO_ANALYZE_SHOWN = 24;
 const REGION_AUCTIONS_SHOWN = 5;
 const REGION_AUCTIONS_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
