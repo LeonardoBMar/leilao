@@ -53,8 +53,14 @@ export default function DashboardPage() {
         <RecentAlerts />
       </Suspense>
 
-      <div className="grid gap-10 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] xl:gap-14">
-        <div className="grid content-start gap-10">
+      <div className="grid items-start gap-10 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] xl:gap-x-14 xl:gap-y-5">
+        <div className="order-first grid content-start empty:hidden xl:order-none xl:col-start-2 xl:row-start-1">
+          <Suspense fallback={null}>
+            <PendingItems />
+          </Suspense>
+        </div>
+
+        <div className="grid content-start gap-10 xl:col-start-1 xl:row-span-2 xl:row-start-1">
           <Section aria-labelledby="followed-lots" className="gap-2">
             <SectionHeader>
               <SectionTitle id="followed-lots">Lotes acompanhados</SectionTitle>
@@ -82,11 +88,10 @@ export default function DashboardPage() {
           </Section>
         </div>
 
-        <aside className="grid content-start gap-5" aria-label="Pendências e indicadores">
-          <Suspense fallback={null}>
-            <PendingItems />
-          </Suspense>
-
+        <aside
+          className="grid content-start gap-5 xl:col-start-2 xl:row-start-2"
+          aria-label="Indicadores e coleta automática"
+        >
           <Suspense fallback={<DecisionIndicatorSkeleton />}>
             <DecisionIndicator />
           </Suspense>
