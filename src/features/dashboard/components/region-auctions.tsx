@@ -1,7 +1,7 @@
 import { ChevronRight, CircleCheck, Clock } from "lucide-react";
 import Link from "next/link";
 
-import { EmptyState, Skeleton } from "@/components/ui";
+import { ButtonLink, EmptyState, Skeleton } from "@/components/ui";
 import { getRegionOverview } from "@/features/listings/queries";
 import { CATALOG_AUCTIONS_PATH, catalogAuctionPath } from "@/features/listings/search";
 import type { RegionAuction } from "@/features/listings/types";
@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
  * padrão ou nos monitores, agrupados por dia, com quantos lotes estão no filtro e quantos cabem no limite.
  */
 export async function RegionAuctions() {
-  const { auctions, auctionsTotal } = await getRegionOverview();
+  const { auctions } = await getRegionOverview();
 
   if (auctions.length === 0) {
     return (
@@ -90,11 +90,10 @@ export async function RegionAuctions() {
           </li>
         ))}
       </ol>
-      {auctionsTotal > auctions.length ? (
-        <Link href={CATALOG_AUCTIONS_PATH} className="w-fit text-label text-accent hover:underline">
-          Ver os {auctionsTotal} leilões no catálogo
-        </Link>
-      ) : null}
+      <ButtonLink href={CATALOG_AUCTIONS_PATH} variant="secondary" size="sm" className="w-fit">
+        Ver todos
+        <ChevronRight aria-hidden="true" />
+      </ButtonLink>
     </div>
   );
 }
