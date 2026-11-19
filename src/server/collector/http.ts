@@ -12,6 +12,8 @@ export type PoliteFetcher = SourceHttp & {
    * a parada por falhas seguidas (D-41); página que veio mas não serve (outro anúncio, formato novo) não conta.
    */
   readonly siteFailing: boolean;
+  /** Zera `siteFailing` antes de visitar outro anúncio (evita vazar falha HTTP da visita anterior). */
+  resetSiteFailing: () => void;
 };
 
 type Request = { url: string; form?: Readonly<Record<string, string>> };
@@ -25,6 +27,7 @@ type Options = {
   fetchImpl?: typeof fetch;
   sleep?: (ms: number) => Promise<void>;
   now?: () => number;
+  random?: () => number;
   /**
    * Fim do tempo da execução (ms desde a época, no relógio de `now`). Depois dele nenhuma requisição sai, nem nova
    * tentativa: a resposta é uma falha na hora. Uma fonte fora do ar não segura a coleta inteira até o job ser morto.
@@ -55,16 +58,31 @@ export function createPoliteFetcher({
   fetchImpl = fetch,
   sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
   now = Date.now,
+  random = Math.random,
   deadline = Number.POSITIVE_INFINITY,
 }: Options = {}): PoliteFetcher {
   let lastRequestAt = Number.NEGATIVE_INFINITY;
   let requests = 0;
   let siteFailing = false;
+  let deadlineReached = false;
 
   async function attempt({ url, form }: Request): Promise<FetchOutcome & { retryAfterMs?: number; retry: boolean }> {
+    if (deadlineReached || now() >= deadline) {
+      deadlineReached = true;
+      return { ok: false, status: null, error: DEADLINE_ERROR, retry: false };
+    }
     const wait = lastRequestAt + minIntervalMs - now();
-    if (wait > 0) await sleep(wait);
-    if (now() >= deadline) return { ok: false, status: null, error: DEADLINE_ERROR, retry: false };
+    if (wait > 0) {
+      if (now() + wait >= deadline) {
+        deadlineReached = true;
+        return { ok: false, status: null, error: DEADLINE_ERROR, retry: false };
+      }
+      await sleep(wait);
+    }
+    if (now() >= deadline) {
+      deadlineReached = true;
+      return { ok: false, status: null, error: DEADLINE_ERROR, retry: false };
+    }
     lastRequestAt = now();
     requests++;
     try {
@@ -82,7 +100,7 @@ export function createPoliteFetcher({
         status: response.status,
         error: `HTTP ${response.status}`,
         retry: RETRY_STATUSES.has(response.status),
-        retryAfterMs: parseRetryAfter(response.headers.get("retry-after")),
+        retryAfterMs: parseRetryAfter(response.headers.get("retry-after"), now()),
       };
     } catch (error) {
       return { ok: false, status: null, error: error instanceof Error ? error.message : String(error), retry: true };
@@ -96,7 +114,16 @@ export function createPoliteFetcher({
         siteFailing = isSiteFailure(outcome);
         return outcome;
       }
-      await sleep(Math.min(retryAfterMs ?? 2 ** tryNumber * 1_000, MAX_RETRY_AFTER_MS));
+      const jitter = 0.8 + random() * 0.4;
+      const baseDelay = retryAfterMs ?? Math.round(2 ** tryNumber * 1_000 * jitter);
+      const delay = Math.min(baseDelay, MAX_RETRY_AFTER_MS);
+      if (now() + delay >= deadline) {
+        deadlineReached = true;
+        const expired: FetchOutcome = { ok: false, status: null, error: DEADLINE_ERROR };
+        siteFailing = isSiteFailure(expired);
+        return expired;
+      }
+      await sleep(delay);
     }
   }
 
@@ -107,14 +134,19 @@ export function createPoliteFetcher({
     get siteFailing() {
       return siteFailing;
     },
+    resetSiteFailing() {
+      siteFailing = false;
+    },
     get: (url) => send({ url }),
     // Consulta de leitura (ex.: situação de vários lotes de uma vez): mesmas regras de ritmo e de novas tentativas.
     post: (url, form) => send({ url, form }),
   };
 }
 
-function parseRetryAfter(value: string | null): number | undefined {
+function parseRetryAfter(value: string | null, nowMs: number): number | undefined {
   if (!value) return undefined;
   const seconds = Number(value);
-  return Number.isFinite(seconds) && seconds >= 0 ? seconds * 1_000 : undefined;
+  if (Number.isFinite(seconds) && seconds >= 0) return seconds * 1_000;
+  const dateMs = Date.parse(value);
+  return Number.isFinite(dateMs) ? Math.max(0, dateMs - nowMs) : undefined;
 }

@@ -39,6 +39,9 @@ const DEFAULT_BUDGET_MS = 12 * 60_000;
  * sequência, porque prova que o site responde.
  */
 const MAX_CONSECUTIVE_FAILURES = 10;
+/** Falhas seguidas de formato/contrato sem nenhum anúncio gravado indicam quebra de layout da fonte. */
+const MAX_CONSECUTIVE_PARSE_FAILURES = 20;
+const SYSTEMIC_FAILURE_MIN_VISITS = 10;
 /** Execução ainda "running" depois disto foi morta antes de fechar o registro (o job passa de 20 min). */
 const STALE_RUN_MS = 30 * 60_000;
 /** Depois das fontes, tempo para casar na FIPE os anúncios gravados no fim da coleta (D-47, D-51). */
@@ -290,7 +293,11 @@ async function collectSource(input: {
       for (const { url, error } of common.errors) {
         if (errors.length < MAX_ERROR_SAMPLES) errors.push({ url, error });
       }
-      const status = discoveryFailed || common.errors.length > 0 || runId === "" ? "failed" : "succeeded";
+      const systemicParseFailure =
+        counters.failed >= SYSTEMIC_FAILURE_MIN_VISITS &&
+        ((counters.created === 0 && counters.updated === 0) || counters.failed > counters.created + counters.updated);
+      const status =
+        discoveryFailed || systemicParseFailure || common.errors.length > 0 || runId === "" ? "failed" : "succeeded";
       if (runId !== "") {
         await db.collectorRun.update({
           where: { id: runId },
@@ -342,14 +349,19 @@ async function collectListings(input: {
   const visits = planVisits({ due, discovered: discovery.listings, knownIds, budget: maxVisits });
 
   let consecutiveFailures = 0;
+  let consecutiveParseFailures = 0;
   for (const [index, visit] of visits.entries()) {
-    // Fim do tempo ou fonte que só falha: o resto fica para a próxima execução, com um registro só.
+    // Fim do tempo ou fonte que só falha (rede ou formato quebrado): o resto fica para a próxima execução.
     const stop =
       now().getTime() >= deadline
         ? DEADLINE_ERROR
         : consecutiveFailures >= MAX_CONSECUTIVE_FAILURES
           ? `${MAX_CONSECUTIVE_FAILURES} falhas seguidas`
-          : null;
+          : consecutiveParseFailures >= MAX_CONSECUTIVE_PARSE_FAILURES &&
+              counters.created === 0 &&
+              counters.updated === 0
+            ? `${MAX_CONSECUTIVE_PARSE_FAILURES} falhas seguidas de formato`
+            : null;
     if (stop) {
       fail("(execução)", `${stop}; ${visits.length - index} anúncios ficaram para a próxima execução`);
       return true;
@@ -358,19 +370,26 @@ async function collectListings(input: {
     // Qualquer falha afeta só este anúncio. Revisita que falha é reagendada com espera crescente,
     // para não gastar o limite de toda execução com o mesmo anúncio.
     let problem: string;
+    let siteError = false;
+    let parseError = false;
+    fetcher.resetSiteFailing();
     try {
       const outcome = await visitListing(source, fetcher, visit.externalId, { now: now(), place }, listReadAt);
       if (outcome.ok) {
         counters[outcome.value]++;
         consecutiveFailures = 0;
+        consecutiveParseFailures = 0;
         continue;
       }
       problem = outcome.error;
+      siteError = fetcher.siteFailing;
+      parseError = !siteError;
     } catch (error) {
-      // Erro inesperado (ex.: dado recusado por um CHECK do banco).
+      // Erro inesperado (ex.: dado recusado por um CHECK do banco): não é queda do site.
       problem = describeError(error);
     }
-    consecutiveFailures = fetcher.siteFailing ? consecutiveFailures + 1 : 0;
+    consecutiveFailures = siteError ? consecutiveFailures + 1 : 0;
+    consecutiveParseFailures = parseError ? consecutiveParseFailures + 1 : 0;
     fail(url, problem);
     if (visit.reason === "due") await recordCheckFailure(source.id, visit.externalId, now());
   }

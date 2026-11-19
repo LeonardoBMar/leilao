@@ -49,11 +49,36 @@ describe("createPoliteFetcher", () => {
   it("tenta de novo em 503 e erro de rede, com espera crescente", async () => {
     const clock = fakeClock();
     const { impl } = fakeFetch([new Response("", { status: 503 }), new Error("ECONNRESET"), new Response("ok")]);
-    const fetcher = createPoliteFetcher({ fetchImpl: impl, sleep: clock.sleep, now: clock.now, minIntervalMs: 0 });
+    const fetcher = createPoliteFetcher({
+      fetchImpl: impl,
+      sleep: clock.sleep,
+      now: clock.now,
+      minIntervalMs: 0,
+      random: () => 0.5,
+    });
 
     expect(await fetcher.get("https://fonte/1")).toEqual({ ok: true, text: "ok" });
     expect(clock.waits).toEqual([2_000, 4_000]);
     expect(fetcher.requests).toBe(3);
+  });
+
+  it("aplica jitter leve no backoff exponencial e segue Retry-After em HTTP-date", async () => {
+    const clock = fakeClock();
+    const { impl } = fakeFetch([
+      new Response("", { status: 503 }),
+      new Response("", { status: 429, headers: { "retry-after": "Thu, 01 Jan 1970 00:00:05 GMT" } }),
+      new Response("ok"),
+    ]);
+    const fetcher = createPoliteFetcher({
+      fetchImpl: impl,
+      sleep: clock.sleep,
+      now: clock.now,
+      minIntervalMs: 0,
+      random: () => 0,
+    });
+
+    await fetcher.get("https://fonte/1");
+    expect(clock.waits).toEqual([1_600, 3_400]);
   });
 
   it("segue o Retry-After do 429", async () => {
@@ -100,6 +125,8 @@ describe("createPoliteFetcher", () => {
       states.push(fetcher.siteFailing);
     }
     expect(states).toEqual([true, false, true, false]);
+    fetcher.resetSiteFailing();
+    expect(fetcher.siteFailing).toBe(false);
   });
 
   it("desiste depois do número máximo de tentativas", async () => {
@@ -127,17 +154,24 @@ describe("createPoliteFetcher", () => {
       deadline: 1_000,
     });
 
-    // A primeira tentativa sai; a espera de 2 s passa do fim e a segunda não sai.
+    // A primeira tentativa sai; a espera de 2 s passa do fim e a segunda não sai nem dorme.
     expect(await fetcher.get("https://fonte/1")).toEqual({ ok: false, status: null, error: DEADLINE_ERROR });
     expect(await fetcher.get("https://fonte/2")).toEqual({ ok: false, status: null, error: DEADLINE_ERROR });
     expect(calls).toHaveLength(1);
+    expect(clock.waits).toEqual([]);
     expect(fetcher.requests).toBe(1);
   });
 
   it("POST de formulário segue o mesmo ritmo e as mesmas novas tentativas", async () => {
     const clock = fakeClock();
     const { impl, calls } = fakeFetch([new Response("a"), new Response("", { status: 503 }), new Response("{}")]);
-    const fetcher = createPoliteFetcher({ fetchImpl: impl, sleep: clock.sleep, now: clock.now, minIntervalMs: 1_000 });
+    const fetcher = createPoliteFetcher({
+      fetchImpl: impl,
+      sleep: clock.sleep,
+      now: clock.now,
+      minIntervalMs: 1_000,
+      random: () => 0.5,
+    });
 
     await fetcher.get("https://fonte/lista");
     expect(await fetcher.post("https://fonte/consulta", { lotes: "1-2-", lote: "" })).toEqual({ ok: true, text: "{}" });

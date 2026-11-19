@@ -58,6 +58,7 @@ export async function backfillListings(input: {
       break;
     }
     const url = source.listingUrl(externalId);
+    fetcher.resetSiteFailing();
     try {
       const outcome = await visitListing(source, fetcher, externalId, { now: now(), place }, null);
       if (outcome.ok) {
