@@ -12,6 +12,7 @@ import {
   createDraft,
   type CreateDraftError,
   discardDraft,
+  fixAllReadyDrafts,
   fixAnalysis,
   type FixAnalysisError,
   saveDraft,
@@ -113,4 +114,27 @@ export async function discardDraftAction(id: string): Promise<ActionState> {
   if (!result.ok) return failure(FIX_ERRORS[result.error]);
 
   redirect(`/lotes/${result.value.lotId}`);
+}
+
+/** Fixa todos os rascunhos completos do usuário direto do dashboard. */
+export async function fixAllDraftsAction(): Promise<ActionState> {
+  const { fixed, skipped } = await fixAllReadyDrafts();
+  if (fixed === 0) {
+    return failure(
+      skipped > 0
+        ? "Nenhum rascunho pronto para fixar. Preencha os campos pendentes em cada rascunho."
+        : "Nenhum rascunho aberto para fixar.",
+    );
+  }
+
+  refresh();
+  const fixedLabel = fixed === 1 ? "1 análise fixada" : `${fixed} análises fixadas`;
+  if (skipped === 0) {
+    return { status: "success", message: `${fixedLabel} com as premissas preenchidas.` };
+  }
+  const skippedLabel =
+    skipped === 1
+      ? "1 continua como rascunho por ter campos pendentes"
+      : `${skipped} continuam como rascunho por ter campos pendentes`;
+  return { status: "success", message: `${fixedLabel}; ${skippedLabel}.` };
 }
