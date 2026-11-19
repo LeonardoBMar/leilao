@@ -12,6 +12,7 @@ import {
   differenceToLimit,
   type MaxBidOutcome,
   missingFields,
+  prepareFixedAnalysis,
   roomToFixedLimit,
   simulateBid,
 } from "./calculator";
@@ -277,5 +278,50 @@ describe("roomToFixedLimit", () => {
     expect(roomToFixedLimit(null, cents(1))).toBeNull();
     expect(roomToFixedLimit({ isViable: false }, cents(1))).toBeNull();
     expect(roomToFixedLimit({ isViable: true, maxBid: cents(1) }, null)).toBeNull();
+  });
+});
+
+describe("prepareFixedAnalysis", () => {
+  it("prepara análise viável calculando reserva e margem em centavos a partir de %", () => {
+    const result = prepareFixedAnalysis({
+      ...percentageExample,
+      riskReserve: null,
+      riskReserveRateBps: bps(500),
+      desiredMargin: null,
+      desiredMarginRateBps: bps(1_500),
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.isViable).toBe(true);
+      expect(result.value.riskReserve).toBe(reais(2_500));
+      expect(result.value.desiredMargin).toBe(reais(7_500));
+      expect(result.value.maxBid).toBeGreaterThan(0);
+      expect(result.value.totalAtMaxBid).not.toBeNull();
+      expect(result.value.marginAtMaxBid).not.toBeNull();
+    }
+  });
+
+  it("prepara análise completa porém inviável com saídas nulas", () => {
+    const result = prepareFixedAnalysis({ ...fixedExample, desiredMargin: reais(45_000) });
+    expect(result).toEqual({
+      ok: true,
+      value: {
+        riskReserve: reais(2_000),
+        desiredMargin: reais(45_000),
+        isViable: false,
+        maxBid: null,
+        totalAtMaxBid: null,
+        marginAtMaxBid: null,
+      },
+    });
+  });
+
+  it("rejeita análise incompleta ou com valor de mercado zerado", () => {
+    expect(prepareFixedAnalysis({ ...fixedExample, marketValue: null })).toEqual({ ok: false, error: "incomplete" });
+    expect(prepareFixedAnalysis({ ...fixedExample, repairCost: null })).toEqual({ ok: false, error: "incomplete" });
+    expect(prepareFixedAnalysis({ ...fixedExample, marketValue: cents(0) })).toEqual({
+      ok: false,
+      error: "market_value_not_positive",
+    });
   });
 });

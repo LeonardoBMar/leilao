@@ -166,6 +166,40 @@ export function calculateMaxBid(inputs: AnalysisInputs): MaxBidOutcome {
   };
 }
 
+export type PreparedFixedAnalysis = {
+  riskReserve: Cents;
+  desiredMargin: Cents;
+  isViable: boolean;
+  maxBid: Cents | null;
+  totalAtMaxBid: Cents | null;
+  marginAtMaxBid: Cents | null;
+};
+
+export type PrepareFixedError = "incomplete" | "market_value_not_positive";
+
+/** Valida e calcula as colunas gravadas ao fixar uma análise (RF-05, SPEC §7.6). */
+export function prepareFixedAnalysis(
+  inputs: AnalysisInputs,
+): { ok: true; value: PreparedFixedAnalysis } | { ok: false; error: PrepareFixedError } {
+  const outcome = calculateMaxBid(inputs);
+  const complete = completeInputs(inputs);
+  if (outcome.kind === "incomplete" || !complete.ok) return { ok: false, error: "incomplete" };
+  if (inputs.marketValue === null || inputs.marketValue <= 0) {
+    return { ok: false, error: "market_value_not_positive" };
+  }
+  return {
+    ok: true,
+    value: {
+      riskReserve: complete.value.riskReserve,
+      desiredMargin: complete.value.desiredMargin,
+      isViable: outcome.kind === "viable",
+      maxBid: outcome.kind === "viable" ? outcome.maxBid : null,
+      totalAtMaxBid: outcome.kind === "viable" ? outcome.totalAtMaxBid : null,
+      marginAtMaxBid: outcome.kind === "viable" ? outcome.marginAtMaxBid : null,
+    },
+  };
+}
+
 /** Diferença para o limite: positiva = folga, negativa = acima do limite. */
 export function differenceToLimit(maxBid: Cents, bid: Cents): Cents {
   return cents(maxBid - bid);
