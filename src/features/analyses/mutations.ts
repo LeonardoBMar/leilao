@@ -1,7 +1,7 @@
 import "server-only";
 
-import { calculateMaxBid, completeInputs, FORMULA_VERSION } from "@/domain/finance/calculator";
-import { getLotMarketReference } from "@/features/research/queries";
+import { FORMULA_VERSION, prepareFixedAnalysis } from "@/domain/finance/calculator";
+import { getLotMarketReference, getLotMarketReferences } from "@/features/research/queries";
 import { err, ok, type Result } from "@/lib/result";
 import { requireUser } from "@/server/auth";
 import { db, isUniqueViolation } from "@/server/db";
@@ -14,7 +14,7 @@ import {
   UNKNOWN_VEHICLE,
 } from "./draft-defaults";
 import { snapshotOf } from "./market-snapshot";
-import { analysisColumns } from "./queries";
+import { analysisColumns, toInputs } from "./queries";
 import { type AnalysisForm, toAnalysisInputs, toAnalysisReferences } from "./schemas";
 
 /** Formulário → colunas. Opcionais ausentes viram `null` (no update, `undefined` manteria o valor antigo). */
@@ -141,21 +141,18 @@ export type FixAnalysisError = SaveDraftError | "incomplete" | "market_value_not
  */
 export async function fixAnalysis(id: string, form: AnalysisForm): Promise<Result<null, FixAnalysisError>> {
   const user = await requireUser();
-  const inputs = toAnalysisInputs(form);
-  const outcome = calculateMaxBid(inputs);
-  const complete = completeInputs(inputs);
-  if (outcome.kind === "incomplete" || !complete.ok) return err("incomplete");
-  if (inputs.marketValue === null || inputs.marketValue <= 0) return err("market_value_not_positive");
+  const prepared = prepareFixedAnalysis(toAnalysisInputs(form));
+  if (!prepared.ok) return err(prepared.error);
+  const { isViable, maxBid, totalAtMaxBid, marginAtMaxBid, riskReserve, desiredMargin } = prepared.value;
 
-  const outputs =
-    outcome.kind === "viable"
-      ? {
-          isViable: true,
-          maxBidCents: outcome.maxBid,
-          totalAtMaxBidCents: outcome.totalAtMaxBid,
-          marginAtMaxBidCents: outcome.marginAtMaxBid,
-        }
-      : { isViable: false, maxBidCents: null, totalAtMaxBidCents: null, marginAtMaxBidCents: null };
+  const outputs = isViable
+    ? {
+        isViable: true,
+        maxBidCents: maxBid,
+        totalAtMaxBidCents: totalAtMaxBid,
+        marginAtMaxBidCents: marginAtMaxBid,
+      }
+    : { isViable: false, maxBidCents: null, totalAtMaxBidCents: null, marginAtMaxBidCents: null };
 
   // Mercado do lote no momento da fixação (D-74), gravado no mesmo UPDATE: depois dele a linha é imutável.
   const draft = await db.analysis.findFirst({
@@ -172,8 +169,8 @@ export async function fixAnalysis(id: string, form: AnalysisForm): Promise<Resul
       ...toAnalysisData(form),
       ...(market === null ? {} : { marketSnapshot: snapshotOf(market, fixedAt) }),
       // Reserva e margem em %: a versão fixada guarda também o valor aplicado em R$ (D-38).
-      riskReserveCents: complete.value.riskReserve,
-      desiredMarginCents: complete.value.desiredMargin,
+      riskReserveCents: riskReserve,
+      desiredMarginCents: desiredMargin,
       ...outputs,
       formulaVersion: FORMULA_VERSION,
       status: "fixed",
@@ -181,6 +178,84 @@ export async function fixAnalysis(id: string, form: AnalysisForm): Promise<Resul
     },
   });
   return count > 0 ? ok(null) : err(await whyNotDraft(id, user.id));
+}
+
+export type FixAllDraftsOutcome = { fixed: number; skipped: number };
+
+/**
+ * Fixa em lote todos os rascunhos ativos completos do usuário com as premissas já preenchidas (incluindo os valores
+ * padrão), recalculando saídas e snapshot de mercado no servidor. Rascunhos incompletos permanecem em aberto.
+ */
+export async function fixAllReadyDrafts(): Promise<FixAllDraftsOutcome> {
+  const user = await requireUser();
+  const activeLot = { archivedAt: null, auction: { archivedAt: null } };
+  const drafts = await db.analysis.findMany({
+    where: { ownerId: user.id, status: "draft", lot: activeLot },
+    select: {
+      id: true,
+      lotId: true,
+      updatedAt: true,
+      knownResultAtCreation: true,
+      ...analysisColumns,
+      lot: { select: { _count: { select: { results: true } } } },
+    },
+  });
+
+  const ready: {
+    id: string;
+    lotId: string;
+    updatedAt: Date;
+    knownResultAtCreation: boolean;
+    hasResult: boolean;
+    prepared: Extract<ReturnType<typeof prepareFixedAnalysis>, { ok: true }>["value"];
+  }[] = [];
+  let skipped = 0;
+
+  for (const draft of drafts) {
+    const prepared = prepareFixedAnalysis(toInputs(draft));
+    if (!prepared.ok) {
+      skipped += 1;
+      continue;
+    }
+    ready.push({
+      id: draft.id,
+      lotId: draft.lotId,
+      updatedAt: draft.updatedAt,
+      knownResultAtCreation: draft.knownResultAtCreation,
+      hasResult: draft.lot._count.results > 0,
+      prepared: prepared.value,
+    });
+  }
+
+  if (ready.length === 0) return { fixed: 0, skipped };
+
+  const markets = await getLotMarketReferences(ready.map((item) => item.lotId));
+  const fixedAt = new Date();
+
+  const results = await db.$transaction(
+    ready.map((item) => {
+      const market = markets.get(item.lotId);
+      return db.analysis.updateMany({
+        where: { id: item.id, ownerId: user.id, status: "draft", updatedAt: item.updatedAt },
+        data: {
+          ...(market === undefined ? {} : { marketSnapshot: snapshotOf(market, fixedAt) }),
+          riskReserveCents: item.prepared.riskReserve,
+          desiredMarginCents: item.prepared.desiredMargin,
+          isViable: item.prepared.isViable,
+          maxBidCents: item.prepared.maxBid,
+          totalAtMaxBidCents: item.prepared.totalAtMaxBid,
+          marginAtMaxBidCents: item.prepared.marginAtMaxBid,
+          knownResultAtCreation: item.knownResultAtCreation || item.hasResult,
+          formulaVersion: FORMULA_VERSION,
+          status: "fixed",
+          fixedAt,
+        },
+      });
+    }),
+  );
+
+  const fixed = results.reduce((total, { count }) => total + count, 0);
+  return { fixed, skipped };
 }
 
 /** Descarta o rascunho. Versões fixadas nunca são removidas. */
