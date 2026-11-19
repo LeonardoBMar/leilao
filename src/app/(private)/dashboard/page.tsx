@@ -30,6 +30,11 @@ export default function DashboardPage() {
       <div className="grid gap-5">
         <PageHeader
           title="Dashboard"
+          inlineMeta={
+            <Suspense fallback={<CollectorStatusLineSkeleton compact />}>
+              <CollectorStatusLine compact />
+            </Suspense>
+          }
           actions={
             <>
               <ButtonLink href="/minhas-analises/leiloes/novo" variant="secondary">
@@ -72,16 +77,6 @@ export default function DashboardPage() {
             </Suspense>
           </Section>
 
-          <Section aria-labelledby="to-analyze" className="gap-2">
-            <SectionTitle id="to-analyze" className="flex scroll-mt-20 items-center gap-2">
-              <Calculator aria-hidden="true" className="size-4 shrink-0 text-muted" />
-              Para analisar agora
-            </SectionTitle>
-            <Suspense fallback={<ToAnalyzeSkeleton />}>
-              <ToAnalyze />
-            </Suspense>
-          </Section>
-
           <Section aria-labelledby="region-auctions" className="gap-2">
             <SectionTitle id="region-auctions" className="flex scroll-mt-20 items-center gap-2">
               <CalendarDays aria-hidden="true" className="size-4 shrink-0 text-muted" />
@@ -94,18 +89,22 @@ export default function DashboardPage() {
         </div>
 
         <aside
-          className="grid content-start gap-5 xl:col-start-2 xl:row-start-2"
-          aria-label="Indicadores e coleta automática"
+          className="grid content-start gap-8 xl:col-start-2 xl:row-start-2"
+          aria-label="Indicadores e oportunidades para analisar"
         >
           <Suspense fallback={<DecisionIndicatorSkeleton />}>
             <DecisionIndicator />
           </Suspense>
 
-          <section aria-label="Coleta automática" className="border-t border-border pt-5">
-            <Suspense fallback={<CollectorStatusLineSkeleton />}>
-              <CollectorStatusLine />
+          <Section aria-labelledby="to-analyze" className="gap-2">
+            <SectionTitle id="to-analyze" className="flex scroll-mt-20 items-center gap-2">
+              <Calculator aria-hidden="true" className="size-4 shrink-0 text-muted" />
+              Para analisar agora
+            </SectionTitle>
+            <Suspense fallback={<ToAnalyzeSkeleton />}>
+              <ToAnalyze />
             </Suspense>
-          </section>
+          </Section>
         </aside>
       </div>
     </div>
