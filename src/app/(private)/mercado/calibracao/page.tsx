@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
+import { getCalibration } from "@/features/analyses/queries";
 import {
   CalibrationView,
   CalibrationViewSkeleton,
@@ -11,6 +12,11 @@ import { ResearchHeader, ResearchHeaderSkeleton } from "@/features/research/comp
 
 export const metadata: Metadata = { title: "Calibração · Mercado · Leilão Tracker" };
 
+async function CalibrationSection() {
+  const items = await getCalibration();
+  return <CalibrationView items={items} />;
+}
+
 export default function CalibrationPage() {
   return (
     <div className="grid gap-6">
@@ -19,7 +25,7 @@ export default function CalibrationPage() {
       </Suspense>
       <MarketTabs active="calibration" />
       <Suspense fallback={<CalibrationViewSkeleton />}>
-        <CalibrationView />
+        <CalibrationSection />
       </Suspense>
       <EngineQualityBlock />
     </div>

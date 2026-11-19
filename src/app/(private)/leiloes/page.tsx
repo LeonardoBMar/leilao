@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { CatalogAuctionsView, CatalogAuctionsViewSkeleton } from "@/features/listings/components/catalog-auctions-view";
 import { CollectorStatusLine, CollectorStatusLineSkeleton } from "@/features/listings/components/collector-status";
+import { SaveWatchButton } from "@/features/watches/components/save-watch-button";
 
 export const metadata: Metadata = { title: "Leilões · Leilão Tracker" };
 
@@ -19,7 +20,10 @@ export default function CatalogAuctionsPage({ searchParams }: PageProps<"/leiloe
         }
       />
       <Suspense fallback={<CatalogAuctionsViewSkeleton />}>
-        <CatalogAuctionsView searchParams={searchParams} />
+        <CatalogAuctionsView
+          searchParams={searchParams}
+          renderSaveWatch={(query) => <SaveWatchButton query={query} />}
+        />
       </Suspense>
     </div>
   );

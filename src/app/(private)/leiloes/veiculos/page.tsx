@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { CollectorStatusLine, CollectorStatusLineSkeleton } from "@/features/listings/components/collector-status";
 import { ListingsView, ListingsViewSkeleton } from "@/features/listings/components/listings-view";
 import { CATALOG_LISTINGS_PATH } from "@/features/listings/search";
+import { SaveWatchButton } from "@/features/watches/components/save-watch-button";
 
 export const metadata: Metadata = { title: "Leilões · Leilão Tracker" };
 
@@ -21,7 +22,11 @@ export default function CatalogListingsPage({ searchParams }: PageProps<"/leiloe
         }
       />
       <Suspense fallback={<ListingsViewSkeleton />}>
-        <ListingsView searchParams={searchParams} basePath={CATALOG_LISTINGS_PATH} />
+        <ListingsView
+          searchParams={searchParams}
+          basePath={CATALOG_LISTINGS_PATH}
+          renderSaveWatch={(query) => <SaveWatchButton query={query} />}
+        />
       </Suspense>
     </div>
   );

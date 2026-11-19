@@ -29,12 +29,6 @@ const KEY_CATEGORY = {
 } as const satisfies Record<Exclude<CategoryKey, "outros">, ListingCategory>;
 export const DEFAULT_CATEGORIES: readonly CategoryKey[] = ["carros", "motos", "utilitarios"];
 
-/** Chaves de grupo usadas antes das categorias múltiplas (URLs antigas e monitores gravados até D-43). */
-export const LEGACY_CATEGORY_GROUPS = {
-  veiculos: DEFAULT_CATEGORIES,
-  todas: null,
-} as const satisfies Record<string, readonly CategoryKey[] | null>;
-
 /** Chave da categoria do anúncio. */
 export function categoryKeyOf(category: string | null): CategoryKey {
   return CATEGORY_KEYS.find((key) => key !== "outros" && KEY_CATEGORY[key] === category) ?? "outros";

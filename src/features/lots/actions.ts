@@ -83,9 +83,11 @@ export async function updateCurrentBidAction(id: string, _prev: ActionState, for
 
 export async function setLotFollowedAction(id: string, isFollowed: boolean): Promise<ActionState> {
   const parsedId = lotIdSchema.safeParse(id);
+  const parsedFollowed = z.boolean().safeParse(isFollowed);
   if (!parsedId.success) return failure(NOT_FOUND);
+  if (!parsedFollowed.success) return failure("Valor inválido.");
 
-  const result = await setLotFollowed(parsedId.data, isFollowed === true);
+  const result = await setLotFollowed(parsedId.data, parsedFollowed.data);
   if (!result.ok) return failure(STATE_ERRORS[result.error]);
 
   refresh();
@@ -94,13 +96,15 @@ export async function setLotFollowedAction(id: string, isFollowed: boolean): Pro
 
 export async function setLotArchivedAction(id: string, archived: boolean): Promise<ActionState> {
   const parsedId = lotIdSchema.safeParse(id);
+  const parsedArchived = z.boolean().safeParse(archived);
   if (!parsedId.success) return failure(NOT_FOUND);
+  if (!parsedArchived.success) return failure("Valor inválido.");
 
-  const result = await setLotArchived(parsedId.data, archived === true);
+  const result = await setLotArchived(parsedId.data, parsedArchived.data);
   if (!result.ok) return failure(STATE_ERRORS[result.error]);
 
   refresh();
-  return { status: "success", message: archived ? "Lote arquivado." : "Lote reativado." };
+  return { status: "success", message: parsedArchived.data ? "Lote arquivado." : "Lote reativado." };
 }
 
 export type BulkLotOperation = "follow" | "unfollow" | "archive" | "unarchive";

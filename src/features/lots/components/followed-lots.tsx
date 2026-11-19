@@ -3,8 +3,8 @@ import Link from "next/link";
 
 import { Badge, ButtonLink, EmptyState, Money, Skeleton } from "@/components/ui";
 import type { LimitFit } from "@/domain/listings/estimates";
-import { LIMIT_FIT_LABELS, LIMIT_FIT_VARIANTS, priceEvidenceLabel } from "@/features/listings/labels";
 import { formatDate, formatShortDateTime } from "@/lib/format";
+import { LIMIT_FIT_LABELS, LIMIT_FIT_VARIANTS, priceEvidenceLabel } from "@/lib/listing-labels";
 import { cn } from "@/lib/utils";
 
 import { getFollowedLotsOverview } from "../queries";

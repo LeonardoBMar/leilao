@@ -18,6 +18,7 @@ export * from "./motion-list";
 export * from "./pagination";
 export * from "./popover";
 export * from "./radio-group";
+export * from "./search-box";
 export * from "./section";
 export * from "./segmented-control";
 export * from "./select";

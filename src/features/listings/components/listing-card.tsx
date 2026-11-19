@@ -15,7 +15,6 @@ import { Badge, ButtonLink, Money } from "@/components/ui";
 import type { LimitFit } from "@/domain/listings/estimates";
 import type { Cents } from "@/domain/money";
 import { formatDateTime, formatKm, formatRatio } from "@/lib/format";
-
 import {
   CONDITION_FLAG_LABELS,
   DAMAGE_LABELS,
@@ -27,7 +26,8 @@ import {
   LISTING_STATUS_LABELS,
   LISTING_STATUS_VARIANTS,
   marketValueOriginLabel,
-} from "../labels";
+} from "@/lib/listing-labels";
+
 import type { ListingListItem } from "../types";
 import { AddToTrackerButton } from "./add-to-tracker-button";
 import { ListingQuickDrawer } from "./listing-quick-drawer";

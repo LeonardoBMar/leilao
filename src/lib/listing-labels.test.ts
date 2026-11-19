@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { cents } from "@/domain/money";
 
-import { priceBasisLabel, priceEvidenceLabel } from "./labels";
+import { priceBasisLabel, priceEvidenceLabel } from "./listing-labels";
 
 const comparables = {
   kind: "comparables",

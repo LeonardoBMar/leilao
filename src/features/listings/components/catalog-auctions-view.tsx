@@ -15,10 +15,17 @@ import { CatalogTabs } from "./catalog-tabs";
 import { ListingFilterBar } from "./filters/listing-filter-bar";
 
 /** "Leilões" por leilão (D-42): um cartão por leilão do catálogo com lote no filtro. Renderizar em <Suspense>. */
-export async function CatalogAuctionsView({ searchParams }: { searchParams: SearchParams }) {
+export async function CatalogAuctionsView({
+  searchParams,
+  renderSaveWatch,
+}: {
+  searchParams: SearchParams;
+  renderSaveWatch?: (query: string) => React.ReactNode;
+}) {
   const { filters, params } = readListingSearch(await searchParams);
   const [page, facets] = await Promise.all([listCatalogAuctions(filters), getListingFacets(filters)]);
   const hasFilters = activeFilters(filters, {}).length > 0;
+  const saveWatch = renderSaveWatch?.(new URLSearchParams(listingParams(filters)).toString());
 
   return (
     <div className="grid gap-6">
@@ -31,6 +38,7 @@ export async function CatalogAuctionsView({ searchParams }: { searchParams: Sear
         facets={facets}
         regionLabel={DEFAULT_REGION.label}
         currentYear={new Date().getUTCFullYear()}
+        saveWatch={saveWatch}
       />
       {page.total === 0 ? (
         <EmptyState

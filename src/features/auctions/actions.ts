@@ -2,6 +2,7 @@
 
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 
 import { type ActionState, failure, validationError } from "@/lib/action-state";
 
@@ -47,13 +48,15 @@ export async function updateAuctionAction(id: string, _prev: ActionState, formDa
 
 export async function setAuctionArchivedAction(id: string, archived: boolean): Promise<ActionState> {
   const parsedId = auctionIdSchema.safeParse(id);
+  const parsedArchived = z.boolean().safeParse(archived);
   if (!parsedId.success) return failure(NOT_FOUND);
+  if (!parsedArchived.success) return failure("Valor inválido.");
 
-  const result = await setAuctionArchived(parsedId.data, archived === true);
+  const result = await setAuctionArchived(parsedId.data, parsedArchived.data);
   if (!result.ok) return failure(UPDATE_ERRORS[result.error]);
 
   refresh();
-  return { status: "success", message: archived ? "Leilão arquivado." : "Leilão reativado." };
+  return { status: "success", message: parsedArchived.data ? "Leilão arquivado." : "Leilão reativado." };
 }
 
 export async function markAuctionFinishedAction(id: string): Promise<ActionState> {

@@ -45,12 +45,12 @@ export function AddToTrackerButton({
       onClick={() =>
         startTransition(async () => {
           const result = await addListingToTrackerAction(listingId);
-          if (result.status === "error") {
-            toast.error(result.message);
+          if (result.status !== "success") {
+            if (result.status === "error") toast.error(result.message);
             return;
           }
           onAdded?.();
-          const { href } = result;
+          const { href } = result.data;
           if (isOpenMode) {
             router.push(href);
             return;

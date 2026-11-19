@@ -1,13 +1,8 @@
 import { Badge, Card, Money, Stat } from "@/components/ui";
 import { compareToFixedLimit } from "@/domain/finance/calculator";
 import { cents } from "@/domain/money";
-import {
-  LIMIT_FIT_LABELS,
-  LIMIT_FIT_VARIANTS,
-  marketValueOriginLabel,
-  priceEvidenceLabel,
-} from "@/features/listings/labels";
 import { formatBRL, formatDate, formatDateTime } from "@/lib/format";
+import { LIMIT_FIT_LABELS, LIMIT_FIT_VARIANTS, marketValueOriginLabel, priceEvidenceLabel } from "@/lib/listing-labels";
 import { cn } from "@/lib/utils";
 
 import { updateCurrentBidAction } from "../actions";

@@ -52,14 +52,16 @@ export function LotGallery({ lotId, images }: LotGalleryProps) {
     if (problem) return `${file.name}: ${CHECK_MESSAGES[problem]}.`;
 
     const ticket = await requestImageUploadAction(lotId, { fileName: file.name, mimeType: file.type, size: file.size });
-    if (ticket.status === "error") return `${file.name}: ${ticket.message}`;
+    if (ticket.status !== "success") {
+      return `${file.name}: ${ticket.status === "error" ? ticket.message : "erro inesperado"}.`;
+    }
 
     const { error } = await getSupabaseBrowserClient()
       .storage.from(LOT_IMAGES_BUCKET)
-      .uploadToSignedUrl(ticket.path, ticket.token, file, { contentType: file.type });
+      .uploadToSignedUrl(ticket.data.path, ticket.data.token, file, { contentType: file.type });
     if (error) return `${file.name}: falha no envio. Tente novamente.`;
 
-    const confirmed = await confirmImageUploadAction(lotId, { path: ticket.path, fileName: file.name });
+    const confirmed = await confirmImageUploadAction(lotId, { path: ticket.data.path, fileName: file.name });
     return confirmed.status === "error" ? `${file.name}: ${confirmed.message}` : null;
   }
 

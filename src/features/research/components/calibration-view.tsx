@@ -18,13 +18,12 @@ import { cents } from "@/domain/money";
 import {
   bandPlacement,
   calibrationByCategory,
+  type CalibrationInput,
   EXPECTED_BAND_HIT_RATE,
   limitDeviation,
   MIN_CALIBRATION_RESULTS,
   summarizeCalibration,
 } from "@/domain/research/calibration";
-import { getCalibration } from "@/features/analyses/queries";
-import type { CalibrationItem } from "@/features/analyses/types";
 import { niceRange } from "@/lib/charts";
 import { formatBRL, formatCompactBRL, formatDate, formatRatio } from "@/lib/format";
 
@@ -39,14 +38,22 @@ import {
 } from "../labels";
 import { ResearchBlock } from "./research-block";
 
+/** Item de calibração recebido pela visão; desacoplado de `features/analyses`. */
+export type CalibrationEntry = CalibrationInput & {
+  lotId: string;
+  analysisId: string;
+  label: string;
+  fixedAt: Date;
+  bandSource: "snapshot" | "recomputed";
+};
+
 /**
  * Calibração (docs/PLANO-MERCADO.md §7): como as análises fixadas antes do desfecho se saíram frente ao arremate. As
  * frases do topo, o gráfico limite × arremate com a diagonal, a quebra por categoria e a tabela por análise. A faixa da
  * época nunca usa vendas posteriores à fixação (`getCalibration`). Com menos de `MIN_CALIBRATION_RESULTS`, avisa que os
  * números ainda mudam muito.
  */
-export async function CalibrationView() {
-  const items = await getCalibration();
+export function CalibrationView({ items }: { items: readonly CalibrationEntry[] }) {
   if (items.length === 0) {
     return (
       <EmptyState
@@ -193,7 +200,7 @@ function Statement({ title, children }: { title: string; children: ReactNode }) 
 }
 
 /** Limite fixado × arremate, com a diagonal: ponto acima dela é arremate acima do limite. Sem lance viável fica fora. */
-function LimitChart({ items }: { items: readonly CalibrationItem[] }) {
+function LimitChart({ items }: { items: readonly CalibrationEntry[] }) {
   const points = items.flatMap((item) => (item.limit === null ? [] : [{ item, limit: item.limit }]));
   if (points.length === 0) return null;
   // Os dois eixos na mesma escala, para a diagonal ser a linha "limite = arremate".

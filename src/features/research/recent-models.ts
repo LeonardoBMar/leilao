@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { ResearchVehicle } from "@/domain/research/filters";
+import { createBrowserStore } from "@/lib/browser-store";
 
 /**
  * Modelos pesquisados por último, para a busca sugeri-los antes dos mais vendidos. Ficam no `localStorage` deste
@@ -24,37 +25,18 @@ export function withRecentModel(
 }
 
 const EMPTY: readonly ResearchVehicle[] = [];
-let cache: readonly ResearchVehicle[] | null = null;
-const listeners = new Set<() => void>();
+const store = createBrowserStore<readonly ResearchVehicle[]>({
+  key: STORAGE_KEY,
+  schema: savedSchema,
+  fallback: EMPTY,
+  normalize: (list) => list.slice(0, RECENT_MODELS_LIMIT),
+});
 
-function read(): readonly ResearchVehicle[] {
-  if (cache) return cache;
-  try {
-    const parsed = savedSchema.safeParse(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]"));
-    cache = parsed.success ? parsed.data.slice(0, RECENT_MODELS_LIMIT) : EMPTY;
-  } catch {
-    cache = EMPTY;
-  }
-  return cache;
-}
-
-export function subscribeRecentModels(listener: () => void) {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
-}
-
-export const recentModelsSnapshot = read;
-export const recentModelsServerSnapshot = () => EMPTY;
+export const subscribeRecentModels = store.subscribe;
+export const recentModelsSnapshot = store.getSnapshot;
+export const recentModelsServerSnapshot = store.getServerSnapshot;
 
 /** Guarda o modelo escolhido na busca. */
 export function rememberModel(vehicle: ResearchVehicle) {
-  cache = withRecentModel(read(), vehicle);
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
-  } catch {
-    // Sem armazenamento (aba privada, bloqueio): vale só nesta sessão da página.
-  }
-  for (const listener of listeners) listener();
+  store.write(withRecentModel(store.read(), vehicle));
 }

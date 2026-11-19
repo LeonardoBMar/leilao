@@ -22,16 +22,18 @@ type ListingsViewProps = {
   basePath: string;
   /** Só os anúncios deste leilão do catálogo (página do leilão); sem ele, "Todos os veículos", com as abas. */
   auction?: CatalogAuctionKey;
+  renderSaveWatch?: (query: string) => React.ReactNode;
 };
 
 /** Anúncios coletados, com filtros na URL. Renderizar dentro de <Suspense>. */
-export async function ListingsView({ searchParams, basePath, auction }: ListingsViewProps) {
+export async function ListingsView({ searchParams, basePath, auction, renderSaveWatch }: ListingsViewProps) {
   const { filters, params } = readListingSearch(await searchParams);
   const [page, facets] = await Promise.all([
     listListings(filters, { auction }),
     getListingFacets(filters, { auction }),
   ]);
   const hasFilters = activeFilters(filters, {}).length > 0;
+  const saveWatch = auction ? undefined : renderSaveWatch?.(new URLSearchParams(listingParams(filters)).toString());
 
   return (
     <div className="grid gap-6">
@@ -44,6 +46,7 @@ export async function ListingsView({ searchParams, basePath, auction }: Listings
         facets={facets}
         regionLabel={DEFAULT_REGION.label}
         currentYear={new Date().getUTCFullYear()}
+        saveWatch={saveWatch}
       />
       {page.total === 0 ? (
         <EmptyState

@@ -57,13 +57,15 @@ export async function updateWatchAction(id: string, _prev: ActionState, formData
 
 export async function setWatchActiveAction(id: string, active: boolean): Promise<ActionState> {
   const parsedId = watchIdSchema.safeParse(id);
+  const parsedActive = z.boolean().safeParse(active);
   if (!parsedId.success) return failure(ERRORS.not_found);
+  if (!parsedActive.success) return failure("Valor inválido.");
 
-  const result = await setWatchActive(parsedId.data, active === true);
+  const result = await setWatchActive(parsedId.data, parsedActive.data);
   if (!result.ok) return failure(ERRORS[result.error]);
 
   refresh();
-  return { status: "success", message: active ? "Monitor ligado." : "Monitor desligado." };
+  return { status: "success", message: parsedActive.data ? "Monitor ligado." : "Monitor desligado." };
 }
 
 export async function deleteWatchAction(id: string): Promise<ActionState> {

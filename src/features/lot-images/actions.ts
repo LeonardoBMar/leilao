@@ -38,18 +38,18 @@ const CONFIRM_ERRORS = {
 
 const IMAGE_ERRORS = { not_found: "Foto não encontrada." } satisfies Record<ImageError, string>;
 
-type UploadTicket = { status: "ready"; path: string; token: string } | Extract<ActionState, { status: "error" }>;
+export type UploadTicketData = { path: string; token: string };
 
 /** Passo 1: autoriza o envio e devolve a URL assinada (o arquivo não passa pelo servidor; D-11). */
-export async function requestImageUploadAction(lotId: string, file: unknown): Promise<UploadTicket> {
+export async function requestImageUploadAction(lotId: string, file: unknown): Promise<ActionState<UploadTicketData>> {
   const parsedLot = lotIdSchema.safeParse(lotId);
   const parsed = requestUploadSchema.safeParse(file);
-  if (!parsedLot.success) return { status: "error", message: REQUEST_ERRORS.lot_not_found };
-  if (!parsed.success) return { status: "error", message: REQUEST_ERRORS.unsupported_type };
+  if (!parsedLot.success) return failure(REQUEST_ERRORS.lot_not_found);
+  if (!parsed.success) return failure(REQUEST_ERRORS.unsupported_type);
 
   const result = await requestImageUpload(parsedLot.data, parsed.data);
-  if (!result.ok) return { status: "error", message: REQUEST_ERRORS[result.error] };
-  return { status: "ready", ...result.value };
+  if (!result.ok) return failure(REQUEST_ERRORS[result.error]);
+  return { status: "success", data: result.value };
 }
 
 /** Passo 2: depois do envio, confere o arquivo real e registra a foto. */

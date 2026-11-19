@@ -23,6 +23,7 @@ import {
   RadioGroup,
   RadioItem,
   RemovableChip,
+  SearchBox,
   SegmentedControl,
   Select,
   SelectContent,
@@ -30,7 +31,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui";
-import { SearchBox } from "@/features/listings/components/filters/search-box";
 import { withQuery } from "@/features/listings/search";
 import { MOTION_EXIT_TRANSITION, MOTION_LAYOUT_TRANSITION } from "@/lib/motion";
 import { cn } from "@/lib/utils";

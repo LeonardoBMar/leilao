@@ -21,6 +21,7 @@ import {
   PopoverContent,
   PopoverTrigger,
   RemovableChip,
+  SearchBox,
   SegmentedControl,
   Select,
   SelectContent,
@@ -29,7 +30,6 @@ import {
   SelectValue,
 } from "@/components/ui";
 import type { ListingCriteria } from "@/domain/listings/criteria";
-import { SaveWatchButton } from "@/features/watches/components/save-watch-button";
 import { MOTION_EXIT_TRANSITION, MOTION_LAYOUT_TRANSITION } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
@@ -57,7 +57,6 @@ import {
   SourceField,
   YearFields,
 } from "./criteria-controls";
-import { SearchBox } from "./search-box";
 
 /** Onde a barra está: muda o que se conta (lotes ou leilões) e o que faz sentido mostrar. */
 export type FilterBarScope = "auctions" | "listings" | "auction";
@@ -71,6 +70,7 @@ type ListingFilterBarProps = {
   facets: ListingFacetsView;
   regionLabel: string;
   currentYear: number;
+  saveWatch?: React.ReactNode;
 };
 
 /** Filtros que ficam na barra (e não contam em "Mais filtros"). */
@@ -88,6 +88,7 @@ export function ListingFilterBar({
   facets,
   regionLabel,
   currentYear,
+  saveWatch,
 }: ListingFilterBarProps) {
   const router = useRouter();
   const sortLabelId = useId();
@@ -417,9 +418,7 @@ export function ListingFilterBar({
               </Select>
             </div>
           )}
-          {scope === "auction" ? null : (
-            <SaveWatchButton query={new URLSearchParams(listingParams(filters)).toString()} />
-          )}
+          {saveWatch}
         </div>
       </div>
     </section>

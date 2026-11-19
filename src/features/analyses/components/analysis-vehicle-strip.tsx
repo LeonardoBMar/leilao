@@ -7,14 +7,14 @@ import { useId, useState } from "react";
 
 import { Badge, Button, Money } from "@/components/ui";
 import type { Cents } from "@/domain/money";
+import { formatDateTime, formatKm } from "@/lib/format";
 import {
   CONDITION_FLAG_LABELS,
   DAMAGE_LABELS,
   DAMAGE_VARIANTS,
   INSPECTION_LABELS,
   INSPECTION_VARIANTS,
-} from "@/features/listings/labels";
-import { formatDateTime, formatKm } from "@/lib/format";
+} from "@/lib/listing-labels";
 import { MOTION_ENTER_TRANSITION, MOTION_EXIT_TRANSITION, MOTION_SPRING } from "@/lib/motion";
 
 import type { AnalysisVehicleContext } from "../types";

@@ -19,7 +19,6 @@ import {
   Money,
 } from "@/components/ui";
 import { formatDateTime, formatKm, formatRatio } from "@/lib/format";
-
 import {
   CONDITION_FLAG_LABELS,
   DAMAGE_LABELS,
@@ -33,7 +32,8 @@ import {
   marketValueOriginLabel,
   priceBasisLabel,
   priceEvidenceLabel,
-} from "../labels";
+} from "@/lib/listing-labels";
+
 import type { ListingListItem } from "../types";
 import { AddToTrackerButton } from "./add-to-tracker-button";
 

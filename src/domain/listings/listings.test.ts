@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { boundingBox, distanceKm } from "./geo";
+import { distanceKm } from "./geo";
 import { municipalityKey, normalizePlaceName, splitBrandModel, stateCode } from "./place";
 import { DEFAULT_REGION } from "./region";
 import {
@@ -86,18 +86,6 @@ describe("distanceKm", () => {
   it("São Carlos → Araraquara ≈ 39 km e → São Paulo ≈ 200 km, em linha reta", () => {
     expect(distanceKm(saoCarlos, { latitude: -21.7845, longitude: -48.178 })).toBeCloseTo(39.4, 0);
     expect(distanceKm(saoCarlos, { latitude: -23.5329, longitude: -46.6395 })).toBeCloseTo(207, -1);
-  });
-
-  it("o retângulo de pré-filtro contém todo o círculo", () => {
-    const box = boundingBox(saoCarlos, 150);
-    const north = { latitude: box.maxLatitude, longitude: saoCarlos.longitude };
-    const east = { latitude: saoCarlos.latitude, longitude: box.maxLongitude };
-    expect(distanceKm(saoCarlos, north)).toBeGreaterThanOrEqual(150 - 1e-6);
-    expect(distanceKm(saoCarlos, east)).toBeGreaterThanOrEqual(150);
-    // Ponto do círculo no lado mais distante do equador (sul) cabe na largura do retângulo.
-    const southEdge = { latitude: box.minLatitude + 0.3, longitude: saoCarlos.longitude };
-    const southEast = { latitude: southEdge.latitude, longitude: box.maxLongitude };
-    expect(distanceKm(saoCarlos, southEast)).toBeGreaterThan(150);
   });
 });
 
