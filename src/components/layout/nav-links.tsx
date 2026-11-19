@@ -3,12 +3,19 @@
 import { BellRing, Calculator, ChartColumn, Gavel, LayoutDashboard, type LucideIcon } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, Suspense, useEffect, useSyncExternalStore } from "react";
 
+import { toast } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
-import { lastFiltersServerSnapshot, lastFiltersSnapshot, rememberFilters, subscribeLastFilters } from "./last-filters";
+import {
+  clearRememberedFilter,
+  lastFiltersServerSnapshot,
+  lastFiltersSnapshot,
+  rememberFilters,
+  subscribeLastFilters,
+} from "./last-filters";
 
 /** `sections`: outras rotas que pertencem ao item (a ficha do lote e a análise ficam em "Minhas análises"). */
 type NavItem = { href: Route; label: string; icon: LucideIcon; sections?: readonly string[] };
@@ -61,17 +68,34 @@ function NavList({
   badges,
   saved,
 }: NavLinksProps & { pathname: string | null; saved?: Readonly<Record<string, string>> }) {
+  const router = useRouter();
+
   return (
     <ul className="grid gap-px">
       {NAV_ITEMS.map(({ href, label, icon: Icon, sections = [] }) => {
         const isActive =
           pathname !== null &&
           [href, ...sections].some((section) => pathname === section || pathname.startsWith(`${section}/`));
+        const target = savedHref(saved?.[href], href);
+        const hasRestoredQuery = !isActive && target !== href && target.includes("?");
         return (
           <li key={href}>
             <Link
-              href={savedHref(saved?.[href], href)}
-              onClick={onNavigate}
+              href={target}
+              onClick={() => {
+                onNavigate?.();
+                if (hasRestoredQuery) {
+                  toast.info(`Filtros anteriores restaurados em ${label}.`, {
+                    action: {
+                      label: "Limpar",
+                      onClick: () => {
+                        clearRememberedFilter(href);
+                        router.push(href);
+                      },
+                    },
+                  });
+                }
+              }}
               aria-current={isActive ? "page" : undefined}
               className={cn(
                 "group flex min-h-10 items-center gap-2.5 rounded-md px-2.5 text-body font-medium text-foreground-secondary transition-colors duration-120 outline-none hover:bg-foreground/5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent",
