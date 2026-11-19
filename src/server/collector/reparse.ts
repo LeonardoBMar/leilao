@@ -1,9 +1,12 @@
 import "server-only";
 
+import { finalBidOf } from "@/domain/listings/collect";
 import { isFinalStatus, type ListingStatus } from "@/domain/listings/types";
+import { cents } from "@/domain/money";
 import type { SourceAdapter } from "@/sources/types";
 
 import { db } from "../db";
+import { changedFields } from "./changes";
 
 const PAGE_SIZE = 200;
 /** Gravações simultâneas. Sem transação por lote: cada anúncio é independente e rodar de novo regrava o mesmo valor. */
@@ -16,7 +19,7 @@ export type ReparseSummary = { scanned: number; updated: number; statusChanged: 
 /**
  * Rederiva do dado bruto guardado (`listings.raw`) o que a extração passou a entender depois da coleta: descrição,
  * condição e situação (ex.: uma situação da fonte mapeada depois). Não baixa páginas, então serve também para anúncios
- * cuja página já saiu do ar. Idempotente.
+ * cuja página já saiu do ar. Idempotente: só regrava linhas com mudança real.
  */
 export async function reparseListings(adapter: SourceAdapter, now: Date): Promise<ReparseSummary> {
   const summary: ReparseSummary = { scanned: 0, updated: 0, statusChanged: 0, skipped: 0 };
@@ -28,7 +31,21 @@ export async function reparseListings(adapter: SourceAdapter, now: Date): Promis
       orderBy: { id: "asc" },
       take: PAGE_SIZE,
       ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
-      select: { id: true, raw: true, status: true, currentBidCents: true, bidCount: true },
+      select: {
+        id: true,
+        raw: true,
+        status: true,
+        currentBidCents: true,
+        bidCount: true,
+        description: true,
+        damageLevel: true,
+        conditionFlags: true,
+        inspectionResult: true,
+        inspectionNotes: true,
+        sourceStatus: true,
+        finalBidCents: true,
+        nextCheckAt: true,
+      },
     });
     if (rows.length === 0) return summary;
     cursor = rows.at(-1)?.id;
@@ -42,8 +59,7 @@ export async function reparseListings(adapter: SourceAdapter, now: Date): Promis
       }
       const { description, condition } = details;
       const newStatus = OUTCOMES.includes(details.status) && details.status !== row.status ? details.status : null;
-      if (newStatus) summary.statusChanged += 1;
-      const data = {
+      const desired = {
         description,
         damageLevel: condition.damageLevel,
         conditionFlags: condition.flags,
@@ -53,11 +69,18 @@ export async function reparseListings(adapter: SourceAdapter, now: Date): Promis
           ? {
               status: newStatus,
               sourceStatus: details.sourceStatus,
+              finalBidCents: finalBidOf({
+                status: newStatus,
+                currentBid: row.currentBidCents === null ? null : cents(row.currentBidCents),
+              }),
               // Desfecho definitivo não precisa de revisita; condicional segue na agenda que já tinha.
               ...(isFinalStatus(newStatus) ? { nextCheckAt: null } : {}),
             }
           : {}),
       };
+      const data = changedFields(row, desired);
+      if (Object.keys(data).length === 0 && !newStatus) return [];
+      if (newStatus) summary.statusChanged += 1;
       return [
         () =>
           newStatus
