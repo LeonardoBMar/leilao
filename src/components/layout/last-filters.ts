@@ -66,3 +66,17 @@ export function rememberFilters(pathname: string, search: URLSearchParams) {
   }
   for (const listener of listeners) listener();
 }
+
+/** Remove os filtros lembrados de um item do menu, voltando ao link padrão. */
+export function clearRememberedFilter(navHref: string) {
+  const current = read();
+  if (!(navHref in current)) return;
+  const { [navHref]: _removed, ...rest } = current;
+  cache = rest;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
+  } catch {
+    // Sem armazenamento: vale só nesta sessão da página.
+  }
+  for (const listener of listeners) listener();
+}
