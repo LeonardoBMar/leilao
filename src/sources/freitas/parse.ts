@@ -151,6 +151,16 @@ export function parseFreitasAgenda(html: string): FreitasAuction[] {
   return auctions;
 }
 
+/** Confirma que a agenda vazia veio da página esperada do site (e não de erro/manutenção). */
+export function isFreitasAgendaPage(html: string): boolean {
+  return /agenda-listaLeiloes|Nenhum leil[ãa]o/i.test(decodeHtmlEntities(html));
+}
+
+/** Confirma que a página 1 sem cartões trouxe o aviso explícito de lista vazia do site. */
+export function isFreitasEmptyList(html: string): boolean {
+  return /Nenhum lote localizado/i.test(decodeHtmlEntities(html));
+}
+
 /** Leilão de pátio ou de veículos ("PÁTIO UTINGA · VEÍCULOS"); imóveis, materiais e judiciais ficam de fora. */
 export function isVehicleAuction(auction: FreitasAuction): boolean {
   return /\bPATIO\b|\bVEICULOS?\b/.test(normalizePlaceName(`${auction.local} ${auction.title}`));

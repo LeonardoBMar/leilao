@@ -38,6 +38,11 @@ export async function loadPlaceLookup(): Promise<PlaceLookup> {
   };
 }
 
+export async function hasOpenListings(sourceId: string): Promise<boolean> {
+  const row = await db.listing.findFirst({ where: { sourceId, status: "open" }, select: { id: true } });
+  return row !== null;
+}
+
 export async function findKnownIds(sourceId: string, externalIds: readonly string[]): Promise<Set<string>> {
   const rows = await db.listing.findMany({
     where: { sourceId, externalId: { in: [...externalIds] } },

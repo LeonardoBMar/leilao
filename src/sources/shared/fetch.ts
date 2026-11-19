@@ -14,7 +14,16 @@ export async function discoverFromSitemaps(
       discovery.errors.push({ url, error: response.error });
       continue;
     }
+    if (!/<(urlset|sitemapindex)\b/i.test(response.text)) {
+      discovery.complete = false;
+      discovery.errors.push({ url, error: "sitemap fora do formato" });
+      continue;
+    }
     discovery.listings.push(...parse(response.text));
+  }
+  if (discovery.complete && discovery.listings.length === 0) {
+    discovery.complete = false;
+    discovery.errors.push({ url: urls[0] ?? "(sitemap)", error: "nenhum lote encontrado no sitemap" });
   }
   return discovery;
 }

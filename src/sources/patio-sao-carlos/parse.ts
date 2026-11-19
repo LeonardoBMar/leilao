@@ -117,6 +117,11 @@ export function parsePatioLotList(html: string): { listings: DiscoveredListing[]
   return { listings: [...found.values()], lastPage: last === undefined ? null : Number(last) };
 }
 
+/** Confirma que uma lista vazia veio de uma página de lotes válida (e não de erro/manutenção). */
+export function isPatioLotListPage(html: string): boolean {
+  return /lotes-page-layout|pg_lotes|Nenhum Lote Encontrado/i.test(html);
+}
+
 /** Situação de vários lotes na resposta da consulta interna, por id. Lote ausente ou fora do formato fica de fora. */
 export function parsePatioLive(json: string): Result<Map<string, PatioLiveLot>, ParseError> {
   const response = patioLiveResponseSchema.safeParse(parseJson(json));

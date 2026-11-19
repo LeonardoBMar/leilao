@@ -255,6 +255,16 @@ describe("patioSaoCarlosSource", () => {
     expect(discovery).toMatchObject({ complete: false, listings: [] });
   });
 
+  it("descoberta com HTML sem estrutura de lista (manutenção) volta incompleta", async () => {
+    const http: SourceHttp = {
+      get: () => Promise.resolve({ ok: true, text: "<html><body>Site em manutenção</body></html>" }),
+      post: () => Promise.resolve({ ok: true, text: '{"item":[]}' }),
+    };
+    const discovery = await patioSaoCarlosSource.discover(http, now);
+    expect(discovery.complete).toBe(false);
+    expect(discovery.errors.length).toBeGreaterThan(0);
+  });
+
   it("lê um lote juntando a página, a consulta interna e o edital", async () => {
     const { http, calls } = fakeHttp({
       [patioListingUrl("991")]: { ok: true, text: openPage },

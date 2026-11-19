@@ -1,5 +1,6 @@
 import type { DiscoveredListing, Discovery, SourceAdapter, SourceHttp } from "../types";
 import {
+  isPatioLotListPage,
   isPatioPageGone,
   parsePatioEditalAddress,
   parsePatioListing,
@@ -86,6 +87,11 @@ async function discover(http: SourceHttp, now: Date): Promise<Discovery> {
       }
       const list = parsePatioLotList(response.text);
       if (page === 0) {
+        if (list.listings.length === 0 && !isPatioLotListPage(response.text)) {
+          discovery.complete = false;
+          discovery.errors.push({ url, error: "página de lotes sem a lista esperada" });
+          break;
+        }
         lastPage = list.lastPage ?? 0;
         // Lista maior que o teto: o que ficar de fora não pode ser lido como "saiu da lista" (goneStatus).
         if (lastPage >= MAX_PAGES) {

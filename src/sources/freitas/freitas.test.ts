@@ -356,4 +356,23 @@ describe("freitasSource", () => {
     const { http } = fakeHttp({ "8095|all": fixture("lista-aberto.html") });
     expect(await freitasSource.fetchListing(http, "8095-1", now)).toMatchObject({ ok: false, gone: false });
   });
+
+  it("agenda ou lista em HTML de manutenção volta incompleta", async () => {
+    const brokenAgenda: SourceHttp = {
+      get: () => Promise.resolve({ ok: true, text: "<html>Manutenção</html>" }),
+      post: () => Promise.resolve({ ok: false, status: 405, error: "HTTP 405" }),
+    };
+    const d1 = await freitasSource.discover(brokenAgenda, now);
+    expect(d1.complete).toBe(false);
+
+    const brokenList: SourceHttp = {
+      get: (url) => {
+        if (url.includes("/ListarLeiloes")) return ok(fixture("agenda.html"));
+        return ok("<html>Erro inesperado</html>");
+      },
+      post: () => Promise.resolve({ ok: false, status: 405, error: "HTTP 405" }),
+    };
+    const d2 = await freitasSource.discover(brokenList, now);
+    expect(d2.complete).toBe(false);
+  });
 });

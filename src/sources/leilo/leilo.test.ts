@@ -7,7 +7,7 @@ import { finalBidOf } from "@/domain/listings/collect";
 import { isFinalStatus } from "@/domain/listings/types";
 
 import { listingContractProblems } from "../shared/contract";
-import { fetchListingPage } from "../shared/fetch";
+import { discoverFromSitemaps, fetchListingPage } from "../shared/fetch";
 import { parseLeiloSitemap } from "./discover";
 import { leiloDetailsFromRaw, leiloListingUrl, parseLeiloListingPage } from "./parse";
 
@@ -298,5 +298,29 @@ describe("fetchListingPage", () => {
     expect(await fetchListingPage(page(openPage), listing.url, parseLeiloListingPage, now)).toMatchObject({
       ok: true,
     });
+  });
+});
+
+describe("discoverFromSitemaps", () => {
+  it("marca descoberta como incompleta quando a resposta não é sitemap ou vem vazia", async () => {
+    const httpOf = (text: string) => ({
+      get: () => Promise.resolve({ ok: true as const, text }),
+      post: () => Promise.resolve({ ok: true as const, text }),
+    });
+    const htmlError = await discoverFromSitemaps(
+      httpOf("<html>Manutenção</html>"),
+      ["https://leilo.com.br/s.xml"],
+      parseLeiloSitemap,
+    );
+    expect(htmlError.complete).toBe(false);
+    expect(htmlError.errors).toHaveLength(1);
+
+    const empty = await discoverFromSitemaps(
+      httpOf("<urlset></urlset>"),
+      ["https://leilo.com.br/s.xml"],
+      parseLeiloSitemap,
+    );
+    expect(empty.complete).toBe(false);
+    expect(empty.errors[0]?.error).toMatch(/nenhum lote/i);
   });
 });

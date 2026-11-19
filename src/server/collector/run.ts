@@ -18,6 +18,7 @@ import {
   findKnownIds,
   findStoredRaw,
   findTrackedVisits,
+  hasOpenListings,
   loadPlaceLookup,
   markGone,
   markSeen,
@@ -323,13 +324,15 @@ async function collectListings(input: {
   const discovery = await source.discover(fetcher, now());
   for (const { url, error } of discovery.errors) fail(url, error);
   counters.discovered = discovery.listings.length;
+  const emptyWithOpen = discovery.complete && discovery.listings.length === 0 && (await hasOpenListings(source.id));
+  if (emptyWithOpen) fail("(descoberta)", "nenhum anúncio encontrado com abertos existentes no catálogo");
 
   const discoveredIds = discovery.listings.map((item) => item.externalId);
   const knownIds = await findKnownIds(source.id, discoveredIds);
   const seenAt = now();
   await markSeen(source.id, [...knownIds], seenAt);
-  // Com a lista completa, "não visto agora" significa "saiu da lista da fonte" (goneStatus).
-  const listReadAt = discovery.complete ? seenAt : null;
+  // Com a lista completa (e sem descoberta vazia suspeita), "não visto agora" significa "saiu da lista" (`goneStatus`).
+  const listReadAt = discovery.complete && !emptyWithOpen ? seenAt : null;
 
   // Lotes acompanhados primeiro: o lance deles é o que o usuário está olhando.
   const due = [
@@ -371,7 +374,7 @@ async function collectListings(input: {
     fail(url, problem);
     if (visit.reason === "due") await recordCheckFailure(source.id, visit.externalId, now());
   }
-  return !discovery.complete;
+  return !discovery.complete || emptyWithOpen;
 }
 
 /**

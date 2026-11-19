@@ -17,6 +17,8 @@ import {
   type FreitasPage,
   freitasPhotosUrl,
   freitasTypesUrl,
+  isFreitasAgendaPage,
+  isFreitasEmptyList,
   isFreitasOpen,
   isVehicleAuction,
   parseFreitasAgenda,
@@ -106,8 +108,17 @@ async function discover(http: SourceHttp): Promise<Discovery> {
     return { ...discovery, complete: false, errors: [{ url: FREITAS_AGENDA_URL, error: agenda.error }] };
   }
 
+  const auctions = parseFreitasAgenda(agenda.text);
+  if (auctions.length === 0 && !isFreitasAgendaPage(agenda.text)) {
+    return {
+      ...discovery,
+      complete: false,
+      errors: [{ url: FREITAS_AGENDA_URL, error: "agenda sem a lista de leilões" }],
+    };
+  }
+
   const found = new Map<string, DiscoveredListing>();
-  for (const auction of parseFreitasAgenda(agenda.text).filter(isVehicleAuction)) {
+  for (const auction of auctions.filter(isVehicleAuction)) {
     const cards = await cardsOf(http, auction.auctionId);
     if (!cards.ok) {
       discovery.complete = false;
@@ -186,6 +197,9 @@ async function readList(http: SourceHttp, auctionId: string, filter: FreitasFilt
     const response = await http.get(url);
     if (!response.ok) return { ok: false, error: `lista do leilão ${auctionId}: ${response.error}` };
     const found = parseFreitasCards(response.text);
+    if (page === 1 && found.length === 0 && !isFreitasEmptyList(response.text)) {
+      return { ok: false, error: `lista do leilão ${auctionId} fora do formato` };
+    }
     cards.push(...found);
     if (found.length < FREITAS_PAGE_SIZE) return { ok: true, value: cards };
   }
