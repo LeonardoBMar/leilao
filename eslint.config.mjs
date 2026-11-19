@@ -7,7 +7,7 @@ import simpleImportSort from "eslint-plugin-simple-import-sort";
 // As fronteiras entre camadas estão descritas em docs/ARCHITECTURE.md.
 const dbImports = {
   group: ["@prisma/client", "@prisma/client/*", "@/generated/prisma", "@/generated/prisma/*", "@/server/db"],
-  message: "Acesso ao banco só em src/server/** e em queries.ts/mutations.ts das features.",
+  message: "Acesso ao banco só em src/server/** e em queries/mutations das features.",
 };
 const frameworkImports = {
   group: [
@@ -23,6 +23,30 @@ const frameworkImports = {
     "@/server/*",
   ],
   message: "src/domain é TypeScript puro: sem framework, UI, I/O ou infraestrutura.",
+};
+const libLayerImports = {
+  group: ["@/app/*", "@/features/*", "@/server/*", "@/components/*"],
+  message: "src/lib não importa camadas acima nem src/server.",
+};
+const componentLayerImports = {
+  group: ["@/app/*", "@/features/*", "@/server/*"],
+  message: "src/components é compartilhado e não importa app, features ou server.",
+};
+const serverLayerImports = {
+  group: ["@/app/*", "@/features/*", "@/components/*"],
+  message: "src/server não importa app, features ou components.",
+};
+const noWatchesImports = {
+  group: ["@/features/watches", "@/features/watches/*"],
+  message: "listings não importa watches (composição em app/ para evitar ciclo).",
+};
+const noListingsImports = {
+  group: ["@/features/listings", "@/features/listings/*"],
+  message: "analyses não importa listings.",
+};
+const noAnalysesImports = {
+  group: ["@/features/analyses", "@/features/analyses/*"],
+  message: "research não importa analyses (composição em app/ para evitar ciclo).",
 };
 
 export default defineConfig([
@@ -64,8 +88,24 @@ export default defineConfig([
     rules: { "import/no-default-export": "off" },
   },
   {
-    files: ["src/server/**", "src/features/*/queries.ts", "src/features/*/mutations.ts"],
-    rules: { "no-restricted-imports": "off" },
+    files: ["src/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-properties": [
+        "error",
+        { object: "process", property: "env", message: "Leia variáveis por `@/server/env` ou `@/lib/public-env`." },
+      ],
+    },
+  },
+  {
+    files: [
+      "src/server/env.ts",
+      "src/lib/public-env.ts",
+      "src/server/auth.ts",
+      "src/proxy.ts",
+      "src/app/(private)/componentes/page.tsx",
+      "src/**/*.test.{ts,tsx}",
+    ],
+    rules: { "no-restricted-properties": "off" },
   },
   {
     files: ["src/domain/**"],
@@ -85,6 +125,66 @@ export default defineConfig([
         },
       ],
     },
+  },
+  {
+    files: ["src/lib/**"],
+    rules: { "no-restricted-imports": ["error", { patterns: [dbImports, libLayerImports] }] },
+  },
+  {
+    files: ["src/components/**"],
+    rules: { "no-restricted-imports": ["error", { patterns: [dbImports, componentLayerImports] }] },
+  },
+  {
+    files: ["src/server/**"],
+    rules: { "no-restricted-imports": ["error", { patterns: [serverLayerImports] }] },
+  },
+  {
+    files: [
+      "src/features/*/queries.ts",
+      "src/features/*/queries/**/*.ts",
+      "src/features/*/mutations.ts",
+      "src/features/*/mutations/**/*.ts",
+    ],
+    rules: { "no-restricted-imports": "off" },
+  },
+  {
+    files: ["src/features/listings/**"],
+    rules: { "no-restricted-imports": ["error", { patterns: [dbImports, noWatchesImports] }] },
+  },
+  {
+    files: [
+      "src/features/listings/queries.ts",
+      "src/features/listings/queries/**/*.ts",
+      "src/features/listings/mutations.ts",
+      "src/features/listings/mutations/**/*.ts",
+    ],
+    rules: { "no-restricted-imports": ["error", { patterns: [noWatchesImports] }] },
+  },
+  {
+    files: ["src/features/analyses/**"],
+    rules: { "no-restricted-imports": ["error", { patterns: [dbImports, noListingsImports] }] },
+  },
+  {
+    files: [
+      "src/features/analyses/queries.ts",
+      "src/features/analyses/queries/**/*.ts",
+      "src/features/analyses/mutations.ts",
+      "src/features/analyses/mutations/**/*.ts",
+    ],
+    rules: { "no-restricted-imports": ["error", { patterns: [noListingsImports] }] },
+  },
+  {
+    files: ["src/features/research/**"],
+    rules: { "no-restricted-imports": ["error", { patterns: [dbImports, noAnalysesImports] }] },
+  },
+  {
+    files: [
+      "src/features/research/queries.ts",
+      "src/features/research/queries/**/*.ts",
+      "src/features/research/mutations.ts",
+      "src/features/research/mutations/**/*.ts",
+    ],
+    rules: { "no-restricted-imports": ["error", { patterns: [noAnalysesImports] }] },
   },
   globalIgnores([
     ".next/**",
