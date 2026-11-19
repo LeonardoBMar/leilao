@@ -26,8 +26,8 @@ import pg from "pg";
 nextEnv.loadEnvConfig(process.cwd(), false, { info() {}, error: console.error });
 
 const TABLE_ORDER = ["auctions", "lots", "analyses", "results", "lot_images"];
-/** Backups antigos não têm `catalog`: vira vazio. */
-const CATALOG_ORDER = ["listings", "listing_observations"];
+/** Backups antigos não têm `catalog`: vira vazio. `fipe_matches` entra antes de `listings` por causa da FK. */
+const CATALOG_ORDER = ["fipe_matches", "listings", "listing_observations"];
 /**
  * Backups antigos não têm `watches` (nem `listing_dismissals`, D-56): vira vazio. Alertas e dispensas dependem de
  * anúncios (e alertas, de monitores): entram por último.
@@ -38,6 +38,12 @@ const WATCH_ORDER = ["watches", "alerts", "listing_dismissals"];
 function validate({ tables, catalog, watches }) {
   const problems = [];
   const listingIds = new Set(catalog.listings.map((listing) => listing.id));
+  const fipeMatchIds = new Set(catalog.fipe_matches.map((match) => match.id));
+  for (const listing of catalog.listings) {
+    if (listing.fipe_match_id && !fipeMatchIds.has(listing.fipe_match_id)) {
+      problems.push(`anúncio ${listing.id}: correlação FIPE ausente`);
+    }
+  }
   const watchOwners = new Map(watches.watches.map((watch) => [watch.id, watch.owner_id]));
   for (const alert of watches.alerts) {
     if (watchOwners.get(alert.watch_id) !== alert.owner_id) problems.push(`alerta ${alert.id}: monitor ausente`);
@@ -79,19 +85,20 @@ function validate({ tables, catalog, watches }) {
   return problems;
 }
 
-/** Colunas geradas pelo banco (ex.: `listings.price_cents`, D-43) não aceitam valor no insert: o banco recalcula. */
-async function generatedColumns(client, table) {
+/** Colunas reais não geradas da tabela no destino: impede injeção de identificador e ignora colunas removidas. */
+async function insertableColumns(client, table) {
   const { rows } = await client.query(
-    "select column_name from information_schema.columns where table_schema = 'public' and table_name = $1 and is_generated = 'ALWAYS'",
+    "select column_name from information_schema.columns where table_schema = 'public' and table_name = $1 and is_generated = 'NEVER'",
     [table],
   );
   return new Set(rows.map((row) => row.column_name));
 }
 
 async function insertRows(client, table, rows) {
-  const generated = await generatedColumns(client, table);
+  const allowed = await insertableColumns(client, table);
   for (const row of rows) {
-    const columns = Object.keys(row).filter((column) => !generated.has(column));
+    const columns = Object.keys(row).filter((column) => allowed.has(column));
+    if (columns.length === 0) continue;
     const placeholders = columns.map((_, index) => `$${index + 1}`).join(", ");
     await client.query(
       `insert into "${table}" (${columns.map((column) => `"${column}"`).join(", ")}) values (${placeholders})`,
@@ -113,7 +120,9 @@ async function apply(backup) {
   await client.connect();
   try {
     const applied = (
-      await client.query("select migration_name from _prisma_migrations where finished_at is not null order by 1")
+      await client.query(
+        "select migration_name from _prisma_migrations where finished_at is not null and rolled_back_at is null order by 1",
+      )
     ).rows.map((row) => row.migration_name);
     const missing = backup.migrations.filter((name) => !applied.includes(name));
     if (missing.length > 0)
@@ -167,9 +176,15 @@ async function restorePhotos(backupDir, images) {
     return;
   }
   const supabase = createClient(supabaseUrl, secretKey, { auth: { persistSession: false } });
+  const photosRoot = path.resolve(backupDir, "photos");
   let sent = 0;
   for (const image of images) {
-    const file = await readFile(path.join(backupDir, "photos", image.sourcePath)).catch(() => null);
+    const sourceFile = path.resolve(photosRoot, image.sourcePath);
+    if (!sourceFile.startsWith(photosRoot + path.sep)) {
+      console.warn("Caminho inválido de foto ignorado:", image.sourcePath);
+      continue;
+    }
+    const file = await readFile(sourceFile).catch(() => null);
     if (!file) {
       console.warn("Arquivo ausente no backup:", image.sourcePath);
       continue;
@@ -183,10 +198,11 @@ async function restorePhotos(backupDir, images) {
   console.log(`Fotos: ${sent} de ${images.length} enviadas.`);
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /** Troca o dono de todos os registros e o prefixo das fotos. Só para backups de um único dono. */
 function reassignOwner(backup, newOwner) {
-  if (!/^[0-9a-f-]{36}$/.test(newOwner))
-    throw new Error("--owner precisa ser o UUID do usuário no projeto de destino.");
+  if (!UUID_RE.test(newOwner)) throw new Error("--owner precisa ser o UUID do usuário no projeto de destino.");
   const owners = new Set([
     ...TABLE_ORDER.flatMap((table) => backup.tables[table].map((row) => row.owner_id)),
     ...WATCH_ORDER.flatMap((table) => backup.watches[table].map((row) => row.owner_id)),
@@ -198,7 +214,12 @@ function reassignOwner(backup, newOwner) {
   for (const table of TABLE_ORDER) {
     for (const row of backup.tables[table]) {
       row.owner_id = newOwner;
-      if (table === "lot_images") row.storage_path = row.storage_path.replace(`${oldOwner}/`, `${newOwner}/`);
+      if (table === "lot_images") {
+        if (!row.storage_path.startsWith(`${oldOwner}/`)) {
+          throw new Error(`Foto ${row.id} fora da pasta do dono original: ${row.storage_path}`);
+        }
+        row.storage_path = `${newOwner}/${row.storage_path.slice(oldOwner.length + 1)}`;
+      }
     }
   }
   for (const table of WATCH_ORDER) for (const row of backup.watches[table]) row.owner_id = newOwner;
@@ -215,8 +236,24 @@ async function main() {
     throw new Error("Informe a pasta do backup: npm run restore -- backups/<data> [--apply] [--owner <id>]");
   const backup = JSON.parse(await readFile(path.join(backupDir, "database.json"), "utf8"));
   if (backup.format !== 1) throw new Error(`Formato de backup desconhecido: ${backup.format}`);
+  const hasFipeMatches = backup.catalog?.fipe_matches !== undefined;
   backup.catalog = Object.fromEntries(CATALOG_ORDER.map((table) => [table, backup.catalog?.[table] ?? []]));
   backup.watches = Object.fromEntries(WATCH_ORDER.map((table) => [table, backup.watches?.[table] ?? []]));
+
+  if (!hasFipeMatches) {
+    let cleared = 0;
+    for (const listing of backup.catalog.listings) {
+      if (listing.fipe_match_id != null) {
+        listing.fipe_match_id = null;
+        cleared += 1;
+      }
+    }
+    if (cleared > 0) {
+      console.warn(
+        `Aviso: backup legado sem fipe_matches; fipe_match_id limpo em ${cleared} anúncios (rode db:fipe-match após restaurar).`,
+      );
+    }
+  }
 
   const counts = Object.fromEntries([
     ...TABLE_ORDER.map((table) => [table, backup.tables[table].length]),

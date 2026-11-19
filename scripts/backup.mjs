@@ -72,6 +72,9 @@ async function main() {
       tables[table.name] = (await client.query(`select * from "${table.name}" order by ${table.orderBy}`)).rows;
     }
     if (migrations.some((name) => name.endsWith("_add_listings_catalog"))) {
+      if (migrations.some((name) => name.endsWith("_fipe_catalog_and_matches"))) {
+        catalog.fipe_matches = (await client.query('select * from "fipe_matches" order by vehicle_key, id')).rows;
+      }
       for (const table of CATALOG_TABLES) {
         catalog[table.name] = (await client.query(`select * from "${table.name}" order by ${table.orderBy}`)).rows;
       }
@@ -114,13 +117,18 @@ async function backupPhotos(images, outDir) {
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, secretKey, { auth: { persistSession: false } });
   let saved = 0;
   const missing = [];
+  const photosRoot = path.resolve(outDir, "photos");
   for (const image of images) {
+    const target = path.resolve(photosRoot, image.storage_path);
+    if (!target.startsWith(photosRoot + path.sep)) {
+      console.warn("Caminho inválido de foto ignorado:", image.storage_path);
+      continue;
+    }
     const { data, error } = await supabase.storage.from("lot-images").download(image.storage_path);
     if (error || !data) {
       missing.push(image.storage_path);
       continue;
     }
-    const target = path.join(outDir, "photos", image.storage_path);
     await mkdir(path.dirname(target), { recursive: true });
     await writeFile(target, Buffer.from(await data.arrayBuffer()));
     saved += 1;
