@@ -1,8 +1,11 @@
+import { ChevronRight, CircleAlert, CircleCheck, Clock, type LucideIcon, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 
 import { Badge, ButtonLink, EmptyState, Money, Skeleton } from "@/components/ui";
+import type { LimitFit } from "@/domain/listings/estimates";
 import { LIMIT_FIT_LABELS, LIMIT_FIT_VARIANTS, priceEvidenceLabel } from "@/features/listings/labels";
 import { formatDate, formatShortDateTime } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 import { getFollowedLotsOverview } from "../queries";
 import type { FollowedLotItem } from "../types";
@@ -10,6 +13,12 @@ import { LimitProgress } from "./limit-progress";
 
 const SHOWN = 8;
 const ALL_FOLLOWED_HREF = "/minhas-analises?acompanhados=1&resultado=sem";
+
+const LIMIT_FIT_ICONS = {
+  comfortable: CircleCheck,
+  tight: TriangleAlert,
+  above: CircleAlert,
+} as const satisfies Record<LimitFit, LucideIcon>;
 
 /**
  * "Lotes acompanhados" do dashboard (SPEC §5, DESIGN.md §15.1 e §19.5, D-44): ativos, marcados e ainda sem
@@ -44,27 +53,56 @@ export async function FollowedLots() {
           >
             <span className="font-mono text-label font-normal text-foreground-secondary">{lot.lotNumber}</span>
             <div className="min-w-0">
-              <Link href={`/lotes/${lot.id}`} className="font-semibold text-foreground hover:underline">
-                {lot.brand} {lot.model} {lot.modelYear}
+              <Link
+                href={`/lotes/${lot.id}`}
+                className="group inline-flex max-w-full items-center gap-1 font-semibold text-foreground hover:underline"
+              >
+                <span className="truncate">
+                  {lot.brand} {lot.model} {lot.modelYear}
+                </span>
+                <ChevronRight
+                  aria-hidden="true"
+                  className="size-3.5 shrink-0 text-muted-subtle transition-transform duration-120 group-hover:translate-x-0.5 group-hover:text-foreground"
+                />
               </Link>
-              <p className="truncate text-caption text-muted">
-                {lot.auction.name} ·{" "}
-                {lot.endsAt ? `encerra ${formatShortDateTime(lot.endsAt)}` : formatDate(lot.auction.startsAt)}
+              <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-caption text-muted">
+                <span className="min-w-0 truncate">{lot.auction.name}</span>
+                <span aria-hidden="true" className="text-border-strong">
+                  ·
+                </span>
+                <span className="inline-flex shrink-0 items-center gap-1 tabular-nums">
+                  <Clock aria-hidden="true" className="size-3 shrink-0 text-muted-subtle" />
+                  {lot.endsAt ? `encerra ${formatShortDateTime(lot.endsAt)}` : formatDate(lot.auction.startsAt)}
+                </span>
               </p>
             </div>
-            <div className="col-start-2 md:col-start-auto md:text-right">
-              <p className="text-body-lg font-medium text-foreground">
-                <Money value={lot.currentBid} />
-              </p>
-              <p className="text-caption text-muted">
-                {lot.limit?.isViable && lot.limit.maxBid !== null ? (
-                  <>
-                    de <Money value={lot.limit.maxBid} />
-                  </>
-                ) : (
-                  "sem limite"
-                )}
-              </p>
+            <div className="col-start-2 flex items-stretch gap-2.5 md:col-start-auto md:flex-row-reverse md:justify-start">
+              <span aria-hidden="true" className="flex flex-col items-center py-1.5">
+                <span className="size-1.5 rounded-full bg-foreground" />
+                <span className="my-0.5 w-px flex-1 bg-border-strong" />
+                <span
+                  className={cn(
+                    "size-1.5 rounded-none border",
+                    lot.limit?.isViable && lot.limit.maxBid !== null
+                      ? "border-foreground-secondary bg-surface"
+                      : "border-dashed border-muted-subtle",
+                  )}
+                />
+              </span>
+              <div className="md:text-right">
+                <p className="text-body-lg font-medium text-foreground">
+                  <Money value={lot.currentBid} />
+                </p>
+                <p className="text-caption text-muted">
+                  {lot.limit?.isViable && lot.limit.maxBid !== null ? (
+                    <>
+                      de <Money value={lot.limit.maxBid} />
+                    </>
+                  ) : (
+                    "sem limite"
+                  )}
+                </p>
+              </div>
             </div>
             <div className="col-start-2 grid gap-1.5 md:col-start-auto">
               <LimitProgress limit={lot.limit} bid={lot.currentBid} />
@@ -93,13 +131,19 @@ function ProbableLine({ lot }: { lot: FollowedLotItem }) {
       </p>
     );
   }
+  const FitIcon = fit ? LIMIT_FIT_ICONS[fit] : null;
   return (
     <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-muted">
       <span>
         Provável <Money value={price.median} className="font-medium text-foreground-secondary" /> (
         {priceEvidenceLabel(price)})
       </span>
-      {fit === null ? null : <Badge variant={LIMIT_FIT_VARIANTS[fit]}>{LIMIT_FIT_LABELS[fit]}</Badge>}
+      {fit !== null && FitIcon ? (
+        <Badge variant={LIMIT_FIT_VARIANTS[fit]}>
+          <FitIcon aria-hidden="true" className="size-3 shrink-0" />
+          {LIMIT_FIT_LABELS[fit]}
+        </Badge>
+      ) : null}
     </p>
   );
 }
