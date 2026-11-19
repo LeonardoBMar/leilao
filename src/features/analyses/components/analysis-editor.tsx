@@ -1,60 +1,31 @@
 "use client";
 
-import { Calculator, FileInput, Lock, Save, Trash2 } from "lucide-react";
-import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { Lock, Save } from "lucide-react";
+import { useActionState, useEffect, useRef, useState } from "react";
 
-import {
-  Alert,
-  AlertDescription,
-  Button,
-  Checkbox,
-  CurrencyInput,
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  Input,
-  RadioGroup,
-  RadioItem,
-  Textarea,
-  toast,
-} from "@/components/ui";
+import { Alert, AlertDescription, Button, toast } from "@/components/ui";
 import type { CommissionMode } from "@/domain/finance/calculator";
 import { estimateFromFipe } from "@/domain/finance/defaults";
 import { type Cents, parseBRL } from "@/domain/money";
 import type { LotMarketReference } from "@/features/research/types";
-import { fieldError, fieldValue, idleState } from "@/lib/action-state";
-import { toCalendarDateInput, toMonthInput } from "@/lib/dates";
-import { formatBps, formatBRL, formatMoneyInput, formatTime } from "@/lib/format";
+import { fieldValue, idleState } from "@/lib/action-state";
+import { formatBps, formatMoneyInput } from "@/lib/format";
 
-import { autosaveDraftAction, discardDraftAction, saveAnalysisAction } from "../actions";
+import { autosaveDraftAction, saveAnalysisAction } from "../actions";
 import { fipeFill } from "../fipe-fill";
 import { FIELD_LABELS, FIXED_COST_LABELS } from "../labels";
 import { readAnalysisInputs } from "../read-inputs";
-import { liveSummary, type SummaryModel } from "../summary-model";
+import { liveSummary } from "../summary-model";
 import type { AnalysisDetail } from "../types";
+import { AnalysisCostsSection } from "./analysis-costs-section";
+import { type AutosaveStatus, AutosaveText, DiscardDraftButton, MobileMaxBidBar } from "./analysis-mobile-bar";
+import { AnalysisReferencesSection } from "./analysis-references-section";
 import { AnalysisSummary } from "./analysis-summary";
 
 /** Espera depois da última digitação antes de salvar sozinho. */
 const AUTOSAVE_DELAY_MS = 1500;
 
-type AutosaveStatus =
-  { kind: "idle" } | { kind: "saving" } | { kind: "saved"; at: Date } | { kind: "invalid" | "failed" };
-
 const centsToInput = (value: Cents | null) => (value === null ? undefined : formatMoneyInput(value));
-const bpsToInput = (value: number | null) =>
-  value === null
-    ? undefined
-    : (value / 100)
-        .toFixed(2)
-        .replace(/\.?0+$/, "")
-        .replace(".", ",");
-
-type MoneyField = (typeof FIXED_COST_LABELS)[number][0] | "riskReserve" | "desiredMargin";
 
 /** Rascunho da análise (SPEC `/analise/[id]`, RF-04): formulário + resumo ao vivo. */
 export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail; market: LotMarketReference | null }) {
@@ -235,33 +206,8 @@ export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail;
   }
 
   const emptyFixedCostCount = FIXED_COST_LABELS.filter(([name]) => inputs[name] === null).length;
-
   const { inputs: saved, references } = analysis;
   const value = (field: string, stored?: string) => fieldValue(state, field) ?? prefill?.[field] ?? stored;
-  const percent = (name: "riskReserveRate" | "desiredMarginRate", label: string, helperText: string) => (
-    <Input
-      name={name}
-      label={label}
-      inputMode="decimal"
-      placeholder={name === "riskReserveRate" ? "5" : "15"}
-      helperText={helperText}
-      defaultValue={value(
-        name,
-        bpsToInput(name === "riskReserveRate" ? saved.riskReserveRateBps : saved.desiredMarginRateBps),
-      )}
-      error={fieldError(state, name)}
-    />
-  );
-  const money = (name: MoneyField, label: string, helperText?: string) => (
-    <CurrencyInput
-      name={name}
-      label={label}
-      helperText={helperText}
-      defaultValue={value(name, centsToInput(saved[name]))}
-      error={fieldError(state, name)}
-    />
-  );
-
   const summaryModel = liveSummary(inputs);
   const missingFields = summaryModel.outcome.kind === "incomplete" ? summaryModel.outcome.missing : [];
 
@@ -282,185 +228,30 @@ export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail;
           </Alert>
         ) : null}
 
-        <fieldset className="grid gap-4 md:grid-cols-2 md:gap-6">
-          <legend className="mb-4 text-heading-3 text-foreground">Referências de preço</legend>
-          <CurrencyInput
-            name="fipeValue"
-            label="FIPE (opcional)"
-            helperText="Base das premissas padrão de valor de venda e reparos."
-            defaultValue={value("fipeValue", centsToInput(references.fipeValue))}
-            error={fieldError(state, "fipeValue")}
-          />
-          <div className="flex flex-wrap gap-2 md:mt-7">
-            {analysis.listingFipe === null ? null : (
-              <Button type="button" variant="secondary" onClick={applyListingFipe}>
-                <FileInput aria-hidden="true" />
-                Usar FIPE do anúncio ({formatBRL(analysis.listingFipe.value)})
-              </Button>
-            )}
-            <Button type="button" variant="secondary" onClick={estimateSaleAndRepairs}>
-              <Calculator aria-hidden="true" />
-              Estimar a partir da FIPE
-            </Button>
-          </div>
-          <CurrencyInput
-            name="marketValue"
-            label="Valor de venda esperado"
-            helperText="Quanto o veículo vale após os reparos. Padrão: FIPE menos o desconto pela condição."
-            containerClassName="md:col-span-2"
-            defaultValue={value("marketValue", centsToInput(saved.marketValue))}
-            error={fieldError(state, "marketValue")}
-          />
-          {/* Metadados raros: recolhidos, mas sempre enviados com o formulário. */}
-          <details
-            className="group md:col-span-2"
-            open={["marketReferenceDate", "marketReferenceSource", "fipeReferenceMonth", "fipeReferenceSource"].some(
-              (field) => fieldError(state, field) !== undefined,
-            )}
-          >
-            <summary className="cursor-pointer text-label text-foreground-secondary hover:text-foreground">
-              Fontes e datas das referências
-            </summary>
-            <div className="mt-4 grid gap-4 md:grid-cols-2 md:gap-6">
-              <Input
-                name="marketReferenceDate"
-                type="date"
-                label="Data da referência"
-                defaultValue={value(
-                  "marketReferenceDate",
-                  references.marketReferenceDate ? toCalendarDateInput(references.marketReferenceDate) : undefined,
-                )}
-                error={fieldError(state, "marketReferenceDate")}
-              />
-              <Input
-                name="marketReferenceSource"
-                label="Fonte da referência"
-                placeholder="Ex.: anúncios similares, avaliação"
-                maxLength={200}
-                defaultValue={value("marketReferenceSource", references.marketReferenceSource ?? undefined)}
-                error={fieldError(state, "marketReferenceSource")}
-              />
-              <Input
-                name="fipeReferenceMonth"
-                type="month"
-                label="Mês da FIPE"
-                defaultValue={value(
-                  "fipeReferenceMonth",
-                  references.fipeReferenceMonth ? toMonthInput(references.fipeReferenceMonth) : undefined,
-                )}
-                error={fieldError(state, "fipeReferenceMonth")}
-              />
-              <Input
-                name="fipeReferenceSource"
-                label="Fonte da FIPE"
-                maxLength={200}
-                defaultValue={value("fipeReferenceSource", references.fipeReferenceSource ?? undefined)}
-                error={fieldError(state, "fipeReferenceSource")}
-              />
-            </div>
-          </details>
-        </fieldset>
+        <AnalysisReferencesSection
+          state={state}
+          marketValue={saved.marketValue}
+          references={references}
+          listingFipe={analysis.listingFipe}
+          value={value}
+          onApplyListingFipe={applyListingFipe}
+          onEstimateSaleAndRepairs={estimateSaleAndRepairs}
+        />
 
-        <fieldset className="grid gap-4 md:grid-cols-2 md:gap-6">
-          <legend className="mb-4 text-heading-3 text-foreground">Custos fixos</legend>
-          <div className="-mt-2 flex flex-wrap items-center justify-between gap-2 md:col-span-2">
-            <p className="text-caption text-muted">
-              Informe 0 quando não houver o custo. Campo vazio significa “não informado” e impede a fixação.
-            </p>
-            {emptyFixedCostCount > 0 ? (
-              <Button type="button" variant="outline" size="sm" onClick={zeroEmptyFixedCosts}>
-                Preencher vazios com R$ 0 ({emptyFixedCostCount})
-              </Button>
-            ) : null}
-          </div>
-          {FIXED_COST_LABELS.map(([name, label]) => (
-            <div key={name}>{money(name, label)}</div>
-          ))}
-        </fieldset>
-
-        <fieldset className="grid gap-4 md:grid-cols-2 md:gap-6">
-          <legend className="mb-4 text-heading-3 text-foreground">Comissão do leiloeiro</legend>
-          <div className="grid gap-2 md:col-span-2">
-            <RadioGroup
-              name="commissionMode"
-              value={mode}
-              onValueChange={(next) => {
-                setMode(next === "fixed" || next === "percentage" ? next : "");
-                recompute({ commissionMode: next });
-              }}
-              aria-label="Modalidade da comissão"
-              className="md:grid-cols-2"
-            >
-              <RadioItem value="fixed" label="Valor fixo" description="Mesmo valor para qualquer lance." />
-              <RadioItem value="percentage" label="Percentual sobre o lance" description="Ex.: 5% do lance." />
-            </RadioGroup>
-            {fieldError(state, "commissionMode") ? (
-              <p className="text-caption text-error" role="alert">
-                {fieldError(state, "commissionMode")}
-              </p>
-            ) : null}
-          </div>
-          {mode === "fixed" ? (
-            <CurrencyInput
-              name="commissionFixed"
-              label="Comissão fixa"
-              defaultValue={value("commissionFixed", centsToInput(saved.commissionFixed))}
-              error={fieldError(state, "commissionFixed")}
-            />
-          ) : null}
-          {mode === "percentage" ? (
-            <Input
-              name="commissionRate"
-              label="Taxa de comissão (%)"
-              inputMode="decimal"
-              placeholder="5,00"
-              helperText="Aplicada sobre o lance, arredondada ao centavo."
-              defaultValue={value("commissionRate", bpsToInput(saved.commissionRateBps))}
-              error={fieldError(state, "commissionRate")}
-            />
-          ) : null}
-        </fieldset>
-
-        <fieldset className="grid gap-4 md:grid-cols-2 md:gap-6">
-          <legend className="mb-4 text-heading-3 text-foreground">Estratégia</legend>
-          {percent("riskReserveRate", "Reserva para imprevistos (%)", "Do valor de venda.")}
-          {percent(
-            "desiredMarginRate",
-            "Margem desejada (%)",
-            "Do valor de venda: lucro pretendido ou economia mínima.",
-          )}
-          {/* Análises anteriores ao % (D-38) guardavam R$; o campo aparece até o % ser preenchido. */}
-          {saved.riskReserve !== null && saved.riskReserveRateBps === null
-            ? money("riskReserve", "Reserva em R$ (versão anterior)", "Vale enquanto o % estiver vazio.")
-            : null}
-          {saved.desiredMargin !== null && saved.desiredMarginRateBps === null
-            ? money("desiredMargin", "Margem em R$ (versão anterior)", "Vale enquanto o % estiver vazio.")
-            : null}
-        </fieldset>
-
-        <fieldset className="grid gap-4">
-          <legend className="mb-4 text-heading-3 text-foreground">Notas</legend>
-          <Textarea
-            name="notes"
-            label="Premissas, danos, documentação e dúvidas"
-            rows={5}
-            maxLength={10_000}
-            defaultValue={value("notes", references.notes ?? undefined)}
-            error={fieldError(state, "notes")}
-          />
-          <Checkbox
-            name="knownResultAtCreation"
-            label="Fiz esta análise já conhecendo o resultado do lote"
-            description="Análises retrospectivas ficam fora do indicador de decisões anteriores ao resultado."
-            defaultChecked={
-              state.status === "error"
-                ? fieldValue(state, "knownResultAtCreation") !== undefined
-                : prefill
-                  ? prefill.knownResultAtCreation !== undefined
-                  : references.knownResultAtCreation
-            }
-          />
-        </fieldset>
+        <AnalysisCostsSection
+          state={state}
+          saved={saved}
+          references={references}
+          mode={mode}
+          prefill={prefill}
+          emptyFixedCostCount={emptyFixedCostCount}
+          value={value}
+          onZeroEmptyFixedCosts={zeroEmptyFixedCosts}
+          onModeChange={(next) => {
+            setMode(next === "fixed" || next === "percentage" ? next : "");
+            recompute({ commissionMode: next });
+          }}
+        />
 
         <div className="grid gap-3 border-t border-border pt-6">
           {missingFields.length > 0 ? (
@@ -514,99 +305,5 @@ export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail;
         }}
       />
     </div>
-  );
-}
-
-/** Barra inferior fixa em telas abaixo de `lg` (DESIGN.md §10): mantém o lance máximo visível durante a edição. */
-function MobileMaxBidBar({ model, pending, onFix }: { model: SummaryModel; pending: boolean; onFix: () => void }) {
-  const { outcome } = model;
-  return (
-    <div
-      aria-label="Resumo rápido da análise"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-border-strong bg-surface px-4 py-3 shadow-md lg:hidden"
-    >
-      <div className="mx-auto flex max-w-360 items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-caption text-muted">Lance máximo</p>
-          {outcome.kind === "viable" ? (
-            <p className="truncate text-heading-2 font-semibold text-foreground tabular-nums">
-              {formatBRL(outcome.maxBid)}
-            </p>
-          ) : outcome.kind === "not_viable" ? (
-            <p className="truncate text-label font-semibold text-warning">Sem lance viável</p>
-          ) : (
-            <p className="truncate text-label text-muted">
-              Falta: {outcome.missing.map((field) => FIELD_LABELS[field]).join(", ")}
-            </p>
-          )}
-        </div>
-        <Button type="button" size="sm" onClick={onFix} loading={pending} loadingLabel="Fixando…">
-          <Lock aria-hidden="true" />
-          Fixar análise
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function AutosaveText({ status }: { status: AutosaveStatus }) {
-  const text = {
-    idle: null,
-    saving: "Salvando…",
-    saved: status.kind === "saved" ? `Salvo às ${formatTime(status.at)}` : null,
-    invalid: "Não salvo: revise os campos",
-    failed: "Não foi possível salvar sozinho",
-  }[status.kind];
-  if (!text) return null;
-  return (
-    <p
-      className={
-        status.kind === "invalid" || status.kind === "failed" ? "text-caption text-warning" : "text-caption text-muted"
-      }
-      aria-live="polite"
-    >
-      {text}
-    </p>
-  );
-}
-
-function DiscardDraftButton({ analysisId }: { analysisId: string }) {
-  const [isPending, startTransition] = useTransition();
-
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button type="button" variant="ghost">
-          <Trash2 aria-hidden="true" />
-          Descartar rascunho
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Descartar rascunho?</DialogTitle>
-          <DialogDescription>
-            Os dados deste rascunho serão removidos. Versões fixadas não são afetadas.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="secondary">Voltar</Button>
-          </DialogClose>
-          <Button
-            variant="destructive"
-            loading={isPending}
-            loadingLabel="Descartando…"
-            onClick={() =>
-              startTransition(async () => {
-                const result = await discardDraftAction(analysisId);
-                if (result.status === "error") toast.error(result.message);
-              })
-            }
-          >
-            Descartar
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }

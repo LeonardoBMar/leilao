@@ -1,10 +1,10 @@
 "use client";
 
 import { ChevronDown, LoaderCircle, SlidersHorizontal, Target } from "lucide-react";
-import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useId, useOptimistic, useRef, useTransition } from "react";
 
+import { ActiveFilterChips } from "@/components/layout/active-filter-chips";
 import {
   Button,
   Checkbox,
@@ -22,7 +22,6 @@ import {
   PopoverTrigger,
   RadioGroup,
   RadioItem,
-  RemovableChip,
   SearchBox,
   SegmentedControl,
   Select,
@@ -32,7 +31,6 @@ import {
   SelectValue,
 } from "@/components/ui";
 import { withQuery } from "@/features/listings/search";
-import { MOTION_EXIT_TRANSITION, MOTION_LAYOUT_TRANSITION } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 import {
@@ -246,55 +244,14 @@ export function LotFilters({
         </Dialog>
       </div>
 
-      {chips.length > 0 ? (
-        <LayoutGroup>
-          <div className="relative flex flex-wrap items-center gap-2">
-            <ul aria-label="Filtros ativos" className="contents">
-              <AnimatePresence mode="popLayout" initial={false}>
-                {chips.map((chip) => (
-                  <motion.li
-                    key={chip.id}
-                    layout="position"
-                    initial={{ opacity: 0, scale: 0.94 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.94, transition: MOTION_EXIT_TRANSITION }}
-                    transition={MOTION_LAYOUT_TRANSITION}
-                    className="flex max-w-full"
-                  >
-                    <RemovableChip
-                      removeLabel={`Remover filtro ${chip.label}`}
-                      onRemove={() => applyAndFocusStatus(chip.without)}
-                    >
-                      {chip.label}
-                    </RemovableChip>
-                  </motion.li>
-                ))}
-              </AnimatePresence>
-            </ul>
-            <AnimatePresence mode="popLayout" initial={false}>
-              {chips.length > 1 ? (
-                <motion.div
-                  key="clear-all"
-                  layout="position"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0, transition: MOTION_EXIT_TRANSITION }}
-                  transition={MOTION_LAYOUT_TRANSITION}
-                >
-                  <Button
-                    variant="link"
-                    size="sm"
-                    className="h-10 px-1"
-                    onClick={() => applyAndFocusStatus(clearedLotFilters(filters))}
-                  >
-                    Limpar tudo
-                  </Button>
-                </motion.div>
-              ) : null}
-            </AnimatePresence>
-          </div>
-        </LayoutGroup>
-      ) : null}
+      <ActiveFilterChips
+        chips={chips}
+        onRemove={(id) => {
+          const chip = chips.find((item) => item.id === id);
+          if (chip) applyAndFocusStatus(chip.without);
+        }}
+        onClearAll={() => applyAndFocusStatus(clearedLotFilters(filters))}
+      />
 
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         <p
