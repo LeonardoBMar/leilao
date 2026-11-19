@@ -37,7 +37,7 @@ const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
-  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
+  ...(isDev ? [] : [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" }]),
 ];
 
 const nextConfig: NextConfig = {
@@ -45,6 +45,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Modelo de renderização atual: dinâmico por padrão, cache explícito com "use cache" e streaming com <Suspense>.
   cacheComponents: true,
+  // Preserva o prefetch atual no Next 16.4.6 até auditarmos `partialPrefetching: true` (D-84).
+  partialPrefetching: false,
   // Bases do catálogo global entre requisições (D-78): a coleta roda a cada 2 h, então 15 min de atraso não mudam nada.
   cacheLife: {
     catalog: { stale: 300, revalidate: 900, expire: 7200 },

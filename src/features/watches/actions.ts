@@ -2,6 +2,7 @@
 
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 
 import { parseListingParams } from "@/features/listings/schemas";
 import { type ActionState, failure, validationError } from "@/lib/action-state";
@@ -28,9 +29,11 @@ export async function createWatchFromSearchAction(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  const parsedQuery = z.string().max(4_000).safeParse(query);
+  if (!parsedQuery.success) return failure("Critérios da busca inválidos.", formData);
   const parsed = quickWatchSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return validationError(parsed.error, formData);
-  const { criteria } = parseListingParams(Object.fromEntries(new URLSearchParams(query)));
+  const { criteria } = parseListingParams(Object.fromEntries(new URLSearchParams(parsedQuery.data)));
   if (!hasVehicleCriterion(criteria)) {
     return failure("Para salvar, busque por marca ou modelo, ou filtre por ano, preço ou % do mercado.", formData);
   }

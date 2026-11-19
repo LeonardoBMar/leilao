@@ -94,7 +94,7 @@ export async function createDraft(lotId: string, sourceId?: string): Promise<Res
 
   try {
     const draft = await db.$transaction(async (tx) => {
-      const { _max } = await tx.analysis.aggregate({ where: { lotId }, _max: { version: true } });
+      const { _max } = await tx.analysis.aggregate({ where: { lotId, ownerId: user.id }, _max: { version: true } });
       return tx.analysis.create({
         data: {
           ...premises,
@@ -157,16 +157,18 @@ export async function fixAnalysis(id: string, form: AnalysisForm): Promise<Resul
   // Mercado do lote no momento da fixação (D-74), gravado no mesmo UPDATE: depois dele a linha é imutável.
   const draft = await db.analysis.findFirst({
     where: { id, ownerId: user.id, status: "draft" },
-    select: { lotId: true },
+    select: { lotId: true, lot: { select: { _count: { select: { results: true } } } } },
   });
   if (!draft) return err(await whyNotDraft(id, user.id));
   const market = await getLotMarketReference(draft.lotId);
   const fixedAt = new Date();
+  const analysisData = toAnalysisData(form);
 
   const { count } = await db.analysis.updateMany({
     where: { id, ownerId: user.id, status: "draft" },
     data: {
-      ...toAnalysisData(form),
+      ...analysisData,
+      knownResultAtCreation: analysisData.knownResultAtCreation || draft.lot._count.results > 0,
       ...(market === null ? {} : { marketSnapshot: snapshotOf(market, fixedAt) }),
       // Reserva e margem em %: a versão fixada guarda também o valor aplicado em R$ (D-38).
       riskReserveCents: riskReserve,

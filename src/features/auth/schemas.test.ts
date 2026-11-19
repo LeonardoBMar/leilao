@@ -7,12 +7,19 @@ describe("nextPathSchema", () => {
     expect(nextPathSchema.parse(path)).toBe(path);
   });
 
-  it.each(["https://evil.example", "//evil.example/x", "/\\evil.example", "javascript:alert(1)", "dashboard"])(
-    "troca destino externo ou inválido %s pelo padrão",
-    (path) => {
-      expect(nextPathSchema.parse(path)).toBe(DEFAULT_AFTER_LOGIN);
-    },
-  );
+  it.each([
+    "https://evil.example",
+    "//evil.example/x",
+    "/\\evil.example",
+    "javascript:alert(1)",
+    "dashboard",
+    "/login",
+    "/login?next=/dashboard",
+    "/dashboard\r\nX-Test: 1",
+    "/dashboard\x00",
+  ])("troca destino externo ou inválido %s pelo padrão", (path) => {
+    expect(nextPathSchema.parse(path)).toBe(DEFAULT_AFTER_LOGIN);
+  });
 });
 
 describe("loginInputSchema", () => {
