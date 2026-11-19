@@ -12,7 +12,6 @@ export default function CatalogAuctionsPage({ searchParams }: PageProps<"/leiloe
     <div className="grid gap-6">
       <PageHeader
         title="Leilões"
-        description="Leilões encontrados automaticamente nos sites, com todos os lotes coletados."
         actions={
           <Suspense fallback={<CollectorStatusLineSkeleton />}>
             <CollectorStatusLine />
