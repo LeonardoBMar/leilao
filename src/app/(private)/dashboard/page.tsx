@@ -1,4 +1,4 @@
-import { Gavel, Plus } from "lucide-react";
+import { Calculator, CalendarDays, ChevronRight, Eye, Gavel, Plus } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
@@ -63,9 +63,17 @@ export default function DashboardPage() {
         <div className="grid content-start gap-10 xl:col-start-1 xl:row-span-2 xl:row-start-1">
           <Section aria-labelledby="followed-lots" className="gap-2">
             <SectionHeader>
-              <SectionTitle id="followed-lots">Lotes acompanhados</SectionTitle>
-              <ButtonLink href="/minhas-analises?acompanhados=1&resultado=sem" variant="link" className="h-auto px-0">
+              <SectionTitle id="followed-lots" className="flex scroll-mt-20 items-center gap-2">
+                <Eye aria-hidden="true" className="size-4 shrink-0 text-muted" />
+                Lotes acompanhados
+              </SectionTitle>
+              <ButtonLink
+                href="/minhas-analises?acompanhados=1&resultado=sem"
+                variant="link"
+                className="h-auto gap-1 px-0"
+              >
                 Ver todos
+                <ChevronRight aria-hidden="true" className="size-4" />
               </ButtonLink>
             </SectionHeader>
             <Suspense fallback={<FollowedLotsSkeleton />}>
@@ -74,14 +82,20 @@ export default function DashboardPage() {
           </Section>
 
           <Section aria-labelledby="to-analyze" className="gap-2">
-            <SectionTitle id="to-analyze">Para analisar agora</SectionTitle>
+            <SectionTitle id="to-analyze" className="flex scroll-mt-20 items-center gap-2">
+              <Calculator aria-hidden="true" className="size-4 shrink-0 text-muted" />
+              Para analisar agora
+            </SectionTitle>
             <Suspense fallback={<ToAnalyzeSkeleton />}>
               <ToAnalyze />
             </Suspense>
           </Section>
 
           <Section aria-labelledby="region-auctions" className="gap-2">
-            <SectionTitle id="region-auctions">Próximos leilões na região</SectionTitle>
+            <SectionTitle id="region-auctions" className="flex scroll-mt-20 items-center gap-2">
+              <CalendarDays aria-hidden="true" className="size-4 shrink-0 text-muted" />
+              Próximos leilões na região
+            </SectionTitle>
             <Suspense fallback={<RegionAuctionsSkeleton />}>
               <RegionAuctions />
             </Suspense>
