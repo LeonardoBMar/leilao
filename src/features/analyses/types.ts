@@ -1,5 +1,6 @@
 import type { AnalysisInputs } from "@/domain/finance/calculator";
 import type { DefaultsInput } from "@/domain/finance/defaults";
+import type { ConditionFlag, DamageLevel, InspectionResult } from "@/domain/listings/condition";
 import type { Cents } from "@/domain/money";
 
 import type { ListingFipe } from "./fipe-fill";
@@ -17,6 +18,25 @@ export type AnalysisOutputs = {
   formulaVersion: number;
 };
 
+export type AnalysisVehicleContext = {
+  vehicleVersion: string | null;
+  mileageKm: number | null;
+  lotUrl: string | null;
+  sourceName: string | null;
+  city: string | null;
+  state: string | null;
+  endsAt: Date | null;
+  fuel: string | null;
+  hasKey: boolean | null;
+  recoveryType: string | null;
+  damageLevel: DamageLevel | null;
+  conditionFlags: ConditionFlag[];
+  inspection: InspectionResult | null;
+  inspectionNotes: string | null;
+  /** Fotos do anúncio ligado (D-29); fotos privadas do lote são combinadas na tela. */
+  listingPhotoUrls: string[];
+};
+
 export type AnalysisLotRef = {
   id: string;
   lotNumber: string;
@@ -24,6 +44,7 @@ export type AnalysisLotRef = {
   currentBid: Cents | null;
   hasResult: boolean;
   auction: { id: string; name: string };
+  context: AnalysisVehicleContext;
 };
 
 export type AnalysisDetail = {
