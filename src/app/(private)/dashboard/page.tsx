@@ -1,13 +1,13 @@
-import { Calculator, CalendarDays, ChevronRight, Eye, Gavel, Plus } from "lucide-react";
+import { Calculator, CalendarDays, Eye, Gavel, Plus } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { PageHeader } from "@/components/layout/page-header";
-import { ButtonLink, Section, SectionHeader, SectionTitle } from "@/components/ui";
+import { ButtonLink, Section, SectionTitle } from "@/components/ui";
 import { RecentAlerts } from "@/features/alerts/components/recent-alerts";
 import {
-  DashboardCounts,
-  DashboardCountsSkeleton,
+  DashboardKpis,
+  DashboardKpisSkeleton,
   DecisionIndicator,
   DecisionIndicatorSkeleton,
 } from "@/features/dashboard/components/dashboard-summary";
@@ -26,35 +26,36 @@ export const metadata: Metadata = { title: "Dashboard · Leilão Tracker" };
  */
 export default function DashboardPage() {
   return (
-    <div className="grid gap-9">
-      <PageHeader
-        title="Dashboard"
-        description={
-          <Suspense fallback={<DashboardCountsSkeleton />}>
-            <DashboardCounts />
-          </Suspense>
-        }
-        actions={
-          <>
-            <ButtonLink href="/minhas-analises/leiloes/novo" variant="secondary">
-              <Plus aria-hidden="true" />
-              Novo leilão
-            </ButtonLink>
-            <ButtonLink href="/leiloes">
-              <Gavel aria-hidden="true" />
-              Ver leilões
-            </ButtonLink>
-          </>
-        }
-      />
+    <div className="grid gap-8">
+      <div className="grid gap-5">
+        <PageHeader
+          title="Dashboard"
+          actions={
+            <>
+              <ButtonLink href="/minhas-analises/leiloes/novo" variant="secondary">
+                <Plus aria-hidden="true" />
+                Novo leilão
+              </ButtonLink>
+              <ButtonLink href="/leiloes">
+                <Gavel aria-hidden="true" />
+                Ver leilões
+              </ButtonLink>
+            </>
+          }
+        />
+
+        <Suspense fallback={<DashboardKpisSkeleton />}>
+          <DashboardKpis />
+        </Suspense>
+      </div>
 
       {/* Sem alertas não lidos, a seção não aparece: fallback vazio evita um bloco que some depois. */}
       <Suspense fallback={null}>
         <RecentAlerts />
       </Suspense>
 
-      <div className="grid items-start gap-10 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] xl:gap-x-14 xl:gap-y-5">
-        <div className="order-first grid content-start empty:hidden xl:order-none xl:col-start-2 xl:row-start-1">
+      <div className="grid items-start gap-10 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] xl:grid-rows-[auto_1fr] xl:gap-x-14 xl:gap-y-0">
+        <div className="order-first grid content-start empty:hidden xl:order-none xl:col-start-2 xl:row-start-1 xl:pb-5">
           <Suspense fallback={null}>
             <PendingItems />
           </Suspense>
@@ -62,20 +63,10 @@ export default function DashboardPage() {
 
         <div className="grid content-start gap-10 xl:col-start-1 xl:row-span-2 xl:row-start-1">
           <Section aria-labelledby="followed-lots" className="gap-2">
-            <SectionHeader>
-              <SectionTitle id="followed-lots" className="flex scroll-mt-20 items-center gap-2">
-                <Eye aria-hidden="true" className="size-4 shrink-0 text-muted" />
-                Lotes acompanhados
-              </SectionTitle>
-              <ButtonLink
-                href="/minhas-analises?acompanhados=1&resultado=sem"
-                variant="link"
-                className="h-auto gap-1 px-0"
-              >
-                Ver todos
-                <ChevronRight aria-hidden="true" className="size-4" />
-              </ButtonLink>
-            </SectionHeader>
+            <SectionTitle id="followed-lots" className="flex scroll-mt-20 items-center gap-2">
+              <Eye aria-hidden="true" className="size-4 shrink-0 text-muted" />
+              Lotes acompanhados
+            </SectionTitle>
             <Suspense fallback={<FollowedLotsSkeleton />}>
               <FollowedLots />
             </Suspense>
