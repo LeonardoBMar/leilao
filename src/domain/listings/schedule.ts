@@ -8,7 +8,7 @@ export const AFTER_END_DELAY_MS = HOUR;
 /** Anúncio aberto na região de interesse: lance atualizado a cada 6 h. */
 export const OPEN_REFRESH_MS = 6 * HOUR;
 /**
- * Anúncio aberto ligado a um lote do usuário (etapa 3): revisitado a cada execução do coletor (de 2 em 2 horas),
+ * Anúncio aberto ligado a um lote do usuário (etapa 3): revisitado a cada execução do coletor,
  * para o lance do lote se manter sozinho. Uma hora de folga cobre o atraso do disparo.
  */
 export const TRACKED_REFRESH_MS = HOUR;

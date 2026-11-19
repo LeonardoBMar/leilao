@@ -10,7 +10,7 @@ describe("collectorHealth", () => {
     expect(collectorHealth(null, now)).toBe("never");
   });
 
-  it("concluída há pouco: ok; há mais de 4 h: atrasada (agendamento parou)", () => {
+  it("concluída há pouco: ok; há mais de 14 h: atrasada (agendamento parou)", () => {
     expect(collectorHealth({ status: "succeeded", startedAt: ago(60_000), finishedAt: ago(0) }, now)).toBe("ok");
     const old = ago(COLLECTION_LATE_AFTER_MS + 1);
     expect(collectorHealth({ status: "succeeded", startedAt: old, finishedAt: old }, now)).toBe("late");

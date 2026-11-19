@@ -36,7 +36,7 @@ export async function CatalogAuctionsView({ searchParams }: { searchParams: Sear
         <EmptyState
           icon={Gavel}
           title={filters.ended ? "Nenhum leilão encerrado encontrado" : "Nenhum leilão aberto encontrado"}
-          description="O coletor busca lotes novos a cada 2 horas. Tire um filtro ou aumente a distância."
+          description="O coletor busca lotes novos a cada 12 horas. Tire um filtro ou aumente a distância."
           action={
             hasFilters ? (
               <ButtonLink

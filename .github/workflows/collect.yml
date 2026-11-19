@@ -3,10 +3,8 @@
 name: Coleta
 
 on:
-  # Disparo principal: o pg_cron do Supabase, de 2 em 2 horas (prisma/sql/cron.sql, D-33). O agendamento do GitHub
-  # atrasa e pula execuções; fica só como reserva, a cada 12 horas. Execução a mais é barata (coleta incremental).
-  schedule:
-    - cron: "47 */12 * * *"
+  # Disparo pelo pg_cron do Supabase, de 12 em 12 horas (prisma/sql/cron.sql, D-33). Sem `schedule` próprio
+  # para não duplicar execuções na cota mensal do GitHub Actions em repositório privado.
   workflow_dispatch:
     inputs:
       max_visits:

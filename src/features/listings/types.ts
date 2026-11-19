@@ -103,7 +103,7 @@ export type CatalogAuctionDetail = CatalogAuctionItem & {
 
 export type CollectorStatus = {
   /**
-   * A pior entre as últimas execuções de cada fonte ativa: interrompida conta como falha; parada há 4 h, como atraso.
+   * A pior entre as últimas execuções de cada fonte ativa: interrompida conta como falha; parada há 14 h, como atraso.
    */
   health: CollectorHealth;
   /** Fim da execução mais recente, de qualquer fonte. */

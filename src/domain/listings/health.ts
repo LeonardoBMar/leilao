@@ -2,8 +2,8 @@ const MINUTE = 60 * 1000;
 
 /** O workflow tem limite de 20 min: execução "em andamento" há mais de 30 min foi interrompida. */
 export const RUN_INTERRUPTED_AFTER_MS = 30 * MINUTE;
-/** Agendamento de 2 em 2 horas + folga para fila do GitHub: sem coleta concluída há 4 h, está atrasada. */
-export const COLLECTION_LATE_AFTER_MS = 4 * 60 * MINUTE;
+/** Agendamento de 12 em 12 horas + folga para fila do GitHub: sem coleta concluída há 14 h, está atrasada. */
+export const COLLECTION_LATE_AFTER_MS = 14 * 60 * MINUTE;
 
 export type CollectorHealth = "never" | "running" | "ok" | "late" | "failed";
 

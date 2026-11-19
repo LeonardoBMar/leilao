@@ -52,7 +52,7 @@ export async function ListingsView({ searchParams, basePath, auction }: Listings
           description={
             auction
               ? "Nenhum lote deste leilão atende aos filtros. Tire um filtro ou aumente a distância."
-              : "O coletor busca lotes novos a cada 2 horas. Tire um filtro ou aumente a distância."
+              : "O coletor busca lotes novos a cada 12 horas. Tire um filtro ou aumente a distância."
           }
           action={
             hasFilters ? (

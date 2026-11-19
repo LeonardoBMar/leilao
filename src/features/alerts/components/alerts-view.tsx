@@ -63,7 +63,7 @@ export async function AlertsView({ searchParams }: { searchParams: SearchParams 
         <EmptyState
           icon={BellRing}
           title={filters.unreadOnly ? "Nenhum alerta não lido" : "Nenhum alerta ainda"}
-          description="A cada coleta (de 2 em 2 horas), lotes novos que combinam com um monitor ligado aparecem aqui."
+          description="A cada coleta (de 12 em 12 horas), lotes novos que combinam com um monitor ligado aparecem aqui."
           action={
             <ButtonLink href="/monitores" variant="secondary">
               Ver monitores

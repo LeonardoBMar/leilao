@@ -1,6 +1,6 @@
--- Disparo da coleta pelo Supabase (D-33): o pg_cron chama a API do GitHub de 2 em 2 horas e dispara o workflow
--- "Coleta" (.github/workflows/collect.yml). O agendamento do próprio GitHub atrasa e pula execuções (4 de 12 em
--- 28/09/2026); ele fica só como reserva, mais espaçado.
+-- Disparo da coleta pelo Supabase (D-33): o pg_cron chama a API do GitHub de 12 em 12 horas e dispara o workflow
+-- "Coleta" (.github/workflows/collect.yml). O agendamento do próprio GitHub foi removido para não duplicar execuções
+-- nem consumir a cota mensal do Actions em repositório privado.
 --
 -- Fica fora das migrations do Prisma: pg_cron e pg_net não existem no shadow database.
 -- Pré-requisito: o segredo `github_workflow_token` no Vault (docs/OPERACAO.md §7). O token nunca fica neste arquivo.
@@ -18,10 +18,10 @@ begin
 end
 $$;
 
--- Horário em UTC. Minuto 17: fora da virada da hora, como no workflow. Mesmo nome = o job existente é atualizado.
+-- Horário em UTC (00:17 e 12:17 UTC = 21:17 e 09:17 BRT). Mesmo nome = o job existente é atualizado.
 select cron.schedule(
   'leilao-coleta',
-  '17 */2 * * *',
+  '17 */12 * * *',
   $job$
   select net.http_post(
     url := 'https://api.github.com/repos/LeonardoBMar/leilao/actions/workflows/collect.yml/dispatches',
