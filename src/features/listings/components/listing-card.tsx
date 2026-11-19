@@ -1,7 +1,18 @@
-import { Car, ClipboardCheck, Clock, ExternalLink, MapPin } from "lucide-react";
+import {
+  Car,
+  CircleAlert,
+  CircleCheck,
+  ClipboardCheck,
+  Clock,
+  ExternalLink,
+  type LucideIcon,
+  MapPin,
+  TriangleAlert,
+} from "lucide-react";
 import Image from "next/image";
 
 import { Badge, ButtonLink, Money } from "@/components/ui";
+import type { LimitFit } from "@/domain/listings/estimates";
 import type { Cents } from "@/domain/money";
 import { formatDateTime, formatKm, formatRatio } from "@/lib/format";
 
@@ -208,9 +219,16 @@ function ConditionBadges({ item }: { item: ListingListItem }) {
   );
 }
 
+const COMPACT_FIT_ICONS = {
+  comfortable: CircleCheck,
+  tight: TriangleAlert,
+  above: CircleAlert,
+} as const satisfies Record<LimitFit, LucideIcon>;
+
 /** Variante em linha (dashboard): miniatura, título, lance com a situação, fim e as ações. */
 function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents | null; footer: React.ReactNode }) {
   const fit = item.estimate?.fit ?? null;
+  const FitIcon = fit ? COMPACT_FIT_ICONS[fit] : null;
   const price = item.estimate?.price;
   return (
     <article className="grid w-full grid-cols-[6.5rem_minmax(0,1fr)] gap-x-4 gap-y-2 sm:grid-cols-[8rem_minmax(0,1fr)]">
@@ -237,12 +255,24 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
               · provável <Money value={price.median} /> ({priceEvidenceLabel(price)})
             </span>
           ) : null}
-          {fit === null ? null : <Badge variant={LIMIT_FIT_VARIANTS[fit]}>{LIMIT_FIT_LABELS[fit]}</Badge>}
+          {fit !== null && FitIcon ? (
+            <Badge variant={LIMIT_FIT_VARIANTS[fit]}>
+              <FitIcon aria-hidden="true" className="size-3 shrink-0" />
+              {LIMIT_FIT_LABELS[fit]}
+            </Badge>
+          ) : null}
         </p>
-        <p className="flex items-center gap-1.5 text-caption text-muted tabular-nums">
-          <Clock aria-hidden="true" className="size-3.5 shrink-0" />
-          Encerra {item.endsAt ? formatDateTime(item.endsAt) : "—"}
-          {item.city && item.state ? ` · ${item.city}/${item.state}` : null}
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-muted tabular-nums">
+          <span className="inline-flex items-center gap-1.5">
+            <Clock aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
+            Encerra {item.endsAt ? formatDateTime(item.endsAt) : "—"}
+          </span>
+          {item.city && item.state ? (
+            <span className="inline-flex items-center gap-1.5">
+              <MapPin aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
+              {item.city}/{item.state}
+            </span>
+          ) : null}
         </p>
       </div>
       <div className="col-start-2 flex flex-wrap items-center gap-2">
