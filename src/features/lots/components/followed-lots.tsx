@@ -11,7 +11,7 @@ import { getFollowedLotsOverview } from "../queries";
 import type { FollowedLotItem } from "../types";
 import { LimitProgress } from "./limit-progress";
 
-const SHOWN = 8;
+const SHOWN = 5;
 const ALL_FOLLOWED_HREF = "/minhas-analises?acompanhados=1&resultado=sem";
 
 const LIMIT_FIT_ICONS = {
@@ -112,9 +112,10 @@ export async function FollowedLots() {
         ))}
       </ul>
       {items.length > SHOWN ? (
-        <Link href={ALL_FOLLOWED_HREF} className="w-fit text-label text-accent hover:underline">
-          Ver todos os {items.length} lotes acompanhados
-        </Link>
+        <ButtonLink href={ALL_FOLLOWED_HREF} variant="secondary" size="sm" className="w-fit">
+          Ver todos
+          <ChevronRight aria-hidden="true" />
+        </ButtonLink>
       ) : null}
     </div>
   );
