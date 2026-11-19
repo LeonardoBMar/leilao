@@ -11,7 +11,7 @@ import { bps, type Cents, parseBRL } from "@/domain/money";
 import { formatDate } from "@/lib/format";
 
 import { FREITAS_IMAGE_ORIGIN } from "../image-origins";
-import { decodeHtmlEntities, htmlToLines } from "../shared/extract";
+import { decodeHtmlEntities, htmlToLines, parseBrasiliaDateTime } from "../shared/extract";
 import { redactVehicleIds } from "../shared/redact";
 import type { ListingDetails } from "../types";
 
@@ -130,9 +130,6 @@ const STATUS_BY_TEXT: Record<string, ListingStatus> = {
   "SEM LICITANTE": "unsold",
   RETIRADO: "withdrawn",
 };
-
-/** Horário de Brasília (o do site): UTC−3, sem horário de verão desde 2019. */
-const BRASILIA_OFFSET_HOURS = 3;
 
 /** Leilão da agenda com o que ela diz dele. */
 export type FreitasAuction = { auctionId: string; local: string; title: string };
@@ -472,25 +469,12 @@ function toYear(value: string | undefined, now: Date): number | null {
 }
 
 function brasiliaDate(date: string, time: string): Date | null {
-  const day = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(date.trim());
-  const clock = /^(\d{2}):(\d{2})$/.exec(time.trim());
-  if (!day?.[1] || !day[2] || !day[3] || !clock?.[1] || !clock[2]) return null;
-  const result = new Date(
-    Date.UTC(
-      Number(day[3]),
-      Number(day[2]) - 1,
-      Number(day[1]),
-      Number(clock[1]) + BRASILIA_OFFSET_HOURS,
-      Number(clock[2]),
-    ),
-  );
-  return Number.isNaN(result.getTime()) ? null : result;
+  return parseBrasiliaDateTime(`${date} ${time}`);
 }
 
 /** "24/09/2026 08:38". */
 function brasiliaDateTime(text: string): Date | null {
-  const [date, time] = text.trim().split(/\s+/);
-  return brasiliaDate(date ?? "", time ?? "");
+  return parseBrasiliaDateTime(text);
 }
 
 function money(text: string): Cents | null {

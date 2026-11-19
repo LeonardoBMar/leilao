@@ -148,6 +148,16 @@ describe("parsePatioListing — lote aberto (Yaris, lote 20 do leilão 39)", () 
     });
     expect(patioDetailsFromRaw({ outro: "formato" }, now)).toBeNull();
   });
+
+  it("apaga placa, chassi e Renavam da descrição, notas e raw", () => {
+    const tainted = openPage.replace(
+      "IPVA 2026 PAGO",
+      "IPVA 2026 PAGO PLACA ABC1D23 CHASSI 9BWZZZ377VT004251 RENAVAM 12345678901",
+    );
+    const listing = parseOk(tainted, "991");
+    expect(listing.description).not.toMatch(/ABC1D23|9BWZZZ377VT004251|12345678901/);
+    expect(JSON.stringify(listing.raw)).not.toMatch(/ABC1D23|9BWZZZ377VT004251|12345678901/);
+  });
 });
 
 describe("parsePatioListing — lote encerrado (BYD, 30/09/2026)", () => {

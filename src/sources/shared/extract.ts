@@ -109,6 +109,44 @@ export function htmlToLines(html: string): string[] {
     .filter((line) => line !== "");
 }
 
+/** Horário de Brasília (UTC−3, sem horário de verão desde 2019). */
+export const BRASILIA_OFFSET_HOURS = 3;
+
+export function brasiliaDateUtc(parts: {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  second?: number;
+}): Date | null {
+  const { year, month, day, hour, minute, second = 0 } = parts;
+  if (![year, month, day, hour, minute, second].every(Number.isInteger) || year < 1900) return null;
+  const date = new Date(Date.UTC(year, month - 1, day, hour + BRASILIA_OFFSET_HOURS, minute, second));
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+/** Converte "DD/MM/AAAA HH:MM[:SS]" ou "AAAA-MM-DD HH:MM[:SS]" em horário de Brasília para UTC. */
+export function parseBrasiliaDateTime(text: string): Date | null {
+  const trimmed = text.trim();
+  const iso = /^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(trimmed);
+  const br = /^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(trimmed);
+  const parts = iso
+    ? [iso[1], iso[2], iso[3], iso[4], iso[5], iso[6]]
+    : br
+      ? [br[3], br[2], br[1], br[4], br[5], br[6]]
+      : [];
+  if (!parts[0] || !parts[1] || !parts[2] || !parts[3] || !parts[4]) return null;
+  return brasiliaDateUtc({
+    year: Number(parts[0]),
+    month: Number(parts[1]),
+    day: Number(parts[2]),
+    hour: Number(parts[3]),
+    minute: Number(parts[4]),
+    second: Number(parts[5] ?? 0),
+  });
+}
+
 /** Valor em reais vindo da fonte (ex.: 23900 ou 41247.5) para centavos inteiros. */
 export function reaisToCents(value: number): Cents {
   return cents(Math.round(value * 100));

@@ -6,7 +6,7 @@ import { bps, type Cents, parseBRL } from "@/domain/money";
 import { formatDate } from "@/lib/format";
 
 import { LEILAO_ONLINE_IMAGE_ORIGIN } from "../image-origins";
-import { decodeHtmlEntities, htmlToLines } from "../shared/extract";
+import { decodeHtmlEntities, htmlToLines, parseBrasiliaDateTime } from "../shared/extract";
 import { redactVehicleIds } from "../shared/redact";
 import type { ListingDetails } from "../types";
 import { type LeilaoOnlineRaw, leilaoOnlineRawSchema } from "./schema";
@@ -51,9 +51,6 @@ const CATEGORY_BY_NAME: Record<string, ListingCategory> = {
 
 /** Comissão do leiloeiro: 5% sobre o arremate, pelos Termos de Uso do site (`/termos-de-uso`). */
 const COMMISSION_BPS = 500;
-
-/** Horário de Brasília (o do site): UTC−3, sem horário de verão desde 2019. */
-const BRASILIA_OFFSET_HOURS = 3;
 
 /**
  * Ids dos leilões listados na página da categoria, na ordem do site, sem repetir. `null`: nenhum leilão e sem o aviso
@@ -395,25 +392,7 @@ function toYear(value: string | undefined, now: Date): number | null {
 
 /** "2026-10-14 15:00:00" ou "06/10/2026 15:31:25", em horário de Brasília → instante UTC. */
 function siteDateTime(text: string): Date | null {
-  const iso = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})(?::(\d{2}))?$/.exec(text.trim());
-  const br = /^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})(?::(\d{2}))?$/.exec(text.trim());
-  const [year, month, day, hour, minute, second] = iso
-    ? [iso[1], iso[2], iso[3], iso[4], iso[5], iso[6]]
-    : br
-      ? [br[3], br[2], br[1], br[4], br[5], br[6]]
-      : [];
-  if (!year || !month || !day || !hour || !minute) return null;
-  const result = new Date(
-    Date.UTC(
-      Number(year),
-      Number(month) - 1,
-      Number(day),
-      Number(hour) + BRASILIA_OFFSET_HOURS,
-      Number(minute),
-      Number(second ?? 0),
-    ),
-  );
-  return Number.isNaN(result.getTime()) ? null : result;
+  return parseBrasiliaDateTime(text);
 }
 
 function money(text: string): Cents | null {

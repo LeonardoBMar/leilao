@@ -214,6 +214,19 @@ describe("parseLeiloListingPage — condição declarada pelo leiloeiro", () => 
     });
     expect(leiloDetailsFromRaw({ nome: "sem id" }, now)).toBeNull();
   });
+
+  it("apaga placa, chassi e Renavam da descrição, laudo e raw", () => {
+    const page = withNotes(
+      openPage,
+      "VEICULO PLACA ABC1D23 CHASSI 9BWZZZ377VT004251 RENAVAM 12345678901",
+      "REPROVADO",
+    ).replace(/"laudoCautelarObservacao":(?:null|"[^"]*")/, '"laudoCautelarObservacao":"LAUDO OK PLACA XYZ9876"');
+    const listing = parseOk(page);
+    expect(listing.description).not.toMatch(/ABC1D23|9BWZZZ377VT004251|12345678901/);
+    expect(listing.condition.inspectionNotes).toContain("LAUDO OK PLACA");
+    expect(listing.condition.inspectionNotes).not.toContain("XYZ9876");
+    expect(JSON.stringify(listing.raw)).not.toMatch(/ABC1D23|9BWZZZ377VT004251|12345678901|XYZ9876/);
+  });
 });
 
 describe("parseLeiloListingPage — desfechos do leilão de 28/09/2026", () => {

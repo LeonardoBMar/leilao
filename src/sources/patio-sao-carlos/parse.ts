@@ -11,7 +11,8 @@ import { formatDate } from "@/lib/format";
 import { err, ok, type Result } from "@/lib/result";
 
 import { PATIO_IMAGE_ORIGIN } from "../image-origins";
-import { decodeHtmlEntities, htmlToLines } from "../shared/extract";
+import { brasiliaDateUtc, decodeHtmlEntities, htmlToLines } from "../shared/extract";
+import { redactVehicleIds } from "../shared/redact";
 import type { DiscoveredListing, ListingDetails, ParseError } from "../types";
 import { type PatioDateParts, type PatioLiveLot, patioLiveLotSchema, patioLiveResponseSchema } from "./schema";
 
@@ -102,8 +103,6 @@ type InfoField =
   | "key"
   | "recovery";
 
-/** Horário de Brasília (o do site): UTC−3, sem horário de verão desde 2019. */
-const BRASILIA_OFFSET_HOURS = 3;
 /** Página de lote que o site já tirou do ar: responde 200 com este aviso. */
 const GONE_MARKER = "Nenhum Lote Encontrado";
 
@@ -179,14 +178,24 @@ export function parsePatioListing(
   const infoHtml = sliceBetween(html, "lote-page__panel-body--info", "<h2");
   if (infoHtml === null) return err("missing_data");
   const { info, notes } = readInfo(htmlToLines(infoHtml));
+  const redactedInfo = Object.fromEntries(Object.entries(info).map(([key, value]) => [key, redactVehicleIds(value)]));
+  const redactedNotes = notes.map(redactVehicleIds);
   const descriptionHtml = sliceBetween(html, "lote-page__descricao-texto", "</div>");
-  const description = descriptionHtml === null ? null : htmlToLines(descriptionHtml).join("\n");
+  const descriptionText = descriptionHtml === null ? null : htmlToLines(descriptionHtml).join("\n");
+  const description = descriptionText === null ? null : redactVehicleIds(descriptionText);
   const page: PatioPageInfo = {
     lotNumber: /class="lote-page__title-lote">\s*Lote\s+(\w+)/.exec(html)?.[1] ?? null,
     commission: /id="lote6ModalComissaoPct">\s*([\d.,]+)\s*</.exec(html)?.[1] ?? null,
     photoUrls: photosOf(html),
   };
-  const raw: PatioRaw = { info, notes, description, live: sanitizeLive(live), yardAddress, page };
+  const raw: PatioRaw = {
+    info: redactedInfo,
+    notes: redactedNotes,
+    description,
+    live: sanitizeLive(live),
+    yardAddress,
+    page,
+  };
   return ok(fromRaw(raw, page, now));
 }
 
@@ -291,7 +300,7 @@ function readInfo(lines: readonly string[]): { info: Record<string, string>; not
 }
 
 function describe(raw: Pick<PatioRaw, "notes" | "description">): string | null {
-  return cleanDescription([...raw.notes, raw.description ?? ""].join("\n"));
+  return cleanDescription(redactVehicleIds([...raw.notes, raw.description ?? ""].join("\n")));
 }
 
 /** Condição declarada: a mesma leitura de texto do Leilo, sobre a ficha inteira e a descrição. Sem laudo cautelar. */
@@ -378,14 +387,15 @@ function readPage(value: unknown): PatioPageInfo | null {
 
 function brasiliaDate(parts: PatioDateParts): Date | null {
   const year = Number(parts.ano);
-  const month = Number(parts.mes);
-  const day = Number(parts.dia);
-  const hour = Number(parts.hora);
-  const minute = Number(parts.min);
-  const second = Number(parts.seg);
-  if (![year, month, day, hour, minute, second].every(Number.isInteger) || year < 2000) return null;
-  const date = new Date(Date.UTC(year, month - 1, day, hour + BRASILIA_OFFSET_HOURS, minute, second));
-  return Number.isNaN(date.getTime()) ? null : date;
+  if (!Number.isInteger(year) || year < 2000) return null;
+  return brasiliaDateUtc({
+    year,
+    month: Number(parts.mes),
+    day: Number(parts.dia),
+    hour: Number(parts.hora),
+    minute: Number(parts.min),
+    second: Number(parts.seg),
+  });
 }
 
 function money(text: string | null | undefined): Cents | null {

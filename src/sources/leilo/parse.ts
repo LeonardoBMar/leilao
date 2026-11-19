@@ -16,6 +16,7 @@ import { err, ok, type Result } from "@/lib/result";
 
 import { LEILO_IMAGE_ORIGIN } from "../image-origins";
 import { extractAssignedJson, extractJsonLd, reaisToCents } from "../shared/extract";
+import { redactVehicleIds } from "../shared/redact";
 import type { ListingDetails, ParseError } from "../types";
 import { type LeiloLot, leiloLotSchema, type LeiloVehicleLd, leiloVehicleLdSchema } from "./schema";
 
@@ -83,7 +84,10 @@ export function leiloDetailsFromRaw(raw: unknown, now: Date): ListingDetails | n
 }
 
 function detailsOf(lot: LeiloLot): Pick<ListingDetails, "description" | "condition"> {
-  return { description: cleanDescription(lot.descricao), condition: conditionOf(lot) };
+  return {
+    description: cleanDescription(lot.descricao ? redactVehicleIds(lot.descricao) : null),
+    condition: conditionOf(lot),
+  };
 }
 
 function fromLot(lot: LeiloLot, raw: unknown, ld: LeiloVehicleLd | null, now: Date): ListingInput {
@@ -220,7 +224,9 @@ function conditionOf(lot: LeiloLot): ListingCondition {
     damageLevel: worstDamage(notes.damageLevel, lot.tipo === SALVAGE_CATEGORY ? "salvage" : null),
     flags: notes.flags,
     inspection: laudo ?? null,
-    inspectionNotes: cleanDescription(lot.laudoCautelarObservacao),
+    inspectionNotes: cleanDescription(
+      lot.laudoCautelarObservacao ? redactVehicleIds(lot.laudoCautelarObservacao) : null,
+    ),
   };
 }
 
@@ -240,14 +246,19 @@ function findVehicleLd(html: string): LeiloVehicleLd | null {
   return null;
 }
 
-/** Guarda o lote original sem as fotos (vão para `photoUrls`) e sem quem deu lance. */
+/** Guarda o lote original sem fotos (vão para `photoUrls`), sem quem deu lance e sem placa/chassi/Renavam. */
 function sanitizeRaw(raw: unknown): unknown {
   if (!isRecord(raw)) return raw;
   const { fotosUrls: _photos, ...rest } = raw;
-  const value = rest.valor;
-  if (!isRecord(value) || !isRecord(value.lance)) return rest;
+  const next: Record<string, unknown> = { ...rest };
+  if (typeof next.descricao === "string") next.descricao = redactVehicleIds(next.descricao);
+  if (typeof next.laudoCautelarObservacao === "string") {
+    next.laudoCautelarObservacao = redactVehicleIds(next.laudoCautelarObservacao);
+  }
+  const value = next.valor;
+  if (!isRecord(value) || !isRecord(value.lance)) return next;
   const { apelido: _nickname, cidade: _city, ...lance } = value.lance;
-  return { ...rest, valor: { ...value, lance } };
+  return { ...next, valor: { ...value, lance } };
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>

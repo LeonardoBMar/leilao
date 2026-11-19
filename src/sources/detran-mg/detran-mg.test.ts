@@ -333,4 +333,24 @@ describe("detranMgSource", () => {
     expect(await detranMgSource.fetchListing(http, "3599-1", now, null)).toMatchObject({ ok: false, gone: true });
     expect(await detranMgSource.fetchListing(http, "abc", now, null)).toMatchObject({ ok: false, gone: false });
   });
+
+  it("falha transitória em homeOf ou listOf não fica cacheada na mesma execução", async () => {
+    let calls = 0;
+    const http: SourceHttp = {
+      get: (url) => {
+        calls++;
+        if (url === `${DETRAN_MG_BASE_URL}/`) {
+          return Promise.resolve(calls === 1 ? { ok: false, status: 503, error: "HTTP 503" } : home);
+        }
+        if (url === detranAuctionUrl(pocos, 1)) return Promise.resolve(listPage);
+        return Promise.resolve({ ok: false, status: 404, error: "HTTP 404" });
+      },
+      post: () => Promise.reject(new Error("não usa POST")),
+    };
+    const first = await detranMgSource.discover(http, now);
+    expect(first.complete).toBe(false);
+    const second = await detranMgSource.discover(http, now);
+    expect(second.complete).toBe(true);
+    expect(second.listings).toHaveLength(15);
+  });
 });

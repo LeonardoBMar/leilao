@@ -1,6 +1,10 @@
 import { LISTING_STATUSES, type ListingInput, toListingCategory } from "@/domain/listings/types";
+import { MAX_BPS, MAX_CENTS } from "@/domain/money";
 
 import { LISTING_IMAGE_ORIGINS } from "../image-origins";
+
+const MIN_VEHICLE_YEAR = 1900;
+const MAX_VEHICLE_YEAR = 2100;
 
 /**
  * Regras que todo anúncio precisa cumprir, venha de qual fonte vier (D-37). O coletor confere antes de gravar
@@ -25,7 +29,29 @@ export function listingContractProblems(
     `categoria fora do vocabulário comum (${listing.vehicle.category})`,
   );
   for (const [field, value] of moneyFields(listing)) {
-    check(value === null || (Number.isSafeInteger(value) && value >= 0), `${field} não é centavos inteiros`);
+    check(
+      value === null || (Number.isSafeInteger(value) && value >= 0 && value <= MAX_CENTS),
+      `${field} fora da faixa de centavos`,
+    );
+  }
+  const { commissionRate } = listing.costs;
+  check(
+    commissionRate === null || (Number.isInteger(commissionRate) && commissionRate >= 0 && commissionRate <= MAX_BPS),
+    "comissão fora da faixa (0..10.000 bps)",
+  );
+  const { mileageKm, modelYear, manufactureYear } = listing.vehicle;
+  check(
+    mileageKm === null || (Number.isInteger(mileageKm) && mileageKm >= 0 && mileageKm <= MAX_CENTS),
+    "quilometragem fora da faixa",
+  );
+  for (const [label, year] of [
+    ["ano do modelo", modelYear],
+    ["ano de fabricação", manufactureYear],
+  ] as const) {
+    check(
+      year === null || (Number.isInteger(year) && year >= MIN_VEHICLE_YEAR && year <= MAX_VEHICLE_YEAR),
+      `${label} inválido (${year})`,
+    );
   }
   check(listing.bidCount === null || (Number.isInteger(listing.bidCount) && listing.bidCount >= 0), "nº de lances");
   check(listing.currentBid === null || listing.bidCount !== 0, "lance atual sem nenhum lance");

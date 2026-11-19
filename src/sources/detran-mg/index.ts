@@ -136,16 +136,22 @@ async function discover(http: SourceHttp): Promise<Discovery> {
 
 function homeOf(http: SourceHttp): Promise<Outcome<Map<string, DetranAuctionRef>>> {
   const cache = cacheOf(http);
-  cache.home ??= (async () => {
-    const response = await http.get(`${DETRAN_MG_BASE_URL}/`);
-    if (!response.ok) return { ok: false, error: response.error };
-    const refs = parseDetranHome(response.text);
-    // Página inicial sem nenhum leilão: o site mudou ou falhou, nunca "nenhum leilão aberto" sem conferir.
-    if (refs.length === 0 && !/lista-lotes|Sistema de Leil/i.test(response.text)) {
-      return { ok: false, error: "página inicial sem a lista de leilões" };
-    }
-    return { ok: true, value: new Map(refs.map((ref) => [ref.id, ref])) };
-  })();
+  if (!cache.home) {
+    const pending = (async (): Promise<Outcome<Map<string, DetranAuctionRef>>> => {
+      const response = await http.get(`${DETRAN_MG_BASE_URL}/`);
+      if (!response.ok) return { ok: false, error: response.error };
+      const refs = parseDetranHome(response.text);
+      // Página inicial sem nenhum leilão: o site mudou ou falhou, nunca "nenhum leilão aberto" sem conferir.
+      if (refs.length === 0 && !/lista-lotes|Sistema de Leil/i.test(response.text)) {
+        return { ok: false, error: "página inicial sem a lista de leilões" };
+      }
+      return { ok: true, value: new Map(refs.map((ref) => [ref.id, ref])) };
+    })().then((outcome) => {
+      if (!outcome.ok && cache.home === pending) cache.home = null;
+      return outcome;
+    });
+    cache.home = pending;
+  }
   return cache.home;
 }
 
@@ -153,7 +159,10 @@ function listOf(http: SourceHttp, ref: DetranAuctionRef): Promise<Outcome<Auctio
   const cache = cacheOf(http);
   let pending = cache.lists.get(ref.id);
   if (!pending) {
-    pending = readList(http, ref);
+    pending = readList(http, ref).then((outcome) => {
+      if (!outcome.ok && cache.lists.get(ref.id) === pending) cache.lists.delete(ref.id);
+      return outcome;
+    });
     cache.lists.set(ref.id, pending);
   }
   return pending;
