@@ -1,85 +1,206 @@
-import { ArrowUpRight, Calculator, CalendarClock, CircleAlert, ClipboardList, Eye, Target } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUpRight,
+  Calculator,
+  CalendarClock,
+  CircleAlert,
+  CircleCheck,
+  ClipboardList,
+  Eye,
+  Target,
+} from "lucide-react";
 import Link from "next/link";
 
 import { cardVariants, Skeleton } from "@/components/ui";
 import { getRegionOverview } from "@/features/listings/queries";
 import { catalogAuctionPath } from "@/features/listings/search";
 import { getFollowedLotsOverview } from "@/features/lots/queries";
-import { formatRatio, formatShortDateTime } from "@/lib/format";
+import { formatCompactDateTime, formatRatio } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 import { getLimitIndicator, getPendingItems } from "../queries";
 
 const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
 
-const linkClass =
-  "inline-flex items-center gap-1.5 text-foreground-secondary underline-offset-4 hover:text-foreground hover:underline";
+const kpiCellClass = "flex h-full flex-col justify-between gap-2 bg-surface p-4";
+const kpiLinkClass = cn(
+  kpiCellClass,
+  "group transition-colors duration-120 hover:bg-background focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none focus-visible:ring-inset",
+);
 
 /**
- * Linha abaixo do título (DESIGN.md §15.1, D-44): contagens que levam à ação, cada uma com link para o bloco. As
- * consultas têm memo por requisição: os blocos abaixo leem o mesmo resultado.
+ * Faixa de KPIs operacionais no topo do dashboard (DESIGN.md §4.2, §19.2, D-44): contagens que levam à ação, cada
+ * uma ligada ao bloco ou à página correspondente. As consultas têm memo por requisição.
  */
-export async function DashboardCounts() {
+export async function DashboardKpis() {
   const [region, followed, pending] = await Promise.all([
     getRegionOverview(),
     getFollowedLotsOverview(),
     getPendingItems(),
   ]);
   const [nextAuction] = region.auctions;
-  const pendingCount = pending.drafts.length + pending.awaitingResult.length;
+  const pendingTotal = pending.draftsTotal + pending.awaitingResultTotal;
+  const followedTotal = followed.items.length;
 
-  const parts = [
-    <a key="to-analyze" href="#to-analyze" className={linkClass}>
-      <Calculator aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
-      <span>{region.toAnalyzeTotal} para analisar</span>
-    </a>,
-    nextAuction ? (
-      <Link key="next-auction" href={catalogAuctionPath(nextAuction)} className={linkClass}>
-        <CalendarClock aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
-        <span>
-          próximo leilão na região: {nextAuction.date ? formatShortDateTime(nextAuction.date) : "data não informada"},{" "}
-          {plural(nextAuction.matching, "lote", "lotes")}
-        </span>
-        <ArrowUpRight aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
-      </Link>
-    ) : null,
-    <a key="followed" href="#followed-lots" className={linkClass}>
-      <Eye aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
-      <span>{plural(followed.items.length, "acompanhado", "acompanhados")}</span>
-      {followed.aboveLimit > 0 ? (
-        <span className="inline-flex items-center gap-1 font-medium text-error">
-          , <CircleAlert aria-hidden="true" className="size-3.5 shrink-0" />
-          {followed.aboveLimit} com provável acima do limite
-        </span>
-      ) : null}
-    </a>,
-    pendingCount > 0 ? (
-      <a key="pending" href="#pending-items" className={linkClass}>
-        <ClipboardList aria-hidden="true" className="size-3.5 shrink-0 text-warning" />
-        <span>{plural(pendingCount, "pendência", "pendências")}</span>
-      </a>
-    ) : null,
-  ].filter((part) => part !== null);
+  const pendingNote =
+    pendingTotal === 0 ? (
+      <span className="inline-flex items-center gap-1 text-muted">
+        <CircleCheck aria-hidden="true" className="size-3.5 shrink-0 text-success" />
+        Tudo em dia
+      </span>
+    ) : pending.awaitingResultTotal > 0 && pending.draftsTotal > 0 ? (
+      `${plural(pending.awaitingResultTotal, "resultado", "resultados")} · ${plural(pending.draftsTotal, "rascunho", "rascunhos")}`
+    ) : pending.awaitingResultTotal > 0 ? (
+      `${plural(pending.awaitingResultTotal, "resultado", "resultados")} a registrar`
+    ) : (
+      `${plural(pending.draftsTotal, "rascunho", "rascunhos")} em aberto`
+    );
 
   return (
-    <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1 tabular-nums">
-      {parts.map((part, index) => (
-        <span key={part.key} className="inline-flex items-center gap-x-2.5">
-          {index > 0 ? (
-            <span aria-hidden="true" className="text-border-strong">
-              ·
-            </span>
-          ) : null}
-          {part}
-        </span>
-      ))}
-    </span>
+    <section aria-label="Resumo operacional">
+      <ul className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border lg:grid-cols-4">
+        <li>
+          <a href="#to-analyze" className={kpiLinkClass}>
+            <div className="flex items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
+                <Calculator aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
+                Para analisar
+              </span>
+              <ArrowDown
+                aria-hidden="true"
+                className="size-3.5 shrink-0 text-muted-subtle transition-transform duration-120 group-hover:translate-y-0.5 group-hover:text-foreground"
+              />
+            </div>
+            <p className="text-heading-2 font-semibold text-foreground tabular-nums">{region.toAnalyzeTotal}</p>
+            <p className="text-caption text-muted tabular-nums">
+              {region.toAnalyzeTotal === 0 ? (
+                "Nenhum cabe no limite"
+              ) : region.toAnalyzeComfortable > 0 ? (
+                <span className="inline-flex items-center gap-1 font-medium text-success">
+                  <CircleCheck aria-hidden="true" className="size-3.5 shrink-0" />
+                  {plural(region.toAnalyzeComfortable, "cabe com folga", "cabem com folga")}
+                </span>
+              ) : (
+                "No limite estimado"
+              )}
+            </p>
+          </a>
+        </li>
+
+        <li>
+          <a href="#followed-lots" className={kpiLinkClass}>
+            <div className="flex items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
+                <Eye aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
+                Acompanhados
+              </span>
+              <ArrowDown
+                aria-hidden="true"
+                className="size-3.5 shrink-0 text-muted-subtle transition-transform duration-120 group-hover:translate-y-0.5 group-hover:text-foreground"
+              />
+            </div>
+            <p className="text-heading-2 font-semibold text-foreground tabular-nums">{followedTotal}</p>
+            <p className="text-caption text-muted tabular-nums">
+              {followedTotal === 0 ? (
+                "Nenhum lote ativo"
+              ) : followed.aboveLimit > 0 ? (
+                <span className="inline-flex items-center gap-1 font-medium text-error">
+                  <CircleAlert aria-hidden="true" className="size-3.5 shrink-0" />
+                  {followed.aboveLimit} provável acima
+                </span>
+              ) : (
+                "Nenhum com provável acima"
+              )}
+            </p>
+          </a>
+        </li>
+
+        <li>
+          {pendingTotal > 0 ? (
+            <a href="#pending-items" className={kpiLinkClass}>
+              <div className="flex items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
+                  <ClipboardList aria-hidden="true" className="size-3.5 shrink-0 text-warning" />
+                  Pendências
+                </span>
+                <ArrowDown
+                  aria-hidden="true"
+                  className="size-3.5 shrink-0 text-muted-subtle transition-transform duration-120 group-hover:translate-y-0.5 group-hover:text-foreground"
+                />
+              </div>
+              <p className="text-heading-2 font-semibold text-foreground tabular-nums">{pendingTotal}</p>
+              <p className="text-caption text-muted tabular-nums">{pendingNote}</p>
+            </a>
+          ) : (
+            <div className={kpiCellClass}>
+              <div className="flex items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
+                  <ClipboardList aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
+                  Pendências
+                </span>
+              </div>
+              <p className="text-heading-2 font-semibold text-muted tabular-nums">0</p>
+              <p className="text-caption text-muted tabular-nums">{pendingNote}</p>
+            </div>
+          )}
+        </li>
+
+        <li>
+          {nextAuction ? (
+            <Link href={catalogAuctionPath(nextAuction)} className={kpiLinkClass}>
+              <div className="flex items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
+                  <CalendarClock aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
+                  Próximo leilão
+                </span>
+                <ArrowUpRight
+                  aria-hidden="true"
+                  className="size-3.5 shrink-0 text-muted-subtle transition-transform duration-120 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-foreground"
+                />
+              </div>
+              <p className="text-heading-2 font-semibold text-foreground tabular-nums">
+                {nextAuction.date ? formatCompactDateTime(nextAuction.date) : "Sem data"}
+              </p>
+              <p className="truncate text-caption text-muted tabular-nums">
+                {plural(nextAuction.matching, "lote", "lotes")} · {nextAuction.sourceName}
+              </p>
+            </Link>
+          ) : (
+            <a href="#region-auctions" className={kpiLinkClass}>
+              <div className="flex items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
+                  <CalendarClock aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
+                  Próximo leilão
+                </span>
+                <ArrowDown
+                  aria-hidden="true"
+                  className="size-3.5 shrink-0 text-muted-subtle transition-transform duration-120 group-hover:translate-y-0.5 group-hover:text-foreground"
+                />
+              </div>
+              <p className="text-heading-2 font-semibold text-muted tabular-nums">—</p>
+              <p className="truncate text-caption text-muted">Nenhum nos próximos 7 dias</p>
+            </a>
+          )}
+        </li>
+      </ul>
+    </section>
   );
 }
 
-export function DashboardCountsSkeleton() {
+export function DashboardKpisSkeleton() {
   return (
-    <span className="inline-block h-4 w-md max-w-full animate-pulse rounded-md bg-border/70 motion-reduce:animate-none" />
+    <div
+      className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border lg:grid-cols-4"
+      aria-hidden="true"
+    >
+      {[0, 1, 2, 3].map((slot) => (
+        <div key={slot} className="grid gap-2.5 bg-surface p-4">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-7 w-16" />
+          <Skeleton className="h-4 w-28" />
+        </div>
+      ))}
+    </div>
   );
 }
 
