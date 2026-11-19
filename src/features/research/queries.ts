@@ -960,6 +960,62 @@ export const getLotMarketReference = cache(
   },
 );
 
+/**
+ * Mesma referência de `getLotMarketReference`, em lote (duas consultas para todos os lotes, sem N+1) para fixar vários
+ * rascunhos de uma só vez.
+ */
+export async function getLotMarketReferences(
+  lotIds: readonly string[],
+  until: Date | null = null,
+): Promise<Map<string, LotMarketReference>> {
+  const user = await requireUser();
+  if (lotIds.length === 0) return new Map();
+  const uniqueLotIds = [...new Set(lotIds)];
+  const lots = await db.lot.findMany({
+    where: { id: { in: uniqueLotIds }, ownerId: user.id },
+    select: lotTargetSelect,
+  });
+  const wanted = lots.flatMap((raw) => {
+    const lot = toLotTarget(raw);
+    const filters = targetFilters(lot.target, lot.id, []);
+    return filters.vehicle === null
+      ? []
+      : [{ lotId: raw.id, target: lot.target, filters, key: keyOfVehicle(filters.vehicle) }];
+  });
+  if (wanted.length === 0) return new Map();
+
+  const sales = await loadModelSales([...new Set(wanted.map((item) => item.key))], salesSince(until), until);
+  const evaluated = wanted.map((item) => ({
+    ...item,
+    evaluation: evaluate(salesInWindow(sales, item.key, until), item.filters, item.target),
+  }));
+  const codes = [...new Set(evaluated.flatMap(({ evaluation }) => evaluation.versions.map((option) => option.value)))];
+  const labels =
+    codes.length === 0
+      ? []
+      : await rows(
+          z.object({ code: z.string(), name: z.string() }),
+          sql`SELECT DISTINCT ON (p.fipe_code) p.fipe_code AS code, p.model_name AS name FROM fipe_prices p
+            WHERE p.fipe_code IN (${Prisma.join(codes)}) ORDER BY p.fipe_code, p.reference_month DESC`,
+        );
+  const versionLabels = Object.fromEntries(labels.map(({ code, name }) => [code, name]));
+
+  return new Map(
+    evaluated.map(({ lotId, filters, evaluation }) => [
+      lotId,
+      {
+        level: evaluation.level,
+        scope: evaluateScopeLabel(filters, versionLabels),
+        href: evaluateHref({ ...DEFAULT_EVALUATE_FILTERS, lot: lotId }),
+        sales: evaluation.comparables.flatMap(({ sale, excluded }) =>
+          excluded ? [] : [{ id: sale.id, finalBid: sale.finalBid }],
+        ),
+        band: bandOf(evaluation.answer),
+      },
+    ]),
+  );
+}
+
 function bandOf(answer: EvaluationView["answer"]): LotMarketReference["band"] {
   return answer.kind === "band"
     ? { low: answer.low, median: answer.median, high: answer.high, confidence: answer.confidence }
