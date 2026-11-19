@@ -1,12 +1,14 @@
-import Link from "next/link";
-
 import { ButtonLink, EmptyState, Skeleton } from "@/components/ui";
 import { DEFAULT_RADIUS_KM } from "@/domain/listings/criteria";
 import { DEFAULT_REGION } from "@/domain/listings/region";
 import { DismissListingButton } from "@/features/listings/components/dismiss-listing-button";
 import { ListingCard } from "@/features/listings/components/listing-card";
 import { getRegionOverview } from "@/features/listings/queries";
-import { CATALOG_LISTINGS_PATH, withQuery } from "@/features/listings/search";
+import { CATALOG_LISTINGS_PATH } from "@/features/listings/search";
+
+import { ToAnalyzeList } from "./to-analyze-list";
+
+const INITIAL_SHOWN = 6;
 
 /**
  * "Para analisar agora" (D-44, DESIGN.md §15.1): anúncios da região ou dos monitores cujo provável cabe no limite,
@@ -30,7 +32,13 @@ export async function ToAnalyze() {
     );
   }
 
-  const more = region.toAnalyzeTotal - region.toAnalyze.length;
+  const rows = region.toAnalyze.map((item) => (
+    <li key={item.id} className="flex border-t border-border pt-5 first:border-t-0 first:pt-0">
+      <ListingCard item={item} compact footer={<DismissListingButton listingId={item.id} />} />
+    </li>
+  ));
+  const beyondLoaded = Math.max(0, region.toAnalyzeTotal - region.toAnalyze.length);
+
   return (
     <div className="grid gap-5">
       <p
@@ -39,22 +47,11 @@ export async function ToAnalyze() {
       >
         Da região ou dos seus monitores, com o provável lance final dentro do limite.
       </p>
-      <ul className="grid gap-5">
-        {region.toAnalyze.map((item) => (
-          <li key={item.id} className="flex border-t border-border pt-5 first:border-t-0 first:pt-0">
-            <ListingCard item={item} compact footer={<DismissListingButton listingId={item.id} />} />
-          </li>
-        ))}
-      </ul>
-      {more > 0 ? (
-        // O catálogo não filtra "cabe no limite" nem soma os monitores: leva ao filtro padrão sem os já analisados.
-        <Link
-          href={withQuery(CATALOG_LISTINGS_PATH, { analisados: "esconder" })}
-          className="w-fit text-label text-accent hover:underline"
-        >
-          E mais {more} {more === 1 ? "lote" : "lotes"} · Ver no catálogo
-        </Link>
-      ) : null}
+      <ToAnalyzeList
+        initial={rows.slice(0, INITIAL_SHOWN)}
+        extra={rows.slice(INITIAL_SHOWN)}
+        beyondLoaded={beyondLoaded}
+      />
     </div>
   );
 }
