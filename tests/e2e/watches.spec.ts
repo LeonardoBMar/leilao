@@ -8,18 +8,18 @@ import { field } from "./helpers";
  */
 test.skip(!process.env.E2E_EMAIL, "Sem usuário de testes (E2E_EMAIL/E2E_PASSWORD).");
 
-test("navegação tem Alertas e Monitores, e Alertas abre sem erro", async ({ page }) => {
+test("navegação abre Alertas e a aba Monitores sem erro", async ({ page }) => {
   await page.goto("/dashboard");
   const nav = page.getByRole("navigation", { name: "Principal" }).first();
-  await expect(nav.getByRole("link", { name: /^Alertas/ })).toBeVisible();
-  await nav.getByRole("link", { name: /^Monitores/ }).click();
-  await expect(page.getByRole("heading", { name: "Monitores", level: 1 })).toBeVisible();
-
-  await page.goto("/alertas");
+  await nav.getByRole("link", { name: /^Alertas/ }).click();
   await expect(page.getByRole("heading", { name: "Alertas", level: 1 })).toBeVisible();
   await expect(
     page.getByRole("region", { name: "Alertas" }).or(page.getByText(/Nenhum alerta (não lido|ainda)/)),
   ).toBeVisible();
+
+  await page.getByRole("navigation", { name: "Seções de alertas" }).getByRole("link", { name: "Monitores" }).click();
+  await expect(page).toHaveURL(/\/monitores$/);
+  await expect(page.getByRole("link", { name: "Novo monitor" })).toBeVisible();
 });
 
 test("monitor exige ao menos um critério de veículo e valida a faixa de ano", async ({ page }) => {
