@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { PageHeader } from "@/components/layout/page-header";
-import { ButtonLink } from "@/components/ui";
+import { ButtonLink, LinkTabs } from "@/components/ui";
 import { WatchList, WatchListSkeleton } from "@/features/watches/components/watch-list";
 
 export const metadata: Metadata = { title: "Monitores · Leilão Tracker" };
@@ -12,7 +12,7 @@ export default function WatchesPage() {
   return (
     <div className="grid gap-6">
       <PageHeader
-        title="Monitores"
+        title="Alertas"
         description="Buscas salvas. A cada coleta, lotes novos que combinam viram alertas."
         actions={
           <ButtonLink href="/monitores/novo">
@@ -20,6 +20,13 @@ export default function WatchesPage() {
             Novo monitor
           </ButtonLink>
         }
+      />
+      <LinkTabs
+        label="Seções de alertas"
+        tabs={[
+          { href: "/alertas", label: "Alertas", active: false },
+          { href: "/monitores", label: "Monitores", active: true },
+        ]}
       />
       <Suspense fallback={<WatchListSkeleton />}>
         <WatchList />
