@@ -1,7 +1,7 @@
 "use client";
 
 import { Car, ChevronDown, ChevronUp, Clock, ExternalLink, Images, KeyRound, MapPin } from "lucide-react";
-import { AnimatePresence, LayoutGroup, motion } from "motion/react";
+import { AnimatePresence, LayoutGroup, m } from "motion/react";
 import Image from "next/image";
 import { useId, useState } from "react";
 
@@ -159,7 +159,7 @@ export function AnalysisVehicleStrip({ title, currentBid, context, photoUrls }: 
 
       <AnimatePresence initial={false}>
         {galleryOpen && activeUrl ? (
-          <motion.div
+          <m.div
             key="vehicle-gallery"
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0, transition: MOTION_ENTER_TRANSITION }}
@@ -194,7 +194,7 @@ export function AnalysisVehicleStrip({ title, currentBid, context, photoUrls }: 
                         >
                           <Image src={url} alt="" fill unoptimized sizes="5rem" className="object-cover" />
                           {isSelected ? (
-                            <motion.span
+                            <m.span
                               aria-hidden="true"
                               layoutId="vehicle-thumb-active"
                               transition={MOTION_SPRING}
@@ -208,7 +208,7 @@ export function AnalysisVehicleStrip({ title, currentBid, context, photoUrls }: 
                 </ul>
               </LayoutGroup>
             ) : null}
-          </motion.div>
+          </m.div>
         ) : null}
       </AnimatePresence>
     </section>

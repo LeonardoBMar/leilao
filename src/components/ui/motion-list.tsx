@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, LayoutGroup, motion } from "motion/react";
+import { AnimatePresence, LayoutGroup, m } from "motion/react";
 import { useId } from "react";
 
 import { MOTION_EXIT_TRANSITION, MOTION_LAYOUT_TRANSITION } from "@/lib/motion";
@@ -58,7 +58,7 @@ function MotionListItem({ variant = "item", className, children }: MotionListIte
   const states = ITEM_STATES[variant];
 
   return (
-    <motion.li
+    <m.li
       layout="position"
       initial={states.initial}
       animate={states.animate}
@@ -67,7 +67,7 @@ function MotionListItem({ variant = "item", className, children }: MotionListIte
       className={className}
     >
       {children}
-    </motion.li>
+    </m.li>
   );
 }
 

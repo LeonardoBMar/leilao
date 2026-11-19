@@ -1,7 +1,7 @@
 "use client";
 
 import { GitCompareArrows, LoaderCircle, SlidersHorizontal } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useId, useOptimistic, useRef, useState } from "react";
 
@@ -321,7 +321,7 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
           ) : null}
           <AnimatePresence initial={false}>
             {showCompare ? (
-              <motion.div
+              <m.div
                 key="compare-row"
                 id={compareRowId}
                 initial={{ opacity: 0, y: -6 }}
@@ -360,7 +360,7 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
                     apply({ ...filters, compare: { vehicle: filters.compare?.vehicle ?? null, state } })
                   }
                 />
-              </motion.div>
+              </m.div>
             ) : null}
           </AnimatePresence>
         </div>

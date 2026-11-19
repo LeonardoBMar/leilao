@@ -1,7 +1,7 @@
 "use client";
 
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
-import { LayoutGroup, motion } from "motion/react";
+import { LayoutGroup, m } from "motion/react";
 import { useId } from "react";
 
 import { MOTION_SPRING } from "@/lib/motion";
@@ -62,7 +62,7 @@ function SegmentedControl<T extends string>({
                 className="relative flex min-h-10 min-w-0 flex-1 items-center justify-center rounded-sm px-2 py-1 text-center text-caption leading-tight font-medium text-foreground-secondary transition-colors duration-120 outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent data-[state=checked]:font-semibold data-[state=checked]:text-foreground"
               >
                 {isSelected ? (
-                  <motion.span
+                  <m.span
                     aria-hidden="true"
                     layoutId="segmented-indicator"
                     transition={MOTION_SPRING}

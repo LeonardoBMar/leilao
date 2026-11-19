@@ -1,7 +1,7 @@
 "use client";
 
 import * as TabsPrimitive from "@radix-ui/react-tabs";
-import { LayoutGroup, motion } from "motion/react";
+import { LayoutGroup, m } from "motion/react";
 import { createContext, use, useId, useState } from "react";
 
 import { MOTION_SPRING } from "@/lib/motion";
@@ -56,7 +56,7 @@ function TabsTrigger({ className, value, children, ...props }: TabsPrimitive.Tab
     >
       {children}
       {isActive ? (
-        <motion.span
+        <m.span
           aria-hidden="true"
           layoutId="tabs-indicator"
           transition={MOTION_SPRING}

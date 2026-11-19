@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutGroup, motion } from "motion/react";
+import { LayoutGroup, m } from "motion/react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useId } from "react";
@@ -43,7 +43,7 @@ function LinkTabs({
             >
               {tab.label}
               {tab.active ? (
-                <motion.span
+                <m.span
                   aria-hidden="true"
                   layoutId={indicatorId}
                   transition={MOTION_SPRING}

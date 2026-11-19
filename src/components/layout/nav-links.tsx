@@ -1,7 +1,7 @@
 "use client";
 
 import { BellRing, Calculator, ChartColumn, Gavel, LayoutDashboard, type LucideIcon } from "lucide-react";
-import { LayoutGroup, motion } from "motion/react";
+import { LayoutGroup, m } from "motion/react";
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -107,7 +107,7 @@ function NavList({
                 )}
               >
                 {isActive ? (
-                  <motion.span
+                  <m.span
                     aria-hidden="true"
                     layoutId="nav-active-pill"
                     transition={MOTION_SPRING}

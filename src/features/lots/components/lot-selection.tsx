@@ -1,7 +1,7 @@
 "use client";
 
 import { Archive, ArchiveRestore, Eye, EyeOff, X } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { createContext, use, useState, useTransition } from "react";
 
 import { Button, Checkbox, toast } from "@/components/ui";
@@ -103,7 +103,7 @@ export function LotBulkBar() {
   return (
     <AnimatePresence initial={false}>
       {selection && count > 0 ? (
-        <motion.div
+        <m.div
           key="bulk-bar"
           role="toolbar"
           aria-label="Ações nos lotes selecionados"
@@ -132,7 +132,7 @@ export function LotBulkBar() {
             <X aria-hidden="true" />
             Limpar seleção
           </Button>
-        </motion.div>
+        </m.div>
       ) : null}
     </AnimatePresence>
   );

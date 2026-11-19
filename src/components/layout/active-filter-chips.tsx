@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { AnimatePresence, LayoutGroup, motion } from "motion/react";
+import { AnimatePresence, LayoutGroup, m } from "motion/react";
 
 import { Button, RemovableChip } from "@/components/ui";
 import { MOTION_EXIT_TRANSITION, MOTION_LAYOUT_TRANSITION } from "@/lib/motion";
@@ -45,7 +45,7 @@ export function ActiveFilterChips({
           <ul aria-label="Filtros ativos" className="contents">
             <AnimatePresence mode="popLayout" initial={false}>
               {chips.map((chip) => (
-                <motion.li
+                <m.li
                   key={chip.id}
                   layout="position"
                   initial={{ opacity: 0, scale: 0.94 }}
@@ -57,7 +57,7 @@ export function ActiveFilterChips({
                   <RemovableChip removeLabel={`Remover filtro ${chip.label}`} onRemove={() => onRemove(chip.id)}>
                     {chip.label}
                   </RemovableChip>
-                </motion.li>
+                </m.li>
               ))}
             </AnimatePresence>
           </ul>
@@ -65,7 +65,7 @@ export function ActiveFilterChips({
         {onClearAll ? (
           <AnimatePresence mode="popLayout" initial={false}>
             {chips.length >= clearThreshold ? (
-              <motion.div
+              <m.div
                 key="clear-all"
                 layout="position"
                 initial={{ opacity: 0 }}
@@ -76,7 +76,7 @@ export function ActiveFilterChips({
                 <Button variant="link" size="sm" className="h-10 px-1" onClick={onClearAll}>
                   Limpar tudo
                 </Button>
-              </motion.div>
+              </m.div>
             ) : null}
           </AnimatePresence>
         ) : null}
@@ -84,7 +84,7 @@ export function ActiveFilterChips({
           <ul aria-label="Atalhos de filtro" className="contents">
             <AnimatePresence mode="popLayout" initial={false}>
               {shortcuts.map((shortcut) => (
-                <motion.li
+                <m.li
                   key={shortcut.id}
                   layout="position"
                   initial={{ opacity: 0, scale: 0.94 }}
@@ -101,7 +101,7 @@ export function ActiveFilterChips({
                     <Plus aria-hidden="true" className="size-3.5" />
                     {shortcut.label}
                   </button>
-                </motion.li>
+                </m.li>
               ))}
             </AnimatePresence>
           </ul>
