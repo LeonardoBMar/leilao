@@ -88,6 +88,7 @@ export type RegionOverview = {
   /** Os primeiros de "Para analisar agora", na ordem da regra. */
   toAnalyze: ListingListItem[];
   toAnalyzeTotal: number;
+  toAnalyzeComfortable: number;
   /** Próximos leilões na região, do mais próximo. */
   auctions: RegionAuction[];
   auctionsTotal: number;

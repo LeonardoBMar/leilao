@@ -656,7 +656,7 @@ export const getRegionOverview = cache(async (): Promise<RegionOverview> => {
       })
     ).map(({ listingId }) => listingId),
   );
-  const toAnalyzeIds = matching
+  const toAnalyzeCandidates = matching
     .flatMap((candidate) =>
       candidate.row.lots.length === 0 &&
       !dismissed.has(candidate.row.id) &&
@@ -665,8 +665,9 @@ export const getRegionOverview = cache(async (): Promise<RegionOverview> => {
         ? [{ id: candidate.row.id, candidate: { ...candidate.estimate, endsAt: candidate.row.endsAt } }]
         : [],
     )
-    .sort((a, b) => byAnalysisPriority(a.candidate, b.candidate))
-    .map(({ id }) => id);
+    .sort((a, b) => byAnalysisPriority(a.candidate, b.candidate));
+  const toAnalyzeIds = toAnalyzeCandidates.map(({ id }) => id);
+  const toAnalyzeComfortable = toAnalyzeCandidates.filter(({ candidate }) => candidate.fit === "comfortable").length;
 
   // Fase 2: o cartão completo só dos exibidos, na ordem da prioridade.
   const shownIds = toAnalyzeIds.slice(0, TO_ANALYZE_SHOWN);
@@ -694,6 +695,7 @@ export const getRegionOverview = cache(async (): Promise<RegionOverview> => {
   return {
     toAnalyze,
     toAnalyzeTotal: toAnalyzeIds.length,
+    toAnalyzeComfortable,
     auctions,
     auctionsTotal: inFilter.size,
     truncated,
