@@ -130,3 +130,9 @@ export function formatShortDateTime(value: Date): string {
   const parts = Object.fromEntries(shortDateTime.formatToParts(value).map((part) => [part.type, part.value]));
   return `${parts.day} ${(parts.month ?? "").replace(".", "")} ${parts.year}, ${parts.hour}:${parts.minute}`;
 }
+
+/** Data e hora sem ano, para cabeçalhos e KPIs compactos: "02 out, 10:00". */
+export function formatCompactDateTime(value: Date): string {
+  const parts = Object.fromEntries(shortDateTime.formatToParts(value).map((part) => [part.type, part.value]));
+  return `${parts.day} ${(parts.month ?? "").replace(".", "")}, ${parts.hour}:${parts.minute}`;
+}

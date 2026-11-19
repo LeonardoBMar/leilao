@@ -5,6 +5,7 @@ import { cents, parseBRL } from "@/domain/money";
 import {
   formatCalendarDayMonth,
   formatCompactBRL,
+  formatCompactDateTime,
   formatDayParts,
   formatMoneyInput,
   formatShortDateTime,
@@ -26,6 +27,7 @@ describe("formatadores de agenda", () => {
   it("formata hora e data curta", () => {
     expect(formatTime(auction)).toBe("10:00");
     expect(formatShortDateTime(auction)).toBe("02 out 2030, 10:00");
+    expect(formatCompactDateTime(auction)).toBe("02 out, 10:00");
   });
 });
 
