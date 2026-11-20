@@ -19,6 +19,7 @@
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | ✅ | ✅ | Pública; a proteção vem de RLS (D-14) e das políticas do Storage |
 | `DATABASE_URL` | ✅ | ✅ | Pooler de transação, `?pgbouncer=true` |
 | `DIRECT_URL` | ❌ | ✅ | Só para migrations, `db:storage` e backup |
+| `DB_POOL_MAX` | Opcional | Opcional | Conexões máximas por processo no pool `pg` (1 a 30, padrão `5`; D-84) |
 | `SUPABASE_SECRET_KEY` | ❌ **nunca** | Só no backup | Ignora RLS. Supabase → Project Settings → API Keys → Secret keys |
 | `E2E_EMAIL` / `E2E_PASSWORD` | ❌ | Opcional | Usuário dedicado aos testes E2E |
 | `RESTORE_DATABASE_URL` / `RESTORE_SUPABASE_URL` | ❌ | Só na restauração | Destino da restauração |
@@ -49,7 +50,7 @@
 
 ## 4. Rotina de release
 
-1. `npm run check` e `npm run build` passam localmente. Se possível, rode também `npm run test:e2e`.
+1. `npm run check` e `npm run build` passam localmente. Se mexeu em SQL (`$queryRaw`), rode `npm run test:db`; se possível, rode também `npm run test:e2e`.
 2. **Com migration nova:** faça backup (`npm run backup`), depois `npm run db:release` **antes** de publicar o código.
    - A migration precisa ser compatível com a versão **atual** do app, porque por alguns minutos o código antigo roda sobre o schema novo. Adicione colunas e tabelas primeiro e remova só num release seguinte (expandir → migrar → contrair).
 3. Publique (push/merge para a branch de produção). A Vercel faz o deploy.
@@ -69,7 +70,7 @@
 npm run backup
 ```
 
-- **Gera** `backups/<data>/database.json` (tabelas do domínio, catálogo coletado, monitores, alertas, sugestões dispensadas e migrations aplicadas) e, com `SUPABASE_SECRET_KEY`, a pasta `backups/<data>/photos/`.
+- **Gera** `backups/<data>/database.json` (tabelas do domínio, catálogo coletado, correlações `fipe_matches`, monitores, alertas, sugestões dispensadas e migrations aplicadas) e, com `SUPABASE_SECRET_KEY`, a pasta `backups/<data>/photos/`.
 - **Leitura consistente:** as tabelas são lidas numa única transação somente leitura.
 - **`backups/` não é versionada.**
 - **Backups do plano Supabase:** o plano Free não oferece backups para download; o Pro mantém 7 dias diários. Este script vale para qualquer plano e é a fonte principal.
@@ -108,8 +109,9 @@ npm run restore -- backups/<data>
 
 **Garantias do script:**
 - restaura só em `RESTORE_DATABASE_URL`, nunca no banco configurado no app;
+- valida formato do backup, UUID de `--owner` e caminhos das fotos contra path traversal antes de abrir transação;
 - exige destino **vazio** e com as mesmas migrations;
-- insere tudo numa transação única, então ou restaura inteiro ou nada.
+- insere tudo numa transação única (em lotes para tabelas grandes), então ou restaura inteiro ou nada.
 
 **Ensaio feito em 27/09/2026:** dois bancos temporários, com leilão, lote, análise fixada e rascunho, duas revisões de resultado e uma foto.
 - As 5 tabelas foram restauradas com conteúdo **idêntico**, verificado por hash.
@@ -119,7 +121,7 @@ npm run restore -- backups/<data>
 
 ## 7. Monitoramento e manutenção
 
-- **Coleta automática** (docs/PLANO-COLETA.md): workflow **Coleta** no GitHub Actions, de 12 em 12 horas.
+- **Coleta automática** (`docs/archive/PLANO-COLETA.md`): workflow **Coleta** no GitHub Actions, de 12 em 12 horas.
   - **Segredo necessário** em GitHub → Settings → Secrets and variables → Actions: `DATABASE_URL` (pooler, porta 6543, o mesmo valor da Vercel). `DIRECT_URL` não é usado ali: `prisma generate` não conecta ao banco.
   - **Fontes** (D-37): todas as de `src/sources/index.ts`, em paralelo, cada uma com o seu registro em `collector_runs`. O log tem uma linha por fonte e, no fim, a linha dos lotes ligados e alertas. Fonte nova se cadastra em `sources` na primeira execução.
   - **Saúde:** a linha "Última coleta" no dashboard e em Leilões mostra a pior fonte; se uma falhar, o aviso traz o nome dela. Falha aparece ali e em Actions → Coleta.

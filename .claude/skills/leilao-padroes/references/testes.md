@@ -20,12 +20,13 @@
   - Testing Library + jsdom (`// @vitest-environment jsdom` no arquivo) quando houver interação. Instalar na primeira necessidade e registrar.
 - **Async Server Components** não são testados com Vitest (limitação documentada pelo Next): cobrir com E2E.
 - `server-only` é substituído por um stub nos testes (`tests/stubs/server-only.ts`), então queries e mutations podem ser importadas em testes de integração.
-- **Teste com banco, só leitura (D-45):** consulta com SQL próprio (`$queryRaw`) ganha um teste que roda contra o banco só com `DB_TESTS=1` (`describe.skipIf(process.env.DB_TESTS !== "1")`), carregando o `.env.local` com `process.loadEnvFile` (o Next não o carrega com `NODE_ENV=test`). Nada de escrita: só `SELECT`. Rode com `DB_TESTS=1 npx vitest run <pasta>` ao mexer no SQL; o `npm run check` pula esses testes. Exemplos: `src/server/vehicle-key-sql.test.ts` e `src/features/research/queries.test.ts`.
+- **Teste com banco, só leitura (D-45):** consulta com SQL próprio (`$queryRaw`) ganha um teste que roda contra o banco só com `DB_TESTS=1` (`describe.skipIf(process.env.DB_TESTS !== "1")`), carregando o `.env.local` com `process.loadEnvFile` (o Next não o carrega com `NODE_ENV=test`) e encerrando o pool com `disconnectDb()` em `afterAll`. Nada de escrita: só `SELECT`. Rode com `npm run test:db` ao mexer no SQL; o `npm run check` pula esses testes. Exemplos: `src/server/fipe/catalog.test.ts` e `src/features/research/queries.test.ts`.
+- **Cache de módulos do Vitest (`fsModuleCache: true`, D-84):** habilitado em `vitest.config.mts` para reutilizar transformações entre execuções locais.
 - **Bug corrigido ganha um teste de regressão** que falha antes da correção.
 
 ## E2E (Playwright)
 
-- **Projetos** (`playwright.config.ts`): `public` (sem sessão), `setup` (login único, sessão salva em `tests/e2e/.auth/`, fora do Git) e `authenticated` (fluxo e acesso).
+- **Projetos** (`playwright.config.ts`): `public` (sem sessão), `setup` (login único, sessão salva em `tests/e2e/.auth/`, fora do Git) e `authenticated` (fluxo e acesso, incluindo `flow.spec.ts` e `authenticated-access.spec.ts`).
 - **Usuário de testes dedicado:** `E2E_EMAIL`/`E2E_PASSWORD` no `.env.local`. Sem eles, os testes autenticados são pulados. **O agente não roda o projeto autenticado**, porque exigiria digitar credenciais enviadas ao Supabase. Quem roda é o usuário.
 - **Dados reais:** cada execução cria um leilão `E2E <data>` e o arquiva no final. Análises fixadas e resultados são imutáveis, então ficam no usuário de testes.
 - **Seletores por papel e rótulo** (`getByRole`, `getByLabel` com `exact`), nunca por classe CSS. Select do Radix: helper `choose()`. Valores em reais: helper `brl()` (o Intl usa espaço não separável).
@@ -36,7 +37,8 @@
 ```bash
 npm test               # execução única
 npm run test:watch     # modo watch
+npm run test:db        # testes somente leitura contra o banco (.env.local)
 npx vitest run src/domain   # um diretório
-npm run test:e2e:public     # E2E sem sessão
+npm run test:e2e:public     # E2E sem sessão (também roda no CI)
 npm run test:e2e            # E2E completo (precisa de E2E_EMAIL/E2E_PASSWORD)
 ```
