@@ -1,11 +1,11 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
 
 import { DEFAULT_EVALUATE_FILTERS } from "@/domain/research/evaluate";
 import { DEFAULT_RESEARCH_FILTERS, type ResearchFilters } from "@/domain/research/filters";
 
 /**
  * Teste com banco, só leitura: roda as consultas da Pesquisa contra o catálogo real com
- * `DB_TESTS=1 npx vitest run src/features/research`. Confere que o SQL executa e que as linhas passam pelo Zod; os
+ * `npm run test:db`. Confere que o SQL executa e que as linhas passam pelo Zod; os
  * números dependem do catálogo e não são fixados aqui.
  */
 vi.mock("@/server/auth", () => ({
@@ -13,11 +13,15 @@ vi.mock("@/server/auth", () => ({
 }));
 
 describe.skipIf(process.env.DB_TESTS !== "1")("consultas da Pesquisa", () => {
+  afterAll(async () => {
+    const { disconnectDb } = await import("@/server/disconnect");
+    await disconnectDb();
+  });
+
   it("executam no banco e devolvem o formato esperado", async () => {
     // O Next não carrega .env.local com NODE_ENV=test; o Node carrega direto.
     if (!process.env.DATABASE_URL) process.loadEnvFile(".env.local");
     const queries = await import("./queries");
-    const { db } = await import("@/server/db");
 
     const overview = await queries.getResearchOverview();
     expect(overview.sales).toBeGreaterThan(0);
@@ -154,7 +158,5 @@ describe.skipIf(process.env.DB_TESTS !== "1")("consultas da Pesquisa", () => {
     // Calibração: só os resultados do dono (o usuário do teste não tem nenhum).
     const { getCalibration } = await import("@/features/analyses/queries");
     expect(await getCalibration()).toEqual([]);
-
-    await db.$disconnect();
   }, 60_000);
 });
