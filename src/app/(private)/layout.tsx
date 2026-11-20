@@ -41,14 +41,14 @@ export default function PrivateLayout({ children }: LayoutProps<"/">) {
 
   return (
     // Direção A (DESIGN.md §9): menu no papel quente, conteúdo num painel branco embutido (no celular, tela cheia).
-    <div className="min-h-dvh bg-background lg:grid lg:grid-cols-[248px_1fr]">
+    <div className="min-h-dvh bg-background lg:grid lg:grid-cols-[296px_1fr]">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-surface focus:px-4 focus:py-2 focus:text-body focus:font-medium focus:text-foreground focus:shadow-md focus:ring-2 focus:ring-accent"
       >
         Pular para o conteúdo
       </a>
-      <aside className="sticky top-0 hidden h-dvh flex-col gap-6 overflow-y-auto px-3 pt-4 pb-3 lg:flex">
+      <aside className="sticky top-0 hidden h-dvh flex-col gap-6 overflow-y-auto px-4 pt-5 pb-4 lg:flex">
         <div className="px-2.5">
           <Brand />
         </div>
