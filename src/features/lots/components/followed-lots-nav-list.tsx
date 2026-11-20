@@ -57,8 +57,8 @@ function LotList({ items, pathname }: FollowedLotsNavListProps & { pathname: str
               href={href}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex min-h-9 items-center gap-2.5 rounded-md px-2.5 text-body font-medium text-foreground-secondary transition-colors duration-120 outline-none hover:bg-primary-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent",
-                isActive && "bg-primary-subtle-hover font-semibold text-foreground hover:bg-primary-subtle-hover",
+                "flex min-h-9 items-center gap-2.5 rounded-md px-2.5 text-body font-medium text-foreground-secondary transition-colors duration-120 outline-none hover:bg-primary-subtle/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent",
+                isActive && "bg-primary-subtle font-semibold text-foreground hover:bg-primary-subtle",
               )}
             >
               <span aria-hidden="true" className="flex w-4 shrink-0 justify-center">

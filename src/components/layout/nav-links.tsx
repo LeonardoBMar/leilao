@@ -103,7 +103,7 @@ function NavList({
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
                   "group relative flex min-h-9 items-center gap-2.5 rounded-md px-2.5 text-body font-medium text-foreground-secondary transition-colors duration-120 outline-none focus-visible:ring-2 focus-visible:ring-accent",
-                  isActive ? "font-semibold text-foreground" : "hover:bg-primary-subtle hover:text-foreground",
+                  isActive ? "font-semibold text-foreground" : "hover:bg-primary-subtle/60 hover:text-foreground",
                 )}
               >
                 {isActive ? (
@@ -111,7 +111,7 @@ function NavList({
                     aria-hidden="true"
                     layoutId="nav-active-pill"
                     transition={MOTION_SPRING}
-                    className="pointer-events-none absolute inset-0 rounded-md bg-primary-subtle-hover"
+                    className="pointer-events-none absolute inset-0 rounded-md bg-primary-subtle"
                   />
                 ) : null}
                 <Icon
