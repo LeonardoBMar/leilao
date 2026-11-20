@@ -51,6 +51,8 @@ type ScatterPlotProps = {
   band?: { low: number; high: number; label: string };
   /** Diagonal tracejada y = x, com o rótulo no fim (ex.: limite igual ao arremate); pede `xAxis` na mesma unidade do y. */
   diagonal?: { label: string };
+  /** Âncora da tabela de dados para navegação por teclado e leitores de tela. */
+  tableAnchorId?: string;
   ariaLabel: string;
 };
 
@@ -75,6 +77,7 @@ export function ScatterPlot({
   reference,
   band,
   diagonal,
+  tableAnchorId,
   ariaLabel,
 }: ScatterPlotProps) {
   const [activeKey, setActiveKey] = useState<string | null>(null);
@@ -100,6 +103,14 @@ export function ScatterPlot({
     .join(" ");
   return (
     <div className="grid gap-3">
+      {tableAnchorId ? (
+        <a
+          href={`#${tableAnchorId}`}
+          className="sr-only focus:not-sr-only focus:inline-block focus:w-fit focus:rounded-md focus:bg-surface focus:px-3 focus:py-1.5 focus:text-label focus:text-accent focus:ring-2 focus:ring-accent"
+        >
+          Ir para a tabela de dados
+        </a>
+      ) : null}
       <PlotFrame
         ariaLabel={ariaLabel}
         yDomain={yDomain}

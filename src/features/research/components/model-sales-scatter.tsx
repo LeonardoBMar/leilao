@@ -143,6 +143,7 @@ export function ModelSalesScatter({ sales, medians, subject, yearSummary, select
       </div>
       {points.length > 0 ? (
         <ScatterPlot
+          tableAnchorId="pesquisa-vendas-tabela"
           ariaLabel={
             axis === "year" && measure === "price"
               ? yearSummary

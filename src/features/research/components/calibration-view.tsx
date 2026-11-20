@@ -216,6 +216,7 @@ function LimitChart({ items }: { items: readonly CalibrationEntry[] }) {
       description={`Cada ponto é um lote: o limite fixado no eixo de baixo, o arremate no lateral. Acima da diagonal, o arremate passou do limite (${above} de ${points.length}).`}
     >
       <ScatterPlot
+        tableAnchorId="calibracao-analises"
         ariaLabel={`Limite fixado × arremate: ${points
           .map(({ item, limit }) => `${item.label}, limite ${formatBRL(limit)}, arremate ${formatBRL(item.finalBid)}`)
           .join("; ")}`}

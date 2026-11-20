@@ -47,9 +47,9 @@ const FILL_CLASSES = {
 const LABEL_CLASSES = {
   1: "text-foreground",
   2: "text-foreground",
-  3: "text-white",
-  4: "text-white",
-  5: "text-white",
+  3: "text-surface",
+  4: "text-surface",
+  5: "text-surface",
 } as const satisfies Record<DataStep, string>;
 
 const percentX = (x: number) => `${(x / BRAZIL_VIEWBOX.width) * 100}%`;

@@ -42,6 +42,12 @@ export default function PrivateLayout({ children }: LayoutProps<"/">) {
   return (
     // Direção A (DESIGN.md §9): menu no papel quente, conteúdo num painel branco embutido (no celular, tela cheia).
     <div className="min-h-dvh bg-background lg:grid lg:grid-cols-[248px_1fr]">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-surface focus:px-4 focus:py-2 focus:text-body focus:font-medium focus:text-foreground focus:shadow-md focus:ring-2 focus:ring-accent"
+      >
+        Pular para o conteúdo
+      </a>
       <aside className="sticky top-0 hidden h-dvh flex-col gap-6 overflow-y-auto px-3 pt-4 pb-3 lg:flex">
         <div className="px-2.5">
           <Brand />
@@ -62,7 +68,13 @@ export default function PrivateLayout({ children }: LayoutProps<"/">) {
           <Brand />
         </header>
         <div className="flex-1 bg-surface lg:rounded-lg lg:shadow-sm">
-          <main className="mx-auto w-full max-w-360 px-4 py-6 md:px-6 lg:px-12 lg:pt-7 lg:pb-10">{children}</main>
+          <main
+            id="main-content"
+            tabIndex={-1}
+            className="mx-auto w-full max-w-360 px-4 py-6 outline-none md:px-6 lg:px-12 lg:pt-7 lg:pb-10"
+          >
+            {children}
+          </main>
         </div>
       </div>
     </div>

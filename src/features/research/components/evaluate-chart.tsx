@@ -130,6 +130,7 @@ export function EvaluateChart({
         <p className="text-body text-muted">Nenhuma venda tem {axis === "year" ? "ano-modelo" : "data"} informado.</p>
       ) : (
         <ScatterPlot
+          tableAnchorId="comparaveis"
           ariaLabel={`Lances finais do ${subject} por ${axis === "year" ? "ano-modelo" : "data"}: ${salesLabel(sales.length)}${
             open.length > 0 ? ` e ${open.length} ${open.length === 1 ? "lote aberto" : "lotes abertos"}` : ""
           }${band ? `; faixa típica de ${formatCompactBRL(cents(band.low))} a ${formatCompactBRL(cents(band.high))}` : ""}.`}

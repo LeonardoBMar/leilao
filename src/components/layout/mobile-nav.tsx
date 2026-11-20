@@ -1,7 +1,8 @@
 "use client";
 
 import { Menu } from "lucide-react";
-import { type MouseEvent, type ReactNode, useState } from "react";
+import { usePathname } from "next/navigation";
+import { type ReactNode, Suspense, useEffect, useRef, useState } from "react";
 
 import { Button, Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui";
 
@@ -17,17 +18,33 @@ type MobileNavProps = {
   nextAuction?: ReactNode;
 };
 
+/**
+ * Fecha a gaveta quando o pathname muda (ex.: link nos extras do menu ou navegação programática).
+ * Fica em <Suspense> porque `usePathname()` é dado de URL em rotas dinâmicas.
+ */
+function CloseOnPathnameChange({ onClose }: { onClose: () => void }) {
+  const pathname = usePathname();
+  const prevPathname = useRef(pathname);
+
+  useEffect(() => {
+    if (prevPathname.current !== pathname) {
+      prevPathname.current = pathname;
+      onClose();
+    }
+  }, [pathname, onClose]);
+
+  return null;
+}
+
 /** Gaveta lateral abaixo de `lg`, com os mesmos destinos e ordem da sidebar (DESIGN.md §9). */
 export function MobileNav({ account, badges, followed, nextAuction }: MobileNavProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Os extras vêm prontos do servidor (sem `onClick` próprio): qualquer link clicado dentro deles fecha a gaveta.
-  function closeOnLink(event: MouseEvent<HTMLDivElement>) {
-    if (event.target instanceof Element && event.target.closest("a")) setIsOpen(false);
-  }
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Suspense fallback={null}>
+        <CloseOnPathnameChange onClose={() => setIsOpen(false)} />
+      </Suspense>
       <DialogTrigger asChild>
         <Button variant="ghost" size="icon" aria-label="Abrir menu">
           <Menu aria-hidden="true" />
@@ -46,10 +63,8 @@ export function MobileNav({ account, badges, followed, nextAuction }: MobileNavP
           {/* Fecha ao navegar: com <Activity> a rota anterior fica montada e a gaveta ficaria aberta. */}
           <NavLinks onNavigate={() => setIsOpen(false)} badges={badges} />
         </nav>
-        <div onClick={closeOnLink} className="contents">
-          {followed}
-        </div>
-        <div onClick={closeOnLink} className="mt-auto grid grid-cols-1 gap-2.5">
+        {followed}
+        <div className="mt-auto grid grid-cols-1 gap-2.5">
           {nextAuction}
           <div className="border-t border-border-strong pt-2.5">{account}</div>
         </div>
