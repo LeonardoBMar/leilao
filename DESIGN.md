@@ -116,7 +116,7 @@ Os nomes semânticos são a API visual do projeto. O código deve consumir `back
 | `accent-hover` | `#1E34A0` | Hover de link e texto selecionado. | Estado permanente. |
 | `accent-subtle` | `#E9ECFA` | Linha selecionada, seleção de texto e hover do botão Outline. | Alertas informativos genéricos. |
 
-Texto sobre `primary`, `primary-hover` e `primary-active` deve ser `#FFFFFF`. O item ativo da navegação não usa azul: é uma cápsula branca (`surface` com `shadow-sm`) com texto e ícone em tinta.
+Texto sobre `primary`, `primary-hover` e `primary-active` deve ser `#FFFFFF`. O item ativo da navegação não usa azul nem borda: usa fundo `primary-subtle-hover` (sem sombra) com texto e ícone em tinta.
 
 Ações destrutivas usam `error-hover: #9E1F1F` e `error-active: #851A1A`; não reduzir opacidade do fundo, pois isso reduz o contraste do texto branco. `control-border` mantém pelo menos 3:1 contra `surface` e `surface-subtle`; `placeholder` mantém pelo menos 4,5:1 nessas superfícies.
 
@@ -262,7 +262,7 @@ shadow-lg: 0 20px 48px rgba(21, 23, 28, 0.16), 0 0 0 1px rgba(21, 23, 28, 0.04)
 ```
 
 - A hierarquia vem da troca de superfície (papel, branco, papel rebaixado) e de linhas finas, não de sombra. Cards comuns usam só a borda `border`.
-- `shadow-xs` fica no botão Secondary; `shadow-sm` no painel principal e no item ativo da navegação.
+- `shadow-xs` fica no botão Secondary; `shadow-sm` no painel principal.
 - Menus e popovers usam `shadow-md`.
 - Dialogs e drawers usam `shadow-lg` com overlay.
 - Nunca usar sombra colorida, glow ou múltiplas sombras decorativas.
@@ -288,7 +288,7 @@ O design é mobile first. Breakpoint indica mudança de composição, não uma c
 
 ### 4.1 Estrutura privada
 
-- Em `lg` ou maior, a sidebar fixa de `248px` fica sobre o papel (`background`), sem borda. O conteúdo fica num **painel branco embutido** (`surface`, `radius-lg`, `shadow-sm`) com `10px` de margem no topo, à direita e embaixo.
+- Em `lg` ou maior, a sidebar fixa de `296px` fica sobre o papel (`background`), sem borda, com padding lateral de `16px` (`20px` no topo e `16px` embaixo). O conteúdo fica num **painel branco embutido** (`surface`, `radius-lg`, `shadow-sm`) com `10px` de margem no topo, à direita e embaixo.
 - Abaixo de `lg`, uma barra superior de `56px` sobre o papel traz a marca e o menu; o conteúdo ocupa a largura toda em `surface`.
 - A área de conteúdo usa largura máxima de `1440px`, centralizada dentro do painel.
 - Padding horizontal: `16px` no mobile, `24px` em `md` e `48px` em `lg`.
@@ -594,8 +594,8 @@ Usar para informação faltante, análise retrospectiva, resultado não compará
 
 Ordem inicial:
 
-1. Marca: quadrado de 28 px em tinta com o martelo, “Leilão Tracker” e “Uso pessoal” (`src/components/layout/brand.tsx`).
-2. Dashboard.
+1. Marca: quadrado de 28 px em tinta com o martelo e “Leilão Tracker” (`src/components/layout/brand.tsx`).
+2. Início (ícone de casa, rota `/dashboard`).
 3. Leilões (o catálogo coletado, por leilão ou todos os veículos; docs/PLANO-COLETA.md e docs/PLANO-NAVEGACAO.md): porta de entrada do fluxo descobrir → analisar.
 4. Minhas análises (os lotes do usuário, todos ou por leilão).
 5. Monitores (buscas salvas que geram alertas).
@@ -607,9 +607,9 @@ Ordem inicial:
 10. Conta: avatar neutro, e-mail e botão só com ícone "Sair".
 
 - A sidebar fica sobre o papel (`background`), sem borda; um divisor `border-strong` separa a conta.
-- Item: altura mínima de 40 px, `radius-md`, 1 px entre itens, ícone 16 px em `muted-subtle`, texto `body` peso 500 em `foreground-secondary`.
-- Ativo: cápsula branca (`surface` com `shadow-sm`), texto e ícone em tinta, peso 600.
-- Hover: véu de 5% de tinta, texto e ícone em tinta.
+- Item: altura mínima de 36 px, `radius-md`, 1 px entre itens, ícone 16 px em `muted-subtle`, texto `body` peso 500 em `foreground-secondary`.
+- Ativo: fundo `primary-subtle-hover` (sem borda nem sombra), texto e ícone em tinta, peso 600; mantém a mesma cor no hover.
+- Hover: fundo `primary-subtle`, texto e ícone em tinta.
 - Não usar badges de contagem na navegação salvo necessidade operacional validada. Única exceção validada: **não lidos em Alertas** (etapa 2 de docs/PLANO-COLETA.md), pílula `accent` com texto branco alinhada à direita, some quando é zero.
 
 ### Navegação mobile
