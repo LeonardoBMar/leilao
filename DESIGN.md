@@ -116,7 +116,7 @@ Os nomes semânticos são a API visual do projeto. O código deve consumir `back
 | `accent-hover` | `#1E34A0` | Hover de link e texto selecionado. | Estado permanente. |
 | `accent-subtle` | `#E9ECFA` | Linha selecionada, seleção de texto e hover do botão Outline. | Alertas informativos genéricos. |
 
-Texto sobre `primary`, `primary-hover` e `primary-active` deve ser `#FFFFFF`. O item ativo da navegação não usa azul nem borda: usa fundo `primary-subtle-hover` (sem sombra) com texto e ícone em tinta.
+Texto sobre `primary`, `primary-hover` e `primary-active` deve ser `#FFFFFF`. O item ativo da navegação não usa azul nem borda: usa fundo `primary-subtle` (sem sombra) com texto e ícone em tinta.
 
 Ações destrutivas usam `error-hover: #9E1F1F` e `error-active: #851A1A`; não reduzir opacidade do fundo, pois isso reduz o contraste do texto branco. `control-border` mantém pelo menos 3:1 contra `surface` e `surface-subtle`; `placeholder` mantém pelo menos 4,5:1 nessas superfícies.
 
@@ -608,8 +608,8 @@ Ordem inicial:
 
 - A sidebar fica sobre o papel (`background`), sem borda; um divisor `border-strong` separa a conta.
 - Item: altura mínima de 36 px, `radius-md`, 1 px entre itens, ícone 16 px em `muted-subtle`, texto `body` peso 500 em `foreground-secondary`.
-- Ativo: fundo `primary-subtle-hover` (sem borda nem sombra), texto e ícone em tinta, peso 600; mantém a mesma cor no hover.
-- Hover: fundo `primary-subtle`, texto e ícone em tinta.
+- Ativo: fundo `primary-subtle` (sem borda nem sombra), texto e ícone em tinta, peso 600; mantém a mesma cor no hover.
+- Hover: fundo `primary-subtle` a 60%, texto e ícone em tinta.
 - Não usar badges de contagem na navegação salvo necessidade operacional validada. Única exceção validada: **não lidos em Alertas** (etapa 2 de docs/PLANO-COLETA.md), pílula `accent` com texto branco alinhada à direita, some quando é zero.
 
 ### Navegação mobile
