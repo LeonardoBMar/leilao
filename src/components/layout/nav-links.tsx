@@ -1,6 +1,6 @@
 "use client";
 
-import { BellRing, Calculator, ChartColumn, Gavel, LayoutDashboard, type LucideIcon } from "lucide-react";
+import { BellRing, Calculator, ChartColumn, Gavel, House, type LucideIcon } from "lucide-react";
 import { LayoutGroup, m } from "motion/react";
 import type { Route } from "next";
 import Link from "next/link";
@@ -24,7 +24,7 @@ type NavItem = { href: Route; label: string; icon: LucideIcon; sections?: readon
 
 // Ordem do DESIGN.md §9.
 const NAV_ITEMS: readonly NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Início", icon: House },
   { href: "/leiloes", label: "Leilões", icon: Gavel },
   { href: "/minhas-analises", label: "Minhas análises", icon: Calculator, sections: ["/lotes", "/analise"] },
   { href: "/alertas", label: "Alertas", icon: BellRing, sections: ["/monitores"] },
