@@ -29,7 +29,7 @@ type FollowedLotsNavListProps = {
 };
 
 /**
- * Lista clicável de "Acompanhando" com estado ativo em cápsula branca (DESIGN.md §9).
+ * Lista clicável de "Acompanhando" com destaque ativo sem borda (DESIGN.md §9).
  * `usePathname()` é dado de URL e precisa de <Suspense>; o fallback mostra a lista sem destaque.
  */
 export function FollowedLotsNavList({ items }: FollowedLotsNavListProps) {
@@ -57,8 +57,8 @@ function LotList({ items, pathname }: FollowedLotsNavListProps & { pathname: str
               href={href}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex min-h-10 items-center gap-2.5 rounded-md px-2.5 text-body font-medium text-foreground-secondary transition-colors duration-120 outline-none hover:bg-foreground/5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent",
-                isActive && "bg-surface font-semibold text-foreground shadow-sm hover:bg-surface",
+                "flex min-h-9 items-center gap-2.5 rounded-md px-2.5 text-body font-medium text-foreground-secondary transition-colors duration-120 outline-none hover:bg-primary-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent",
+                isActive && "bg-primary-subtle-hover font-semibold text-foreground hover:bg-primary-subtle-hover",
               )}
             >
               <span aria-hidden="true" className="flex w-4 shrink-0 justify-center">
