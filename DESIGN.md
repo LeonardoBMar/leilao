@@ -1,19 +1,18 @@
 # Leilão Tracker — Design System
 
-> Versão: 2.3 • Data: 11/10/2026 • Status: fonte de verdade visual. Direção A, "refinado e silencioso".
+> Versão: 3.0 • Data: 21/11/2026 • Status: fonte de verdade visual. Direção **Cirúrgico & Monocromático** (Linear Light / Precision Workbench).
 >
 > Este documento complementa o [`SPEC.md`](./SPEC.md). O `SPEC.md` define produto, domínio e comportamento; este arquivo define apresentação, composição e interação.
 
 ## Estado atual e origem das decisões
 
-O projeto possui a fundação em Next.js 16, Tailwind CSS 4 e uma primeira biblioteca reutilizável em `src/components/ui`. Portanto:
+O projeto possui a fundação em Next.js 16, Tailwind CSS 4, Radix UI, `motion` e biblioteca reutilizável em `src/components/ui`. Portanto:
 
-- Em 01/10/2026 o usuário escolheu a **Direção A, "refinado e silencioso"** (tinta, papel e um número que decide). Ela substitui as definições anteriores (azul `#2454F8` e fontes Geist).
-- Fontes obrigatórias: **Hanken Grotesk** na interface e **IBM Plex Mono** em códigos (número do lote, leilão, identificadores).
-- Ação principal em **tinta** (`#15171C`). O azul **`#2B45C8`** é acento: link, foco e seleção, nunca botão principal nem decoração.
-- Dashboard claro, sóbrio e orientado a dados: papel quente ao fundo, conteúdo num painel branco, hierarquia por troca de superfície e linhas finas, quase sem sombra.
-- O MVP terá tema claro. Tema escuro só poderá ser adicionado como um conjunto completo de tokens, nunca por estilos isolados.
-- Os componentes fundamentais documentados abaixo já possuem implementação. Componentes de domínio continuam como contratos para as próximas features.
+- Em 21/11/2026 o usuário escolheu a direção **v3.0 — "Cirúrgico & Monocromático"** (Precision Workbench claro estilo Linear Light), substituindo a antiga Direção A (papel quente `#F7F7F4`, Hanken Grotesk e sidebar fixa de `296px`).
+- Fontes obrigatórias: **Inter** (`cv02`, `cv03`, `cv04`, `cv11`) na interface e **JetBrains Mono** em códigos (número do lote, atalhos `⌘K`, identificadores).
+- Casca arquitetônica de borda a borda: **Sidebar colapsável** (`264px` expandida ↔ `56px` só ícones, atalho `Ctrl+B`) em `#FAFAFB` com **header próprio de `48px`** (marca + botão de recolher/expandir), e **Header fixo de `48px` à direita da sidebar** sobre o canvas branco puro (`#FFFFFF`) com o contexto da seção e salto rápido `⌘K`, separados por linhas hairline (`#EAECEF`).
+- Paleta acromática cirúrgica: ação principal em **tinta** (`#111318`). Cor aparece apenas no **veredicto financeiro** (`#047857` esmeralda / `#BE123C` carmesim / `#92400E` âmbar), em foco/links (`#1D4ED8`) e na escala sequencial dos gráficos de Mercado.
+- Acabamento guiado pelo combo de skills do projeto (`impeccable`, `emil-design-eng`, `jakubkrehel/skills`, `web-design-guidelines`, `frontend-design` e `modern-web-guidance`): curvas customizadas (`--ease-out`, `--ease-drawer`), `active:scale-[0.97]`, popovers orientados pelo gatilho, zero animação em ações de teclado (`⌘K`, `Ctrl+B`), `text-wrap: balance/pretty`, `line-height` sem unidade, `overscroll-behavior: contain` em overlays e inputs em `16px` no mobile (`text-base sm:text-body`).
 
 Alterar uma decisão deste arquivo exige atualizar primeiro o token ou contrato correspondente e depois aplicar a mudança ao código.
 
@@ -88,46 +87,46 @@ Os nomes semânticos são a API visual do projeto. O código deve consumir `back
 
 | Token | Valor | Uso | Não usar para |
 | --- | --- | --- | --- |
-| `background` | `#F7F7F4` | Papel quente: fundo da casca (menu e topbar) e painéis rebaixados dentro do conteúdo, como o de lance e limite. | Fundo de campos. |
-| `surface` | `#FFFFFF` | Painel principal de conteúdo, cards, tabelas e formulários. | Criar camadas sem necessidade. |
-| `surface-subtle` | `#F0F0EB` | Superfície rebaixada: campos readonly e grupos secundários. | Estados selecionados ou alertas. |
-| `surface-elevated` | `#FFFFFF` | Dialogs, menus e popovers com sombra. | Cards comuns que não flutuam. |
-| `foreground` | `#15171C` | Tinta: texto principal, títulos e os números que decidem. | Texto sobre fundos escuros sem verificar contraste. |
-| `foreground-secondary` | `#3F434C` | Descrições, itens da navegação e informação complementar. | Placeholder ou texto desabilitado. |
-| `muted` | `#63676F` | Metadados, captions, rótulos de dado e cabeçalhos de tabela. Mantém 4,5:1 até sobre `surface-subtle`. | Corpo de texto longo. |
-| `muted-subtle` | `#8A8E96` | Ícones da navegação em repouso e conteúdo desabilitado. | Informação necessária para completar uma tarefa. |
-| `placeholder` | `#63676F` | Sugestão de preenchimento, com contraste de texto normal. | Substituir o label. |
-| `border` | `#EFEEEA` | Linhas finas: divisores, linhas de tabela e borda de cards. | Identificar controles, erro ou foco. |
-| `border-strong` | `#E4E3DD` | Divisores mais marcados e contorno do botão Secondary. | Identificar limites de campos. |
-| `control-border` | `#CFD0D3` | Inputs, selects, checkbox e radio. | Contornar todos os cards. |
-| `overlay` | `rgba(21, 23, 28, 0.48)` | Fundo atrás de dialogs e drawers. | Superfícies permanentes. |
+| `background` | `#FAFAFB` | Chrome cirúrgico: fundo do header fixo (`48px`) e da sidebar colapsável. | Fundo de campos. |
+| `surface` | `#FFFFFF` | Canvas principal de conteúdo, cards, tabelas e formulários. | Criar camadas sem necessidade. |
+| `surface-subtle` | `#F3F4F6` | Superfície rebaixada: painéis de resumo/cálculo, campos readonly e grupos secundários. | Estados selecionados ou alertas. |
+| `surface-elevated` | `#FFFFFF` | Dialogs, menus, popovers e `CommandPalette` com sombra em camadas. | Cards comuns que não flutuam. |
+| `foreground` | `#111318` | Tinta: texto principal, títulos e os números que decidem. | Texto sobre fundos escuros sem verificar contraste. |
+| `foreground-secondary` | `#3E434D` | Descrições, itens da navegação e informação complementar. | Placeholder ou texto desabilitado. |
+| `muted` | `#626773` | Metadados, captions, rótulos de dado e cabeçalhos de tabela. Mantém ≥ 4,7:1 até sobre `surface-subtle`. | Corpo de texto longo. |
+| `muted-subtle` | `#8B909B` | Ícones da navegação em repouso e conteúdo desabilitado. | Informação necessária para completar uma tarefa. |
+| `placeholder` | `#626773` | Sugestão de preenchimento, com contraste de texto normal. | Substituir o label. |
+| `border` | `#EAECEF` | Linhas hairline: header, sidebar, divisores, linhas de tabela e borda de cards. | Identificar controles, erro ou foco. |
+| `border-strong` | `#DADDE3` | Divisores marcados e contorno do botão Secondary. | Identificar limites de campos. |
+| `control-border` | `#C5C9D2` | Inputs, selects, checkbox e radio (≥ 3:1 sobre `surface`). | Contornar todos os cards. |
+| `overlay` | `rgba(17, 19, 24, 0.42)` | Fundo atrás de dialogs e drawers. | Superfícies permanentes. |
 
 #### Tinta, acento e interação
 
 | Token | Valor | Uso | Não usar para |
 | --- | --- | --- | --- |
-| `primary` | `#15171C` | Tinta: botão principal, checkbox, radio e switch marcados, marca. | Links e foco (use `accent`). |
-| `primary-hover` | `#2C2F37` | Hover do botão principal. | Estado permanente. |
+| `primary` | `#111318` | Tinta: botão principal, checkbox, radio e switch marcados, marca. | Links e foco (use `accent`). |
+| `primary-hover` | `#252932` | Hover do botão principal. | Estado permanente. |
 | `primary-active` | `#000000` | Pressionado. | Item apenas selecionado. |
-| `primary-subtle` | `#EFEEE9` | Fundo do badge neutro. | Botão principal. |
-| `primary-subtle-hover` | `#E4E3DD` | Hover sobre o fundo neutro. | Alertas. |
-| `primary-disabled` | `#A9ABB0` | Fundo de ação principal desabilitada. | Estado de carregamento ativo. |
-| `accent` | `#2B45C8` | Link, anel de foco, borda de campo em foco, seleção e contador de alertas. | Botão principal, decoração e ícones em geral. |
-| `accent-hover` | `#1E34A0` | Hover de link e texto selecionado. | Estado permanente. |
-| `accent-subtle` | `#E9ECFA` | Linha selecionada, seleção de texto e hover do botão Outline. | Alertas informativos genéricos. |
+| `primary-subtle` | `#EEF0F3` | Fundo do item ativo da navegação e badges neutros. | Botão principal. |
+| `primary-subtle-hover` | `#E3E6EB` | Hover sobre fundo neutro. | Alertas. |
+| `primary-disabled` | `#A8ADB8` | Fundo de ação principal desabilitada. | Estado de carregamento ativo. |
+| `accent` | `#1D4ED8` | Link inline, anel de foco, borda de campo em foco, seleção e contador de alertas. | Botão principal, decoração e ícones em geral. |
+| `accent-hover` | `#1E40AF` | Hover de link e texto selecionado. | Estado permanente. |
+| `accent-subtle` | `#EFF4FF` | Linha selecionada, seleção de texto e hover do botão Outline. | Alertas informativos genéricos. |
 
-Texto sobre `primary`, `primary-hover` e `primary-active` deve ser `#FFFFFF`. O item ativo da navegação não usa azul nem borda: usa fundo `primary-subtle` (sem sombra) com texto e ícone em tinta.
+Texto sobre `primary`, `primary-hover` e `primary-active` deve ser `#FFFFFF`. O item ativo da navegação usa fundo `primary-subtle` com contorno hairline `border` e texto/ícone em tinta.
 
-Ações destrutivas usam `error-hover: #9E1F1F` e `error-active: #851A1A`; não reduzir opacidade do fundo, pois isso reduz o contraste do texto branco. `control-border` mantém pelo menos 3:1 contra `surface` e `surface-subtle`; `placeholder` mantém pelo menos 4,5:1 nessas superfícies.
+Ações destrutivas usam `error-hover: #9F1239` e `error-active: #881337`; não reduzir opacidade do fundo, pois isso reduz o contraste do texto branco. `control-border` mantém pelo menos 3:1 contra `surface` e `surface-subtle`; `placeholder` mantém pelo menos 4,5:1 nessas superfícies.
 
 #### Estados semânticos
 
 | Papel | Base | Fundo suave | Borda suave | Finalidade |
 | --- | --- | --- | --- | --- |
-| `success` | `#0F6B47` | `#E7F3EC` | `#BFE0CD` | Operação concluída, valor abaixo do limite e folga positiva. |
-| `warning` | `#7A4A00` | `#FBF1DE` | `#ECD3A3` | Atenção, dado incompleto ou proximidade do limite. |
-| `error` | `#B42323` | `#FBEAEA` | `#F0C4C4` | Falha, validação inválida e valor acima do limite. |
-| `info` | `#2B45C8` | `#E9ECFA` | `#C6CEF2` | Informação contextual e orientação neutra. |
+| `success` | `#047857` | `#ECFDF5` | `#A7F3D0` | Operação concluída, valor abaixo do limite e folga positiva. |
+| `warning` | `#92400E` | `#FFFBEB` | `#FDE68A` | Atenção, dado incompleto ou proximidade do limite. |
+| `error` | `#BE123C` | `#FFF1F2` | `#FECDD3` | Falha, validação inválida e valor acima do limite. |
+| `info` | `#1D4ED8` | `#EFF4FF` | `#BFDBFE` | Informação contextual e orientação neutra. |
 
 Regras:
 
