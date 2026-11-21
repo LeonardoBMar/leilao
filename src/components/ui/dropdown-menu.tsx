@@ -18,7 +18,7 @@ function DropdownMenuContent({ className, sideOffset = 6, ...props }: DropdownMe
       <DropdownMenuPrimitive.Content
         sideOffset={sideOffset}
         className={cn(
-          "z-50 min-w-48 rounded-lg border border-border bg-surface-elevated p-1 text-foreground shadow-md outline-none",
+          "z-50 min-w-48 origin-[var(--radix-dropdown-menu-content-transform-origin)] overscroll-contain rounded-lg border border-border bg-surface-elevated p-1 text-foreground shadow-md outline-none",
           className,
         )}
         {...props}

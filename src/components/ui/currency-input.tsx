@@ -61,7 +61,7 @@ function CurrencyInput({
           aria-invalid={Boolean(error) || undefined}
           aria-describedby={describedBy || undefined}
           className={cn(
-            "h-10 w-full rounded-md border border-control-border bg-surface pr-3 pl-10 text-body text-foreground tabular-nums transition-[border-color,box-shadow] duration-120 outline-none placeholder:text-placeholder read-only:bg-surface-subtle focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:bg-surface-subtle disabled:text-muted-subtle",
+            "h-10 w-full rounded-md border border-control-border bg-surface pr-3 pl-10 text-base text-foreground tabular-nums shadow-xs transition-[border-color,box-shadow] duration-150 ease-[var(--ease-out)] outline-none placeholder:text-placeholder read-only:bg-surface-subtle focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:bg-surface-subtle disabled:text-muted-subtle sm:h-9 sm:text-body",
             align === "right" && "text-right",
             error && "border-error focus:border-error focus:ring-error/20",
             className,

@@ -17,7 +17,7 @@ function DialogOverlay({ className, ...props }: DialogPrimitive.DialogOverlayPro
   return (
     <DialogPrimitive.Overlay
       className={cn(
-        "fixed inset-0 z-50 bg-[var(--overlay)] opacity-0 transition-opacity duration-240 data-[state=open]:opacity-100",
+        "fixed inset-0 z-50 bg-[var(--overlay)] opacity-0 transition-opacity duration-200 ease-[var(--ease-out)] data-[state=open]:opacity-100",
         className,
       )}
       {...props}
@@ -31,7 +31,7 @@ function DialogContent({ className, children, ...props }: DialogPrimitive.Dialog
       <DialogOverlay />
       <DialogPrimitive.Content
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-120 -translate-x-1/2 -translate-y-1/2 scale-95 gap-5 overflow-y-auto rounded-xl border border-border bg-surface-elevated p-5 opacity-0 shadow-lg transition-[opacity,transform] duration-240 outline-none data-[state=open]:scale-100 data-[state=open]:opacity-100 md:p-6",
+          "fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-120 -translate-x-1/2 -translate-y-1/2 scale-95 gap-5 overflow-y-auto overscroll-contain rounded-xl border border-border bg-surface-elevated p-5 opacity-0 shadow-lg transition-[opacity,transform] duration-200 ease-[var(--ease-out)] outline-none data-[state=open]:scale-100 data-[state=open]:opacity-100 md:p-6",
           className,
         )}
         {...props}
@@ -39,9 +39,9 @@ function DialogContent({ className, children, ...props }: DialogPrimitive.Dialog
         {children}
         <DialogPrimitive.Close
           aria-label="Fechar"
-          className="absolute top-4 right-4 flex size-10 items-center justify-center rounded-md text-muted transition-colors duration-120 outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+          className="absolute top-3.5 right-3.5 flex size-9 items-center justify-center rounded-md text-muted transition-colors duration-120 outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
         >
-          <X aria-hidden="true" className="size-5" />
+          <X aria-hidden="true" className="size-4.5" />
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>
     </DialogPortal>
@@ -63,7 +63,7 @@ function DrawerContent({ className, children, side = "right", ...props }: Drawer
       <DialogOverlay />
       <DialogPrimitive.Content
         className={cn(
-          "fixed z-50 flex flex-col bg-surface-elevated shadow-lg transition-transform duration-240 outline-none",
+          "fixed z-50 flex flex-col overscroll-contain bg-surface-elevated shadow-lg transition-transform duration-280 ease-[var(--ease-drawer)] outline-none",
           side === "right" &&
             "inset-y-0 right-0 w-full max-w-110 translate-x-full border-l border-border data-[state=open]:translate-x-0",
           side === "bottom" &&
@@ -75,9 +75,9 @@ function DrawerContent({ className, children, side = "right", ...props }: Drawer
         {children}
         <DialogPrimitive.Close
           aria-label="Fechar"
-          className="absolute top-4 right-4 flex size-10 items-center justify-center rounded-md text-muted transition-colors duration-120 outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+          className="absolute top-3.5 right-3.5 flex size-9 items-center justify-center rounded-md text-muted transition-colors duration-120 outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
         >
-          <X aria-hidden="true" className="size-5" />
+          <X aria-hidden="true" className="size-4.5" />
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>
     </DialogPortal>
@@ -88,7 +88,10 @@ function DrawerContent({ className, children, side = "right", ...props }: Drawer
 function DrawerBody({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("grid min-h-0 flex-1 content-start gap-7 overflow-y-auto px-5 py-5 md:px-6", className)}
+      className={cn(
+        "grid min-h-0 flex-1 content-start gap-7 overflow-y-auto overscroll-contain px-5 py-5 md:px-6",
+        className,
+      )}
       {...props}
     />
   );

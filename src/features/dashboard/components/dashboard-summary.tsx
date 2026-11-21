@@ -187,20 +187,36 @@ export async function DashboardKpis() {
   );
 }
 
+const KPI_SKELETON_ITEMS = [
+  { label: "Para analisar", icon: Calculator, valueWidth: "w-12", noteWidth: "w-32" },
+  { label: "Acompanhados", icon: Eye, valueWidth: "w-10", noteWidth: "w-36" },
+  { label: "Pendências", icon: ClipboardList, valueWidth: "w-10", noteWidth: "w-28" },
+  { label: "Próximo leilão", icon: CalendarClock, valueWidth: "w-28", noteWidth: "w-36" },
+] as const;
+
 export function DashboardKpisSkeleton() {
   return (
-    <div
-      className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border lg:grid-cols-4"
-      aria-hidden="true"
-    >
-      {[0, 1, 2, 3].map((slot) => (
-        <div key={slot} className="grid gap-2.5 bg-surface p-4">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-7 w-16" />
-          <Skeleton className="h-4 w-28" />
-        </div>
-      ))}
-    </div>
+    <section aria-label="Carregando resumo operacional" aria-busy="true">
+      <ul className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border lg:grid-cols-4">
+        {KPI_SKELETON_ITEMS.map(({ label, icon: Icon, valueWidth, noteWidth }) => (
+          <li key={label} className={kpiCellClass}>
+            <div className="flex items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
+                <Icon aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
+                {label}
+              </span>
+              <Skeleton className="size-3.5 rounded-sm" />
+            </div>
+            <div className="flex h-7 items-center">
+              <Skeleton className={cn("h-6", valueWidth)} />
+            </div>
+            <div className="flex h-4 items-center">
+              <Skeleton className={cn("h-3.5", noteWidth)} />
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

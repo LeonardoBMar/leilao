@@ -16,7 +16,7 @@ function SelectTrigger({ className, children, ...props }: SelectPrimitive.Select
   return (
     <SelectPrimitive.Trigger
       className={cn(
-        "flex h-10 w-full items-center justify-between gap-2 rounded-md border border-control-border bg-surface px-3 text-body text-foreground transition-[border-color,box-shadow] duration-120 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:bg-surface-subtle disabled:text-muted-subtle data-[placeholder]:text-placeholder [&>span]:truncate",
+        "flex h-10 w-full items-center justify-between gap-2 rounded-md border border-control-border bg-surface px-3 text-base text-foreground shadow-xs transition-[border-color,box-shadow] duration-150 ease-[var(--ease-out)] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:bg-surface-subtle disabled:text-muted-subtle data-[placeholder]:text-placeholder sm:h-9 sm:text-body [&>span]:truncate",
         className,
       )}
       {...props}
@@ -40,7 +40,7 @@ function SelectContent({
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         className={cn(
-          "relative z-50 max-h-80 overflow-hidden rounded-lg border border-border bg-surface-elevated text-foreground shadow-md",
+          "relative z-50 max-h-80 origin-[var(--radix-select-content-transform-origin)] overflow-hidden overscroll-contain rounded-lg border border-border bg-surface-elevated text-foreground shadow-md",
           position === "popper" &&
             "max-h-[min(20rem,var(--radix-select-content-available-height))] w-[var(--radix-select-trigger-width)] max-w-[var(--radix-select-content-available-width)]",
           className,

@@ -13,7 +13,10 @@ function TooltipContent({ className, sideOffset = 6, ...props }: TooltipPrimitiv
     <TooltipPrimitive.Portal>
       <TooltipPrimitive.Content
         sideOffset={sideOffset}
-        className={cn("z-50 max-w-64 rounded-md bg-foreground px-3 py-2 text-caption text-white shadow-md", className)}
+        className={cn(
+          "z-50 max-w-64 origin-[var(--radix-tooltip-content-transform-origin)] rounded-md bg-foreground px-2.5 py-1.5 text-caption text-white shadow-md",
+          className,
+        )}
         {...props}
       />
     </TooltipPrimitive.Portal>
