@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cacheLife } from "next/cache";
 import { cache } from "react";
 
 import { DEFAULT_CATEGORIES, type ListingCriteria } from "@/domain/listings/criteria";
@@ -190,9 +191,13 @@ export async function countOpenListings(criteria: ListingCriteria): Promise<numb
   return db.listing.count({ where });
 }
 
-/** Saúde do coletor para o dashboard e para "Leilões": última execução de cada fonte e abertos na região. */
-export const getCollectorStatus = cache(async (): Promise<CollectorStatus> => {
-  await requireUser();
+/**
+ * Leitura global da saúde do coletor com cache `catalog` (D-78, D-85): não lê sessão nem dado de usuário.
+ * Quem chama exige `requireUser()`.
+ */
+async function loadCollectorStatusCached(): Promise<CollectorStatus> {
+  "use cache";
+  cacheLife("catalog");
   const now = new Date();
 
   const [sources, openInRegion] = await Promise.all([
@@ -226,4 +231,10 @@ export const getCollectorStatus = cache(async (): Promise<CollectorStatus> => {
     regionLabel: DEFAULT_REGION.label,
     radiusKm: DEFAULT_REGION.radiusKm,
   };
+}
+
+/** Saúde do coletor para o dashboard e para "Leilões": última execução de cada fonte e abertos na região. */
+export const getCollectorStatus = cache(async (): Promise<CollectorStatus> => {
+  await requireUser();
+  return loadCollectorStatusCached();
 });
