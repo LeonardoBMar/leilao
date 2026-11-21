@@ -6,6 +6,7 @@ src/generated
 *.md
 .claude/skills/*/
 !.claude/skills/leilao-padroes/
+.agents/
 skills-lock.json
 tests/e2e/.report
 tests/e2e/.results

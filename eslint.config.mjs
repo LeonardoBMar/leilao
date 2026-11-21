@@ -195,5 +195,7 @@ export default defineConfig([
     "src/generated/**",
     "tests/e2e/.report/**",
     "tests/e2e/.results/**",
+    ".claude/**",
+    ".agents/**",
   ]),
 ]);
