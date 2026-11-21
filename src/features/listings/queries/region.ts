@@ -19,7 +19,7 @@ import { storedCriteriaSelect } from "@/server/collector/alerts";
 import { db } from "@/server/db";
 
 import type { ListingEstimate, RegionOverview } from "../types";
-import { countByAuction, keyOf, loadCatalogAuctionStats } from "./auctions";
+import { keyOf } from "./auctions";
 import { getEstimateContext } from "./estimates";
 import {
   criteriaWhere,
@@ -40,13 +40,24 @@ const REGION_AUCTIONS_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 const fitsEstimate = ({ estimate }: { estimate: ListingEstimate | null }) =>
   estimate?.fit === "comfortable" || estimate?.fit === "tight";
 
-/** Campos de um candidato da home (D-82): o que `matchesCriteria` e a estimativa leem, mais o lote do usuário. */
+const earlierDate = (a: Date | null, b: Date | null): Date | null => {
+  if (a === null) return b;
+  if (b === null) return a;
+  return a.getTime() <= b.getTime() ? a : b;
+};
+
+/** Campos de um candidato da home (D-82, D-85): filtro exato, estimativa, lote do usuário e metadados do leilão. */
 const regionCandidateSelect = (ownerId: string) =>
   ({
     ...listingForDefaultsSelect,
     id: true,
     sourceId: true,
+    source: { select: { name: true } },
     auctionExternalId: true,
+    auctionName: true,
+    auctionStartsAt: true,
+    startsAt: true,
+    lastSeenAt: true,
     title: true,
     brand: true,
     model: true,
@@ -102,17 +113,19 @@ function toMatchable(row: RegionCandidateRow, distance: number | null): Matchabl
 export const getRegionOverview = cache(async (): Promise<RegionOverview> => {
   const user = await requireUser();
   const now = new Date();
-  const [watches, context] = await Promise.all([
+  const [watches, dismissals, context] = await Promise.all([
     db.watch.findMany({ where: { ownerId: user.id, active: true }, select: storedCriteriaSelect }),
+    // Dispensados (D-56) saem só das sugestões; buscar todos do usuário em paralelo evita 1 RTT e `IN` gigante (D-85).
+    db.listingDismissal.findMany({ where: { ownerId: user.id }, select: { listingId: true } }),
     getEstimateContext(),
   ]);
+  const dismissed = new Set(dismissals.map(({ listingId }) => listingId));
   const criteriaList = [DEFAULT_CRITERIA, ...watches.map(criteriaFromStored)];
   const wheres = await Promise.all(
     criteriaList.map(async (criteria) => criteriaWhere(criteria, await loadCriteriaValues(criteria))),
   );
 
-  // Fase 1 (D-82): só o que o filtro exato e a estimativa leem, sem fotos e textos do cartão. Até 2 mil linhas por
-  // tela; o cartão completo vem depois, só para os exibidos.
+  // Fase 1 (D-82, D-85): só o que o filtro exato, a estimativa e o resumo de leilões leem, sem fotos nem textos longos.
   const rows = await db.listing.findMany({
     // O banco filtra por cada critério; `matchesCriteria` confere a regra exata (a busca compara o texto normalizado).
     where: { AND: [openWhere(now), { auctionExternalId: { not: null } }, { OR: wheres }] },
@@ -121,32 +134,21 @@ export const getRegionOverview = cache(async (): Promise<RegionOverview> => {
     select: regionCandidateSelect(user.id),
   });
   const truncated = rows.length > MAX_CANDIDATES;
-  const matching = rows
-    .slice(0, MAX_CANDIDATES)
-    .map((row) => {
-      const distance = row.municipality ? distanceKm(DEFAULT_REGION.center, row.municipality) : null;
-      return { row, distance, estimate: estimateFor(row, context) };
-    })
-    .filter(({ row, distance }) => {
-      const listing = toMatchable(row, distance);
-      return criteriaList.some((criteria) => matchesCriteria(criteria, listing, now));
-    });
+  const nowMs = now.getTime();
 
-  // Dispensados (D-56) saem só das sugestões; continuam contando nos leilões e no catálogo.
-  const dismissed = new Set(
-    (
-      await db.listingDismissal.findMany({
-        where: { ownerId: user.id, listingId: { in: matching.map(({ row }) => row.id) } },
-        select: { listingId: true },
-      })
-    ).map(({ listingId }) => listingId),
-  );
+  // Filtra por `matchesCriteria` antes de estimar e só calcula estimativa para quem entra em sugestões ou nos 7 dias.
+  const matching = rows.slice(0, MAX_CANDIDATES).flatMap((row) => {
+    const distance = row.municipality ? distanceKm(DEFAULT_REGION.center, row.municipality) : null;
+    if (!criteriaList.some((criteria) => matchesCriteria(criteria, toMatchable(row, distance), now))) return [];
+    const isSoon = row.endsAt !== null && row.endsAt.getTime() - nowMs <= REGION_AUCTIONS_WINDOW_MS;
+    const isCandidate = row.lots.length === 0 && !dismissed.has(row.id);
+    const estimate = isCandidate || isSoon ? estimateFor(row, context) : null;
+    return [{ row, isSoon, isCandidate, estimate }];
+  });
+
   const toAnalyzeCandidates = matching
     .flatMap((candidate) =>
-      candidate.row.lots.length === 0 &&
-      !dismissed.has(candidate.row.id) &&
-      candidate.estimate &&
-      fitsEstimate(candidate)
+      candidate.isCandidate && candidate.estimate && fitsEstimate(candidate)
         ? [{ id: candidate.row.id, candidate: { ...candidate.estimate, endsAt: candidate.row.endsAt } }]
         : [],
     )
@@ -166,26 +168,69 @@ export const getRegionOverview = cache(async (): Promise<RegionOverview> => {
     return row ? [toListItem(row, context)] : [];
   });
 
-  // Leilões: só anúncios que encerram nos próximos 7 dias.
-  const soon = matching.filter(
-    ({ row }) => row.endsAt !== null && row.endsAt.getTime() - now.getTime() <= REGION_AUCTIONS_WINDOW_MS,
-  );
-  const inFilter = countByAuction(soon.map(({ row }) => row));
-  const fitting = countByAuction(soon.filter(fitsEstimate).map(({ row }) => row));
-  const stats = await loadCatalogAuctionStats(user.id, [...inFilter.values()], now);
+  // Leilões dos próximos 7 dias agregados diretamente dos candidatos abertos (elimina 5 queries em cascata, D-85).
+  type AuctionBucket = {
+    sourceId: string;
+    sourceName: string;
+    externalId: string;
+    name: string | null;
+    latestSeenMs: number;
+    auctionStartsAt: Date | null;
+    firstStartsAt: Date | null;
+    firstEndsAt: Date | null;
+    matching: number;
+    fitting: number;
+  };
+  const buckets = new Map<string, AuctionBucket>();
+  for (const item of matching) {
+    if (!item.isSoon || item.row.auctionExternalId === null) continue;
+    const { row } = item;
+    const key = keyOf(row.sourceId, row.auctionExternalId);
+    const seenMs = row.lastSeenAt.getTime();
+    const fitCount = fitsEstimate(item) ? 1 : 0;
+    const existing = buckets.get(key);
+    if (!existing) {
+      buckets.set(key, {
+        sourceId: row.sourceId,
+        sourceName: row.source.name,
+        externalId: row.auctionExternalId,
+        name: row.auctionName,
+        latestSeenMs: seenMs,
+        auctionStartsAt: row.auctionStartsAt,
+        firstStartsAt: row.startsAt,
+        firstEndsAt: row.endsAt,
+        matching: 1,
+        fitting: fitCount,
+      });
+    } else {
+      existing.matching += 1;
+      existing.fitting += fitCount;
+      existing.auctionStartsAt = earlierDate(existing.auctionStartsAt, row.auctionStartsAt);
+      existing.firstStartsAt = earlierDate(existing.firstStartsAt, row.startsAt);
+      existing.firstEndsAt = earlierDate(existing.firstEndsAt, row.endsAt);
+      if (seenMs > existing.latestSeenMs) {
+        existing.latestSeenMs = seenMs;
+        existing.name = row.auctionName;
+      }
+    }
+  }
+
   const auctions = selectCatalogAuctions(
-    stats.map((item) => ({ ...item, matching: inFilter.get(keyOf(item.sourceId, item.externalId))?.count ?? 0 })),
+    [...buckets.values()].map(({ latestSeenMs: _seen, ...bucket }) => ({
+      ...bucket,
+      total: bucket.matching,
+      open: bucket.matching,
+      analyzed: 0,
+    })),
     false,
-  )
-    .slice(0, REGION_AUCTIONS_SHOWN)
-    .map((item) => ({ ...item, fitting: fitting.get(keyOf(item.sourceId, item.externalId))?.count ?? 0 }));
+  ).slice(0, REGION_AUCTIONS_SHOWN);
 
   return {
     toAnalyze,
     toAnalyzeTotal: toAnalyzeIds.length,
     toAnalyzeComfortable,
     auctions,
-    auctionsTotal: inFilter.size,
+    auctionsTotal: buckets.size,
     truncated,
   };
 });
