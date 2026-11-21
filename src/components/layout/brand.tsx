@@ -1,13 +1,37 @@
 import { Gavel } from "lucide-react";
+import Link from "next/link";
 
-/** Marca da casca (DESIGN.md §9): quadrado em tinta com o martelo e o nome do produto. */
-export function Brand() {
-  return (
-    <div className="flex items-center gap-2.5">
-      <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-background">
-        <Gavel aria-hidden="true" className="size-4" />
+import { cn } from "@/lib/utils";
+
+type BrandProps = {
+  href?: "/dashboard";
+  className?: string;
+};
+
+/** Marca da casca v3.0 (DESIGN.md §9): quadrado em tinta com martelo e nome em Inter semibold. */
+export function Brand({ href, className }: BrandProps) {
+  const content = (
+    <>
+      <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-primary text-white shadow-xs">
+        <Gavel aria-hidden="true" className="size-3.5" />
       </span>
-      <span className="text-body leading-tight font-semibold text-foreground">Leilão Tracker</span>
-    </div>
+      <span className="text-body leading-none font-semibold tracking-[-0.015em] text-foreground">Leilão Tracker</span>
+    </>
   );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className={cn(
+          "inline-flex items-center gap-2 rounded-md py-1 outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2",
+          className,
+        )}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return <div className={cn("inline-flex items-center gap-2", className)}>{content}</div>;
 }
