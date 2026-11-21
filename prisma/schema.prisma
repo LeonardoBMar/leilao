@@ -495,6 +495,8 @@ model Listing {
   @@index([sourceId, auctionExternalId, lastSeenAt(sort: Desc)])
   /// Catálogo "Recém-chegados" (D-84): só os abertos, ordenados por entrada.
   @@index([firstSeenAt(sort: Desc)], map: "listings_open_first_seen_idx", where: { status: "open" })
+  /// Abertos por município e encerramento (`getRegionOverview`, `getCollectorStatus`, D-85).
+  @@index([municipalityId, endsAt], map: "listings_open_region_idx", where: { status: "open" })
   /// Fila do casamento na FIPE (D-47, D-79): só os pendentes, na ordem de `enrichMarketValues`.
   @@index([status, firstSeenAt(sort: Desc)], map: "listings_fipe_pending_idx", where: { marketValueCheckedAt: null })
   @@index([fipeMatchId])
@@ -607,7 +609,7 @@ model CollectorRun {
 
   source Source @relation(fields: [sourceId], references: [id], onDelete: Restrict)
 
-  @@index([sourceId, startedAt])
+  @@index([sourceId, startedAt(sort: Desc)])
   @@map("collector_runs")
 }
 
