@@ -45,7 +45,6 @@ export async function RecentAlerts() {
 
   return (
     <section
-      aria-labelledby="recent-alerts"
       className={cn(
         cardVariants({ variant: "summary" }),
         "flex flex-wrap items-center gap-x-5 gap-y-2 border-l-2 px-5 py-4",
@@ -69,19 +68,22 @@ export async function RecentAlerts() {
       </h2>
 
       {items.length > 0 ? (
-        <ul className="flex min-w-0 flex-1 flex-wrap gap-x-3 gap-y-1 text-caption text-muted">
+        <ul role="list" className="flex min-w-0 flex-1 flex-wrap gap-x-3 gap-y-1 text-caption text-muted">
           {items.map((alert, index) => (
             <li key={alert.id} className="flex min-w-0 items-center gap-2">
               {index > 0 ? <span aria-hidden="true" className="size-1 shrink-0 rounded-full bg-border-strong" /> : null}
               {alert.listing.trackedLotId ? (
                 <Link
                   href={`/lotes/${alert.listing.trackedLotId}`}
-                  className="min-w-0 truncate hover:text-foreground hover:underline"
+                  title={alert.listing.title}
+                  className="min-w-0 truncate rounded-sm outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent"
                 >
                   {alert.listing.title}
                 </Link>
               ) : (
-                <span className="min-w-0 truncate">{alert.listing.title}</span>
+                <span className="min-w-0 truncate" title={alert.listing.title}>
+                  {alert.listing.title}
+                </span>
               )}
             </li>
           ))}

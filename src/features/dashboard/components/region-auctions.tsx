@@ -8,6 +8,10 @@ import type { RegionAuction } from "@/features/listings/types";
 import { formatDayParts, formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
+const ptBrPlural = new Intl.PluralRules("pt-BR");
+const plural = (count: number, one: string, many: string) =>
+  `${count} ${ptBrPlural.select(count) === "one" ? one : many}`;
+
 /**
  * "Próximos leilões na região" (D-44, DESIGN.md §15.1): leilões do catálogo nos próximos 7 dias com lotes no filtro
  * padrão ou nos monitores, agrupados por dia, com quantos lotes estão no filtro e quantos cabem no limite.
@@ -26,23 +30,23 @@ export async function RegionAuctions() {
   }
 
   return (
-    <div className="grid gap-3">
-      <ol className="grid">
+    <div className="@container grid gap-3">
+      <ol role="list" className="grid">
         {groupByDay(auctions).map(({ key, parts, items }) => (
           <li
             key={key}
-            className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-x-4 border-t border-border pt-4 pb-2 sm:grid-cols-[6rem_minmax(0,1fr)] sm:gap-x-6"
+            className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-x-4 border-t border-border pt-4 pb-2 @lg:grid-cols-[6rem_minmax(0,1fr)] @lg:gap-x-6"
           >
             <p className="grid content-start">
               <span className="text-heading-1 tabular-nums">{parts.day}</span>
               <span className="text-label text-foreground-secondary">{parts.month}</span>
               <span className="text-caption text-muted">{parts.weekday}</span>
             </p>
-            <ul className="grid content-start border-l border-border">
+            <ul role="list" className="grid content-start border-l border-border">
               {items.map((auction) => (
                 <li
                   key={`${auction.sourceId}/${auction.externalId}`}
-                  className="relative flex flex-col gap-1 border-border py-2.5 pl-5 not-first:border-t sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+                  className="relative flex flex-col gap-1 border-border py-2.5 pl-5 not-first:border-t @lg:flex-row @lg:items-center @lg:justify-between @lg:gap-4"
                 >
                   <span
                     aria-hidden="true"
@@ -55,17 +59,18 @@ export async function RegionAuctions() {
                     {auction.date ? (
                       <span className="inline-flex shrink-0 items-center gap-1 text-label font-normal text-muted tabular-nums">
                         <Clock aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
-                        {formatTime(auction.date)}
+                        <time dateTime={auction.date.toISOString()}>{formatTime(auction.date)}</time>
                       </span>
                     ) : null}
                     <Link
                       href={catalogAuctionPath(auction)}
-                      className="group inline-flex max-w-full items-center gap-1 font-medium text-foreground hover:underline"
+                      title={auction.name ?? "Leilão sem nome"}
+                      className="group inline-flex max-w-full items-center gap-1 rounded-sm font-medium text-foreground outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent"
                     >
                       <span className="truncate">{auction.name ?? "Leilão sem nome"}</span>
                       <ChevronRight
                         aria-hidden="true"
-                        className="size-3.5 shrink-0 text-muted-subtle transition-transform duration-120 group-hover:translate-x-0.5 group-hover:text-foreground"
+                        className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:text-foreground"
                       />
                     </Link>
                     <span className="text-caption text-muted">· {auction.sourceName}</span>
@@ -79,7 +84,7 @@ export async function RegionAuctions() {
                         </span>
                         <span className="inline-flex items-center gap-1 font-medium text-success">
                           <CircleCheck aria-hidden="true" className="size-3.5 shrink-0" />
-                          {auction.fitting} cabem no limite
+                          {plural(auction.fitting, "cabe no limite", "cabem no limite")}
                         </span>
                       </>
                     ) : null}
@@ -91,7 +96,7 @@ export async function RegionAuctions() {
         ))}
       </ol>
       <ButtonLink href={CATALOG_AUCTIONS_PATH} variant="secondary" size="sm" className="w-fit">
-        Ver todos
+        Ver todos<span className="sr-only"> os leilões</span>
         <ChevronRight aria-hidden="true" />
       </ButtonLink>
     </div>

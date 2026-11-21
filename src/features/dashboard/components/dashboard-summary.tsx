@@ -20,12 +20,14 @@ import { cn } from "@/lib/utils";
 
 import { getLimitIndicator, getPendingItems } from "../queries";
 
-const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
+const ptBrPlural = new Intl.PluralRules("pt-BR");
+const plural = (count: number, one: string, many: string) =>
+  `${count} ${ptBrPlural.select(count) === "one" ? one : many}`;
 
 const kpiCellClass = "flex h-full flex-col justify-between gap-2 bg-surface p-4";
 const kpiLinkClass = cn(
   kpiCellClass,
-  "group transition-colors duration-120 hover:bg-background focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none focus-visible:ring-inset",
+  "group transition-colors duration-150 ease-[var(--ease-out)] hover:bg-background active:bg-surface-subtle focus-visible:outline-2 focus-visible:outline-transparent focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset",
 );
 
 /**
@@ -57,8 +59,12 @@ export async function DashboardKpis() {
     );
 
   return (
-    <section aria-label="Resumo operacional">
-      <ul className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border lg:grid-cols-4">
+    <div className="@container">
+      <ul
+        role="list"
+        aria-label="Resumo operacional"
+        className="grid grid-cols-2 gap-px overflow-clip rounded-lg border border-border bg-border @3xl:grid-cols-4"
+      >
         <li>
           <a href="#to-analyze" className={kpiLinkClass}>
             <div className="flex items-center justify-between gap-2">
@@ -68,7 +74,7 @@ export async function DashboardKpis() {
               </span>
               <ArrowDown
                 aria-hidden="true"
-                className="size-3.5 shrink-0 text-muted-subtle transition-transform duration-120 group-hover:translate-y-0.5 group-hover:text-foreground"
+                className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-y-0.5 group-hover:text-foreground"
               />
             </div>
             <p className="text-heading-2 font-semibold text-foreground tabular-nums">{region.toAnalyzeTotal}</p>
@@ -96,7 +102,7 @@ export async function DashboardKpis() {
               </span>
               <ArrowDown
                 aria-hidden="true"
-                className="size-3.5 shrink-0 text-muted-subtle transition-transform duration-120 group-hover:translate-y-0.5 group-hover:text-foreground"
+                className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-y-0.5 group-hover:text-foreground"
               />
             </div>
             <p className="text-heading-2 font-semibold text-foreground tabular-nums">{followedTotal}</p>
@@ -106,7 +112,7 @@ export async function DashboardKpis() {
               ) : followed.aboveLimit > 0 ? (
                 <span className="inline-flex items-center gap-1 font-medium text-error">
                   <CircleAlert aria-hidden="true" className="size-3.5 shrink-0" />
-                  {followed.aboveLimit} provável acima
+                  {plural(followed.aboveLimit, "provável acima", "prováveis acima")}
                 </span>
               ) : (
                 "Nenhum com provável acima"
@@ -125,7 +131,7 @@ export async function DashboardKpis() {
                 </span>
                 <ArrowDown
                   aria-hidden="true"
-                  className="size-3.5 shrink-0 text-muted-subtle transition-transform duration-120 group-hover:translate-y-0.5 group-hover:text-foreground"
+                  className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-y-0.5 group-hover:text-foreground"
                 />
               </div>
               <p className="text-heading-2 font-semibold text-foreground tabular-nums">{pendingTotal}</p>
@@ -151,17 +157,24 @@ export async function DashboardKpis() {
               <div className="flex items-center justify-between gap-2">
                 <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
                   <CalendarClock aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
-                  Próximo leilão
+                  Próximo na região
                 </span>
                 <ArrowUpRight
                   aria-hidden="true"
-                  className="size-3.5 shrink-0 text-muted-subtle transition-transform duration-120 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-foreground"
+                  className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-foreground"
                 />
               </div>
               <p className="text-heading-2 font-semibold text-foreground tabular-nums">
-                {nextAuction.date ? formatCompactDateTime(nextAuction.date) : "Sem data"}
+                {nextAuction.date ? (
+                  <time dateTime={nextAuction.date.toISOString()}>{formatCompactDateTime(nextAuction.date)}</time>
+                ) : (
+                  "Sem data"
+                )}
               </p>
-              <p className="truncate text-caption text-muted tabular-nums">
+              <p
+                className="truncate text-caption text-muted tabular-nums"
+                title={`${plural(nextAuction.matching, "lote", "lotes")} · ${nextAuction.sourceName}`}
+              >
                 {plural(nextAuction.matching, "lote", "lotes")} · {nextAuction.sourceName}
               </p>
             </Link>
@@ -170,20 +183,20 @@ export async function DashboardKpis() {
               <div className="flex items-center justify-between gap-2">
                 <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
                   <CalendarClock aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
-                  Próximo leilão
+                  Próximo na região
                 </span>
                 <ArrowDown
                   aria-hidden="true"
-                  className="size-3.5 shrink-0 text-muted-subtle transition-transform duration-120 group-hover:translate-y-0.5 group-hover:text-foreground"
+                  className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-y-0.5 group-hover:text-foreground"
                 />
               </div>
               <p className="text-heading-2 font-semibold text-muted tabular-nums">—</p>
-              <p className="truncate text-caption text-muted">Nenhum nos próximos 7 dias</p>
+              <p className="text-caption text-muted">Nenhum nos próximos 7 dias</p>
             </a>
           )}
         </li>
       </ul>
-    </section>
+    </div>
   );
 }
 
@@ -191,13 +204,13 @@ const KPI_SKELETON_ITEMS = [
   { label: "Para analisar", icon: Calculator, valueWidth: "w-12", noteWidth: "w-32" },
   { label: "Acompanhados", icon: Eye, valueWidth: "w-10", noteWidth: "w-36" },
   { label: "Pendências", icon: ClipboardList, valueWidth: "w-10", noteWidth: "w-28" },
-  { label: "Próximo leilão", icon: CalendarClock, valueWidth: "w-28", noteWidth: "w-36" },
+  { label: "Próximo na região", icon: CalendarClock, valueWidth: "w-28", noteWidth: "w-36" },
 ] as const;
 
 export function DashboardKpisSkeleton() {
   return (
-    <section aria-label="Carregando resumo operacional" aria-busy="true">
-      <ul className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border lg:grid-cols-4">
+    <div className="@container" aria-hidden="true">
+      <ul className="grid grid-cols-2 gap-px overflow-clip rounded-lg border border-border bg-border @3xl:grid-cols-4">
         {KPI_SKELETON_ITEMS.map(({ label, icon: Icon, valueWidth, noteWidth }) => (
           <li key={label} className={kpiCellClass}>
             <div className="flex items-center justify-between gap-2">
@@ -216,7 +229,7 @@ export function DashboardKpisSkeleton() {
           </li>
         ))}
       </ul>
-    </section>
+    </div>
   );
 }
 
@@ -225,7 +238,7 @@ export async function DecisionIndicator() {
   const indicator = await getLimitIndicator();
   const ratio = indicator.comparable > 0 ? indicator.withinLimit / indicator.comparable : 0;
   return (
-    <section aria-labelledby="decision-indicator" className={cn(cardVariants(), "grid gap-3 p-5 md:p-6")}>
+    <section className={cn(cardVariants(), "grid gap-3 p-5 md:p-6")}>
       <h2 id="decision-indicator" className="flex items-center gap-2 text-heading-3 text-foreground">
         <Target aria-hidden="true" className="size-4 shrink-0 text-muted" />
         Suas decisões antes do resultado
@@ -236,15 +249,15 @@ export async function DecisionIndicator() {
         <div className="grid gap-2.5">
           <p className="grid gap-1 text-body text-foreground-secondary">
             <span className="text-heading-1 text-foreground tabular-nums">
-              {indicator.withinLimit} <span className="font-medium text-muted-subtle">de {indicator.comparable}</span>
+              {indicator.withinLimit} <span className="font-medium text-muted">de {indicator.comparable}</span>
             </span>{" "}
             resultados comparáveis ficaram dentro do limite
           </p>
-          <div className="grid gap-1" aria-hidden="true">
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary-subtle">
+          <div className="grid gap-1">
+            <div className="h-1.5 w-full overflow-clip rounded-full bg-primary-subtle" aria-hidden="true">
               <div className="h-full rounded-full bg-foreground" style={{ width: `${Math.round(ratio * 100)}%` }} />
             </div>
-            <span className="text-right text-caption font-medium text-muted tabular-nums">
+            <span className="text-end text-caption font-medium text-muted tabular-nums">
               {formatRatio(ratio)} dentro do limite
             </span>
           </div>

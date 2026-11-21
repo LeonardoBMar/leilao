@@ -44,76 +44,94 @@ export async function FollowedLots() {
   }
 
   return (
-    <div className="grid gap-3">
-      <ul className="border-b border-border">
-        {items.slice(0, SHOWN).map((lot) => (
-          <li
-            key={lot.id}
-            className="grid grid-cols-[3.5rem_minmax(0,1fr)] items-center gap-x-5 gap-y-3 border-t border-border py-4 md:grid-cols-[3.5rem_minmax(0,1fr)_9.5rem_12rem]"
-          >
-            <span className="font-mono text-label font-normal text-foreground-secondary">{lot.lotNumber}</span>
-            <div className="min-w-0">
-              <Link
-                href={`/lotes/${lot.id}`}
-                className="group inline-flex max-w-full items-center gap-1 font-semibold text-foreground hover:underline"
-              >
-                <span className="truncate">
-                  {lot.brand} {lot.model} {lot.modelYear}
-                </span>
-                <ChevronRight
-                  aria-hidden="true"
-                  className="size-3.5 shrink-0 text-muted-subtle transition-transform duration-120 group-hover:translate-x-0.5 group-hover:text-foreground"
-                />
-              </Link>
-              <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-caption text-muted">
-                <span className="min-w-0 truncate">{lot.auction.name}</span>
-                <span aria-hidden="true" className="text-border-strong">
-                  ·
-                </span>
-                <span className="inline-flex shrink-0 items-center gap-1 tabular-nums">
-                  <Clock aria-hidden="true" className="size-3 shrink-0 text-muted-subtle" />
-                  {lot.endsAt ? `encerra ${formatShortDateTime(lot.endsAt)}` : formatDate(lot.auction.startsAt)}
-                </span>
-              </p>
-            </div>
-            <div className="col-start-2 flex items-stretch gap-2.5 md:col-start-auto md:flex-row-reverse md:justify-start">
-              <span aria-hidden="true" className="flex flex-col items-center py-1.5">
-                <span className="size-1.5 rounded-full bg-foreground" />
-                <span className="my-0.5 w-px flex-1 bg-border-strong" />
-                <span
-                  className={cn(
-                    "size-1.5 rounded-none border",
-                    lot.limit?.isViable && lot.limit.maxBid !== null
-                      ? "border-foreground-secondary bg-surface"
-                      : "border-dashed border-muted-subtle",
-                  )}
-                />
+    <div className="@container grid gap-3">
+      <ul role="list" className="border-b border-border">
+        {items.slice(0, SHOWN).map((lot) => {
+          const lotTitle = `${lot.brand} ${lot.model} ${lot.modelYear}`;
+          return (
+            <li
+              key={lot.id}
+              className="grid grid-cols-1 items-center gap-x-5 gap-y-3 border-t border-border py-4 @2xl:grid-cols-[3.5rem_minmax(0,1fr)_9.5rem_12rem]"
+            >
+              <span className="hidden font-mono text-label font-normal text-foreground-secondary @2xl:inline">
+                {lot.lotNumber}
               </span>
-              <div className="md:text-right">
-                <p className="text-body-lg font-medium text-foreground">
-                  <Money value={lot.currentBid} />
-                </p>
-                <p className="text-caption text-muted">
-                  {lot.limit?.isViable && lot.limit.maxBid !== null ? (
-                    <>
-                      de <Money value={lot.limit.maxBid} />
-                    </>
-                  ) : (
-                    "sem limite"
-                  )}
+              <div className="min-w-0">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="shrink-0 font-mono text-caption font-normal text-muted @2xl:hidden">
+                    #{lot.lotNumber}
+                  </span>
+                  <Link
+                    href={`/lotes/${lot.id}`}
+                    title={lotTitle}
+                    className="group inline-flex min-w-0 items-center gap-1 rounded-sm font-semibold text-foreground outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent"
+                  >
+                    <span className="truncate">{lotTitle}</span>
+                    <ChevronRight
+                      aria-hidden="true"
+                      className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:text-foreground"
+                    />
+                  </Link>
+                </div>
+                <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-caption text-muted">
+                  <span className="min-w-0 truncate" title={lot.auction.name}>
+                    {lot.auction.name}
+                  </span>
+                  <span aria-hidden="true" className="text-border-strong">
+                    ·
+                  </span>
+                  <span className="inline-flex shrink-0 items-center gap-1 tabular-nums">
+                    <Clock aria-hidden="true" className="size-3 shrink-0 text-muted-subtle" />
+                    {lot.endsAt ? (
+                      <>
+                        encerra <time dateTime={lot.endsAt.toISOString()}>{formatShortDateTime(lot.endsAt)}</time>
+                      </>
+                    ) : (
+                      <time dateTime={lot.auction.startsAt.toISOString()}>{formatDate(lot.auction.startsAt)}</time>
+                    )}
+                  </span>
                 </p>
               </div>
-            </div>
-            <div className="col-start-2 grid gap-1.5 md:col-start-auto">
-              <LimitProgress limit={lot.limit} bid={lot.currentBid} />
-              <ProbableLine lot={lot} />
-            </div>
-          </li>
-        ))}
+              <div className="flex items-stretch gap-2.5 @2xl:flex-row-reverse @2xl:justify-start">
+                <span aria-hidden="true" className="flex flex-col items-center py-1.5">
+                  <span className="size-1.5 rounded-full bg-foreground" />
+                  <span className="my-0.5 w-px flex-1 bg-border-strong" />
+                  <span
+                    className={cn(
+                      "size-1.5 rounded-none border",
+                      lot.limit?.isViable && lot.limit.maxBid !== null
+                        ? "border-foreground-secondary bg-surface"
+                        : "border-dashed border-muted-subtle",
+                    )}
+                  />
+                </span>
+                <div className="@2xl:text-end">
+                  <p className="text-body-lg font-medium text-foreground">
+                    <span className="sr-only">Lance atual: </span>
+                    <Money value={lot.currentBid} />
+                  </p>
+                  <p className="text-caption text-muted">
+                    {lot.limit?.isViable && lot.limit.maxBid !== null ? (
+                      <>
+                        de <Money value={lot.limit.maxBid} />
+                      </>
+                    ) : (
+                      "sem limite"
+                    )}
+                  </p>
+                </div>
+              </div>
+              <div className="grid gap-1.5">
+                <LimitProgress limit={lot.limit} bid={lot.currentBid} />
+                <ProbableLine lot={lot} />
+              </div>
+            </li>
+          );
+        })}
       </ul>
       {items.length > SHOWN ? (
         <ButtonLink href={ALL_FOLLOWED_HREF} variant="secondary" size="sm" className="w-fit">
-          Ver todos
+          Ver todos<span className="sr-only"> os lotes acompanhados</span>
           <ChevronRight aria-hidden="true" />
         </ButtonLink>
       ) : null}

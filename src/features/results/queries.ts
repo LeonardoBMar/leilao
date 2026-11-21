@@ -63,39 +63,32 @@ function toRevision({ finalBidCents, analysis, ...row }: RevisionRow): ResultRev
   return { ...row, finalBid: money(finalBidCents), analysis: analysis ? toLinkedAnalysis(analysis) : null };
 }
 
-/**
- * Tudo que a ficha e o formulário de resultado precisam. `null` para lote inexistente ou de outro dono. Memo por
- * requisição (D-44): na ficha, o painel de resultado, o próximo passo e o botão de registrar leem o mesmo contexto.
- */
-export const getLotResultContext = cache(async (lotId: string): Promise<LotResultContext | null> => {
-  const user = await requireUser();
-  const lot = await db.lot.findFirst({
-    where: { id: lotId, ownerId: user.id },
+const lotResultSelect = {
+  id: true,
+  lotNumber: true,
+  brand: true,
+  model: true,
+  modelYear: true,
+  currentBidCents: true,
+  auction: { select: { id: true, name: true, startsAt: true } },
+  results: { orderBy: { revision: "desc" }, select: revisionSelect },
+  analyses: { where: { status: "fixed" }, orderBy: { version: "desc" }, select: analysisSelect },
+  listing: {
     select: {
-      id: true,
-      lotNumber: true,
-      brand: true,
-      model: true,
-      modelYear: true,
+      url: true,
+      status: true,
       currentBidCents: true,
-      auction: { select: { id: true, name: true, startsAt: true } },
-      results: { orderBy: { revision: "desc" }, select: revisionSelect },
-      analyses: { where: { status: "fixed" }, orderBy: { version: "desc" }, select: analysisSelect },
-      listing: {
-        select: {
-          url: true,
-          status: true,
-          currentBidCents: true,
-          finalBidCents: true,
-          endsAt: true,
-          nextCheckAt: true,
-          source: { select: { name: true } },
-        },
-      },
+      finalBidCents: true,
+      endsAt: true,
+      nextCheckAt: true,
+      source: { select: { name: true } },
     },
-  });
-  if (!lot) return null;
+  },
+} satisfies Prisma.LotSelect;
 
+type LotResultRow = Prisma.LotGetPayload<{ select: typeof lotResultSelect }>;
+
+function toLotResultContext(lot: LotResultRow, now: Date): LotResultContext {
   const revisions = lot.results.map(toRevision);
   const fixedAnalyses = lot.analyses.map(toLinkedAnalysis).filter((analysis) => analysis !== null);
   const suggested = suggestedAnalysis(fixedAnalyses);
@@ -110,7 +103,7 @@ export const getLotResultContext = cache(async (lotId: string): Promise<LotResul
         endsAt: lot.listing.endsAt,
         checking: lot.listing.nextCheckAt !== null,
       },
-      new Date(),
+      now,
     ),
   };
 
@@ -129,7 +122,32 @@ export const getLotResultContext = cache(async (lotId: string): Promise<LotResul
     tracking,
     prefill: revisions.length === 0 && tracking ? prefillFrom(tracking) : null,
   };
+}
+
+/**
+ * Tudo que a ficha e o formulário de resultado precisam. `null` para lote inexistente ou de outro dono. Memo por
+ * requisição (D-44): na ficha, o painel de resultado, o próximo passo e o botão de registrar leem o mesmo contexto.
+ */
+export const getLotResultContext = cache(async (lotId: string): Promise<LotResultContext | null> => {
+  const user = await requireUser();
+  const lot = await db.lot.findFirst({
+    where: { id: lotId, ownerId: user.id },
+    select: lotResultSelect,
+  });
+  return lot ? toLotResultContext(lot, new Date()) : null;
 });
+
+/** Versão em lote de `getLotResultContext` para evitar consultas N+1 em listas (ex.: `PendingItems` do dashboard). */
+export async function getLotResultContexts(lotIds: string[]): Promise<Map<string, LotResultContext>> {
+  if (lotIds.length === 0) return new Map();
+  const user = await requireUser();
+  const now = new Date();
+  const lots = await db.lot.findMany({
+    where: { id: { in: lotIds }, ownerId: user.id },
+    select: lotResultSelect,
+  });
+  return new Map(lots.map((lot) => [lot.id, toLotResultContext(lot, now)]));
+}
 
 /** Desfecho da fonte → valores iniciais do formulário, com a origem descrita (o usuário revisa e salva). */
 function prefillFrom({ sourceName, url, outcome }: ResultTracking): ResultPrefill | null {
