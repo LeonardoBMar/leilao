@@ -25,6 +25,8 @@ export async function FollowedLotsNav() {
         ? {
             isViable: latest.isViable,
             maxBid: latest.maxBidCents === null ? null : cents(latest.maxBidCents),
+            version: latest.version,
+            fixedAt: latest.fixedAt,
           }
         : null;
     const currentBid = row.currentBidCents === null ? null : cents(row.currentBidCents);

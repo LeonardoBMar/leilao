@@ -183,9 +183,10 @@ export const getRegionOverview = cache(async (): Promise<RegionOverview> => {
   };
   const buckets = new Map<string, AuctionBucket>();
   for (const item of matching) {
-    if (!item.isSoon || item.row.auctionExternalId === null) continue;
+    const externalId = item.row.auctionExternalId;
+    if (!item.isSoon || externalId === null) continue;
     const { row } = item;
-    const key = keyOf(row.sourceId, row.auctionExternalId);
+    const key = keyOf(row.sourceId, externalId);
     const seenMs = row.lastSeenAt.getTime();
     const fitCount = fitsEstimate(item) ? 1 : 0;
     const existing = buckets.get(key);
@@ -193,7 +194,7 @@ export const getRegionOverview = cache(async (): Promise<RegionOverview> => {
       buckets.set(key, {
         sourceId: row.sourceId,
         sourceName: row.source.name,
-        externalId: row.auctionExternalId,
+        externalId,
         name: row.auctionName,
         latestSeenMs: seenMs,
         auctionStartsAt: row.auctionStartsAt,

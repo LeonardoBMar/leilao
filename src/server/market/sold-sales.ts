@@ -3,7 +3,12 @@ import "server-only";
 import { cacheLife } from "next/cache";
 
 import type { BacktestSale } from "@/domain/listings/backtest";
-import { buildEstimateIndex, type EstimateIndex, type EstimateSale, SALES_WINDOW_MS } from "@/domain/listings/estimates";
+import {
+  buildEstimateIndex,
+  type EstimateIndex,
+  type EstimateSale,
+  SALES_WINDOW_MS,
+} from "@/domain/listings/estimates";
 import { cents } from "@/domain/money";
 import type { Prisma } from "@/generated/prisma/client";
 import { db } from "@/server/db";
