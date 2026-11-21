@@ -102,7 +102,7 @@
   --muted-subtle: #8b909b;
   --border: #eaecef;
   --border-strong: #dadde3;
-  --control-border: #c5c9d2;
+  --control-border: #878c98;
   --placeholder: #626773;
   --primary: #111318;
   --primary-hover: #252932;
@@ -157,12 +157,13 @@
     min-width: 320px;
     background: var(--surface);
     color-scheme: light;
-    scrollbar-color: var(--border-strong) transparent;
+    scroll-padding-block-start: 4rem;
+    scrollbar-color: var(--muted-subtle) transparent;
     scrollbar-width: thin;
   }
 
   body {
-    min-height: 100vh;
+    min-height: 100dvh;
     background: var(--surface);
     color: var(--foreground);
     font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
@@ -202,12 +203,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  html {
+    scroll-behavior: auto;
+  }
+
+  .animate-pulse {
+    animation: none;
   }
 }
