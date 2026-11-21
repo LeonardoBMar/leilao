@@ -1,20 +1,24 @@
 import Link, { type LinkProps } from "next/link";
 
-const ITEM = "before:px-1.5 before:text-muted-subtle before:content-['/'] first:before:content-none";
-
 /** Trilha das páginas de detalhe (DESIGN.md §9): links para os pais e a página atual por último, sem link. */
 function Breadcrumbs({ children }: { children: React.ReactNode }) {
   return (
     <nav aria-label="Trilha">
-      <ol className="flex flex-wrap text-label font-normal text-muted">{children}</ol>
+      <ol className="flex flex-wrap items-center text-label font-normal text-muted">{children}</ol>
     </nav>
   );
 }
 
 function BreadcrumbLink<RouteType>({ children, ...props }: LinkProps<RouteType> & { children: React.ReactNode }) {
   return (
-    <li className={ITEM}>
-      <Link className="hover:text-foreground hover:underline" {...props}>
+    <li className="group/crumb flex items-center">
+      <span aria-hidden="true" className="px-1.5 text-muted-subtle select-none group-first/crumb:hidden">
+        /
+      </span>
+      <Link
+        className="rounded-sm outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent"
+        {...props}
+      >
         {children}
       </Link>
     </li>
@@ -23,8 +27,11 @@ function BreadcrumbLink<RouteType>({ children, ...props }: LinkProps<RouteType> 
 
 function BreadcrumbPage({ children }: { children: React.ReactNode }) {
   return (
-    <li className={ITEM}>
-      <span aria-current="page" className="text-foreground">
+    <li className="group/crumb flex items-center">
+      <span aria-hidden="true" className="px-1.5 text-muted-subtle select-none group-first/crumb:hidden">
+        /
+      </span>
+      <span aria-current="page" className="text-foreground forced-colors:underline">
         {children}
       </span>
     </li>

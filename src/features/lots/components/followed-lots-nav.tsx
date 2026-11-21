@@ -36,21 +36,21 @@ export async function FollowedLotsNav() {
   }));
 
   return (
-    <section aria-labelledby="nav-followed" className="grid grid-cols-1 gap-1.5 border-t border-border pt-5">
-      <h2 id="nav-followed" className="flex items-center gap-1.5 px-2.5 font-mono text-overline text-muted uppercase">
+    <nav aria-label="Lotes acompanhados" className="grid grid-cols-1 gap-1.5 border-t border-border pt-5">
+      <p className="flex items-center gap-1.5 px-2.5 font-mono text-overline text-muted uppercase">
         <Eye aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
         Acompanhando
         <span className="ml-auto tabular-nums">{page.total}</span>
-      </h2>
+      </p>
       <FollowedLotsNavList items={items} />
       {page.total > SHOWN ? (
         <Link
           href="/minhas-analises?acompanhados=1&resultado=sem"
-          className="px-2.5 text-caption text-muted hover:text-foreground hover:underline"
+          className="rounded-sm px-2.5 text-caption text-muted outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent"
         >
           Ver todos
         </Link>
       ) : null}
-    </section>
+    </nav>
   );
 }

@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -89,6 +89,7 @@ type CommandPaletteProps = {
  */
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const router = useRouter();
+  const listboxId = useId();
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -103,6 +104,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     : DESTINATIONS;
 
   const activeIndex = filtered.length > 0 ? Math.min(selectedIndex, filtered.length - 1) : -1;
+  const activeOptionId = activeIndex >= 0 ? `${listboxId}-option-${activeIndex}` : undefined;
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -130,7 +132,10 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="top-[18%] max-w-132 translate-y-0 gap-0 overflow-hidden p-0 transition-none duration-0 [&>button[aria-label='Fechar']]:hidden">
+      <DialogContent
+        hideClose
+        className="top-[18%] max-w-132 translate-y-0 gap-0 overflow-hidden p-0 transition-none duration-0"
+      >
         <DialogTitle className="sr-only">Navegação rápida</DialogTitle>
         <DialogDescription className="sr-only">
           Digite para filtrar telas do Leilão Tracker e pressione Enter para abrir.
@@ -138,7 +143,12 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         <div className="flex items-center gap-2.5 border-b border-border px-3.5">
           <Search aria-hidden="true" className="size-4 shrink-0 text-muted" />
           <input
-            type="text"
+            type="search"
+            role="combobox"
+            aria-expanded="true"
+            aria-controls={listboxId}
+            aria-autocomplete="list"
+            aria-activedescendant={activeOptionId}
             autoFocus
             value={query}
             onChange={(event) => {
@@ -164,7 +174,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             aria-label="Ir para uma tela ou ação"
             className="h-11 w-full bg-transparent text-base text-foreground outline-none placeholder:text-placeholder sm:text-body"
           />
-          <kbd className="hidden rounded-sm border border-border-strong bg-background px-1.5 py-0.5 font-mono text-[11px] text-muted sm:inline-block">
+          <kbd className="hidden rounded-sm border border-border-strong bg-background px-1.5 py-0.5 font-mono text-caption text-muted sm:inline-block">
             ESC
           </kbd>
         </div>
@@ -173,29 +183,31 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           {filtered.length === 0 ? (
             <p className="px-3 py-8 text-center text-body text-muted">Nenhum destino encontrado para “{query}”.</p>
           ) : (
-            <ul role="listbox" aria-label="Destinos" className="grid gap-0.5">
+            <ul id={listboxId} role="listbox" aria-label="Destinos" className="grid gap-0.5">
               {filtered.map((item, index) => {
                 const Icon = item.icon;
                 const isSelected = index === activeIndex;
                 return (
-                  <li key={item.href} role="option" aria-selected={isSelected}>
-                    <button
-                      type="button"
-                      onMouseEnter={() => setSelectedIndex(index)}
-                      onClick={() => navigateTo(item.href)}
-                      className={cn(
-                        "flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-body outline-none",
-                        isSelected ? "bg-primary-subtle font-medium text-foreground" : "text-foreground-secondary",
-                      )}
-                    >
-                      <Icon
-                        aria-hidden="true"
-                        strokeWidth={1.75}
-                        className={cn("size-4 shrink-0", isSelected ? "text-foreground" : "text-muted-subtle")}
-                      />
-                      <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                      <span className="text-caption text-muted">{item.group}</span>
-                    </button>
+                  <li
+                    key={item.href}
+                    id={`${listboxId}-option-${index}`}
+                    role="option"
+                    aria-selected={isSelected}
+                    onMouseEnter={() => setSelectedIndex(index)}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => navigateTo(item.href)}
+                    className={cn(
+                      "flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-2 text-start text-body select-none",
+                      isSelected ? "bg-primary-subtle font-medium text-foreground" : "text-foreground-secondary",
+                    )}
+                  >
+                    <Icon
+                      aria-hidden="true"
+                      strokeWidth={1.75}
+                      className={cn("size-4 shrink-0", isSelected ? "text-foreground" : "text-muted-subtle")}
+                    />
+                    <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                    <span className="text-caption text-muted">{item.group}</span>
                   </li>
                 );
               })}

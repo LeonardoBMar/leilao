@@ -24,7 +24,7 @@ export function Brand({ href, className }: BrandProps) {
       <Link
         href={href}
         className={cn(
-          "inline-flex items-center gap-2 rounded-md py-1 outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2",
+          "inline-flex items-center gap-2 rounded-md py-1 outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent",
           className,
         )}
       >

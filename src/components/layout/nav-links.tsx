@@ -7,7 +7,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, Suspense, useEffect, useId, useSyncExternalStore } from "react";
 
-import { toast, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui";
+import { toast, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui";
 import { MOTION_SPRING } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
@@ -105,7 +105,7 @@ function NavList({
               aria-current={isActive ? "page" : undefined}
               aria-label={collapsed ? label : undefined}
               className={cn(
-                "group relative flex h-9 items-center gap-2.5 overflow-hidden rounded-md px-2.5 text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color,transform] duration-120 outline-none focus-visible:ring-2 focus-visible:ring-accent active:scale-[0.98]",
+                "group relative flex h-9 items-center gap-2.5 overflow-clip rounded-md px-2.5 text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97]",
                 isActive ? "font-semibold text-foreground" : "hover:bg-primary-subtle/70 hover:text-foreground",
               )}
             >
@@ -151,7 +151,7 @@ function NavList({
           return (
             <li key={href}>
               {collapsed ? (
-                <Tooltip>
+                <Tooltip delayDuration={180}>
                   <TooltipTrigger asChild>{link}</TooltipTrigger>
                   <TooltipContent side="right" sideOffset={10}>
                     {label}
@@ -166,14 +166,6 @@ function NavList({
       </ul>
     </LayoutGroup>
   );
-
-  if (collapsed) {
-    return (
-      <TooltipProvider delayDuration={180} skipDelayDuration={150}>
-        {list}
-      </TooltipProvider>
-    );
-  }
 
   return list;
 }
