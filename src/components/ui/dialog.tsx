@@ -17,7 +17,7 @@ function DialogOverlay({ className, ...props }: DialogPrimitive.DialogOverlayPro
   return (
     <DialogPrimitive.Overlay
       className={cn(
-        "fixed inset-0 z-50 bg-[var(--overlay)] opacity-0 transition-opacity duration-200 ease-[var(--ease-out)] data-[state=open]:opacity-100",
+        "fixed inset-0 z-50 overflow-hidden overscroll-contain bg-[var(--overlay)] opacity-0 transition-opacity duration-200 ease-[var(--ease-out)] data-[state=open]:opacity-100 starting:opacity-0 motion-reduce:transition-none",
         className,
       )}
       {...props}
@@ -25,24 +25,31 @@ function DialogOverlay({ className, ...props }: DialogPrimitive.DialogOverlayPro
   );
 }
 
-function DialogContent({ className, children, ...props }: DialogPrimitive.DialogContentProps) {
+type DialogContentProps = DialogPrimitive.DialogContentProps & {
+  /** Oculta o botão de fechar no canto superior direito (ex.: paleta de comando com Escape). */
+  hideClose?: boolean;
+};
+
+function DialogContent({ className, children, hideClose = false, ...props }: DialogContentProps) {
   return (
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Content
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-120 -translate-x-1/2 -translate-y-1/2 scale-95 gap-5 overflow-y-auto overscroll-contain rounded-xl border border-border bg-surface-elevated p-5 opacity-0 shadow-lg transition-[opacity,transform] duration-200 ease-[var(--ease-out)] outline-none data-[state=open]:scale-100 data-[state=open]:opacity-100 md:p-6",
+          "fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-120 -translate-x-1/2 -translate-y-1/2 scale-[0.98] gap-5 overflow-y-auto overscroll-contain rounded-xl border border-border bg-surface-elevated p-5 opacity-0 shadow-lg transition-[opacity,transform] duration-200 ease-[var(--ease-out)] outline-none data-[state=open]:scale-100 data-[state=open]:opacity-100 starting:scale-[0.98] starting:opacity-0 motion-reduce:transition-none md:p-6",
           className,
         )}
         {...props}
       >
         {children}
-        <DialogPrimitive.Close
-          aria-label="Fechar"
-          className="absolute top-3.5 right-3.5 flex size-9 items-center justify-center rounded-md text-muted transition-colors duration-120 outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-        >
-          <X aria-hidden="true" className="size-4.5" />
-        </DialogPrimitive.Close>
+        {!hideClose ? (
+          <DialogPrimitive.Close
+            aria-label="Fechar"
+            className="absolute top-3.5 right-3.5 flex size-9 items-center justify-center rounded-md text-muted transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97]"
+          >
+            <X aria-hidden="true" className="size-4.5" />
+          </DialogPrimitive.Close>
+        ) : null}
       </DialogPrimitive.Content>
     </DialogPortal>
   );
@@ -63,11 +70,11 @@ function DrawerContent({ className, children, side = "right", ...props }: Drawer
       <DialogOverlay />
       <DialogPrimitive.Content
         className={cn(
-          "fixed z-50 flex flex-col overscroll-contain bg-surface-elevated shadow-lg transition-transform duration-280 ease-[var(--ease-drawer)] outline-none",
+          "fixed z-50 flex flex-col overscroll-contain bg-surface-elevated shadow-lg transition-transform duration-280 ease-[var(--ease-drawer)] outline-none motion-reduce:transition-none",
           side === "right" &&
-            "inset-y-0 right-0 w-full max-w-110 translate-x-full border-l border-border data-[state=open]:translate-x-0",
+            "inset-y-0 right-0 w-full max-w-110 translate-x-full border-l border-border data-[state=open]:translate-x-0 starting:translate-x-full",
           side === "bottom" &&
-            "inset-x-0 bottom-0 max-h-[85dvh] translate-y-full rounded-t-xl border-t border-border data-[state=open]:translate-y-0",
+            "inset-x-0 bottom-0 max-h-[85dvh] translate-y-full rounded-t-xl border-t border-border data-[state=open]:translate-y-0 starting:translate-y-full",
           className,
         )}
         {...props}
@@ -75,7 +82,7 @@ function DrawerContent({ className, children, side = "right", ...props }: Drawer
         {children}
         <DialogPrimitive.Close
           aria-label="Fechar"
-          className="absolute top-3.5 right-3.5 flex size-9 items-center justify-center rounded-md text-muted transition-colors duration-120 outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+          className="absolute top-3.5 right-3.5 flex size-9 items-center justify-center rounded-md text-muted transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97]"
         >
           <X aria-hidden="true" className="size-4.5" />
         </DialogPrimitive.Close>

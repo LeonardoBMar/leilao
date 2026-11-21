@@ -23,7 +23,7 @@ function MotionList({ as = "ul", "aria-label": ariaLabel, className, children }:
 
   return (
     <LayoutGroup id={groupId}>
-      <Tag aria-label={ariaLabel} className={cn("relative", className)}>
+      <Tag role="list" aria-label={ariaLabel} className={cn("relative", className)}>
         <AnimatePresence mode="popLayout" initial={false}>
           {children}
         </AnimatePresence>
@@ -45,9 +45,9 @@ const ITEM_STATES = {
     exit: { opacity: 0, transition: MOTION_EXIT_TRANSITION },
   },
   chip: {
-    initial: { opacity: 0, scale: 0.94 },
+    initial: { opacity: 0, scale: 0.96 },
     animate: { opacity: 1, scale: 1 },
-    exit: { opacity: 0, scale: 0.94, transition: MOTION_EXIT_TRANSITION },
+    exit: { opacity: 0, scale: 0.96, transition: MOTION_EXIT_TRANSITION },
   },
 } as const;
 

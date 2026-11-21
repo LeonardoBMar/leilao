@@ -1,7 +1,7 @@
 import { cva } from "class-variance-authority";
 
 export const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md font-medium whitespace-nowrap transition-[background-color,border-color,color,box-shadow,transform] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-default aria-disabled:cursor-default data-[disabled=true]:opacity-55 data-[loading=true]:cursor-wait actionable:active:scale-[0.97] [&_svg]:shrink-0",
+  "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md font-medium whitespace-nowrap transition-[background-color,border-color,color,box-shadow,transform] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface focus-visible:outline-2 focus-visible:outline-transparent disabled:cursor-default aria-disabled:cursor-default data-[disabled=true]:opacity-55 data-[loading=true]:cursor-wait actionable:active:scale-[0.97] [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -18,9 +18,9 @@ export const buttonVariants = cva(
         link: "bg-transparent text-accent underline-offset-4 actionable:hover:underline actionable:active:text-accent-hover",
       },
       size: {
-        sm: "h-9 px-2.5 text-caption sm:h-8 [&_svg]:size-3.5",
-        md: "h-10 px-3.5 text-body sm:h-9 [&_svg]:size-4",
-        lg: "h-11 px-4.5 text-body-lg sm:h-10 [&_svg]:size-4.5",
+        sm: "h-10 px-2.5 text-caption has-[>svg:first-child]:ps-2 has-[>svg:last-child]:pe-2 sm:h-8 [&_svg]:size-3.5",
+        md: "h-10 px-3.5 text-body has-[>svg:first-child]:ps-3 has-[>svg:last-child]:pe-3 sm:h-9 [&_svg]:size-4",
+        lg: "h-11 px-4.5 text-body-lg has-[>svg:first-child]:ps-4 has-[>svg:last-child]:pe-4 sm:h-10 [&_svg]:size-4.5",
         icon: "size-10 p-0 sm:size-9 [&_svg]:size-4",
       },
     },

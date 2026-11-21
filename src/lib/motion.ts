@@ -3,12 +3,11 @@ import type { Transition } from "motion/react";
 /** Curva de desaceleração precisa (emil-design-eng: --ease-out, sem overshoot perceptível). */
 export const MOTION_EASE = [0.23, 1, 0.32, 1] as const;
 
-/** Mola rápida e amortecida para indicadores compartilhados (`layoutId`) e FLIP de posição. */
+/** Mola criticamente amortecida (sem overshoot) para indicadores compartilhados (`layoutId`) e FLIP de posição. */
 export const MOTION_SPRING = {
   type: "spring",
-  stiffness: 500,
-  damping: 38,
-  mass: 1,
+  duration: 0.35,
+  bounce: 0,
 } as const satisfies Transition;
 
 /** Entrada curta apenas com propriedades compostas (`transform`, `opacity`). */

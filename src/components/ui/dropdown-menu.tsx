@@ -18,7 +18,7 @@ function DropdownMenuContent({ className, sideOffset = 6, ...props }: DropdownMe
       <DropdownMenuPrimitive.Content
         sideOffset={sideOffset}
         className={cn(
-          "z-50 min-w-48 origin-[var(--radix-dropdown-menu-content-transform-origin)] overscroll-contain rounded-lg border border-border bg-surface-elevated p-1 text-foreground shadow-md outline-none",
+          "z-50 min-w-48 origin-[var(--radix-dropdown-menu-content-transform-origin)] overscroll-contain rounded-lg border border-border bg-surface-elevated p-1 text-foreground shadow-md transition-[opacity,transform] duration-150 ease-[var(--ease-out)] outline-none starting:scale-[0.97] starting:opacity-0 motion-reduce:transition-none",
           className,
         )}
         {...props}
@@ -136,7 +136,7 @@ function DropdownMenuSubContent({ className, ...props }: DropdownMenuPrimitive.D
   return (
     <DropdownMenuPrimitive.SubContent
       className={cn(
-        "z-50 min-w-44 rounded-lg border border-border bg-surface-elevated p-1 text-foreground shadow-md outline-none",
+        "z-50 min-w-44 origin-[var(--radix-dropdown-menu-content-transform-origin)] overscroll-contain rounded-lg border border-border bg-surface-elevated p-1 text-foreground shadow-md transition-[opacity,transform] duration-150 ease-[var(--ease-out)] outline-none starting:scale-[0.97] starting:opacity-0 motion-reduce:transition-none",
         className,
       )}
       {...props}

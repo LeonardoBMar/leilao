@@ -16,7 +16,7 @@ function SelectTrigger({ className, children, ...props }: SelectPrimitive.Select
   return (
     <SelectPrimitive.Trigger
       className={cn(
-        "flex h-10 w-full items-center justify-between gap-2 rounded-md border border-control-border bg-surface px-3 text-base text-foreground shadow-xs transition-[border-color,box-shadow] duration-150 ease-[var(--ease-out)] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:bg-surface-subtle disabled:text-muted-subtle data-[placeholder]:text-placeholder sm:h-9 sm:text-body [&>span]:truncate",
+        "flex h-10 w-full items-center justify-between gap-2 rounded-md border border-control-border bg-surface px-3 text-base text-foreground shadow-xs transition-[border-color,box-shadow] duration-150 ease-[var(--ease-out)] outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 focus-visible:outline-2 focus-visible:outline-transparent disabled:cursor-not-allowed disabled:bg-surface-subtle disabled:text-muted-subtle data-[placeholder]:text-placeholder sm:h-9 sm:text-body [&>span]:truncate",
         className,
       )}
       {...props}
@@ -40,7 +40,7 @@ function SelectContent({
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         className={cn(
-          "relative z-50 max-h-80 origin-[var(--radix-select-content-transform-origin)] overflow-hidden overscroll-contain rounded-lg border border-border bg-surface-elevated text-foreground shadow-md",
+          "relative z-50 max-h-80 origin-[var(--radix-select-content-transform-origin)] overflow-hidden overscroll-contain rounded-lg border border-border bg-surface-elevated text-foreground shadow-md transition-[opacity,transform] duration-150 ease-[var(--ease-out)] starting:scale-[0.97] starting:opacity-0 motion-reduce:transition-none",
           position === "popper" &&
             "max-h-[min(20rem,var(--radix-select-content-available-height))] w-[var(--radix-select-trigger-width)] max-w-[var(--radix-select-content-available-width)]",
           className,
@@ -135,7 +135,7 @@ function SelectField({
           id={selectId}
           aria-invalid={Boolean(error) || undefined}
           aria-describedby={error || helperText ? messageId : undefined}
-          className={cn(error && "border-error focus:border-error focus:ring-error/20")}
+          className={cn(error && "border-error focus-visible:border-error focus-visible:ring-error/20")}
         >
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
