@@ -172,41 +172,48 @@ export async function listLots(filters: LotFilters, scope: { auctionId?: string 
 }
 
 /**
+ * Base compartilhada de lotes acompanhados ativos sem resultado (memo por requisição, D-85):
+ * usada diretamente pela sidebar (`FollowedLotsNav`, sem carregar estimativas) e enriquecida por
+ * `getFollowedLotsOverview` no dashboard, evitando duas consultas paralelas na mesma requisição.
+ */
+export const getFollowedLotsBase = cache(async () => {
+  const user = await requireUser();
+  return db.lot.findMany({
+    where: {
+      ownerId: user.id,
+      archivedAt: null,
+      auction: { archivedAt: null },
+      isFollowed: true,
+      results: { none: {} },
+    },
+    orderBy: [{ auction: { startsAt: "asc" } }, { lotNumber: "asc" }, { id: "asc" }],
+    select: {
+      ...listSelect,
+      listing: {
+        select: {
+          status: true,
+          endsAt: true,
+          mileageKm: true,
+          category: true,
+          damageLevel: true,
+          fipeCode: true,
+          marketValueFipeCode: true,
+          vehicleOrigin: true,
+          marketValueCents: true,
+        },
+      },
+    },
+  });
+});
+
+/**
  * Acompanhados do dashboard (D-44): ativos, marcados e sem resultado, do que encerra primeiro (sem anúncio ou sem
  * data, por último, pela data do leilão). Cada um com o provável do anúncio aberto ligado frente ao limite fixado.
  * Memo por requisição: o cabeçalho conta os que têm o provável acima do limite.
  */
 export const getFollowedLotsOverview = cache(async (): Promise<FollowedLotsOverview> => {
-  const user = await requireUser();
-  const [rows, context] = await Promise.all([
-    db.lot.findMany({
-      where: {
-        ownerId: user.id,
-        archivedAt: null,
-        auction: { archivedAt: null },
-        isFollowed: true,
-        results: { none: {} },
-      },
-      orderBy: [{ auction: { startsAt: "asc" } }, { lotNumber: "asc" }, { id: "asc" }],
-      select: {
-        ...listSelect,
-        listing: {
-          select: {
-            status: true,
-            endsAt: true,
-            mileageKm: true,
-            category: true,
-            damageLevel: true,
-            fipeCode: true,
-            marketValueFipeCode: true,
-            vehicleOrigin: true,
-            marketValueCents: true,
-          },
-        },
-      },
-    }),
-    getEstimateContext(),
-  ]);
+  await requireUser();
+  const [rows, context] = await Promise.all([getFollowedLotsBase(), getEstimateContext()]);
 
   const items = rows.map(({ listing, ...row }) => {
     const item = toListItem(row);

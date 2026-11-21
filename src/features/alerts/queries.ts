@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cache } from "react";
+
 import { type EstimateContext, listingCardSelect, loadEstimateContext, toListItem } from "@/features/listings/queries";
 import { toWatchItem, watchSelect } from "@/features/watches/queries";
 import { watchTitle } from "@/features/watches/summary";
@@ -67,25 +69,47 @@ export async function listAlerts(filters: AlertFilters): Promise<AlertPage> {
   };
 }
 
-/** Não lidos, para o contador da navegação. */
-export async function countUnreadAlerts(): Promise<number> {
+/** Não lidos, para o contador da navegação e faixa do dashboard (memo por requisição). */
+export const countUnreadAlerts = cache(async (): Promise<number> => {
   const user = await requireUser();
   return db.alert.count({ where: { ownerId: user.id, readAt: null } });
-}
+});
 
-/** Os não lidos mais recentes, para o dashboard. */
-export async function listRecentUnreadAlerts(limit: number): Promise<{ items: AlertItem[]; total: number }> {
+export type RecentUnreadAlert = {
+  id: string;
+  title: string;
+  trackedLotId: string | null;
+};
+
+/**
+ * Os não lidos mais recentes, para o dashboard (D-85): seleção mínima (sem fotos, watch nem base de estimativas)
+ * compartilhando a contagem de `countUnreadAlerts` na mesma requisição.
+ */
+export async function listRecentUnreadAlerts(limit: number): Promise<{ items: RecentUnreadAlert[]; total: number }> {
   const user = await requireUser();
-  const where: Prisma.AlertWhereInput = { ownerId: user.id, readAt: null };
   const [rows, total] = await Promise.all([
     db.alert.findMany({
-      where,
+      where: { ownerId: user.id, readAt: null },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: limit,
-      select: alertSelect(user.id),
+      select: {
+        id: true,
+        listing: {
+          select: {
+            title: true,
+            lots: { where: { ownerId: user.id }, select: { id: true }, take: 1 },
+          },
+        },
+      },
     }),
-    db.alert.count({ where }),
+    countUnreadAlerts(),
   ]);
-  const estimates = rows.length > 0 ? await loadEstimateContext(new Date()) : null;
-  return { items: rows.map((row) => toAlertItem(row, estimates)), total };
+  return {
+    items: rows.map((row) => ({
+      id: row.id,
+      title: row.listing.title,
+      trackedLotId: row.listing.lots[0]?.id ?? null,
+    })),
+    total,
+  };
 }

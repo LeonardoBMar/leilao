@@ -2,9 +2,10 @@ import { Eye } from "lucide-react";
 import Link from "next/link";
 
 import { compareToFixedLimit } from "@/domain/finance/calculator";
+import { cents } from "@/domain/money";
 
 import { toFixedLimit } from "../limit";
-import { listLots } from "../queries";
+import { getFollowedLotsBase } from "../queries";
 import { type FollowedLotNavItem, FollowedLotsNavList } from "./followed-lots-nav-list";
 
 const SHOWN = 5;
@@ -14,36 +15,37 @@ const SHOWN = 5;
  * ponto colorido (e em texto para leitores de tela). Sem nenhum, o grupo não aparece. Renderizar em <Suspense>.
  */
 export async function FollowedLotsNav() {
-  const page = await listLots({
-    search: undefined,
-    followedOnly: true,
-    analysis: undefined,
-    result: "sem",
-    archived: false,
-    position: undefined,
-    timing: undefined,
-    sort: "leilao",
-    page: 1,
-  });
-  if (page.total === 0) return null;
+  const rows = await getFollowedLotsBase();
+  if (rows.length === 0) return null;
 
-  const items: FollowedLotNavItem[] = page.items.slice(0, SHOWN).map((lot) => ({
-    id: lot.id,
-    model: lot.model,
-    modelYear: lot.modelYear,
-    lotNumber: lot.lotNumber,
-    comparison: compareToFixedLimit(toFixedLimit(lot.limit), lot.currentBid),
-  }));
+  const items: FollowedLotNavItem[] = rows.slice(0, SHOWN).map((row) => {
+    const [latest] = row.analyses;
+    const limit =
+      latest?.isViable != null && latest.fixedAt
+        ? {
+            isViable: latest.isViable,
+            maxBid: latest.maxBidCents === null ? null : cents(latest.maxBidCents),
+          }
+        : null;
+    const currentBid = row.currentBidCents === null ? null : cents(row.currentBidCents);
+    return {
+      id: row.id,
+      model: row.model,
+      modelYear: row.modelYear,
+      lotNumber: row.lotNumber,
+      comparison: compareToFixedLimit(toFixedLimit(limit), currentBid),
+    };
+  });
 
   return (
     <nav aria-label="Lotes acompanhados" className="grid grid-cols-1 gap-1.5 border-t border-border pt-5">
       <p className="flex items-center gap-1.5 px-2.5 font-mono text-overline text-muted uppercase">
         <Eye aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
         Acompanhando
-        <span className="ml-auto tabular-nums">{page.total}</span>
+        <span className="ml-auto tabular-nums">{rows.length}</span>
       </p>
       <FollowedLotsNavList items={items} />
-      {page.total > SHOWN ? (
+      {rows.length > SHOWN ? (
         <Link
           href="/minhas-analises?acompanhados=1&resultado=sem"
           className="rounded-sm px-2.5 text-caption text-muted outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent"

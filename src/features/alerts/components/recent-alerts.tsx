@@ -72,17 +72,17 @@ export async function RecentAlerts() {
           {items.map((alert, index) => (
             <li key={alert.id} className="flex min-w-0 items-center gap-2">
               {index > 0 ? <span aria-hidden="true" className="size-1 shrink-0 rounded-full bg-border-strong" /> : null}
-              {alert.listing.trackedLotId ? (
+              {alert.trackedLotId ? (
                 <Link
-                  href={`/lotes/${alert.listing.trackedLotId}`}
-                  title={alert.listing.title}
+                  href={`/lotes/${alert.trackedLotId}`}
+                  title={alert.title}
                   className="min-w-0 truncate rounded-sm outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent"
                 >
-                  {alert.listing.title}
+                  {alert.title}
                 </Link>
               ) : (
-                <span className="min-w-0 truncate" title={alert.listing.title}>
-                  {alert.listing.title}
+                <span className="min-w-0 truncate" title={alert.title}>
+                  {alert.title}
                 </span>
               )}
             </li>
