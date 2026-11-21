@@ -27,7 +27,7 @@ export async function ToAnalyze() {
   }
 
   return (
-    <ul className="grid gap-5">
+    <ul role="list" className="grid gap-5">
       {region.toAnalyze.map((item) => (
         <li key={item.id} className="flex border-t border-border pt-5 first:border-t-0 first:pt-0">
           <ListingCard item={item} compact footer={<DismissListingButton listingId={item.id} />} />

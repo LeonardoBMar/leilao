@@ -11,20 +11,29 @@ export default function DashboardLoading() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <Skeleton className="h-9 w-40" />
           <div className="flex gap-2">
-            <Skeleton className="h-10 w-32" />
-            <Skeleton className="h-10 w-32" />
+            <Skeleton className="h-10 w-32 sm:h-9" />
+            <Skeleton className="h-10 w-32 sm:h-9" />
           </div>
         </div>
         <DashboardKpisSkeleton />
       </div>
       <div className="grid items-start gap-10 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] xl:gap-x-14">
         <div className="grid gap-10">
-          <FollowedLotsSkeleton />
-          <RegionAuctionsSkeleton />
+          <div className="grid gap-2">
+            <Skeleton className="h-6 w-44" />
+            <FollowedLotsSkeleton />
+          </div>
+          <div className="grid gap-2">
+            <Skeleton className="h-6 w-56" />
+            <RegionAuctionsSkeleton />
+          </div>
         </div>
         <div className="grid gap-8">
+          <div className="grid gap-2">
+            <Skeleton className="h-6 w-44" />
+            <ToAnalyzeSkeleton />
+          </div>
           <DecisionIndicatorSkeleton />
-          <ToAnalyzeSkeleton />
         </div>
       </div>
     </div>

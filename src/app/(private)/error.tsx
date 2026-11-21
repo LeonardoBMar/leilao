@@ -13,9 +13,7 @@ export default function PrivateError({ error, retry }: { error: Error & { digest
     <div className="grid max-w-2xl gap-4">
       <Alert variant="error">
         <AlertTitle>Algo deu errado</AlertTitle>
-        <AlertDescription>
-          Não foi possível carregar esta página.{error.digest ? ` Código: ${error.digest}` : null}
-        </AlertDescription>
+        <AlertDescription>Não foi possível carregar esta página.</AlertDescription>
       </Alert>
       <div>
         <Button variant="secondary" onClick={() => retry()}>

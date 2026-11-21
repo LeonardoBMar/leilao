@@ -178,7 +178,15 @@ export function ListingCard({ item, header, footer, eager = false, compact = fal
 }
 
 /** Já no Tracker: leva ao lote. Senão, adiciona à análise ou abre direto o rascunho. */
-function TrackerAction({ item, openDirectly = false }: { item: ListingListItem; openDirectly?: boolean }) {
+function TrackerAction({
+  item,
+  openDirectly = false,
+  variant,
+}: {
+  item: ListingListItem;
+  openDirectly?: boolean;
+  variant?: "primary" | "secondary";
+}) {
   if (item.trackedLotId) {
     return (
       <ButtonLink href={`/lotes/${item.trackedLotId}`} variant="secondary" size="sm" className="w-fit">
@@ -187,7 +195,9 @@ function TrackerAction({ item, openDirectly = false }: { item: ListingListItem; 
       </ButtonLink>
     );
   }
-  return item.trackable ? <AddToTrackerButton listingId={item.id} mode={openDirectly ? "open" : "stay"} /> : null;
+  return item.trackable ? (
+    <AddToTrackerButton listingId={item.id} mode={openDirectly ? "open" : "stay"} variant={variant} />
+  ) : null;
 }
 
 /** Condição declarada pelo leiloeiro. Sem nada declarado, não mostra nada (não afirma "sem dano"). */
@@ -224,14 +234,15 @@ const COMPACT_FIT_ICONS = {
   above: CircleAlert,
 } as const satisfies Record<LimitFit, LucideIcon>;
 
-/** Variante em linha (dashboard): miniatura, título, lance com a situação, fim e as ações. */
+/** Variante em linha (dashboard): miniatura, título clicável (abre inspeção rápida), lance com situação, dano e ações. */
 function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents | null; footer: React.ReactNode }) {
   const fit = item.estimate?.fit ?? null;
   const FitIcon = fit ? COMPACT_FIT_ICONS[fit] : null;
   const price = item.estimate?.price;
+  const fullTitle = item.modelYear ? `${item.title} ${item.modelYear}` : item.title;
   return (
     <article className="grid w-full grid-cols-[6.5rem_minmax(0,1fr)] gap-x-3.5 gap-y-2">
-      <div className="relative row-span-2 aspect-4/3 overflow-hidden rounded-md bg-surface-subtle">
+      <div className="relative row-span-2 aspect-4/3 overflow-clip rounded-md bg-surface-subtle">
         {item.photoUrl ? (
           <Image src={item.photoUrl} alt="" fill unoptimized loading="lazy" sizes="8rem" className="object-cover" />
         ) : (
@@ -240,10 +251,21 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
           </div>
         )}
       </div>
-      <div className="grid min-w-0 gap-0.5">
-        <h3 className="truncate text-body font-semibold text-foreground">
-          {item.title}
-          {item.modelYear ? <span className="font-medium text-muted tabular-nums"> {item.modelYear}</span> : null}
+      <div className="grid min-w-0 gap-1">
+        <h3 className="min-w-0 text-body font-semibold text-foreground">
+          <ListingQuickDrawer
+            item={item}
+            trigger={
+              <button
+                type="button"
+                title={fullTitle}
+                className="block max-w-full truncate rounded-sm text-start outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent"
+              >
+                {item.title}
+                {item.modelYear ? <span className="font-medium text-muted tabular-nums"> {item.modelYear}</span> : null}
+              </button>
+            }
+          />
         </h3>
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-muted tabular-nums">
           <span>
@@ -260,11 +282,15 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
               {LIMIT_FIT_LABELS[fit]}
             </Badge>
           ) : null}
+          {item.damageLevel ? (
+            <Badge variant={DAMAGE_VARIANTS[item.damageLevel]}>{DAMAGE_LABELS[item.damageLevel]}</Badge>
+          ) : null}
         </p>
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-muted tabular-nums">
           <span className="inline-flex items-center gap-1.5">
             <Clock aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
-            Encerra {item.endsAt ? formatDateTime(item.endsAt) : "—"}
+            Encerra{" "}
+            {item.endsAt ? <time dateTime={item.endsAt.toISOString()}>{formatDateTime(item.endsAt)}</time> : "—"}
           </span>
           {item.city && item.state ? (
             <span className="inline-flex items-center gap-1.5">
@@ -275,18 +301,7 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
         </p>
       </div>
       <div className="col-start-2 flex flex-wrap items-center gap-2">
-        <TrackerAction item={item} openDirectly />
-        <ListingQuickDrawer item={item} />
-        <a
-          href={item.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-label text-accent hover:underline"
-        >
-          {item.sourceName}
-          <ExternalLink aria-hidden="true" className="size-3.5" />
-          <span className="sr-only">(abre em nova aba)</span>
-        </a>
+        <TrackerAction item={item} openDirectly variant="secondary" />
         {footer}
       </div>
     </article>

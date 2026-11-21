@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { PageHeader } from "@/components/layout/page-header";
+import { SectionErrorBoundary } from "@/components/layout/section-error-boundary";
 import { ButtonLink, Section, SectionTitle } from "@/components/ui";
 import { RecentAlerts } from "@/features/alerts/components/recent-alerts";
 import {
@@ -17,11 +18,11 @@ import { ToAnalyze, ToAnalyzeSkeleton } from "@/features/dashboard/components/to
 import { CollectorStatusLine, CollectorStatusLineSkeleton } from "@/features/listings/components/collector-status";
 import { FollowedLots, FollowedLotsSkeleton } from "@/features/lots/components/followed-lots";
 
-export const metadata: Metadata = { title: "Dashboard · Leilão Tracker" };
+export const metadata: Metadata = { title: "Visão geral · Leilão Tracker" };
 
 /**
  * Visão geral orientada à próxima decisão (SPEC §5, DESIGN.md §15.1, D-44): o que analisar agora, os acompanhados
- * frente ao limite, os próximos leilões da região e, na lateral, pendências e o indicador. Cada seção carrega de forma
+ * frente ao limite, os próximos leilões da região, pendências e o indicador. Cada seção carrega e falha de forma
  * independente; as que leem o catálogo compartilham a mesma consulta por requisição.
  */
 export default function DashboardPage() {
@@ -29,7 +30,7 @@ export default function DashboardPage() {
     <div className="grid gap-8">
       <div className="grid gap-5">
         <PageHeader
-          title="Dashboard"
+          title="Visão geral"
           inlineMeta={
             <Suspense fallback={<CollectorStatusLineSkeleton compact />}>
               <CollectorStatusLine compact />
@@ -49,62 +50,73 @@ export default function DashboardPage() {
           }
         />
 
-        <Suspense fallback={<DashboardKpisSkeleton />}>
-          <DashboardKpis />
-        </Suspense>
+        <SectionErrorBoundary title="Resumo operacional indisponível">
+          <Suspense fallback={<DashboardKpisSkeleton />}>
+            <DashboardKpis />
+          </Suspense>
+        </SectionErrorBoundary>
       </div>
 
-      {/* Sem alertas não lidos, a seção não aparece: fallback vazio evita um bloco que some depois. */}
-      <Suspense fallback={null}>
-        <RecentAlerts />
-      </Suspense>
+      {/* Faixas condicionais no topo mantêm a ordem visual idêntica à ordem do DOM em todos os breakpoints. */}
+      <div className="grid gap-5 empty:hidden">
+        <SectionErrorBoundary title="Alertas indisponíveis">
+          <Suspense fallback={null}>
+            <RecentAlerts />
+          </Suspense>
+        </SectionErrorBoundary>
 
-      <div className="grid items-start gap-10 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] xl:grid-rows-[auto_1fr] xl:gap-x-14 xl:gap-y-0">
-        <div className="order-first grid content-start empty:hidden xl:order-none xl:col-start-2 xl:row-start-1 xl:pb-5">
+        <SectionErrorBoundary title="Pendências indisponíveis">
           <Suspense fallback={null}>
             <PendingItems />
           </Suspense>
-        </div>
+        </SectionErrorBoundary>
+      </div>
 
-        <div className="grid content-start gap-10 xl:col-start-1 xl:row-span-2 xl:row-start-1">
-          <Section aria-labelledby="followed-lots" className="gap-2">
-            <SectionTitle id="followed-lots" className="flex scroll-mt-20 items-center gap-2">
+      <div className="grid items-start gap-10 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] xl:gap-x-14">
+        <div className="grid content-start gap-10">
+          <Section className="gap-2">
+            <SectionTitle id="followed-lots" className="flex items-center gap-2">
               <Eye aria-hidden="true" className="size-4 shrink-0 text-muted" />
               Lotes acompanhados
             </SectionTitle>
-            <Suspense fallback={<FollowedLotsSkeleton />}>
-              <FollowedLots />
-            </Suspense>
+            <SectionErrorBoundary title="Lotes acompanhados indisponíveis">
+              <Suspense fallback={<FollowedLotsSkeleton />}>
+                <FollowedLots />
+              </Suspense>
+            </SectionErrorBoundary>
           </Section>
 
-          <Section aria-labelledby="region-auctions" className="gap-2">
-            <SectionTitle id="region-auctions" className="flex scroll-mt-20 items-center gap-2">
+          <Section className="gap-2">
+            <SectionTitle id="region-auctions" className="flex items-center gap-2">
               <CalendarDays aria-hidden="true" className="size-4 shrink-0 text-muted" />
               Próximos leilões na região
             </SectionTitle>
-            <Suspense fallback={<RegionAuctionsSkeleton />}>
-              <RegionAuctions />
-            </Suspense>
+            <SectionErrorBoundary title="Próximos leilões indisponíveis">
+              <Suspense fallback={<RegionAuctionsSkeleton />}>
+                <RegionAuctions />
+              </Suspense>
+            </SectionErrorBoundary>
           </Section>
         </div>
 
-        <aside
-          className="grid content-start gap-8 xl:col-start-2 xl:row-start-2"
-          aria-label="Indicadores e oportunidades para analisar"
-        >
-          <Suspense fallback={<DecisionIndicatorSkeleton />}>
-            <DecisionIndicator />
-          </Suspense>
-
-          <Section aria-labelledby="to-analyze" className="gap-2">
-            <SectionTitle id="to-analyze" className="flex scroll-mt-20 items-center gap-2">
+        <aside className="grid content-start gap-8" aria-label="Oportunidades para analisar e indicadores">
+          <Section className="gap-2">
+            <SectionTitle id="to-analyze" className="flex items-center gap-2">
               <Calculator aria-hidden="true" className="size-4 shrink-0 text-muted" />
               Para analisar agora
             </SectionTitle>
-            <Suspense fallback={<ToAnalyzeSkeleton />}>
-              <ToAnalyze />
-            </Suspense>
+            <SectionErrorBoundary title="Sugestões indisponíveis">
+              <Suspense fallback={<ToAnalyzeSkeleton />}>
+                <ToAnalyze />
+              </Suspense>
+            </SectionErrorBoundary>
           </Section>
+
+          <SectionErrorBoundary title="Indicador indisponível">
+            <Suspense fallback={<DecisionIndicatorSkeleton />}>
+              <DecisionIndicator />
+            </Suspense>
+          </SectionErrorBoundary>
         </aside>
       </div>
     </div>
