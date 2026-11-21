@@ -1,7 +1,7 @@
 import type { Transition } from "motion/react";
 
-/** Curva de desaceleração precisa (padrão SaaS, sem overshoot perceptível). */
-export const MOTION_EASE = [0.22, 1, 0.36, 1] as const;
+/** Curva de desaceleração precisa (emil-design-eng: --ease-out, sem overshoot perceptível). */
+export const MOTION_EASE = [0.23, 1, 0.32, 1] as const;
 
 /** Mola rápida e amortecida para indicadores compartilhados (`layoutId`) e FLIP de posição. */
 export const MOTION_SPRING = {
