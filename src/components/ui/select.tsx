@@ -40,7 +40,7 @@ function SelectContent({
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         className={cn(
-          "relative z-50 max-h-80 origin-[var(--radix-select-content-transform-origin)] overflow-hidden overscroll-contain rounded-lg border border-border bg-surface-elevated text-foreground shadow-md transition-[opacity,transform] duration-150 ease-[var(--ease-out)] starting:scale-[0.97] starting:opacity-0 motion-reduce:transition-none",
+          "relative z-50 max-h-80 origin-[var(--radix-select-content-transform-origin)] overflow-hidden overscroll-contain rounded-lg border border-border bg-surface-elevated text-foreground shadow-md transition-[opacity,transform] duration-150 ease-[var(--ease-out)] motion-reduce:transition-none starting:scale-[0.97] starting:opacity-0",
           position === "popper" &&
             "max-h-[min(20rem,var(--radix-select-content-available-height))] w-[var(--radix-select-trigger-width)] max-w-[var(--radix-select-content-available-width)]",
           className,

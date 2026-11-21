@@ -17,7 +17,7 @@ function DialogOverlay({ className, ...props }: DialogPrimitive.DialogOverlayPro
   return (
     <DialogPrimitive.Overlay
       className={cn(
-        "fixed inset-0 z-50 overflow-hidden overscroll-contain bg-[var(--overlay)] opacity-0 transition-opacity duration-200 ease-[var(--ease-out)] data-[state=open]:opacity-100 starting:opacity-0 motion-reduce:transition-none",
+        "fixed inset-0 z-50 overflow-hidden overscroll-contain bg-[var(--overlay)] opacity-0 transition-opacity duration-200 ease-[var(--ease-out)] data-[state=open]:opacity-100 motion-reduce:transition-none starting:opacity-0",
         className,
       )}
       {...props}
@@ -36,7 +36,7 @@ function DialogContent({ className, children, hideClose = false, ...props }: Dia
       <DialogOverlay />
       <DialogPrimitive.Content
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-120 -translate-x-1/2 -translate-y-1/2 scale-[0.98] gap-5 overflow-y-auto overscroll-contain rounded-xl border border-border bg-surface-elevated p-5 opacity-0 shadow-lg transition-[opacity,transform] duration-200 ease-[var(--ease-out)] outline-none data-[state=open]:scale-100 data-[state=open]:opacity-100 starting:scale-[0.98] starting:opacity-0 motion-reduce:transition-none md:p-6",
+          "fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-120 -translate-x-1/2 -translate-y-1/2 scale-[0.98] gap-5 overflow-y-auto overscroll-contain rounded-xl border border-border bg-surface-elevated p-5 opacity-0 shadow-lg transition-[opacity,transform] duration-200 ease-[var(--ease-out)] outline-none data-[state=open]:scale-100 data-[state=open]:opacity-100 motion-reduce:transition-none md:p-6 starting:scale-[0.98] starting:opacity-0",
           className,
         )}
         {...props}

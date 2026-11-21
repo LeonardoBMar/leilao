@@ -22,7 +22,7 @@ function PopoverContent({
         sideOffset={sideOffset}
         collisionPadding={16}
         className={cn(
-          "z-50 grid max-h-[var(--radix-popover-content-available-height)] w-80 max-w-[calc(100dvw-2rem)] origin-[var(--radix-popover-content-transform-origin)] gap-4 overflow-y-auto overscroll-contain rounded-lg border border-border bg-surface-elevated p-4 text-foreground shadow-md transition-[opacity,transform] duration-150 ease-[var(--ease-out)] outline-none starting:scale-[0.97] starting:opacity-0 motion-reduce:transition-none",
+          "z-50 grid max-h-[var(--radix-popover-content-available-height)] w-80 max-w-[calc(100dvw-2rem)] origin-[var(--radix-popover-content-transform-origin)] gap-4 overflow-y-auto overscroll-contain rounded-lg border border-border bg-surface-elevated p-4 text-foreground shadow-md transition-[opacity,transform] duration-150 ease-[var(--ease-out)] outline-none motion-reduce:transition-none starting:scale-[0.97] starting:opacity-0",
           className,
         )}
         {...props}

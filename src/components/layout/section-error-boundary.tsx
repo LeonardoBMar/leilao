@@ -16,13 +16,13 @@ type ErrorBoundaryInnerState = {
 };
 
 class ErrorBoundaryInner extends Component<ErrorBoundaryInnerProps, ErrorBoundaryInnerState> {
-  state: ErrorBoundaryInnerState = { hasError: false };
+  override state: ErrorBoundaryInnerState = { hasError: false };
 
   static getDerivedStateFromError(): ErrorBoundaryInnerState {
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error, info: ErrorInfo) {
+  override componentDidCatch(error: Error, info: ErrorInfo) {
     console.error(error, info.componentStack);
   }
 
@@ -31,7 +31,7 @@ class ErrorBoundaryInner extends Component<ErrorBoundaryInnerProps, ErrorBoundar
     this.props.onRetry();
   };
 
-  render() {
+  override render() {
     if (!this.state.hasError) return this.props.children;
     return (
       <Alert variant="error" className="grid gap-3">
@@ -50,13 +50,7 @@ class ErrorBoundaryInner extends Component<ErrorBoundaryInnerProps, ErrorBoundar
 }
 
 /** Isola falhas de uma seção independente para não derrubar a página inteira (DESIGN.md §15.7). */
-export function SectionErrorBoundary({
-  title = "Algo deu errado",
-  children,
-}: {
-  title?: string;
-  children: ReactNode;
-}) {
+export function SectionErrorBoundary({ title = "Algo deu errado", children }: { title?: string; children: ReactNode }) {
   const router = useRouter();
   return (
     <ErrorBoundaryInner title={title} onRetry={() => router.refresh()}>

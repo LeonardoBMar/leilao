@@ -14,7 +14,7 @@ function TooltipContent({ className, sideOffset = 6, ...props }: TooltipPrimitiv
       <TooltipPrimitive.Content
         sideOffset={sideOffset}
         className={cn(
-          "z-50 max-w-64 origin-[var(--radix-tooltip-content-transform-origin)] rounded-md border border-transparent bg-foreground px-2.5 py-1.5 text-caption text-white shadow-md transition-[opacity,transform] duration-150 ease-[var(--ease-out)] data-[state=instant-open]:transition-none starting:scale-[0.97] starting:opacity-0 motion-reduce:transition-none",
+          "z-50 max-w-64 origin-[var(--radix-tooltip-content-transform-origin)] rounded-md border border-transparent bg-foreground px-2.5 py-1.5 text-caption text-white shadow-md transition-[opacity,transform] duration-150 ease-[var(--ease-out)] data-[state=instant-open]:transition-none motion-reduce:transition-none starting:scale-[0.97] starting:opacity-0",
           className,
         )}
         {...props}

@@ -27,7 +27,7 @@ const plural = (count: number, one: string, many: string) =>
 const kpiCellClass = "flex h-full flex-col justify-between gap-2 bg-surface p-4";
 const kpiLinkClass = cn(
   kpiCellClass,
-  "group transition-colors duration-150 ease-[var(--ease-out)] hover:bg-background active:bg-surface-subtle focus-visible:outline-2 focus-visible:outline-transparent focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset",
+  "group transition-colors duration-150 ease-[var(--ease-out)] hover:bg-background focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent focus-visible:ring-inset active:bg-surface-subtle",
 );
 
 /**

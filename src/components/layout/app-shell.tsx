@@ -198,7 +198,7 @@ export function AppShell({ account, badges, followed, nextAuction, children }: A
         {/* Padding lateral fixo (px-2.5 = 10px) mantém os ícones ancorados no mesmo eixo X durante a animação */}
         <div
           id="sidebar-nav"
-          className="flex min-h-0 flex-1 flex-col gap-5 overflow-x-hidden overflow-y-auto overscroll-contain px-2.5 py-3.5 [scrollbar-gutter:stable]"
+          className="flex min-h-0 flex-1 [scrollbar-gutter:stable] flex-col gap-5 overflow-x-hidden overflow-y-auto overscroll-contain px-2.5 py-3.5"
         >
           <nav aria-label="Principal" className="w-full">
             <NavLinks badges={badges} collapsed={collapsed} />
@@ -240,7 +240,7 @@ export function AppShell({ account, badges, followed, nextAuction, children }: A
               onClick={() => setCommandOpen(true)}
               aria-label={isMac ? "Buscar ou navegar (⌘K)" : "Buscar ou navegar (Ctrl+K)"}
               aria-keyshortcuts="Control+K Meta+K"
-              className="inline-flex h-10 items-center justify-between gap-3 rounded-md border border-border-strong bg-background px-2.5 text-label text-muted shadow-xs transition-[background-color,border-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:border-control-border hover:bg-surface hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] pointer-coarse:min-h-11 pointer-coarse:min-w-11 sm:h-8 sm:w-64 md:w-76"
+              className="inline-flex h-10 items-center justify-between gap-3 rounded-md border border-border-strong bg-background px-2.5 text-label text-muted shadow-xs transition-[background-color,border-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:border-control-border hover:bg-surface hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] sm:h-8 sm:w-64 md:w-76 pointer-coarse:min-h-11 pointer-coarse:min-w-11"
             >
               <span className="inline-flex min-w-0 items-center gap-2">
                 <Search aria-hidden="true" strokeWidth={1.75} className="size-3.5 shrink-0" />
