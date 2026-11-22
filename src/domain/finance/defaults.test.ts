@@ -3,10 +3,12 @@ import { describe, expect, it } from "vitest";
 import { bps, cents } from "../money";
 import {
   DEFAULT_COSTS,
+  DEFAULT_DRAFT_NOTES_PREFIX,
   defaultAssumptions,
   defaultMaxBid,
   type DefaultsInput,
   estimateFromFipe,
+  isUnreviewedDefaultDraft,
   towCost,
 } from "./defaults";
 
@@ -116,5 +118,21 @@ describe("defaultMaxBid", () => {
   it("sem FIPE ou sucata: incompleto (sem valor de venda nem reparos)", () => {
     expect(defaultMaxBid(car({ fipe: null })).kind).toBe("incomplete");
     expect(defaultMaxBid(car({ damageLevel: "salvage" })).kind).toBe("incomplete");
+  });
+});
+
+describe("isUnreviewedDefaultDraft", () => {
+  const createdAt = new Date("2026-10-01T12:00:00Z");
+  const defaultNotes = `${DEFAULT_DRAFT_NOTES_PREFIX} (revise antes de fixar):\n- exemplo`;
+
+  it("marca verdadeiro quando as notas são padrão e nunca foi editado", () => {
+    expect(isUnreviewedDefaultDraft({ createdAt, updatedAt: createdAt, notes: defaultNotes })).toBe(true);
+  });
+
+  it("marca falso quando foi editado depois da criação ou teve notas alteradas", () => {
+    const updatedAt = new Date("2026-10-01T12:05:00Z");
+    expect(isUnreviewedDefaultDraft({ createdAt, updatedAt, notes: defaultNotes })).toBe(false);
+    expect(isUnreviewedDefaultDraft({ createdAt, updatedAt: createdAt, notes: "Revisado manualmente." })).toBe(false);
+    expect(isUnreviewedDefaultDraft({ createdAt, updatedAt: createdAt, notes: null })).toBe(false);
   });
 });

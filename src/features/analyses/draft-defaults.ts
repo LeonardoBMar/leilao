@@ -1,5 +1,6 @@
 import {
   DEFAULT_COSTS,
+  DEFAULT_DRAFT_NOTES_PREFIX,
   type DefaultAssumptions,
   defaultAssumptions,
   type DefaultsInput,
@@ -173,18 +174,6 @@ export function draftDefaults(input: DefaultsInput, source: DraftSource | null) 
   };
 }
 
-const DEFAULT_NOTES_PREFIX = "Premissas padrão, pessimistas";
-
-/**
- * Rascunho criado com as premissas padrão e nunca editado pelo usuário (nem em valores nem nas notas).
- * Usado para alertar antes de fixar em lote diretamente pelo dashboard.
- */
-export function isUnreviewedDefaultDraft(draft: { createdAt: Date; updatedAt: Date; notes: string | null }): boolean {
-  return (
-    draft.updatedAt.getTime() === draft.createdAt.getTime() && Boolean(draft.notes?.startsWith(DEFAULT_NOTES_PREFIX))
-  );
-}
-
 function defaultsNote(input: DefaultsInput, defaults: DefaultAssumptions, sourceName: string | null): string {
   const { basis } = defaults;
   const vehicle = input.isMotorcycle ? "moto" : "carro";
@@ -216,7 +205,7 @@ function defaultsNote(input: DefaultsInput, defaults: DefaultAssumptions, source
       : `Comissão: padrão ${formatBps(defaults.commissionRateBps)} sobre o lance; confira no edital.`,
     `Reserva ${formatBps(defaults.riskReserveRateBps)} e margem ${formatBps(defaults.desiredMarginRateBps)} do valor de venda.`,
   ].filter((line) => line !== null);
-  return `${DEFAULT_NOTES_PREFIX} (revise antes de fixar):\n${lines.map((line) => `- ${line}`).join("\n")}`;
+  return `${DEFAULT_DRAFT_NOTES_PREFIX} (revise antes de fixar):\n${lines.map((line) => `- ${line}`).join("\n")}`;
 }
 
 function repairText(input: DefaultsInput, rate: Bps): string {

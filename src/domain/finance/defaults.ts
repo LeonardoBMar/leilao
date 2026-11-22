@@ -183,6 +183,20 @@ export function defaultMaxBid(input: DefaultsInput): MaxBidOutcome {
   return calculateMaxBid(defaultInputs(input));
 }
 
+/** Prefixo das observações geradas automaticamente para rascunhos criados com premissas padrão (D-38). */
+export const DEFAULT_DRAFT_NOTES_PREFIX = "Premissas padrão, pessimistas";
+
+/**
+ * Rascunho criado com as premissas padrão e nunca editado pelo usuário (nem em valores nem nas notas).
+ * Usado para alertar antes de fixar em lote diretamente pelo dashboard.
+ */
+export function isUnreviewedDefaultDraft(draft: { createdAt: Date; updatedAt: Date; notes: string | null }): boolean {
+  return (
+    draft.updatedAt.getTime() === draft.createdAt.getTime() &&
+    Boolean(draft.notes?.startsWith(DEFAULT_DRAFT_NOTES_PREFIX))
+  );
+}
+
 function roundUp(value: number, step: number): Cents {
   return cents(Math.ceil(value / step) * step);
 }

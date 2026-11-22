@@ -3,10 +3,10 @@ import "server-only";
 import { cache } from "react";
 
 import { type FixedLimit, prepareFixedAnalysis } from "@/domain/finance/calculator";
+import { isUnreviewedDefaultDraft } from "@/domain/finance/defaults";
 import { listingOutcome } from "@/domain/listings/outcome";
 import { cents } from "@/domain/money";
 import { compareResult, limitIndicator } from "@/domain/results/results";
-import { isUnreviewedDefaultDraft } from "@/features/analyses/draft-defaults";
 import { analysisColumns, toInputs } from "@/features/analyses/queries";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
