@@ -1,7 +1,7 @@
 "use client";
 
 import { History, Search, X } from "lucide-react";
-import { type KeyboardEvent, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
+import { Fragment, type KeyboardEvent, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -200,34 +200,55 @@ export function ModelPicker({
             Nenhum modelo encontrado para &ldquo;{typed.trim()}&rdquo;.
           </li>
         ) : (
-          matches.map((option, index) => (
-            <li
-              key={`${option.brand}|${option.model}`}
-              id={`${listId}-${index}`}
-              role="option"
-              aria-selected={index === active}
-              // mousedown: escolhe antes de o campo perder o foco (e fechar a lista).
-              onMouseDown={(event) => {
-                event.preventDefault();
-                choose(option);
-              }}
-              className={cn(
-                "flex min-h-10 cursor-default items-center justify-between gap-3 rounded-md px-2 text-body",
-                index === active ? "bg-surface-subtle text-foreground" : "text-foreground-secondary",
-              )}
-            >
-              <span className="flex min-w-0 items-center gap-2">
-                {isRecent(option) ? (
-                  <>
-                    <History aria-hidden="true" className="size-4 shrink-0 text-muted" />
-                    <span className="sr-only">Recente: </span>
-                  </>
+          matches.map((option, index) => {
+            const showRecentHeader = typed.trim() === "" && index === 0 && isRecent(option);
+            const showPopularHeader =
+              typed.trim() === "" &&
+              !isRecent(option) &&
+              (index === 0 || (index > 0 && isRecent(matches[index - 1] ?? option)));
+            return (
+              <Fragment key={`${option.brand}|${option.model}`}>
+                {showRecentHeader ? (
+                  <li role="presentation" className="px-2 pt-1.5 pb-1 text-caption font-medium text-muted">
+                    Buscados por último
+                  </li>
                 ) : null}
-                <span className="truncate">{option.label}</span>
-              </span>
-              <span className="text-caption text-muted tabular-nums">{salesLabel(option.sales)}</span>
-            </li>
-          ))
+                {showPopularHeader && recentOptions.length > 0 ? (
+                  <li
+                    role="presentation"
+                    className="mt-1 border-t border-border px-2 pt-2 pb-1 text-caption font-medium text-muted"
+                  >
+                    Mais vendidos
+                  </li>
+                ) : null}
+                <li
+                  id={`${listId}-${index}`}
+                  role="option"
+                  aria-selected={index === active}
+                  // mousedown: escolhe antes de o campo perder o foco (e fechar a lista).
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    choose(option);
+                  }}
+                  className={cn(
+                    "flex min-h-10 cursor-default items-center justify-between gap-3 rounded-md px-2 text-body",
+                    index === active ? "bg-surface-subtle text-foreground" : "text-foreground-secondary",
+                  )}
+                >
+                  <span className="flex min-w-0 items-center gap-2">
+                    {isRecent(option) ? (
+                      <>
+                        <History aria-hidden="true" className="size-4 shrink-0 text-muted" />
+                        <span className="sr-only">Recente: </span>
+                      </>
+                    ) : null}
+                    <span className="truncate">{option.label}</span>
+                  </span>
+                  <span className="text-caption text-muted tabular-nums">{salesLabel(option.sales)}</span>
+                </li>
+              </Fragment>
+            );
+          })
         )}
       </ul>
     </div>

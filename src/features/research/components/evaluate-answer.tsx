@@ -1,4 +1,4 @@
-import { RotateCcw } from "lucide-react";
+import { ChevronDown, RotateCcw } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Badge, Card } from "@/components/ui";
@@ -66,13 +66,15 @@ export function EvaluateAnswer({
                 {formatCompactBRL(answer.low)} a {formatCompactBRL(answer.high)}
               </p>
             </div>
-            <dl className="flex flex-wrap items-baseline gap-x-5 gap-y-2 text-body text-foreground-secondary tabular-nums">
-              <Fact label="Mediana">{formatCompactBRL(answer.median)}</Fact>
-              {answer.marketRatio === null ? null : <Fact label="Da FIPE">{formatRatio(answer.marketRatio)}</Fact>}
-              <Fact label="Base">{salesLabel(answer.n)}</Fact>
-              <Fact label="Período">
-                {formatDate(answer.from)} a {formatDate(answer.to)}
+            <dl className="flex flex-wrap items-baseline gap-x-6 gap-y-2 text-body text-foreground tabular-nums">
+              <Fact label="Mediana">
+                <span className="font-semibold">{formatCompactBRL(answer.median)}</span>
               </Fact>
+              {answer.marketRatio === null ? null : (
+                <Fact label="Da FIPE">
+                  <span className="font-semibold">{formatRatio(answer.marketRatio)}</span>
+                </Fact>
+              )}
               <Fact label="Confiança">
                 {answer.confidence === "low" ? (
                   <span className="inline-flex items-center gap-1.5">
@@ -80,12 +82,13 @@ export function EvaluateAnswer({
                     <span className="text-caption text-warning">faixa larga, erro ~25%</span>
                   </span>
                 ) : (
-                  CONFIDENCE_SHORT_LABELS[answer.confidence]
+                  <span className="font-semibold">{CONFIDENCE_SHORT_LABELS[answer.confidence]}</span>
                 )}
               </Fact>
             </dl>
-            <p className="text-caption text-muted">
-              Vendas {EVALUATE_LEVEL_LABELS[level]}
+            <p className="text-caption text-muted tabular-nums">
+              Base: {salesLabel(answer.n)} {EVALUATE_LEVEL_LABELS[level]} ({formatDate(answer.from)} a{" "}
+              {formatDate(answer.to)})
               {excluded > 0 ? `, sem as ${salesLabel(excluded)} que você tirou` : ""}.
             </p>
             {filters.yearFrom === null && filters.yearTo === null && evaluation.years.length > MIXED_YEARS ? (
@@ -94,8 +97,14 @@ export function EvaluateAnswer({
                 mais justa.
               </p>
             ) : null}
-            <details className="text-caption text-muted">
-              <summary className="cursor-pointer hover:text-foreground">Como calculamos</summary>
+            <details className="group text-caption text-muted">
+              <summary className="inline-flex min-h-8 cursor-pointer list-none items-center gap-1 font-medium text-foreground-secondary hover:text-foreground [&::-webkit-details-marker]:hidden">
+                <ChevronDown
+                  aria-hidden="true"
+                  className="size-3.5 transition-transform duration-150 group-open:rotate-180"
+                />
+                Como calculamos
+              </summary>
               <div className="mt-2 grid max-w-3xl gap-1.5">
                 <p>
                   Lances finais das vendas arrematadas no catálogo nos últimos 12 meses, de qualquer região, dentro do

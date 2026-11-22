@@ -9,7 +9,7 @@ import type { ResearchModelOption } from "../types";
 import { RecentModelLinks } from "./recent-model-links";
 
 /** Mais vendidos sugeridos na entrada. */
-const TOP_MODELS = 8;
+const TOP_MODELS = 5;
 
 /**
  * Entrada do Avaliar sem veículo (docs/PLANO-MERCADO.md §5.2): a pergunta da tela e atalhos para o que o usuário
@@ -21,15 +21,15 @@ export async function EvaluateEntry({ models }: { models: readonly ResearchModel
   return (
     <Card className="grid gap-6 p-5 md:p-6">
       <div className="grid gap-1">
-        <h2 className="text-heading-3 text-foreground">Quanto este veículo costuma sair em leilão?</h2>
+        <h2 className="text-heading-2 text-foreground">Quanto este veículo costuma sair em leilão?</h2>
         <p className="text-body text-muted">
           Busque um modelo acima ou comece por um dos seus lotes: a faixa vem das vendas parecidas do catálogo.
         </p>
       </div>
       {lots.length === 0 ? null : (
-        <section aria-labelledby="entrada-lotes" className="grid gap-2">
-          <h3 id="entrada-lotes" className="text-label text-foreground">
-            Seus lotes
+        <section aria-labelledby="entrada-lotes" className="grid gap-2.5 rounded-md bg-surface-subtle p-4">
+          <h3 id="entrada-lotes" className="text-label font-medium text-foreground">
+            Seus lotes em acompanhamento
           </h3>
           <div className="flex flex-wrap gap-2">
             {lots.map((lot) => (

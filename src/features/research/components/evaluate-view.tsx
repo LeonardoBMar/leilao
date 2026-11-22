@@ -101,9 +101,14 @@ function facetsOf(evaluation: EvaluationView): EvaluateFacets {
 
 export function EvaluateViewSkeleton() {
   return (
-    <div className="grid gap-4" aria-hidden="true">
-      <Skeleton className="h-10 w-full max-w-xl" />
-      <Skeleton className="h-40 w-full" />
+    <div className="grid gap-6" aria-hidden="true">
+      <div className="flex flex-wrap gap-2 border-b border-border pb-3">
+        <Skeleton className="h-10 w-full md:w-72" />
+        <Skeleton className="h-10 w-44" />
+        <Skeleton className="h-10 w-32" />
+      </div>
+      <Skeleton className="h-48 w-full rounded-lg" />
+      <Skeleton className="h-64 w-full rounded-lg" />
     </div>
   );
 }
