@@ -13,6 +13,6 @@ setup("login do usuário de testes", async ({ page }) => {
   setup.skip(!email || !password, "Defina E2E_EMAIL e E2E_PASSWORD no .env.local para rodar os testes autenticados.");
 
   await signIn(page, email ?? "", password ?? "");
-  await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Visão geral" })).toBeVisible();
   await page.context().storageState({ path: AUTH_STATE });
 });

@@ -286,7 +286,7 @@ test("sair e entrar de novo: dados e vínculos continuam lá (CA-01)", async ({ 
   const otherDevice = await browser.newContext({ storageState: AUTH_STATE, baseURL });
   const otherPage = await otherDevice.newPage();
   await otherPage.goto("/dashboard");
-  await expect(otherPage.getByRole("heading", { name: "Dashboard" })).toBeVisible();
+  await expect(otherPage.getByRole("heading", { name: "Visão geral" })).toBeVisible();
   await otherDevice.close();
 
   await signIn(page, process.env.E2E_EMAIL ?? "", process.env.E2E_PASSWORD ?? "");

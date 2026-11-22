@@ -130,7 +130,7 @@ Ações destrutivas usam `error-hover: #9F1239` e `error-active: #881337`; não 
 
 Regras:
 
-- Use a cor base para texto e ícones. Badges usam só o fundo suave (pílula sem borda); alerts usam fundo e borda suaves.
+- Use a cor base para texto e ícones. Badges e alerts usam fundo e borda suaves do estado (ou contorno `border` na variante neutra).
 - “Abaixo do limite” usa `success`; “No limite” e “Sem lance viável” usam `warning`; “Acima do limite” usa `error`.
 - Status de domínio como “Agendado”, “Encerrado” ou “Rascunho” não deve herdar automaticamente sucesso ou erro. Use aparência neutra, salvo quando o estado exigir ação.
 - `success` significa que uma condição foi atendida; não significa compra segura, lucro garantido ou recomendação.
@@ -169,13 +169,13 @@ Regras:
 #### Famílias
 
 ```css
---font-sans: var(--font-hanken-grotesk); /* Hanken Grotesk via next/font/google, pesos 400–700 */
---font-mono: var(--font-plex-mono);      /* IBM Plex Mono via next/font/google, pesos 400 e 500 */
+--font-sans: var(--font-inter);          /* Inter via next/font/google, pesos 400–700 */
+--font-mono: var(--font-jetbrains-mono); /* JetBrains Mono via next/font/google, pesos 400 e 500 */
 ```
 
-- Use **Hanken Grotesk** em toda a interface.
-- Use **IBM Plex Mono** em códigos: a linha de contexto acima do título ("LOTE 0152 · DETRAN · 14/10"), número de versão e identificadores técnicos.
-- Valores monetários ficam em Hanken Grotesk com numerais tabulares; não usar monospace como estilo decorativo.
+- Use **Inter** (`cv02`, `cv03`, `cv04`, `cv11`) em toda a interface.
+- Use **JetBrains Mono** em códigos: a linha de contexto acima do título ("LOTE 0152 · DETRAN · 14/10"), número de lote, atalhos (`⌘K`, `Ctrl K`), versão e identificadores técnicos.
+- Valores monetários ficam em Inter com numerais tabulares (`tabular-nums`); não usar monospace como estilo decorativo.
 - Não introduzir outras famílias sem atualizar este documento.
 
 #### Pesos
@@ -287,13 +287,14 @@ O design é mobile first. Breakpoint indica mudança de composição, não uma c
 
 ### 4.1 Estrutura privada
 
-- Em `lg` ou maior, a sidebar fixa de `296px` fica sobre o papel (`background`), sem borda, com padding lateral de `16px` (`20px` no topo e `16px` embaixo). O conteúdo fica num **painel branco embutido** (`surface`, `radius-lg`, `shadow-sm`) com `10px` de margem no topo, à direita e embaixo.
-- Abaixo de `lg`, uma barra superior de `56px` sobre o papel traz a marca e o menu; o conteúdo ocupa a largura toda em `surface`.
-- A área de conteúdo usa largura máxima de `1440px`, centralizada dentro do painel.
-- Padding horizontal: `16px` no mobile, `24px` em `md` e `48px` em `lg`.
-- Padding vertical da página: `24px` no mobile; `28px` no topo e `40px` embaixo no desktop.
-- Espaço entre cabeçalho de página e conteúdo: `24px`.
-- Espaço entre seções: `40px` no mobile e `48px` no desktop.
+- Em `lg` ou maior, a sidebar colapsável (`264px` expandida ↔ `56px` recolhida, atalho `Ctrl+B`/`⌘B`) fica sobre `background` (`#FAFAFB`), separada por borda hairline `border`, com header próprio de `48px` (marca + botão recolher/expandir). Na rota `/dashboard`, o grupo `Acompanhando` da sidebar é ocultado para evitar duplicação com a seção principal.
+- A coluna principal à direita traz o header fixo de `48px` sobre `surface` (`#FFFFFF`) com contexto de seção (e breadcrumb em sub-rotas) e gatilho da paleta rápida `CommandPalette` (`⌘K`/`Ctrl K`), seguido pelo canvas em `surface` (`#FFFFFF`).
+- Abaixo de `lg`, o mesmo header fixo de `48px` traz o menu em gaveta (`MobileNav`), a marca e o gatilho da paleta rápida.
+- A área de conteúdo usa largura máxima de `1440px` (`max-w-360`), centralizada na coluna principal.
+- Padding horizontal: `16px` no mobile (`px-4`), `24px` em `md` (`px-6`) e `32px` em `lg` (`px-8`).
+- Padding vertical da página: `24px` no mobile (`py-6`) e `28px` no desktop `lg` (`py-7`).
+- Espaço entre cabeçalho de página e conteúdo: `20–24px`.
+- Espaço entre seções: `32–40px`.
 
 ### 4.2 Grid
 
@@ -331,7 +332,7 @@ A biblioteca inicial implementa as primitivas com reutilização imediata no MVP
 
 ### 5.1 Button
 
-Alturas: `sm 40px`, `md 40px`, `lg 48px`; `icon 40 × 40px`. O tamanho padrão é `md`. `sm` reduz padding horizontal para 12 px e usa `caption`; `md` usa padding de 16 px e `body`; `lg` usa padding de 20 px e `body-lg`. Todos usam peso 600. Ícones: 16 px em `sm`/`md`, 20 px em `lg`/`icon`.
+Alturas responsivas: no mobile/touch, `sm 40px`, `md 40px`, `lg 44px` e `icon 40 × 40px`; a partir de `sm` (desktop/tablet), `sm 32px`, `md 36px`, `lg 40px` e `icon 36 × 36px`. O tamanho padrão é `md`. `sm` reduz padding horizontal para `10px` e usa `caption`; `md` usa padding de `14px` e `body`; `lg` usa padding de `18px` e `body-lg`. Todos usam peso `500`. Ícones: `14px` em `sm`, `16px` em `md`/`icon` e `18px` em `lg`.
 
 | Variante | Aparência | Uso |
 | --- | --- | --- |
@@ -400,7 +401,7 @@ Cards não devem conter cards idênticos aninhados. Para subdivisões internas, 
 
 ### 5.5 Badge / StatusBadge
 
-- Pílula: altura mínima de 22 px, padding horizontal de 8 px, `radius-full`, texto `12/16` peso 500, só o fundo suave, sem borda.
+- Pílula: altura mínima de `22px` (`min-h-5.5`), padding horizontal de `8px`, `radius-full`, texto `12/16` peso `500`, com fundo suave e borda sutil semântica (`border-{estado}-border` / `border` no neutro).
 - Variante neutra para status de domínio.
 - Variantes success, warning, error e info apenas com o significado definido nos tokens.
 - Texto curto e explícito: “Rascunho”, “Fixada”, “Acima do limite”.
@@ -746,18 +747,21 @@ Easing padrão: `cubic-bezier(0.2, 0, 0, 1)`. Saída pode usar `cubic-bezier(0.4
 
 ## 15. UI Patterns
 
-### 15.1 Dashboard
+### 15.1 Dashboard (`/dashboard`)
 
-1. PageHeader com título “Dashboard”, as contagens que levam à ação numa linha ("6 para analisar · próximo leilão na região: ter 13/10, 23 lotes · 16 acompanhados, 3 com provável acima do limite · 1 pendência"), cada trecho com link para o bloco, e a ação principal “Ver leilões”, com “Novo leilão” como secundária.
-2. Alertas não lidos, quando houver.
-3. Duas colunas no desktop amplo (1,7 : 1):
-   - à esquerda, nesta ordem:
-     - “Para analisar agora”: até 6 `ListingCard` em grade (1, 2 e 3 colunas), com a linha da situação ("Cabe com folga", `success`; "No limite", `warning`) nas estimativas, e o rodapé “e mais N · Ver no catálogo”;
-     - “Lotes acompanhados” em linhas: número do lote em mono, veículo, lance atual "de" limite, a barra de posição com a diferença em texto e, abaixo, o provável com a situação frente ao limite ("provável acima do seu limite" em `error`);
-     - “Próximos leilões na região”: agrupados por dia (dia grande, mês e dia da semana à esquerda; hora, nome, fonte, lotes no filtro e quantos cabem à direita), cada um com link para o leilão do catálogo;
-   - à direita, “Registros pendentes” no painel rebaixado, “Suas decisões antes do resultado” (o indicador, com o denominador) e a linha da coleta.
-4. EmptyState `inline` em cada seção quando necessário. Sem lote que cabe: “Nenhum lote da região cabe no limite agora”, com “Ver leilões”.
-5. No celular, uma coluna na mesma ordem, com “Para analisar agora” logo depois dos alertas.
+1. `PageHeader` com título **“Visão geral”**, linha compacta da coleta à direita (`X veículos abertos até 150 km de … · Coleta dd mmm, hh:mm`), e ações **“Ver leilões”** (`primary`) e **“Novo leilão”** (`secondary`).
+2. Faixa de KPIs operacionais (`DashboardKpis`) em grade hairline (`2` colunas no mobile, `4` em `@3xl+`): **Para analisar**, **Acompanhados** (destaque suave em `error-subtle/40` quando houver provável acima do limite), **Pendências** (destaque suave em `warning-subtle/40` quando houver pendências) e **Próximo no catálogo**, cada célula ligada à seção ou leilão correspondente.
+3. Faixa compacta de alertas não lidos e saúde da coleta (`RecentAlerts`), quando houver alertas ou falha/atraso na coleta (neste caso explicando o impacto e oferecendo link para `/leiloes`).
+4. Duas colunas no desktop amplo (`1,7 : 1`):
+   - à esquerda, nesta ordem (`SPEC §5`):
+     - **“Para analisar agora”**: até `4` `ListingCard` compactos em grade de `2` colunas em `@3xl+` (1 coluna abaixo), mostrando lance, preço provável, limite estimado, evidência (`n`, confiança e origem do limite), ações (`Analisar agora`, `Inspecionar`, `Dispensar`), aviso quando truncado e rodapé **“Ver mais N no catálogo”** quando houver mais candidatos;
+     - **“Lotes acompanhados”**: linhas com toda a área clicável (`≥ 44px`), número do lote em mono, veículo, leilão, urgência de encerramento (≤24h em `warning`) e frescor do lance observado, rótulos visíveis **Lance** / **Limite**, barra `LimitProgress` com a diferença em texto e o provável frente ao limite;
+     - **“Próximos leilões na região”**: agenda agrupada por dia (dia grande, mês e dia da semana à esquerda; marcador sólido quando há lote que cabe no limite, hora, nome, fonte, lotes no filtro e quantos cabem à direita) com linha inteira clicável (`≥ 44px`).
+   - à direita (`<aside>`):
+     - **“Registros pendentes”** no painel rebaixado `summary` (até `3` aguardando resultado + `3` rascunhos, com botão **“Revisar e fixar”** abrindo diálogo com checklist explícito de lotes, limites calculados e alerta de premissas padrão antes de fixar em lote);
+     - **“Suas decisões antes do resultado”** (`DecisionIndicator`, sempre com o denominador `X de Y resultados comparáveis ficaram dentro do limite` e link para `/mercado/calibracao`).
+5. `EmptyState` `inline` em cada seção quando necessário (sem repetição do CTA primário do cabeçalho e com link para `/monitores` e `/leiloes/veiculos`).
+6. No celular, uma coluna na mesma ordem do DOM, mantendo **“Para analisar agora”** no topo da área de trabalho logo após os KPIs e alertas.
 
 Situação e limite são estimativas: sempre com o método e o `n`. Não destacar “economia potencial”, “lucro” ou score, pois não são resultados garantidos.
 
@@ -887,7 +891,7 @@ Os gráficos são descritivos: sempre com `n` e o início da base, sem “oportu
 5. Não duplique componente sob outro nome.
 6. Não use valores arbitrários quando existir token equivalente.
 7. Não crie cor nova dentro de JSX, CSS module ou classe Tailwind.
-8. Não introduza fonte além de Hanken Grotesk e IBM Plex Mono.
+8. Não introduza fonte além de Inter e JetBrains Mono.
 9. Siga a escala tipográfica e a escala de espaçamento.
 10. Preserve estados default, hover, focus-visible, active, disabled, loading e error.
 11. Implemente acesso por teclado e nome acessível junto do componente.
@@ -927,7 +931,7 @@ Checklist para uma nova página:
 - Next.js App Router + TypeScript.
 - Tailwind CSS.
 - shadcn/ui com primitivas Radix.
-- `next/font/google` para Hanken Grotesk e IBM Plex Mono.
+- `next/font/google` para Inter e JetBrains Mono.
 - Lucide React para ícones.
 
 A estrutura atual relevante ao design system é:
@@ -964,26 +968,28 @@ Referência inicial:
 
 ```css
 :root {
-  --background: #f7f7f4;
+  --background: #fafafb;
   --surface: #ffffff;
-  --surface-subtle: #f0f0eb;
-  --foreground: #15171c;
-  --foreground-secondary: #3f434c;
-  --muted: #63676f;
-  --muted-subtle: #8a8e96;
-  --border: #efeeea;
-  --border-strong: #e4e3dd;
-  --control-border: #cfd0d3;
-  --placeholder: #63676f;
-  --primary: #15171c;
-  --primary-hover: #2c2f37;
+  --surface-subtle: #f3f4f6;
+  --surface-elevated: #ffffff;
+  --foreground: #111318;
+  --foreground-secondary: #3e434d;
+  --muted: #626773;
+  --muted-subtle: #8b909b;
+  --border: #eaecef;
+  --border-strong: #dadde3;
+  --control-border: #878c98;
+  --placeholder: #626773;
+  --primary: #111318;
+  --primary-hover: #252932;
   --primary-active: #000000;
-  --accent: #2b45c8;
-  --accent-hover: #1e34a0;
-  --accent-subtle: #e9ecfa;
-  --success: #0f6b47;
-  --warning: #7a4a00;
-  --error: #b42323;
+  --primary-subtle: #eef0f3;
+  --accent: #1d4ed8;
+  --accent-hover: #1e40af;
+  --accent-subtle: #eff4ff;
+  --success: #047857;
+  --warning: #92400e;
+  --error: #be123c;
 }
 ```
 
@@ -991,7 +997,7 @@ Esse trecho é um resumo; a configuração completa está em `src/app/globals.cs
 
 ### Fonte
 
-Carregar Hanken Grotesk (`--font-hanken-grotesk`, pesos 400–700) e IBM Plex Mono (`--font-plex-mono`, 400 e 500) por `next/font/google` no layout raiz e usar Hanken Grotesk no `body`. Ativar numerais tabulares em classes utilitárias próprias para valores financeiros e tabelas.
+Carregar Inter (`--font-inter`) e JetBrains Mono (`--font-jetbrains-mono`) por `next/font/google` no layout raiz (`src/app/layout.tsx`) e aplicar Inter com `cv02`, `cv03`, `cv04`, `cv11` no `body`. Ativar numerais tabulares (`tabular-nums`) em valores financeiros, datas e tabelas.
 
 ### Componentes shadcn
 
