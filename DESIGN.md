@@ -1,6 +1,6 @@
 ---
 name: Leilão Tracker
-description: Análise financeira e acompanhamento de leilões (v3.0).
+description: Análise e acompanhamento de leilões (v3.0).
 colors:
   primary: "#111318"
   accent: "#1d4ed8"
@@ -49,11 +49,15 @@ Name: Leilão Tracker
 Colors: primary #111318; accent #1d4ed8; success #047857; warning #92400e; error #be123c; background #fafafb; surface #ffffff
 Fonts: Inter (display, body); JetBrains Mono (mono)
 Don't:
+
 - Criar novas cores, fontes, sombras, raios ou espaçamentos localmente.
 - Usar gradientes, glassmorphism, glow ou estética automotiva decorativa.
+
 Do:
-- Usar tinta (primary) na ação principal e o azul ccent só em link, foco e seleção.
-- Manter números financeiros com rótulo, unidade e numerais tabulares (	abular-nums).
+
+- Usar tinta (`primary`) na ação principal e o azul `accent` só em link, foco e seleção.
+- Manter números financeiros com rótulo, unidade e numerais tabulares (`tabular-nums`).
+
 Map: SPEC.md
 Map: src/components/ui
 Map: src/app/globals.css
