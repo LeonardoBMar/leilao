@@ -152,7 +152,7 @@ export function EvaluateFilterBar({ params, models, facets, lotLabel }: Evaluate
               variant="ghost"
               size="icon"
               aria-label="Deixar de comparar com o lote"
-              onClick={() => apply({ ...filters, lot: null })}
+              onClick={() => apply({ ...filters, lot: null }, { focusStatus: true })}
             >
               <X aria-hidden="true" />
             </Button>
@@ -319,7 +319,7 @@ export function EvaluateFilterBar({ params, models, facets, lotLabel }: Evaluate
                       onClick={() => apply(withoutDrawerFilters(filters))}
                       disabled={drawerChips.length === 0}
                     >
-                      Limpar filtros
+                      Limpar refinamentos
                     </Button>
                     <DialogClose asChild>
                       <Button aria-live="polite">

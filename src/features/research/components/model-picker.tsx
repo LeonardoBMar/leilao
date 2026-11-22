@@ -146,6 +146,7 @@ export function ModelPicker({
           aria-expanded={expanded}
           aria-controls={listId}
           aria-activedescendant={matches.length > 0 && active >= 0 ? `${listId}-${active}` : undefined}
+          aria-keyshortcuts={shortcut ? "/" : undefined}
           autoComplete="off"
           spellCheck={false}
           placeholder={placeholder}
@@ -178,6 +179,7 @@ export function ModelPicker({
             onClick={() => {
               setText("");
               onChange(null);
+              inputRef.current?.focus();
             }}
             className="absolute top-0 right-0 flex size-10 items-center justify-center rounded-md text-muted outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent"
           >
@@ -226,12 +228,13 @@ export function ModelPicker({
                   role="option"
                   aria-selected={index === active}
                   // mousedown: escolhe antes de o campo perder o foco (e fechar a lista).
+                  onMouseEnter={() => setActive(index)}
                   onMouseDown={(event) => {
                     event.preventDefault();
                     choose(option);
                   }}
                   className={cn(
-                    "flex min-h-10 cursor-default items-center justify-between gap-3 rounded-md px-2 text-body",
+                    "flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-md px-2 text-body hover:bg-surface-subtle",
                     index === active ? "bg-surface-subtle text-foreground" : "text-foreground-secondary",
                   )}
                 >

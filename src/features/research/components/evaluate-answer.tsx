@@ -34,7 +34,12 @@ export function EvaluateAnswer({
     loosen.length === 0 && excluded === 0 ? null : (
       <div className="flex flex-wrap gap-2">
         {excluded > 0 ? (
-          <ResearchNavButton href={evaluateHref({ ...filters, excluded: [] })} variant="secondary" size="sm">
+          <ResearchNavButton
+            href={evaluateHref({ ...filters, excluded: [] })}
+            focusTargetId="resposta-titulo"
+            variant="secondary"
+            size="sm"
+          >
             <RotateCcw aria-hidden="true" />
             Voltar as {salesLabel(excluded)} excluídas para a conta
           </ResearchNavButton>
@@ -66,7 +71,11 @@ export function EvaluateAnswer({
         {answer.kind === "band" ? (
           <>
             <div className="grid gap-1">
-              <h2 id="resposta-titulo" className="text-label text-muted">
+              <h2
+                id="resposta-titulo"
+                tabIndex={-1}
+                className="w-fit rounded-sm text-label text-muted outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              >
                 Faixa típica de arremate
               </h2>
               <p className="text-display text-foreground tabular-nums">
@@ -101,6 +110,7 @@ export function EvaluateAnswer({
               {excluded > 0 ? (
                 <ResearchNavButton
                   href={evaluateHref({ ...filters, excluded: [] })}
+                  focusTargetId="resposta-titulo"
                   variant="link"
                   size="sm"
                   className="h-auto px-0 py-0 text-caption"
@@ -160,7 +170,11 @@ export function EvaluateAnswer({
           </>
         ) : (
           <div className="grid gap-3">
-            <h2 id="resposta-titulo" className="text-heading-3 text-foreground">
+            <h2
+              id="resposta-titulo"
+              tabIndex={-1}
+              className="w-fit rounded-sm text-heading-3 text-foreground outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            >
               {answer.n === 0
                 ? "Nenhuma venda neste recorte"
                 : `Só ${salesLabel(answer.n)} neste recorte: pouco para uma faixa`}
