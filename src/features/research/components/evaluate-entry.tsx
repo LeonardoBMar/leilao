@@ -60,7 +60,7 @@ export async function EvaluateEntry({ models }: { models: readonly ResearchModel
                   ...DEFAULT_EVALUATE_FILTERS,
                   vehicle: { brand: model.brand, model: model.model },
                 })}
-                variant="ghost"
+                variant="secondary"
                 size="sm"
               >
                 {model.label}

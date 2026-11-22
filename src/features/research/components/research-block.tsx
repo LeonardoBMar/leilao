@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { ButtonLink, Card, EmptyState, Skeleton } from "@/components/ui";
+import { ButtonLink, EmptyState, Skeleton } from "@/components/ui";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -17,22 +17,24 @@ type ResearchBlockProps = {
   children: ReactNode;
 };
 
-/** Bloco da Pesquisa (DESIGN.md §15.8): título, apoio em `muted` e o gráfico sobre `surface`. */
+/** Bloco da Pesquisa (DESIGN.md §5.4): seção com divisor fino em vez de card, reservando Card para o que decide. */
 export function ResearchBlock({ id, title, description, actions, children }: ResearchBlockProps) {
   return (
-    <section id={id} aria-labelledby={`${id}-titulo`} className="min-w-0 scroll-mt-20 lg:scroll-mt-60">
-      <Card className="grid min-w-0 gap-5 p-5 md:p-6">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="grid max-w-3xl gap-1">
-            <h2 id={`${id}-titulo`} className="text-heading-3 text-foreground">
-              {title}
-            </h2>
-            {description ? <p className="text-body text-muted">{description}</p> : null}
-          </div>
-          {actions}
+    <section
+      id={id}
+      aria-labelledby={`${id}-titulo`}
+      className="grid min-w-0 scroll-mt-20 gap-5 border-t border-border pt-6 lg:scroll-mt-60"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="grid max-w-3xl gap-1">
+          <h2 id={`${id}-titulo`} className="text-heading-3 text-foreground">
+            {title}
+          </h2>
+          {description ? <p className="text-body text-muted">{description}</p> : null}
         </div>
-        {children}
-      </Card>
+        {actions}
+      </div>
+      {children}
     </section>
   );
 }
@@ -40,13 +42,13 @@ export function ResearchBlock({ id, title, description, actions, children }: Res
 /** O bloco enquanto carrega: o título já aparece, o gráfico é um retângulo. */
 export function ResearchBlockSkeleton({ title, className }: { title: string; className?: string }) {
   return (
-    <Card className="grid gap-5 p-5 md:p-6">
+    <div className="grid gap-5 border-t border-border pt-6">
       <div className="grid gap-2">
         <p className="text-heading-3 text-foreground">{title}</p>
         <Skeleton className="h-4 w-full max-w-md" />
       </div>
       <Skeleton className={cn("h-64 w-full", className)} />
-    </Card>
+    </div>
   );
 }
 

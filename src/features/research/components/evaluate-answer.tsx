@@ -1,7 +1,7 @@
 import { RotateCcw } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { Card } from "@/components/ui";
+import { Badge, Card } from "@/components/ui";
 import { type EvaluateFilters, loosened } from "@/domain/research/evaluate";
 import { formatCompactBRL, formatDate, formatRatio } from "@/lib/format";
 
@@ -54,7 +54,7 @@ export function EvaluateAnswer({
 
   return (
     <section aria-labelledby="resposta-titulo">
-      <Card variant="metric" className="grid gap-4 p-5 md:p-6">
+      <Card variant="summary" className="grid gap-4 p-5 md:p-6">
         <p className="text-label text-muted">{scope}</p>
         {answer.kind === "band" ? (
           <>
@@ -62,18 +62,27 @@ export function EvaluateAnswer({
               <h2 id="resposta-titulo" className="text-label text-muted">
                 Faixa típica de arremate
               </h2>
-              <p className="text-heading-1 text-foreground tabular-nums">
+              <p className="text-display text-foreground tabular-nums">
                 {formatCompactBRL(answer.low)} a {formatCompactBRL(answer.high)}
               </p>
             </div>
-            <dl className="flex flex-wrap gap-x-5 gap-y-2 text-body text-foreground-secondary tabular-nums">
+            <dl className="flex flex-wrap items-baseline gap-x-5 gap-y-2 text-body text-foreground-secondary tabular-nums">
               <Fact label="Mediana">{formatCompactBRL(answer.median)}</Fact>
               {answer.marketRatio === null ? null : <Fact label="Da FIPE">{formatRatio(answer.marketRatio)}</Fact>}
               <Fact label="Base">{salesLabel(answer.n)}</Fact>
               <Fact label="Período">
                 {formatDate(answer.from)} a {formatDate(answer.to)}
               </Fact>
-              <Fact label="Confiança">{CONFIDENCE_SHORT_LABELS[answer.confidence]}</Fact>
+              <Fact label="Confiança">
+                {answer.confidence === "low" ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Badge variant="warning">{CONFIDENCE_SHORT_LABELS[answer.confidence]}</Badge>
+                    <span className="text-caption text-warning">faixa larga, erro ~25%</span>
+                  </span>
+                ) : (
+                  CONFIDENCE_SHORT_LABELS[answer.confidence]
+                )}
+              </Fact>
             </dl>
             <p className="text-caption text-muted">
               Vendas {EVALUATE_LEVEL_LABELS[level]}
