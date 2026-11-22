@@ -114,7 +114,7 @@ export function EvaluateAnswer({
               </div>
             ) : null}
             <details className="group text-caption text-muted">
-              <summary className="inline-flex min-h-8 cursor-pointer list-none items-center gap-1 font-medium text-foreground-secondary hover:text-foreground [&::-webkit-details-marker]:hidden">
+              <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-1 font-medium text-foreground-secondary hover:text-foreground [&::-webkit-details-marker]:hidden">
                 <ChevronDown
                   aria-hidden="true"
                   className="size-3.5 transition-transform duration-150 group-open:rotate-180"
@@ -131,6 +131,10 @@ export function EvaluateAnswer({
                   A confiança olha o número de vendas e a largura da faixa: alta com 20 vendas ou mais e faixa estreita;
                   baixa com faixa larga. Sem descrição do estado de cada veículo, a mediana erra em torno de 13% com
                   confiança alta e 25% com confiança baixa.
+                </p>
+                <p>
+                  &ldquo;Sem monta declarada&rdquo; significa que a fonte não informou a classificação de avaria — não
+                  equivale a veículo sem sinistro.
                 </p>
               </div>
             </details>

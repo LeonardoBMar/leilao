@@ -150,6 +150,10 @@ export function RankingExplorer({ rows, axisMax, ticks, overall }: RankingExplor
           {typed.trim() === "" ? `${matching.length} modelos` : `${matching.length} encontrados`}
         </p>
       </div>
+      <p className="text-caption text-muted">
+        A barra mostra a faixa onde cai metade das vendas (P25–P75) em % da FIPE;{" "}
+        <span className="font-medium">pts</span> são pontos percentuais em relação à mediana geral.
+      </p>
 
       {shown.length === 0 ? (
         <p className="text-body text-muted">

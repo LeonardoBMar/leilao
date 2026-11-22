@@ -1,3 +1,4 @@
+import { ChevronDown } from "lucide-react";
 import { Suspense } from "react";
 
 import { Skeleton } from "@/components/ui";
@@ -29,9 +30,10 @@ export async function ReadingBlock({ filters }: { filters: ResearchFilters }) {
       title={READING_BLOCK_TITLE}
       description="A curva do lance, de onde vem a FIPE e as regras de amostra."
     >
-      <details>
-        <summary className="w-fit cursor-pointer text-label text-accent hover:text-accent-hover hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-          Mostrar
+      <details className="group">
+        <summary className="inline-flex min-h-10 w-fit cursor-pointer list-none items-center gap-1.5 text-label text-accent hover:text-accent-hover hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent [&::-webkit-details-marker]:hidden">
+          <ChevronDown aria-hidden="true" className="size-4 transition-transform duration-150 group-open:rotate-180" />
+          Mostrar metodologia e regras
         </summary>
         <div className="mt-4 grid gap-8 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           <Suspense fallback={<Skeleton className="h-64 w-full" />}>

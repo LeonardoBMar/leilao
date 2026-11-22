@@ -176,7 +176,7 @@ export function CalibrationView({ items }: { items: readonly CalibrationEntry[] 
                       ? "—"
                       : `${formatCompactBRL(item.band.low)} a ${formatCompactBRL(item.band.high)}`}
                     {item.band !== null && item.bandSource === "recomputed" ? (
-                      <span className="block text-caption text-muted">recalculada</span>
+                      <span className="block text-caption text-muted">recalculada com o histórico da época</span>
                     ) : null}
                   </dd>
                 </div>
@@ -225,7 +225,7 @@ export function CalibrationView({ items }: { items: readonly CalibrationEntry[] 
                       ? "—"
                       : `${formatCompactBRL(item.band.low)} a ${formatCompactBRL(item.band.high)}`}
                     {item.band !== null && item.bandSource === "recomputed" ? (
-                      <span className="block text-caption text-muted">recalculada</span>
+                      <span className="block text-caption text-muted">recalculada com o histórico da época</span>
                     ) : null}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
