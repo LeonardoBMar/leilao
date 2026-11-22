@@ -16,12 +16,14 @@ type ResearchNavButtonProps = Omit<ComponentProps<typeof Button>, "onClick"> & {
  * Botão de navegação dentro do Mercado que passa por `useResearchTransition`, ativando o estado de carregamento do
  * `ResearchShell` sem perder a posição de rolagem.
  */
-export function ResearchNavButton({ href, type = "button", ...props }: ResearchNavButtonProps) {
+export function ResearchNavButton({ href, type = "button", disabled, ...props }: ResearchNavButtonProps) {
   const router = useRouter();
-  const { startTransition } = useResearchTransition();
+  const { isPending, startTransition } = useResearchTransition();
   return (
     <Button
       type={type}
+      disabled={disabled || isPending}
+      aria-busy={isPending}
       onClick={() => {
         startTransition(() => {
           router.push(href, { scroll: false });

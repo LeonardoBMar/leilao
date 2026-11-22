@@ -7,7 +7,7 @@ import { ORIGIN_LABELS } from "@/features/listings/filter-labels";
 import { formatCompactBRL, formatDate, formatKm, formatRatio } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-import { salesLabel, SIMILARITY_LABELS } from "../labels";
+import { CONFIDENCE_SHORT_LABELS, salesLabel, SIMILARITY_LABELS } from "../labels";
 import { evaluateHref } from "../search";
 import type { EvaluateSaleView, EvaluationView } from "../types";
 import { ResearchBlock } from "./research-block";
@@ -35,29 +35,42 @@ export function EvaluateComparables({ filters, evaluation }: { filters: Evaluate
           : "Tire da conta uma venda que não se parece com o veículo (outra versão, batida) e a faixa é refeita."
       }
     >
+      <p role="status" className="sr-only">
+        {excluded > 0
+          ? answer.kind === "band"
+            ? `${salesLabel(excluded)} fora da conta. Faixa recalculada: ${formatCompactBRL(answer.low)} a ${formatCompactBRL(answer.high)}, confiança ${CONFIDENCE_SHORT_LABELS[answer.confidence]}.`
+            : `${salesLabel(excluded)} fora da conta. Restam ${salesLabel(answer.n)} na conta.`
+          : `Todas as ${salesLabel(comparables.length)} estão na conta.`}
+      </p>
       {excluded > 0 ? (
-        <div
-          role="status"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-surface-subtle px-3.5 py-2.5 text-label text-foreground"
-        >
-          <p className="tabular-nums">
+        <div className="sticky top-2 z-20 flex flex-wrap items-center justify-between gap-3 rounded-md border border-border-strong bg-surface-subtle/95 px-3.5 py-2.5 text-label text-foreground shadow-xs backdrop-blur-xs xl:top-16">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 tabular-nums">
             {answer.kind === "band" ? (
               <>
-                Faixa recalculada:{" "}
-                <span className="font-semibold">
-                  {formatCompactBRL(answer.low)} a {formatCompactBRL(answer.high)}
-                </span>{" "}
-                <span className="text-muted">
-                  (mediana {formatCompactBRL(answer.median)} · {salesLabel(answer.n)})
+                <span>
+                  Faixa recalculada:{" "}
+                  <span className="font-semibold">
+                    {formatCompactBRL(answer.low)} a {formatCompactBRL(answer.high)}
+                  </span>
                 </span>
+                <span className="text-muted">
+                  · mediana {formatCompactBRL(answer.median)}
+                  {answer.marketRatio === null ? "" : ` (${formatRatio(answer.marketRatio)} da FIPE)`} ·{" "}
+                  {salesLabel(answer.n)}
+                </span>
+                {answer.confidence === "low" ? (
+                  <Badge variant="warning">Confiança {CONFIDENCE_SHORT_LABELS[answer.confidence]}</Badge>
+                ) : (
+                  <span className="text-muted">· confiança {CONFIDENCE_SHORT_LABELS[answer.confidence]}</span>
+                )}
               </>
             ) : (
-              <>
+              <span>
                 Restam {salesLabel(answer.n)} na conta{" "}
                 <span className="text-muted">(a faixa precisa de {answer.needed}).</span>
-              </>
+              </span>
             )}
-          </p>
+          </div>
           <ResearchNavButton href={evaluateHref({ ...filters, excluded: [] })} variant="secondary" size="sm">
             <RotateCcw aria-hidden="true" />
             Voltar todas para a conta
