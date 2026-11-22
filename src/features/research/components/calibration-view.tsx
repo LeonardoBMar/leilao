@@ -205,10 +205,7 @@ export function CalibrationView({ items }: { items: readonly CalibrationEntry[] 
               {items.map((item) => (
                 <TableRow key={item.analysisId}>
                   <TableCell className="max-w-64">
-                    <Link
-                      href={`/lotes/${item.lotId}`}
-                      className="text-accent hover:text-accent-hover hover:underline"
-                    >
+                    <Link href={`/lotes/${item.lotId}`} className="text-accent hover:text-accent-hover hover:underline">
                       {item.label}
                     </Link>
                   </TableCell>

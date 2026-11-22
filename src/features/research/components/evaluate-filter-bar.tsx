@@ -86,7 +86,9 @@ function activeRefinements(filters: EvaluateFilters, facets: EvaluateFacets): Ac
     filters.version === null || versionLabel === null
       ? null
       : { id: "versao", label: `Versão: ${versionLabel}`, without: { ...filters, version: null } },
-    years === null ? null : { id: "ano", label: `Ano: ${years}`, without: { ...filters, yearFrom: null, yearTo: null } },
+    years === null
+      ? null
+      : { id: "ano", label: `Ano: ${years}`, without: { ...filters, yearFrom: null, yearTo: null } },
     filters.maxKm === null
       ? null
       : { id: "km", label: `Até ${mileageLabel(filters.maxKm)}`, without: { ...filters, maxKm: null } },
@@ -409,11 +411,7 @@ function DrawerSelect({
           <SelectItem value={ALL}>{allLabel}</SelectItem>
           {options.map((option) => (
             <SelectItem key={option.value} value={option.value} disabled={option.n === 0 && option.value !== value}>
-              {option.n === undefined ? (
-                option.label
-              ) : (
-                <OptionWithCount label={option.label} count={option.n} />
-              )}
+              {option.n === undefined ? option.label : <OptionWithCount label={option.label} count={option.n} />}
             </SelectItem>
           ))}
         </SelectContent>
