@@ -1,16 +1,17 @@
-import { Car, ExternalLink } from "lucide-react";
+import { Car, ExternalLink, RotateCcw } from "lucide-react";
 import Image from "next/image";
 
-import { Badge, ButtonLink } from "@/components/ui";
+import { Badge } from "@/components/ui";
 import type { EvaluateComparable, EvaluateFilters } from "@/domain/research/evaluate";
 import { ORIGIN_LABELS } from "@/features/listings/filter-labels";
 import { formatCompactBRL, formatDate, formatKm, formatRatio } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-import { SIMILARITY_LABELS } from "../labels";
+import { salesLabel, SIMILARITY_LABELS } from "../labels";
 import { evaluateHref } from "../search";
 import type { EvaluateSaleView, EvaluationView } from "../types";
 import { ResearchBlock } from "./research-block";
+import { ResearchNavButton } from "./research-nav-button";
 
 /** Linhas abertas de início; o resto fica em "Ver as outras". */
 const SHOWN = 12;
@@ -21,7 +22,7 @@ const SHOWN = 12;
  * venda continua na lista, marcada, para poder voltar. O link fica compartilhável.
  */
 export function EvaluateComparables({ filters, evaluation }: { filters: EvaluateFilters; evaluation: EvaluationView }) {
-  const { comparables, excluded } = evaluation;
+  const { answer, comparables, excluded } = evaluation;
   const shown = comparables.slice(0, SHOWN);
   const rest = comparables.slice(SHOWN);
   return (
@@ -30,10 +31,39 @@ export function EvaluateComparables({ filters, evaluation }: { filters: Evaluate
       title={`Vendas do recorte (${comparables.length})`}
       description={
         excluded > 0
-          ? `${excluded} fora da conta por você. Tire da conta uma venda que não se parece com o veículo (outra versão, batida) e a faixa é refeita.`
+          ? `${salesLabel(excluded)} fora da conta por você. Tire da conta uma venda que não se parece com o veículo (outra versão, batida) e a faixa é refeita.`
           : "Tire da conta uma venda que não se parece com o veículo (outra versão, batida) e a faixa é refeita."
       }
     >
+      {excluded > 0 ? (
+        <div
+          role="status"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-surface-subtle px-3.5 py-2.5 text-label text-foreground"
+        >
+          <p className="tabular-nums">
+            {answer.kind === "band" ? (
+              <>
+                Faixa recalculada:{" "}
+                <span className="font-semibold">
+                  {formatCompactBRL(answer.low)} a {formatCompactBRL(answer.high)}
+                </span>{" "}
+                <span className="text-muted">
+                  (mediana {formatCompactBRL(answer.median)} · {salesLabel(answer.n)})
+                </span>
+              </>
+            ) : (
+              <>
+                Restam {salesLabel(answer.n)} na conta{" "}
+                <span className="text-muted">(a faixa precisa de {answer.needed}).</span>
+              </>
+            )}
+          </p>
+          <ResearchNavButton href={evaluateHref({ ...filters, excluded: [] })} variant="secondary" size="sm">
+            <RotateCcw aria-hidden="true" />
+            Voltar todas para a conta
+          </ResearchNavButton>
+        </div>
+      ) : null}
       <ul className="grid gap-px overflow-hidden rounded-md border border-border bg-border">
         {shown.map((item) => (
           <ComparableRow key={item.sale.id} item={item} filters={filters} />
@@ -82,7 +112,7 @@ function ComparableRow({ item, filters }: { item: EvaluateComparable<EvaluateSal
         )}
       </div>
       <div className={cn("grid min-w-0 gap-1", excluded && "opacity-60")}>
-        <p className="truncate text-body font-medium text-foreground">
+        <p title={sale.title} className="line-clamp-2 text-body font-medium text-foreground">
           <span className="text-muted tabular-nums">{formatDate(sale.endsAt)} · </span>
           {sale.title}
         </p>
@@ -103,15 +133,14 @@ function ComparableRow({ item, filters }: { item: EvaluateComparable<EvaluateSal
         )}
       </div>
       <div className="col-start-2 flex flex-wrap items-center gap-2 sm:col-start-3 sm:row-start-1 sm:flex-col sm:items-end">
-        <ButtonLink
+        <ResearchNavButton
           href={evaluateHref({ ...filters, excluded: toggled })}
-          scroll={false}
           variant={excluded ? "secondary" : "ghost"}
           size="sm"
           aria-label={`${excluded ? "Voltar para a conta" : "Tirar da conta"}: ${sale.title}, ${formatDate(sale.endsAt)}`}
         >
           {excluded ? "Voltar para a conta" : "Tirar da conta"}
-        </ButtonLink>
+        </ResearchNavButton>
         <a
           href={sale.url}
           target="_blank"

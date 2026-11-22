@@ -1,12 +1,14 @@
+import { RotateCcw } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { ButtonLink, Card } from "@/components/ui";
+import { Card } from "@/components/ui";
 import { type EvaluateFilters, loosened } from "@/domain/research/evaluate";
 import { formatCompactBRL, formatDate, formatRatio } from "@/lib/format";
 
 import { CONFIDENCE_SHORT_LABELS, EVALUATE_LEVEL_LABELS, evaluateScopeLabel, loosenLabel, salesLabel } from "../labels";
 import { evaluateHref } from "../search";
 import type { EvaluationView } from "../types";
+import { ResearchNavButton } from "./research-nav-button";
 
 /** Com mais anos-modelo que isto sem filtro de ano, a faixa avisa que mistura anos. */
 const MIXED_YEARS = 3;
@@ -29,18 +31,23 @@ export function EvaluateAnswer({
   const { answer, excluded, loosen, level } = evaluation;
   const scope = evaluateScopeLabel(filters, evaluation.versionLabels);
   const loosenLinks =
-    loosen.length === 0 ? null : (
+    loosen.length === 0 && excluded === 0 ? null : (
       <div className="flex flex-wrap gap-2">
+        {excluded > 0 ? (
+          <ResearchNavButton href={evaluateHref({ ...filters, excluded: [] })} variant="secondary" size="sm">
+            <RotateCcw aria-hidden="true" />
+            Voltar as {salesLabel(excluded)} excluídas para a conta
+          </ResearchNavButton>
+        ) : null}
         {loosen.map((option) => (
-          <ButtonLink
+          <ResearchNavButton
             key={option.change}
             href={evaluateHref(loosened(filters, option.change))}
-            scroll={false}
             variant="secondary"
             size="sm"
           >
             {loosenLabel(option)}
-          </ButtonLink>
+          </ResearchNavButton>
         ))}
       </div>
     );
