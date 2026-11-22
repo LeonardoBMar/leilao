@@ -1,4 +1,5 @@
 import { ClipboardList } from "lucide-react";
+import Link from "next/link";
 
 import { ButtonLink, Card } from "@/components/ui";
 import { DEFAULT_EVALUATE_FILTERS } from "@/domain/research/evaluate";
@@ -7,6 +8,9 @@ import { getEvaluateLotShortcuts } from "../queries";
 import { evaluateHref } from "../search";
 import type { ResearchModelOption } from "../types";
 import { RecentModelLinks } from "./recent-model-links";
+
+/** Lotes do usuário mostrados de início na entrada. */
+const LOT_SHORTCUTS_SHOWN = 4;
 
 /** Mais vendidos sugeridos na entrada. */
 const TOP_MODELS = 4;
@@ -17,6 +21,7 @@ const TOP_MODELS = 4;
  */
 export async function EvaluateEntry({ models }: { models: readonly ResearchModelOption[] }) {
   const lots = await getEvaluateLotShortcuts();
+  const visibleLots = lots.slice(0, LOT_SHORTCUTS_SHOWN);
   const top = models.slice(0, TOP_MODELS);
   return (
     <Card className="grid gap-6 p-5 md:p-6">
@@ -26,13 +31,20 @@ export async function EvaluateEntry({ models }: { models: readonly ResearchModel
           Busque um modelo acima ou comece por um dos seus lotes: a faixa vem das vendas parecidas do catálogo.
         </p>
       </div>
-      {lots.length === 0 ? null : (
+      {visibleLots.length === 0 ? null : (
         <section aria-labelledby="entrada-lotes" className="grid gap-2.5 rounded-md bg-surface-subtle p-4">
-          <h3 id="entrada-lotes" className="text-label font-medium text-foreground">
-            Seus lotes em acompanhamento
-          </h3>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 id="entrada-lotes" className="text-label font-medium text-foreground">
+              Seus lotes em acompanhamento
+            </h3>
+            {lots.length > LOT_SHORTCUTS_SHOWN ? (
+              <Link href="/minhas-analises" className="text-caption text-accent hover:underline">
+                Ver todos em Minhas análises
+              </Link>
+            ) : null}
+          </div>
           <div className="flex flex-wrap gap-2">
-            {lots.map((lot) => (
+            {visibleLots.map((lot) => (
               <ButtonLink
                 key={lot.id}
                 href={evaluateHref({ ...DEFAULT_EVALUATE_FILTERS, lot: lot.id })}

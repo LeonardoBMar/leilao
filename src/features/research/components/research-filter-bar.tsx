@@ -194,7 +194,7 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
             <DrawerContent side="right">
               <DialogHeader className="border-b border-border px-6 py-5">
                 <DialogTitle>Mais filtros</DialogTitle>
-                <DialogDescription className="sr-only">Cada escolha aplica na hora.</DialogDescription>
+                <DialogDescription className="text-caption text-muted">Cada escolha aplica na hora.</DialogDescription>
               </DialogHeader>
               <DrawerBody className="gap-6">
                 <fieldset className="grid gap-4">

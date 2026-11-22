@@ -91,7 +91,20 @@ function activeRefinements(filters: EvaluateFilters, facets: EvaluateFacets): Ac
   ].filter((chip) => chip !== null);
 }
 
-/** Mantém o modelo e o lote alvo, voltando só os refinamentos ao padrão. */
+/** Mantém o modelo, o lote alvo e a condição da barra, limpando só os filtros da gaveta. */
+function withoutDrawerFilters(filters: EvaluateFilters): EvaluateFilters {
+  return {
+    ...filters,
+    family: null,
+    version: null,
+    yearFrom: null,
+    yearTo: null,
+    maxKm: null,
+    origin: null,
+  };
+}
+
+/** Mantém o modelo e o lote alvo, voltando todos os refinamentos ao padrão. */
 function withoutRefinements(filters: EvaluateFilters): EvaluateFilters {
   return {
     ...DEFAULT_EVALUATE_FILTERS,
@@ -206,7 +219,7 @@ export function EvaluateFilterBar({ params, models, facets, lotLabel }: Evaluate
                 <DrawerContent side="right">
                   <DialogHeader className="border-b border-border px-6 py-5">
                     <DialogTitle>Mais filtros</DialogTitle>
-                    <DialogDescription className="sr-only">
+                    <DialogDescription className="text-caption text-muted">
                       Cada escolha aplica na hora sem apagar o modelo selecionado.
                     </DialogDescription>
                   </DialogHeader>
@@ -303,8 +316,8 @@ export function EvaluateFilterBar({ params, models, facets, lotLabel }: Evaluate
                   <DrawerFooter>
                     <Button
                       variant="secondary"
-                      onClick={() => apply(withoutRefinements(filters))}
-                      disabled={totalRefinements === 0}
+                      onClick={() => apply(withoutDrawerFilters(filters))}
+                      disabled={drawerChips.length === 0}
                     >
                       Limpar filtros
                     </Button>
