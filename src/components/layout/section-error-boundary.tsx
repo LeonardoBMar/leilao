@@ -1,13 +1,16 @@
 "use client";
 
+import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
-import { Alert, AlertDescription, AlertTitle, Button } from "@/components/ui";
+import { Alert, AlertDescription, AlertTitle, Button, ButtonLink } from "@/components/ui";
 
 type ErrorBoundaryInnerProps = {
   title: string;
   onRetry: () => void;
+  fallbackHref?: Route;
+  fallbackLabel?: string;
   children: ReactNode;
 };
 
@@ -33,16 +36,22 @@ class ErrorBoundaryInner extends Component<ErrorBoundaryInnerProps, ErrorBoundar
 
   override render() {
     if (!this.state.hasError) return this.props.children;
+    const { fallbackHref, fallbackLabel } = this.props;
     return (
       <Alert variant="error" className="grid gap-3">
         <div className="grid gap-1">
           <AlertTitle>{this.props.title}</AlertTitle>
           <AlertDescription>Não foi possível carregar esta seção agora.</AlertDescription>
         </div>
-        <div>
+        <div className="flex flex-wrap items-center gap-2">
           <Button type="button" variant="secondary" size="sm" onClick={this.handleRetry}>
             Tentar novamente
           </Button>
+          {fallbackHref && fallbackLabel ? (
+            <ButtonLink href={fallbackHref} variant="ghost" size="sm">
+              {fallbackLabel}
+            </ButtonLink>
+          ) : null}
         </div>
       </Alert>
     );
@@ -50,10 +59,25 @@ class ErrorBoundaryInner extends Component<ErrorBoundaryInnerProps, ErrorBoundar
 }
 
 /** Isola falhas de uma seção independente para não derrubar a página inteira (DESIGN.md §15.7). */
-export function SectionErrorBoundary({ title = "Algo deu errado", children }: { title?: string; children: ReactNode }) {
+export function SectionErrorBoundary({
+  title = "Algo deu errado",
+  fallbackHref,
+  fallbackLabel,
+  children,
+}: {
+  title?: string;
+  fallbackHref?: Route;
+  fallbackLabel?: string;
+  children: ReactNode;
+}) {
   const router = useRouter();
   return (
-    <ErrorBoundaryInner title={title} onRetry={() => router.refresh()}>
+    <ErrorBoundaryInner
+      title={title}
+      fallbackHref={fallbackHref}
+      fallbackLabel={fallbackLabel}
+      onRetry={() => router.refresh()}
+    >
       {children}
     </ErrorBoundaryInner>
   );

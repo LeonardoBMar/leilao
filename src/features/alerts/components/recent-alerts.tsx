@@ -1,7 +1,7 @@
 import { AlertTriangle, BellRing, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
-import { Badge, ButtonLink, cardVariants } from "@/components/ui";
+import { Badge, ButtonLink } from "@/components/ui";
 import { getCollectorStatus } from "@/features/listings/queries";
 import { cn } from "@/lib/utils";
 
@@ -15,10 +15,15 @@ function collectorWarningOf(collector: Awaited<ReturnType<typeof getCollectorSta
       variant: "destructive" as const,
       label:
         collector.failingSources.length > 0 ? `Coleta falhou: ${collector.failingSources.join(", ")}` : "Coleta falhou",
+      impact: "Os lances e anúncios das fontes com falha podem estar desatualizados.",
     };
   }
   if (collector.health === "late") {
-    return { variant: "warning" as const, label: "Coleta atrasada" };
+    return {
+      variant: "warning" as const,
+      label: "Coleta atrasada",
+      impact: "A coleta está atrasada; novos lotes e lances podem levar mais tempo para atualizar.",
+    };
   }
   if (collector.health === "ok" && collector.failedListings > 0) {
     return {
@@ -27,6 +32,7 @@ function collectorWarningOf(collector: Awaited<ReturnType<typeof getCollectorSta
         collector.failedListings === 1
           ? "1 lote com falha na coleta"
           : `${collector.failedListings} lotes com falha na coleta`,
+      impact: "Alguns anúncios não puderam ser atualizados na última coleta.",
     };
   }
   return null;
@@ -46,16 +52,15 @@ export async function RecentAlerts() {
   return (
     <section
       className={cn(
-        cardVariants({ variant: "summary" }),
-        "flex flex-wrap items-center gap-x-5 gap-y-2 border-l-2 px-5 py-4",
-        isOnlyDestructiveWarning ? "border-l-error" : "border-l-accent",
+        "flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border px-4 py-3",
+        isOnlyDestructiveWarning ? "border-error-border bg-error-subtle" : "border-border bg-surface-subtle",
       )}
     >
       <h2 id="recent-alerts" className="flex items-center gap-2.5 text-body font-semibold text-foreground">
         <span
           className={cn(
             "flex size-7 shrink-0 items-center justify-center rounded-full",
-            isOnlyDestructiveWarning ? "bg-error-subtle text-error" : "bg-accent-subtle text-accent",
+            isOnlyDestructiveWarning ? "bg-surface text-error" : "bg-accent-subtle text-accent",
           )}
         >
           {isOnlyDestructiveWarning ? (
@@ -75,19 +80,18 @@ export async function RecentAlerts() {
               {alert.trackedLotId ? (
                 <Link
                   href={`/lotes/${alert.trackedLotId}`}
-                  title={alert.title}
-                  className="min-w-0 truncate rounded-sm outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent"
+                  className="inline-flex min-h-9 min-w-0 items-center rounded-sm outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent"
                 >
-                  {alert.title}
+                  <span className="line-clamp-1">{alert.title}</span>
                 </Link>
               ) : (
-                <span className="min-w-0 truncate" title={alert.title}>
-                  {alert.title}
-                </span>
+                <span className="line-clamp-1 min-w-0">{alert.title}</span>
               )}
             </li>
           ))}
         </ul>
+      ) : collectorWarning ? (
+        <p className="min-w-0 flex-1 text-caption text-foreground-secondary">{collectorWarning.impact}</p>
       ) : (
         <div className="min-w-0 flex-1" />
       )}
@@ -99,7 +103,12 @@ export async function RecentAlerts() {
             Ver alertas
             <ChevronRight aria-hidden="true" />
           </ButtonLink>
-        ) : null}
+        ) : (
+          <ButtonLink href="/leiloes" variant="secondary" size="sm">
+            Ver status em Leilões
+            <ChevronRight aria-hidden="true" />
+          </ButtonLink>
+        )}
       </div>
     </section>
   );
