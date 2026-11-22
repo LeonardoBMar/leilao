@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 type CommandDestination = {
   href: Route;
   label: string;
-  group: "Navegação" | "Mercado" | "Ações";
+  group: "Navegação" | "Mercado" | "Ações" | "Buscar";
   keywords: string;
   icon: LucideIcon;
 };
@@ -93,7 +93,8 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const normalized = query.trim().toLowerCase();
+  const trimmedQuery = query.trim();
+  const normalized = trimmedQuery.toLowerCase();
   const filtered = normalized
     ? DESTINATIONS.filter(
         (item) =>
@@ -103,7 +104,28 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       )
     : DESTINATIONS;
 
-  const activeIndex = filtered.length > 0 ? Math.min(selectedIndex, filtered.length - 1) : -1;
+  const searchActions: readonly CommandDestination[] =
+    normalized.length >= 2
+      ? [
+          {
+            href: `/leiloes/veiculos?busca=${encodeURIComponent(trimmedQuery)}` as Route,
+            label: `Buscar “${trimmedQuery}” nos veículos do catálogo`,
+            group: "Buscar",
+            keywords: "",
+            icon: Car,
+          },
+          {
+            href: `/minhas-analises?busca=${encodeURIComponent(trimmedQuery)}` as Route,
+            label: `Buscar “${trimmedQuery}” em Minhas análises`,
+            group: "Buscar",
+            keywords: "",
+            icon: Calculator,
+          },
+        ]
+      : [];
+
+  const items = [...filtered, ...searchActions];
+  const activeIndex = items.length > 0 ? Math.min(selectedIndex, items.length - 1) : -1;
   const activeOptionId = activeIndex >= 0 ? `${listboxId}-option-${activeIndex}` : undefined;
 
   useEffect(() => {
@@ -138,7 +160,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       >
         <DialogTitle className="sr-only">Navegação rápida</DialogTitle>
         <DialogDescription className="sr-only">
-          Digite para filtrar telas do Leilão Tracker e pressione Enter para abrir.
+          Digite para filtrar telas do Leilão Tracker ou buscar um veículo ou lote, e pressione Enter para abrir.
         </DialogDescription>
         <div className="flex items-center gap-2.5 border-b border-border px-3.5">
           <Search aria-hidden="true" className="size-4 shrink-0 text-muted" />
@@ -158,20 +180,18 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             onKeyDown={(event) => {
               if (event.key === "ArrowDown") {
                 event.preventDefault();
-                setSelectedIndex((current) => (filtered.length > 0 ? (current + 1) % filtered.length : 0));
+                setSelectedIndex((current) => (items.length > 0 ? (current + 1) % items.length : 0));
               } else if (event.key === "ArrowUp") {
                 event.preventDefault();
-                setSelectedIndex((current) =>
-                  filtered.length > 0 ? (current - 1 + filtered.length) % filtered.length : 0,
-                );
+                setSelectedIndex((current) => (items.length > 0 ? (current - 1 + items.length) % items.length : 0));
               } else if (event.key === "Enter" && activeIndex >= 0) {
                 event.preventDefault();
-                const item = filtered[activeIndex];
+                const item = items[activeIndex];
                 if (item) navigateTo(item.href);
               }
             }}
-            placeholder="Ir para uma tela ou ação…"
-            aria-label="Ir para uma tela ou ação"
+            placeholder="Ir para uma tela ou buscar veículo/lote…"
+            aria-label="Ir para uma tela ou buscar veículo ou lote"
             className="h-11 w-full bg-transparent text-base text-foreground outline-none placeholder:text-placeholder sm:text-body"
           />
           <kbd className="hidden rounded-sm border border-border-strong bg-background px-1.5 py-0.5 font-mono text-caption text-muted sm:inline-block">
@@ -180,11 +200,11 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         </div>
 
         <div className="max-h-80 overflow-y-auto overscroll-contain p-1.5">
-          {filtered.length === 0 ? (
+          {items.length === 0 ? (
             <p className="px-3 py-8 text-center text-body text-muted">Nenhum destino encontrado para “{query}”.</p>
           ) : (
             <ul id={listboxId} role="listbox" aria-label="Destinos" className="grid gap-0.5">
-              {filtered.map((item, index) => {
+              {items.map((item, index) => {
                 const Icon = item.icon;
                 const isSelected = index === activeIndex;
                 return (

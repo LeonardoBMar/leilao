@@ -25,7 +25,7 @@ export async function NextAuctionCard() {
       <time dateTime={next.startsAt.toISOString()} className="text-body font-semibold text-foreground tabular-nums">
         {formatShortDateTime(next.startsAt)}
       </time>
-      <span className="truncate text-caption text-muted" title={next.name}>
+      <span className="line-clamp-2 text-caption text-muted">
         {next.name} · {next.lotCount} {next.lotCount === 1 ? "lote" : "lotes"}
       </span>
     </Link>

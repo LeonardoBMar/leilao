@@ -56,7 +56,7 @@ function resolveRouteContext(pathname: string | null) {
   if (!item) return null;
 
   let detail: string | null = null;
-  if (pathname === "/dashboard") detail = "Visão geral";
+  if (pathname === "/dashboard") detail = null;
   else if (pathname === "/leiloes") detail = "Catálogo";
   else if (pathname === "/leiloes/veiculos") detail = "Todos os veículos";
   else if (pathname.startsWith("/leiloes/")) detail = "Leilão do catálogo";
@@ -97,6 +97,12 @@ function HeaderRouteContext() {
       ) : null}
     </div>
   );
+}
+
+function HideOnDashboard({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  if (pathname === "/dashboard") return null;
+  return <>{children}</>;
 }
 
 type AppShellProps = {
@@ -180,7 +186,7 @@ export function AppShell({ account, badges, followed, nextAuction, children }: A
                 aria-expanded={!collapsed}
                 aria-controls="sidebar-nav"
                 aria-keyshortcuts="Control+B Meta+B"
-                className="size-9 shrink-0 text-muted hover:text-foreground"
+                className="shrink-0 text-muted hover:text-foreground"
               >
                 {collapsed ? (
                   <PanelLeftOpen aria-hidden="true" strokeWidth={1.75} className="size-4" />
@@ -212,7 +218,11 @@ export function AppShell({ account, badges, followed, nextAuction, children }: A
               collapsed ? "pointer-events-none opacity-0" : "opacity-100",
             )}
           >
-            <div className="w-61 shrink-0">{followed}</div>
+            <div className="w-61 shrink-0">
+              <Suspense fallback={followed}>
+                <HideOnDashboard>{followed}</HideOnDashboard>
+              </Suspense>
+            </div>
             <div className="mt-auto grid w-61 shrink-0 grid-cols-1 gap-2.5 pt-2">
               {nextAuction}
               <div className="border-t border-border pt-2.5">{account}</div>
@@ -238,13 +248,13 @@ export function AppShell({ account, badges, followed, nextAuction, children }: A
             <button
               type="button"
               onClick={() => setCommandOpen(true)}
-              aria-label={isMac ? "Buscar ou navegar (⌘K)" : "Buscar ou navegar (Ctrl+K)"}
+              aria-label={isMac ? "Ir para tela ou buscar (⌘K)" : "Ir para tela ou buscar (Ctrl+K)"}
               aria-keyshortcuts="Control+K Meta+K"
               className="inline-flex h-10 items-center justify-between gap-3 rounded-md border border-border-strong bg-background px-2.5 text-label text-muted shadow-xs transition-[background-color,border-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:border-control-border hover:bg-surface hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] sm:h-8 sm:w-64 md:w-76 pointer-coarse:min-h-11 pointer-coarse:min-w-11"
             >
               <span className="inline-flex min-w-0 items-center gap-2">
                 <Search aria-hidden="true" strokeWidth={1.75} className="size-3.5 shrink-0" />
-                <span className="hidden truncate sm:inline">Buscar ou navegar…</span>
+                <span className="hidden truncate sm:inline">Ir para tela ou buscar…</span>
               </span>
               <kbd className="hidden shrink-0 rounded-sm border border-border bg-surface px-1.5 py-0.5 font-mono text-caption leading-none text-muted sm:inline-block">
                 {isMac ? "⌘K" : "Ctrl K"}
