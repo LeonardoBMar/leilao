@@ -26,6 +26,7 @@ import {
   LISTING_STATUS_LABELS,
   LISTING_STATUS_VARIANTS,
   marketValueOriginLabel,
+  priceEvidenceLabel,
 } from "@/lib/listing-labels";
 
 import type { ListingListItem } from "../types";
@@ -234,12 +235,21 @@ const COMPACT_FIT_ICONS = {
   above: CircleAlert,
 } as const satisfies Record<LimitFit, LucideIcon>;
 
-/** Variante em linha (dashboard): miniatura, título clicável (abre inspeção rápida), lance com situação, dano e ações. */
+/** Variante em linha (dashboard): miniatura, título legível, lance com provável, limite, evidência e ações. */
 function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents | null; footer: React.ReactNode }) {
   const fit = item.estimate?.fit ?? null;
   const FitIcon = fit ? COMPACT_FIT_ICONS[fit] : null;
   const price = item.estimate?.price;
-  const fullTitle = item.modelYear ? `${item.title} ${item.modelYear}` : item.title;
+  const limit = item.estimate?.limit;
+  const evidence = price ? priceEvidenceLabel(price) : null;
+  const limitOrigin =
+    limit?.kind === "defaults"
+      ? "limite por premissas padrão"
+      : limit?.kind === "estimated"
+        ? `limite por ${limit.n} ${limit.n === 1 ? "análise" : "análises"}`
+        : null;
+  const transparency = [evidence, limitOrigin].filter(Boolean).join(" · ");
+
   return (
     <article className="grid w-full grid-cols-[6.5rem_minmax(0,1fr)] gap-x-3.5 gap-y-2">
       <div className="relative row-span-2 aspect-4/3 overflow-clip rounded-md bg-surface-subtle">
@@ -252,20 +262,9 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
         )}
       </div>
       <div className="grid min-w-0 gap-1">
-        <h3 className="min-w-0 text-body font-semibold text-foreground">
-          <ListingQuickDrawer
-            item={item}
-            trigger={
-              <button
-                type="button"
-                title={fullTitle}
-                className="block max-w-full truncate rounded-sm text-start outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent"
-              >
-                {item.title}
-                {item.modelYear ? <span className="font-medium text-muted tabular-nums"> {item.modelYear}</span> : null}
-              </button>
-            }
-          />
+        <h3 className="line-clamp-2 min-w-0 text-body font-semibold text-foreground">
+          {item.title}
+          {item.modelYear ? <span className="font-medium text-muted tabular-nums"> {item.modelYear}</span> : null}
         </h3>
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-muted tabular-nums">
           <span>
@@ -275,6 +274,15 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
             <span>
               · provável <Money value={price.median} />
             </span>
+          ) : null}
+          {limit && limit.kind !== "insufficient" ? (
+            limit.maxBid !== null ? (
+              <span>
+                · lim. <Money value={limit.maxBid} className="font-medium text-foreground-secondary" />
+              </span>
+            ) : (
+              <span>· sem lance viável</span>
+            )
           ) : null}
           {fit !== null && FitIcon ? (
             <Badge variant={LIMIT_FIT_VARIANTS[fit]}>
@@ -286,6 +294,7 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
             <Badge variant={DAMAGE_VARIANTS[item.damageLevel]}>{DAMAGE_LABELS[item.damageLevel]}</Badge>
           ) : null}
         </p>
+        {transparency ? <p className="text-caption text-muted">{transparency}</p> : null}
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-muted tabular-nums">
           <span className="inline-flex items-center gap-1.5">
             <Clock aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
@@ -302,6 +311,7 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
       </div>
       <div className="col-start-2 flex flex-wrap items-center gap-2">
         <TrackerAction item={item} openDirectly variant="secondary" />
+        <ListingQuickDrawer item={item} />
         {footer}
       </div>
     </article>
