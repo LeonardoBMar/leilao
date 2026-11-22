@@ -249,7 +249,7 @@ export const getFollowedLotsOverview = cache(async (): Promise<FollowedLotsOverv
     return a.endsAt.getTime() - b.endsAt.getTime();
   });
 
-  return { items, aboveLimit: items.filter((item) => item.fit === "above").length };
+  return { items, aboveLimit: items.filter((item) => item.fit === "above").length, now: context.now };
 });
 
 /**

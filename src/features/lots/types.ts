@@ -38,6 +38,7 @@ export type FollowedLotsOverview = {
   items: FollowedLotItem[];
   /** Com o provável acima do limite fixado. */
   aboveLimit: number;
+  now: Date;
 };
 
 /** Leilão do usuário com os lotes que atendem aos filtros ("Minhas análises" por leilão). */

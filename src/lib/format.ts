@@ -136,3 +136,19 @@ export function formatCompactDateTime(value: Date): string {
   const parts = Object.fromEntries(shortDateTime.formatToParts(value).map((part) => [part.type, part.value]));
   return `${parts.day} ${(parts.month ?? "").replace(".", "")}, ${parts.hour}:${parts.minute}`;
 }
+
+/** Contagem regressiva curta até o encerramento: destaca lotes encerrando em até 24h. */
+export function formatClosingCountdown(endsAt: Date, now: Date): { label: string; isUrgent: boolean } {
+  const diffMs = endsAt.getTime() - now.getTime();
+  if (diffMs <= 0) return { label: "encerrando agora", isUrgent: true };
+  const hourMs = 60 * 60 * 1000;
+  if (diffMs < hourMs) {
+    const minutes = Math.max(1, Math.ceil(diffMs / 60_000));
+    return { label: `encerra em ${minutes} min`, isUrgent: true };
+  }
+  if (diffMs <= 24 * hourMs) {
+    const hours = Math.round(diffMs / hourMs);
+    return { label: `encerra em ${hours}h`, isUrgent: true };
+  }
+  return { label: `encerra ${formatShortDateTime(endsAt)}`, isUrgent: false };
+}

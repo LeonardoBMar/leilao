@@ -50,7 +50,7 @@ export async function FollowedLotsNav() {
       {rows.length > SHOWN ? (
         <Link
           href="/minhas-analises?acompanhados=1&resultado=sem"
-          className="rounded-sm px-2.5 text-caption text-muted outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent"
+          className="inline-flex min-h-10 items-center rounded-sm px-2.5 text-caption text-muted outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent sm:min-h-8"
         >
           Ver todos
         </Link>
