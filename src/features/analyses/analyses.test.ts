@@ -4,12 +4,18 @@ import { z } from "zod";
 import { calculateMaxBid, missingFields, simulateBid } from "@/domain/finance/calculator";
 import { cents } from "@/domain/money";
 
-import { defaultsInputFromListing, draftDefaults, draftSourceOf, UNKNOWN_VEHICLE } from "./draft-defaults";
+import {
+  defaultsInputFromListing,
+  draftDefaults,
+  draftSourceOf,
+  isUnreviewedDefaultDraft,
+  UNKNOWN_VEHICLE,
+} from "./draft-defaults";
 import { fipeFill } from "./fipe-fill";
 import { FORM_FIELD, limitPositionText } from "./labels";
 import { readMarketSnapshot, snapshotOf } from "./market-snapshot";
 import { readAnalysisInputs } from "./read-inputs";
-import { analysisFormSchema, toAnalysisInputs } from "./schemas";
+import { analysisFormSchema, fixDraftIdsSchema, toAnalysisInputs } from "./schemas";
 import { fixedSummary, liveSummary } from "./summary-model";
 
 /** Formulário do exemplo 7.3 exatamente como o usuário digitaria. */
@@ -340,5 +346,39 @@ describe("snapshot de mercado (D-74)", () => {
   it("sem snapshot ou com formato desconhecido, `null`", () => {
     expect(readMarketSnapshot(null)).toBeNull();
     expect(readMarketSnapshot({ version: 2 })).toBeNull();
+  });
+});
+
+describe("isUnreviewedDefaultDraft", () => {
+  const createdAt = new Date("2026-10-01T12:00:00Z");
+
+  it("marca verdadeiro quando as notas são padrão e nunca foi editado", () => {
+    const draft = draftDefaults(UNKNOWN_VEHICLE, null);
+    expect(isUnreviewedDefaultDraft({ createdAt, updatedAt: createdAt, notes: draft.notes })).toBe(true);
+  });
+
+  it("marca falso quando foi editado depois da criação", () => {
+    const draft = draftDefaults(UNKNOWN_VEHICLE, null);
+    const updatedAt = new Date("2026-10-01T12:05:00Z");
+    expect(isUnreviewedDefaultDraft({ createdAt, updatedAt, notes: draft.notes })).toBe(false);
+  });
+
+  it("marca falso quando as observações foram alteradas", () => {
+    expect(isUnreviewedDefaultDraft({ createdAt, updatedAt: createdAt, notes: "Revisado manualmente." })).toBe(false);
+    expect(isUnreviewedDefaultDraft({ createdAt, updatedAt: createdAt, notes: null })).toBe(false);
+  });
+});
+
+describe("fixDraftIdsSchema", () => {
+  const uuid = "0199a1b2-c3d4-7000-8000-000000000001";
+
+  it("aceita lista válida de ids", () => {
+    expect(fixDraftIdsSchema.parse([uuid])).toEqual([uuid]);
+  });
+
+  it("rejeita lista vazia, id inválido e mais de 50 itens", () => {
+    expect(fixDraftIdsSchema.safeParse([]).success).toBe(false);
+    expect(fixDraftIdsSchema.safeParse(["nao-e-uuid"]).success).toBe(false);
+    expect(fixDraftIdsSchema.safeParse(Array.from({ length: 51 }, () => uuid)).success).toBe(false);
   });
 });

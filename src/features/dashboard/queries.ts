@@ -6,11 +6,12 @@ import { type FixedLimit, prepareFixedAnalysis } from "@/domain/finance/calculat
 import { listingOutcome } from "@/domain/listings/outcome";
 import { cents } from "@/domain/money";
 import { compareResult, limitIndicator } from "@/domain/results/results";
+import { isUnreviewedDefaultDraft } from "@/features/analyses/draft-defaults";
 import { analysisColumns, toInputs } from "@/features/analyses/queries";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
 
-import type { LimitIndicator, PendingItems } from "./types";
+import type { FixableDraftPreview, LimitIndicator, PendingItems } from "./types";
 
 /** Indicador do SPEC §10 sobre a revisão vigente de cada lote ativo. */
 export async function getLimitIndicator(): Promise<LimitIndicator> {
@@ -47,8 +48,9 @@ export async function getLimitIndicator(): Promise<LimitIndicator> {
   );
 }
 
-const PENDING_LIMIT = 5;
+const PENDING_LIMIT = 3;
 const PENDING_CANDIDATES = 50;
+const FIXABLE_PREVIEW_LIMIT = 50;
 
 const toCents = (value: number | null) => (value === null ? null : cents(value));
 
@@ -69,6 +71,9 @@ export const getPendingItems = cache(async (): Promise<PendingItems> => {
       select: {
         id: true,
         version: true,
+        createdAt: true,
+        updatedAt: true,
+        notes: true,
         ...analysisColumns,
         lot: {
           select: {
@@ -111,15 +116,37 @@ export const getPendingItems = cache(async (): Promise<PendingItems> => {
     }),
   ]);
 
-  const allDrafts = rawDrafts.map((draft) => ({
-    analysisId: draft.id,
-    version: draft.version,
-    lotId: draft.lot.id,
-    lotLabel: `Lote ${draft.lot.lotNumber} · ${draft.lot.brand} ${draft.lot.model}`,
-    auctionName: draft.lot.auction.name,
-    startsAt: draft.lot.auction.startsAt,
-    canFix: prepareFixedAnalysis(toInputs(draft)).ok,
-  }));
+  const fixableDrafts: FixableDraftPreview[] = [];
+  let fixableDraftsTotal = 0;
+
+  const allDrafts = rawDrafts.map((draft) => {
+    const lotLabel = `Lote ${draft.lot.lotNumber} · ${draft.lot.brand} ${draft.lot.model}`;
+    const prepared = prepareFixedAnalysis(toInputs(draft));
+    if (prepared.ok) {
+      fixableDraftsTotal += 1;
+      if (fixableDrafts.length < FIXABLE_PREVIEW_LIMIT) {
+        fixableDrafts.push({
+          analysisId: draft.id,
+          version: draft.version,
+          lotId: draft.lot.id,
+          lotLabel,
+          auctionName: draft.lot.auction.name,
+          isViable: prepared.value.isViable,
+          maxBid: prepared.value.isViable ? prepared.value.maxBid : null,
+          isDefaultUnreviewed: isUnreviewedDefaultDraft(draft),
+        });
+      }
+    }
+    return {
+      analysisId: draft.id,
+      version: draft.version,
+      lotId: draft.lot.id,
+      lotLabel,
+      auctionName: draft.lot.auction.name,
+      startsAt: draft.lot.auction.startsAt,
+      canFix: prepared.ok,
+    };
+  });
 
   // Lote ligado a anúncio (etapa 4): só é pendência quando o desfecho é ambíguo ("a confirmar").
   const pendingAwaiting = awaiting.filter((lot) => {
@@ -141,7 +168,8 @@ export const getPendingItems = cache(async (): Promise<PendingItems> => {
   return {
     drafts: allDrafts.slice(0, PENDING_LIMIT),
     draftsTotal: allDrafts.length,
-    fixableDraftsTotal: allDrafts.filter((draft) => draft.canFix).length,
+    fixableDraftsTotal,
+    fixableDrafts,
     awaitingResult: pendingAwaiting.slice(0, PENDING_LIMIT).map((lot) => ({
       lotId: lot.id,
       lotLabel: `Lote ${lot.lotNumber} · ${lot.brand} ${lot.model}`,

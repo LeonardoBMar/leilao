@@ -185,14 +185,19 @@ export async function fixAnalysis(id: string, form: AnalysisForm): Promise<Resul
 export type FixAllDraftsOutcome = { fixed: number; skipped: number };
 
 /**
- * Fixa em lote todos os rascunhos ativos completos do usuário com as premissas já preenchidas (incluindo os valores
- * padrão), recalculando saídas e snapshot de mercado no servidor. Rascunhos incompletos permanecem em aberto.
+ * Fixa em lote os rascunhos ativos completos do usuário (todos ou os selecionados) com as premissas já preenchidas,
+ * recalculando saídas e snapshot de mercado no servidor. Rascunhos incompletos permanecem em aberto.
  */
-export async function fixAllReadyDrafts(): Promise<FixAllDraftsOutcome> {
+export async function fixAllReadyDrafts(analysisIds?: readonly string[]): Promise<FixAllDraftsOutcome> {
   const user = await requireUser();
   const activeLot = { archivedAt: null, auction: { archivedAt: null } };
   const drafts = await db.analysis.findMany({
-    where: { ownerId: user.id, status: "draft", lot: activeLot },
+    where: {
+      ownerId: user.id,
+      status: "draft",
+      lot: activeLot,
+      ...(analysisIds ? { id: { in: [...analysisIds] } } : {}),
+    },
     select: {
       id: true,
       lotId: true,

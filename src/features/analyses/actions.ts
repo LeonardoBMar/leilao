@@ -17,7 +17,7 @@ import {
   type FixAnalysisError,
   saveDraft,
 } from "./mutations";
-import { analysisFormSchema, analysisIdSchema, lotIdSchema, toAnalysisInputs } from "./schemas";
+import { analysisFormSchema, analysisIdSchema, fixDraftIdsSchema, lotIdSchema, toAnalysisInputs } from "./schemas";
 
 const NOT_FOUND = "Análise não encontrada.";
 
@@ -116,9 +116,16 @@ export async function discardDraftAction(id: string): Promise<ActionState> {
   redirect(`/lotes/${result.value.lotId}`);
 }
 
-/** Fixa todos os rascunhos completos do usuário direto do dashboard. */
-export async function fixAllDraftsAction(): Promise<ActionState> {
-  const { fixed, skipped } = await fixAllReadyDrafts();
+/** Fixa em lote rascunhos completos do usuário (todos ou os selecionados no dashboard). */
+export async function fixAllDraftsAction(analysisIds?: string[]): Promise<ActionState> {
+  let parsedIds: string[] | undefined;
+  if (analysisIds !== undefined) {
+    const parsed = fixDraftIdsSchema.safeParse(analysisIds);
+    if (!parsed.success) return failure("Selecione ao menos um rascunho para fixar.");
+    parsedIds = parsed.data;
+  }
+
+  const { fixed, skipped } = await fixAllReadyDrafts(parsedIds);
   if (fixed === 0) {
     return failure(
       skipped > 0

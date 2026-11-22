@@ -15,7 +15,8 @@ const linkFocusClass =
 
 /** Atalhos para concluir registros pendentes (SPEC §5). Não renderiza nada quando não há pendências. */
 export async function PendingItems() {
-  const { drafts, draftsTotal, fixableDraftsTotal, awaitingResult, awaitingResultTotal } = await getPendingItems();
+  const { drafts, draftsTotal, fixableDraftsTotal, fixableDrafts, awaitingResult, awaitingResultTotal } =
+    await getPendingItems();
   const total = draftsTotal + awaitingResultTotal;
   if (total === 0) return null;
 
@@ -85,7 +86,9 @@ export async function PendingItems() {
         <Group
           title="Rascunhos de análise"
           icon={FilePen}
-          action={<FixAllDraftsButton fixableCount={fixableDraftsTotal} totalCount={draftsTotal} />}
+          action={
+            <FixAllDraftsButton drafts={fixableDrafts} totalCount={draftsTotal} fixableTotal={fixableDraftsTotal} />
+          }
           footer={
             draftsTotal > drafts.length ? (
               <Link

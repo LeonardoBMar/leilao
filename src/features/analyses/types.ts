@@ -68,6 +68,18 @@ export type AnalysisDetail = {
   openDraftId: string | null;
 };
 
+/** Prévia de rascunho pronto para revisão antes de fixar em lote pelo dashboard. */
+export type FixableDraftItem = {
+  analysisId: string;
+  version: number;
+  lotId: string;
+  lotLabel: string;
+  auctionName: string;
+  isViable: boolean;
+  maxBid: Cents | null;
+  isDefaultUnreviewed: boolean;
+};
+
 export type AnalysisVersion = {
   id: string;
   version: number;
