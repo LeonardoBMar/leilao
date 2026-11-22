@@ -161,12 +161,18 @@ export function CalibrationView({ items }: { items: readonly CalibrationEntry[] 
               <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-body tabular-nums">
                 <div>
                   <dt className="text-caption text-muted">Arremate</dt>
-                  <dd className="font-semibold text-foreground">{formatBRL(item.finalBid)}</dd>
+                  <dd title={formatBRL(item.finalBid)} className="font-semibold text-foreground">
+                    {formatCompactBRL(item.finalBid)}
+                  </dd>
                 </div>
                 <div>
                   <dt className="text-caption text-muted">Limite</dt>
-                  <dd className="text-foreground">
-                    {item.limit === null ? <span className="text-muted">sem lance viável</span> : formatBRL(item.limit)}
+                  <dd title={item.limit === null ? undefined : formatBRL(item.limit)} className="text-foreground">
+                    {item.limit === null ? (
+                      <span className="text-muted">sem lance viável</span>
+                    ) : (
+                      formatCompactBRL(item.limit)
+                    )}
                   </dd>
                 </div>
                 <div>
@@ -228,10 +234,19 @@ export function CalibrationView({ items }: { items: readonly CalibrationEntry[] 
                       <span className="block text-caption text-muted">recalculada com o histórico da época</span>
                     ) : null}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {item.limit === null ? <span className="text-muted">sem lance viável</span> : formatBRL(item.limit)}
+                  <TableCell
+                    title={item.limit === null ? undefined : formatBRL(item.limit)}
+                    className="text-right tabular-nums"
+                  >
+                    {item.limit === null ? (
+                      <span className="text-muted">sem lance viável</span>
+                    ) : (
+                      formatCompactBRL(item.limit)
+                    )}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">{formatBRL(item.finalBid)}</TableCell>
+                  <TableCell title={formatBRL(item.finalBid)} className="text-right tabular-nums">
+                    {formatCompactBRL(item.finalBid)}
+                  </TableCell>
                   <TableCell>
                     <span className="block">
                       {item.band === null
