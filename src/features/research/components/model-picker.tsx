@@ -93,7 +93,8 @@ export function ModelPicker({
         SUGGESTIONS,
       )
     : [];
-  const expanded = matches.length > 0;
+  const noMatches = open && typed.trim() !== "" && matches.length === 0;
+  const expanded = matches.length > 0 || noMatches;
 
   function close() {
     setOpen(false);
@@ -110,10 +111,10 @@ export function ModelPicker({
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "ArrowDown" && expanded) {
+    if (event.key === "ArrowDown" && matches.length > 0) {
       event.preventDefault();
       setActive((index) => (index + 1) % matches.length);
-    } else if (event.key === "ArrowUp" && expanded) {
+    } else if (event.key === "ArrowUp" && matches.length > 0) {
       event.preventDefault();
       setActive((index) => (index <= 0 ? matches.length - 1 : index - 1));
     } else if (event.key === "Enter") {
@@ -144,7 +145,7 @@ export function ModelPicker({
           aria-autocomplete="list"
           aria-expanded={expanded}
           aria-controls={listId}
-          aria-activedescendant={expanded && active >= 0 ? `${listId}-${active}` : undefined}
+          aria-activedescendant={matches.length > 0 && active >= 0 ? `${listId}-${active}` : undefined}
           autoComplete="off"
           spellCheck={false}
           placeholder={placeholder}
@@ -160,7 +161,7 @@ export function ModelPicker({
             setOpen(true);
           }}
           onBlur={close}
-          className="h-10 w-full rounded-md border border-control-border bg-surface pr-10 pl-9 text-body text-foreground transition-[border-color,box-shadow] duration-120 outline-none placeholder:text-placeholder focus:border-accent focus:ring-2 focus:ring-accent/20"
+          className="h-10 w-full rounded-md border border-control-border bg-surface pr-10 pl-9 text-base text-foreground transition-[border-color,box-shadow] duration-120 outline-none placeholder:text-placeholder focus:border-accent focus:ring-2 focus:ring-accent/20 sm:text-body"
         />
         {value || !shortcut ? null : (
           <kbd
@@ -184,6 +185,9 @@ export function ModelPicker({
           </button>
         ) : null}
       </div>
+      <p role="status" aria-live="polite" className="sr-only">
+        {noMatches ? `Nenhum modelo encontrado para ${typed.trim()}.` : ""}
+      </p>
       <ul
         id={listId}
         role="listbox"
@@ -191,34 +195,40 @@ export function ModelPicker({
         hidden={!expanded}
         className="absolute top-full right-0 left-0 z-40 mt-1 max-h-80 overflow-y-auto rounded-lg border border-border bg-surface-elevated p-1 shadow-md"
       >
-        {matches.map((option, index) => (
-          <li
-            key={`${option.brand}|${option.model}`}
-            id={`${listId}-${index}`}
-            role="option"
-            aria-selected={index === active}
-            // mousedown: escolhe antes de o campo perder o foco (e fechar a lista).
-            onMouseDown={(event) => {
-              event.preventDefault();
-              choose(option);
-            }}
-            className={cn(
-              "flex min-h-10 cursor-default items-center justify-between gap-3 rounded-md px-2 text-body",
-              index === active ? "bg-surface-subtle text-foreground" : "text-foreground-secondary",
-            )}
-          >
-            <span className="flex min-w-0 items-center gap-2">
-              {isRecent(option) ? (
-                <>
-                  <History aria-hidden="true" className="size-4 shrink-0 text-muted" />
-                  <span className="sr-only">Recente: </span>
-                </>
-              ) : null}
-              <span className="truncate">{option.label}</span>
-            </span>
-            <span className="text-caption text-muted tabular-nums">{salesLabel(option.sales)}</span>
+        {noMatches ? (
+          <li role="presentation" className="px-2.5 py-2 text-caption text-muted">
+            Nenhum modelo encontrado para &ldquo;{typed.trim()}&rdquo;.
           </li>
-        ))}
+        ) : (
+          matches.map((option, index) => (
+            <li
+              key={`${option.brand}|${option.model}`}
+              id={`${listId}-${index}`}
+              role="option"
+              aria-selected={index === active}
+              // mousedown: escolhe antes de o campo perder o foco (e fechar a lista).
+              onMouseDown={(event) => {
+                event.preventDefault();
+                choose(option);
+              }}
+              className={cn(
+                "flex min-h-10 cursor-default items-center justify-between gap-3 rounded-md px-2 text-body",
+                index === active ? "bg-surface-subtle text-foreground" : "text-foreground-secondary",
+              )}
+            >
+              <span className="flex min-w-0 items-center gap-2">
+                {isRecent(option) ? (
+                  <>
+                    <History aria-hidden="true" className="size-4 shrink-0 text-muted" />
+                    <span className="sr-only">Recente: </span>
+                  </>
+                ) : null}
+                <span className="truncate">{option.label}</span>
+              </span>
+              <span className="text-caption text-muted tabular-nums">{salesLabel(option.sales)}</span>
+            </li>
+          ))
+        )}
       </ul>
     </div>
   );

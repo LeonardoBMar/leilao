@@ -53,6 +53,10 @@ type ScatterPlotProps = {
   diagonal?: { label: string };
   /** Âncora da tabela de dados para navegação por teclado e leitores de tela. */
   tableAnchorId?: string;
+  /** Rótulo do skip-link principal (padrão: "Ir para a tabela de dados"). */
+  tableAnchorLabel?: string;
+  /** Skip-link secundário quando o gráfico plota duas listas (ex.: lotes abertos e vendas). */
+  secondaryAnchor?: { id: string; label: string };
   ariaLabel: string;
 };
 
@@ -78,6 +82,8 @@ export function ScatterPlot({
   band,
   diagonal,
   tableAnchorId,
+  tableAnchorLabel = "Ir para a tabela de dados",
+  secondaryAnchor,
   ariaLabel,
 }: ScatterPlotProps) {
   const [activeKey, setActiveKey] = useState<string | null>(null);
@@ -104,12 +110,22 @@ export function ScatterPlot({
   return (
     <div className="grid gap-3">
       {tableAnchorId ? (
-        <a
-          href={`#${tableAnchorId}`}
-          className="sr-only focus:not-sr-only focus:inline-block focus:w-fit focus:rounded-md focus:bg-surface focus:px-3 focus:py-1.5 focus:text-label focus:text-accent focus:ring-2 focus:ring-accent"
-        >
-          Ir para a tabela de dados
-        </a>
+        <div className="flex flex-wrap gap-2">
+          <a
+            href={`#${tableAnchorId}`}
+            className="sr-only focus:not-sr-only focus:inline-block focus:w-fit focus:rounded-md focus:bg-surface focus:px-3 focus:py-1.5 focus:text-label focus:text-accent focus:ring-2 focus:ring-accent"
+          >
+            {tableAnchorLabel}
+          </a>
+          {secondaryAnchor ? (
+            <a
+              href={`#${secondaryAnchor.id}`}
+              className="sr-only focus:not-sr-only focus:inline-block focus:w-fit focus:rounded-md focus:bg-surface focus:px-3 focus:py-1.5 focus:text-label focus:text-accent focus:ring-2 focus:ring-accent"
+            >
+              {secondaryAnchor.label}
+            </a>
+          ) : null}
+        </div>
       ) : null}
       <PlotFrame
         ariaLabel={ariaLabel}
@@ -135,7 +151,9 @@ export function ScatterPlot({
               height: `${percentOf(band.high, yDomain) - percentOf(band.low, yDomain)}%`,
             }}
           >
-            <span className="absolute top-1 left-1 text-caption leading-none text-muted">{band.label}</span>
+            <span className="absolute top-1 left-1 rounded-sm bg-surface/90 px-1 py-0.5 text-caption leading-none font-medium text-foreground">
+              {band.label}
+            </span>
           </span>
         ) : null}
         {points.flatMap((point) =>

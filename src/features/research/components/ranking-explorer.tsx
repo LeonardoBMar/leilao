@@ -246,7 +246,7 @@ function RankingRowLink({
       <span className="col-span-3 min-w-0 md:col-span-1">
         <span className="block truncate text-body font-medium text-foreground">{row.label}</span>
         <span className="block truncate text-caption text-muted tabular-nums">
-          {smallSampleLabel(row.n)} · {perWeekLabel(row.perWeek)}
+          {smallSampleLabel(row.n)} · {perWeekLabel(row.perWeek)} · faixa {formatRatio(row.low)}–{formatRatio(row.high)}
           {versus ? <span className="hidden group-hover:inline group-focus-visible:inline"> · {versus}</span> : null}
         </span>
         <span className="block truncate text-caption text-muted tabular-nums xl:hidden">{contextLabel(row)}</span>
@@ -274,19 +274,6 @@ function RankingRowLink({
           className="absolute top-1/2 size-3 -translate-1/2 rounded-full bg-foreground ring-2 ring-surface transition-[left] duration-180"
           style={{ left: `${median}%` }}
         />
-        {/* As pontas da faixa só com o ponteiro: sem elas a linha fica limpa. */}
-        <span
-          className="absolute top-full hidden -translate-x-full pr-1 text-caption leading-none text-muted tabular-nums group-hover:block group-focus-visible:block"
-          style={{ left: `${low}%` }}
-        >
-          {formatRatio(row.low)}
-        </span>
-        <span
-          className="absolute top-full hidden pl-1 text-caption leading-none text-muted tabular-nums group-hover:block group-focus-visible:block"
-          style={{ left: `${high}%` }}
-        >
-          {formatRatio(row.high)}
-        </span>
       </span>
       <span className="text-right text-body font-semibold text-foreground tabular-nums">{formatRatio(row.median)}</span>
       <ChevronRight

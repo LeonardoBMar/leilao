@@ -34,7 +34,8 @@ export function SaleBidsPanel({ bids, closeHref }: { bids: SaleBids; closeHref: 
   const sectionRef = useRef<HTMLElement>(null);
   // O bloco chega por streaming, depois da âncora: o painel rola até si ao abrir (ou trocar de venda).
   useEffect(() => {
-    sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    sectionRef.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
   }, [bids.id]);
   const { marketValue } = bids;
   const effective: Measure = marketValue === null ? "price" : measure;
