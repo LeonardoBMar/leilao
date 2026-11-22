@@ -147,11 +147,15 @@ export const BAND_POSITION_LABELS = {
   above: "Acima da faixa",
 } as const satisfies Record<BandPosition, string>;
 
+/**
+ * Destaque visual do lance atual frente à faixa: abaixo/dentro ficam neutros (o lance ainda sobe até o fim; DESIGN.md
+ * §3.1 — no Mercado, mais barato não é "bom"); só "Acima da faixa" pede atenção em `warning`.
+ */
 export const BAND_POSITION_VARIANTS = {
-  below: "success",
+  below: "outline",
   inside: "default",
   above: "warning",
-} as const satisfies Record<BandPosition, "success" | "default" | "warning">;
+} as const satisfies Record<BandPosition, "outline" | "default" | "warning">;
 
 const LOOSEN_LABELS = {
   years: "Ano ±1 a mais",

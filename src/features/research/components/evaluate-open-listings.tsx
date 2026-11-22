@@ -80,7 +80,9 @@ function OpenListingRow({
   return (
     <li className="grid gap-2 bg-surface p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4">
       <div className="grid min-w-0 gap-1">
-        <p className="truncate text-body font-medium text-foreground">{listing.title}</p>
+        <p title={listing.title} className="line-clamp-2 text-body font-medium text-foreground">
+          {listing.title}
+        </p>
         <p className="text-caption text-muted tabular-nums">
           {[
             listing.endsAt === null ? "fim não informado" : `encerra ${formatDateTime(listing.endsAt)}`,

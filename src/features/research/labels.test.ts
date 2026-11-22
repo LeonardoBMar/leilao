@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  BAND_POSITION_VARIANTS,
   bandHitSentence,
   deviationLabel,
   excludedLabel,
@@ -70,5 +71,13 @@ describe("frases da Calibração", () => {
   it("categoria do anúncio", () => {
     expect(listingCategoryLabel("Utilitarios")).toBe("Utilitários");
     expect(listingCategoryLabel(null)).toBe("Sem anúncio");
+  });
+});
+
+describe("BAND_POSITION_VARIANTS", () => {
+  it("mantém abaixo/dentro neutros e destaca apenas acima da faixa", () => {
+    expect(BAND_POSITION_VARIANTS.below).toBe("outline");
+    expect(BAND_POSITION_VARIANTS.inside).toBe("default");
+    expect(BAND_POSITION_VARIANTS.above).toBe("warning");
   });
 });
