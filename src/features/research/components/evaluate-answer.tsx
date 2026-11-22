@@ -55,7 +55,14 @@ export function EvaluateAnswer({
   return (
     <section aria-labelledby="resposta-titulo">
       <Card variant="summary" className="grid gap-4 p-5 md:p-6">
-        <p className="text-label text-muted">{scope}</p>
+        <div className="grid gap-1">
+          <p className="text-label text-muted">{scope}</p>
+          {filters.condition === "sem-monta" ? (
+            <p className="text-caption text-muted">
+              Sem monta declarada: avaria não informada pela fonte (não equivale a veículo sem sinistro).
+            </p>
+          ) : null}
+        </div>
         {answer.kind === "band" ? (
           <>
             <div className="grid gap-1">

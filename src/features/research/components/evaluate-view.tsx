@@ -19,13 +19,14 @@ import { ResearchShell } from "./research-shell";
 /** Recorte em vigor: o da URL ou, com `?lote=<id>` e sem modelo, o do lote (o mesmo do preço provável). */
 async function resolveEvaluation(
   searchParams: SearchParams,
-): Promise<{ filters: EvaluateFilters; lot: LotTarget | null }> {
+): Promise<{ filters: EvaluateFilters; lot: LotTarget | null; lotNotFound: boolean }> {
   const fromUrl = parseEvaluateParams(await searchParams);
   const lot = fromUrl.lot === null ? null : await getLotTarget(fromUrl.lot);
-  if (lot === null) return { filters: { ...fromUrl, lot: null }, lot: null };
+  if (lot === null) return { filters: { ...fromUrl, lot: null }, lot: null, lotNotFound: fromUrl.lot !== null };
   return {
     filters: fromUrl.vehicle === null ? targetFilters(lot.target, lot.id, fromUrl.excluded) : fromUrl,
     lot,
+    lotNotFound: false,
   };
 }
 
@@ -44,7 +45,7 @@ export async function EvaluateView({
   /** Ações do recorte (monitor, catálogo), compostas pela rota: juntam outras features. */
   vehicleActions: (filters: EvaluateFilters) => ReactNode;
 }) {
-  const { filters, lot } = await resolveEvaluation(searchParams);
+  const { filters, lot, lotNotFound } = await resolveEvaluation(searchParams);
   const [models, evaluation] = await Promise.all([getEvaluateModels(), getEvaluation(filters, lot?.target ?? null)]);
   return (
     <ResearchShell
@@ -57,6 +58,14 @@ export async function EvaluateView({
         />
       }
     >
+      {lotNotFound ? (
+        <p
+          role="status"
+          className="rounded-md border border-warning-border bg-warning-subtle px-3.5 py-2.5 text-caption text-warning"
+        >
+          O lote informado no link não foi encontrado ou não pertence à sua conta.
+        </p>
+      ) : null}
       {evaluation === null ? (
         <Suspense fallback={<Skeleton className="h-64 w-full" />}>
           <EvaluateEntry models={models} />
