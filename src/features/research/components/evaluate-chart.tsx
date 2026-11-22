@@ -76,7 +76,8 @@ export function EvaluateChart({
   subject: string;
 }) {
   const router = useRouter();
-  const { startTransition } = useResearchTransition();
+  const { isPending, startTransition } = useResearchTransition();
+  const [pendingSaleId, setPendingSaleId] = useState<string | null>(null);
   const [axis, setAxis] = useState<XAxis>("year");
   const xOf = (item: { year: number | null; endsAt: number | null }) => (axis === "year" ? item.year : item.endsAt);
   const points = [
@@ -94,7 +95,9 @@ export function EvaluateChart({
               muted: sale.excluded,
               action: {
                 label: sale.excluded ? "Voltar para a conta" : "Tirar da conta",
+                pending: isPending && pendingSaleId === sale.id,
                 onClick: () => {
+                  setPendingSaleId(sale.id);
                   startTransition(() => {
                     router.push(sale.toggleHref, { scroll: false });
                   });

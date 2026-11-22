@@ -20,7 +20,7 @@ export type ScatterPoint = {
   /** Link interno a mais sob o gráfico (ex.: os lances da venda). */
   extraLink?: { href: Route; label: string };
   /** Ação interativa sob o gráfico (ex.: tirar ou voltar venda da conta). */
-  action?: { label: string; onClick: () => void };
+  action?: { label: string; onClick: () => void; pending?: boolean };
   /** Ponto escolhido fora do gráfico (ex.: a venda aberta): anel em tinta. */
   selected?: boolean;
   /** Pertence ao grupo em destaque: com algum ponto em destaque, os outros ficam claros. */
@@ -241,7 +241,7 @@ export function ScatterPlot({
             aria-label={point.title}
             onMouseEnter={() => setActiveKey(point.key)}
             onClick={() => setActiveKey((current) => (current === point.key ? null : point.key))}
-            className="absolute flex size-9 -translate-x-1/2 translate-y-1/2 cursor-pointer items-center justify-center transition-[left,bottom] duration-180"
+            className="absolute flex size-11 -translate-x-1/2 translate-y-1/2 cursor-pointer items-center justify-center transition-[left,bottom] duration-180 md:size-9"
             style={{ left: `${percentOf(spread(point), xDomain)}%`, bottom: `${percentOf(point.y, yDomain)}%` }}
           >
             <span
@@ -307,10 +307,11 @@ export function ScatterPlot({
                 {" · "}
                 <button
                   type="button"
+                  aria-busy={active.action.pending || undefined}
                   onClick={active.action.onClick}
                   className="cursor-pointer font-medium text-accent hover:text-accent-hover hover:underline"
                 >
-                  {active.action.label}
+                  {active.action.pending ? "Atualizando…" : active.action.label}
                 </button>
               </>
             ) : null}

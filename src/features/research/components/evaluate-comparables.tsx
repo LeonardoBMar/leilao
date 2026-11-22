@@ -167,11 +167,11 @@ function ComparableRow({ item, filters }: { item: EvaluateComparable<EvaluateSal
           href={sale.url}
           target="_blank"
           rel="noopener noreferrer"
+          aria-label={`Abrir anúncio: ${sale.title} (abre em nova aba)`}
           className="inline-flex min-h-10 items-center gap-1 rounded-md px-2 text-label text-accent hover:underline sm:min-h-9"
         >
           Anúncio
           <ExternalLink aria-hidden="true" className="size-3.5" />
-          <span className="sr-only">(abre em nova aba)</span>
         </a>
       </div>
     </li>
