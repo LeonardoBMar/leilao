@@ -54,7 +54,10 @@ export async function EvaluateOpenListings({
       {rest.length === 0 ? null : (
         <details className="group">
           <summary className="inline-flex min-h-9 cursor-pointer list-none items-center gap-1.5 text-label text-accent hover:underline [&::-webkit-details-marker]:hidden">
-            <ChevronDown aria-hidden="true" className="size-4 transition-transform duration-150 group-open:rotate-180" />
+            <ChevronDown
+              aria-hidden="true"
+              className="size-4 transition-transform duration-150 group-open:rotate-180"
+            />
             Ver os outros {rest.length} {rest.length === 1 ? "lote aberto" : "lotes abertos"}
           </summary>
           <ul className="mt-3 grid gap-px overflow-hidden rounded-md border border-border bg-border">

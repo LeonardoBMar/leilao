@@ -24,12 +24,7 @@ import {
 } from "@/components/ui";
 import { VEHICLE_ORIGINS } from "@/domain/listings/origin";
 import { DEFAULT_EVALUATE_FILTERS, type EvaluateFilters, familyLabel } from "@/domain/research/evaluate";
-import {
-  normalizeYears,
-  RESEARCH_CONDITIONS,
-  RESEARCH_MILEAGE_OPTIONS,
-  vehicleLabel,
-} from "@/domain/research/filters";
+import { normalizeYears, RESEARCH_CONDITIONS, RESEARCH_MILEAGE_OPTIONS, vehicleLabel } from "@/domain/research/filters";
 import { ORIGIN_LABELS } from "@/features/listings/filter-labels";
 import { cn } from "@/lib/utils";
 
