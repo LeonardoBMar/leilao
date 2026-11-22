@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 type EmptyStateProps = React.ComponentProps<"div"> & {
   icon?: LucideIcon;
   title: string;
-  description?: string;
+  description?: React.ReactNode;
   action?: React.ReactNode;
   /** `inline`: faixa compacta dentro de uma seção (texto à esquerda, ação à direita, sem ícone). */
   variant?: "default" | "inline";

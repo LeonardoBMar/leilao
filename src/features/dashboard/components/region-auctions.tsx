@@ -24,7 +24,20 @@ export async function RegionAuctions() {
       <EmptyState
         variant="inline"
         title="Nenhum leilão na região nos próximos 7 dias"
-        description="Leilões dos sites com lotes no filtro padrão ou nos seus monitores aparecem aqui, por data."
+        description={
+          <>
+            Leilões dos sites com lotes nos próximos 7 dias no filtro padrão (até 150 km) ou nos{" "}
+            <Link href="/monitores" className="font-medium text-accent hover:underline">
+              seus monitores
+            </Link>{" "}
+            aparecem aqui, por data.
+          </>
+        }
+        action={
+          <ButtonLink href={CATALOG_AUCTIONS_PATH} variant="secondary" size="sm">
+            Ver catálogo de leilões
+          </ButtonLink>
+        }
       />
     );
   }
@@ -46,7 +59,7 @@ export async function RegionAuctions() {
               {items.map((auction) => (
                 <li
                   key={`${auction.sourceId}/${auction.externalId}`}
-                  className="relative flex flex-col gap-1 border-border py-2.5 pl-5 not-first:border-t @lg:flex-row @lg:items-center @lg:justify-between @lg:gap-4"
+                  className="relative flex min-h-11 flex-col gap-1 rounded-r-md border-border py-2.5 pr-2 pl-5 transition-colors duration-150 ease-[var(--ease-out)] not-first:border-t hover:bg-background @lg:flex-row @lg:items-center @lg:justify-between @lg:gap-4"
                 >
                   <span
                     aria-hidden="true"
@@ -64,10 +77,9 @@ export async function RegionAuctions() {
                     ) : null}
                     <Link
                       href={catalogAuctionPath(auction)}
-                      title={auction.name ?? "Leilão sem nome"}
-                      className="group inline-flex max-w-full items-center gap-1 rounded-sm font-medium text-foreground outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent"
+                      className="group inline-flex max-w-full items-center gap-1 rounded-sm font-medium text-foreground outline-none after:absolute after:inset-0 after:rounded-r-md hover:underline focus-visible:after:ring-2 focus-visible:after:ring-accent focus-visible:after:ring-inset"
                     >
-                      <span className="truncate">{auction.name ?? "Leilão sem nome"}</span>
+                      <span className="line-clamp-2">{auction.name ?? "Leilão sem nome"}</span>
                       <ChevronRight
                         aria-hidden="true"
                         className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:text-foreground"

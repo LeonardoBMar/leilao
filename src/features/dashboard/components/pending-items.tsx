@@ -1,7 +1,7 @@
 import { ChevronRight, ClipboardList, FilePen, type LucideIcon, Trophy } from "lucide-react";
 import Link from "next/link";
 
-import { Badge, cardVariants } from "@/components/ui";
+import { Badge, cardVariants, Skeleton } from "@/components/ui";
 import { FixAllDraftsButton } from "@/features/analyses/components/fix-all-drafts-button";
 import { RecordResultButton } from "@/features/results/components/record-result-button";
 import { getLotResultContexts } from "@/features/results/queries";
@@ -23,9 +23,13 @@ export async function PendingItems() {
   const resultContexts = await getLotResultContexts(awaitingResult.map((item) => item.lotId));
 
   return (
-    <section className={cn(cardVariants({ variant: "summary" }), "grid gap-4 p-5 md:p-6")}>
+    <section
+      id="pending-items"
+      aria-labelledby="pending-items-heading"
+      className={cn(cardVariants({ variant: "summary" }), "grid scroll-mt-20 gap-4 p-5 md:p-6")}
+    >
       <div className="flex items-center justify-between gap-3">
-        <h2 id="pending-items" className="flex items-center gap-2 text-heading-3 text-foreground">
+        <h2 id="pending-items-heading" className="flex items-center gap-2 text-heading-3 text-foreground">
           <ClipboardList aria-hidden="true" className="size-4 shrink-0 text-warning" />
           Registros pendentes
         </h2>
@@ -42,7 +46,10 @@ export async function PendingItems() {
             awaitingResultTotal > awaitingResult.length ? (
               <Link
                 href="/minhas-analises?acompanhados=1&resultado=sem"
-                className={cn("w-fit py-1 text-caption font-medium text-accent hover:underline", linkFocusClass)}
+                className={cn(
+                  "inline-flex min-h-10 w-fit items-center text-caption font-medium text-accent hover:underline sm:min-h-8",
+                  linkFocusClass,
+                )}
               >
                 Ver todos os {awaitingResultTotal} aguardando resultado
               </Link>
@@ -51,18 +58,18 @@ export async function PendingItems() {
         >
           {awaitingResult.map((item) => (
             <li key={item.lotId} className="flex items-center justify-between gap-3">
-              <span className="grid min-w-0 gap-0.5">
-                <Link
-                  href={`/lotes/${item.lotId}`}
-                  title={item.lotLabel}
-                  className={cn("min-w-0 truncate font-semibold text-foreground hover:underline", linkFocusClass)}
-                >
+              <Link
+                href={`/lotes/${item.lotId}`}
+                className={cn(
+                  "group grid min-h-11 min-w-0 flex-1 content-center gap-0.5 rounded-sm py-1.5",
+                  linkFocusClass,
+                )}
+              >
+                <span className="line-clamp-2 font-semibold text-foreground group-hover:underline">
                   {item.lotLabel}
-                </Link>
+                </span>
                 <span className="flex min-w-0 items-center gap-1.5 text-caption text-muted">
-                  <span className="min-w-0 truncate" title={item.auctionName}>
-                    {item.auctionName}
-                  </span>
+                  <span className="line-clamp-1 min-w-0">{item.auctionName}</span>
                   <span aria-hidden="true" className="shrink-0 text-border-strong">
                     ·
                   </span>
@@ -70,7 +77,7 @@ export async function PendingItems() {
                     {formatDate(item.startsAt)}
                   </time>
                 </span>
-              </span>
+              </Link>
               <RecordResultButton
                 lotId={item.lotId}
                 context={resultContexts.get(item.lotId)}
@@ -93,7 +100,10 @@ export async function PendingItems() {
             draftsTotal > drafts.length ? (
               <Link
                 href="/minhas-analises"
-                className={cn("w-fit py-1 text-caption font-medium text-accent hover:underline", linkFocusClass)}
+                className={cn(
+                  "inline-flex min-h-10 w-fit items-center text-caption font-medium text-accent hover:underline sm:min-h-8",
+                  linkFocusClass,
+                )}
               >
                 Ver todos os {draftsTotal} rascunhos em Minhas análises
               </Link>
@@ -104,22 +114,17 @@ export async function PendingItems() {
             <li key={draft.analysisId}>
               <Link
                 href={`/analise/${draft.analysisId}`}
-                className={cn("group flex items-center justify-between gap-3 rounded-md py-1", linkFocusClass)}
+                className={cn("group flex min-h-11 items-center justify-between gap-3 rounded-md py-2", linkFocusClass)}
               >
                 <span className="grid min-w-0 gap-0.5">
                   <span className="flex flex-wrap items-center gap-2">
-                    <span
-                      className="truncate font-semibold text-foreground group-hover:underline"
-                      title={`${draft.lotLabel} · v${draft.version}`}
-                    >
+                    <span className="line-clamp-2 font-semibold text-foreground group-hover:underline">
                       {draft.lotLabel} · v{draft.version}
                     </span>
                     {!draft.canFix ? <Badge variant="outline">Incompleto</Badge> : null}
                   </span>
                   <span className="flex min-w-0 items-center gap-1.5 text-caption text-muted">
-                    <span className="min-w-0 truncate" title={draft.auctionName}>
-                      {draft.auctionName}
-                    </span>
+                    <span className="line-clamp-1 min-w-0">{draft.auctionName}</span>
                     <span aria-hidden="true" className="shrink-0 text-border-strong">
                       ·
                     </span>
@@ -138,6 +143,19 @@ export async function PendingItems() {
         </Group>
       ) : null}
     </section>
+  );
+}
+
+export function PendingItemsSkeleton() {
+  return (
+    <div className={cn(cardVariants({ variant: "summary" }), "grid gap-3 p-5 md:p-6")} aria-hidden="true">
+      <div className="flex items-center justify-between gap-3">
+        <Skeleton className="h-5 w-40" />
+        <Skeleton className="h-5 w-8 rounded-full" />
+      </div>
+      <Skeleton className="h-12" />
+      <Skeleton className="h-12" />
+    </div>
   );
 }
 

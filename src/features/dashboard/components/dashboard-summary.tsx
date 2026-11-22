@@ -3,6 +3,7 @@ import {
   ArrowUpRight,
   Calculator,
   CalendarClock,
+  ChevronRight,
   CircleAlert,
   CircleCheck,
   ClipboardList,
@@ -11,7 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-import { cardVariants, Skeleton } from "@/components/ui";
+import { ButtonLink, cardVariants, Skeleton } from "@/components/ui";
 import { getRegionOverview } from "@/features/listings/queries";
 import { catalogAuctionPath } from "@/features/listings/search";
 import { getFollowedLotsOverview } from "@/features/lots/queries";
@@ -46,12 +47,16 @@ export async function DashboardKpis() {
 
   const pendingNote =
     pendingTotal === 0 ? (
-      <span className="inline-flex items-center gap-1 text-muted">
-        <CircleCheck aria-hidden="true" className="size-3.5 shrink-0 text-success" />
-        Tudo em dia
-      </span>
+      followedTotal === 0 ? (
+        "Sem pendências"
+      ) : (
+        <span className="inline-flex items-center gap-1 text-muted">
+          <CircleCheck aria-hidden="true" className="size-3.5 shrink-0 text-success" />
+          Tudo em dia
+        </span>
+      )
     ) : pending.awaitingResultTotal > 0 && pending.draftsTotal > 0 ? (
-      `${plural(pending.awaitingResultTotal, "resultado", "resultados")} · ${plural(pending.draftsTotal, "rascunho", "rascunhos")}`
+      `${plural(pending.awaitingResultTotal, "resultado", "resultados")} a registrar · ${plural(pending.draftsTotal, "rascunho", "rascunhos")} em aberto`
     ) : pending.awaitingResultTotal > 0 ? (
       `${plural(pending.awaitingResultTotal, "resultado", "resultados")} a registrar`
     ) : (
@@ -94,7 +99,10 @@ export async function DashboardKpis() {
         </li>
 
         <li>
-          <a href="#followed-lots" className={kpiLinkClass}>
+          <a
+            href="#followed-lots"
+            className={cn(kpiLinkClass, followed.aboveLimit > 0 && "bg-error-subtle/40 hover:bg-error-subtle/60")}
+          >
             <div className="flex items-center justify-between gap-2">
               <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
                 <Eye aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
@@ -112,10 +120,10 @@ export async function DashboardKpis() {
               ) : followed.aboveLimit > 0 ? (
                 <span className="inline-flex items-center gap-1 font-medium text-error">
                   <CircleAlert aria-hidden="true" className="size-3.5 shrink-0" />
-                  {plural(followed.aboveLimit, "provável acima", "prováveis acima")}
+                  {followed.aboveLimit} com provável acima do limite
                 </span>
               ) : (
-                "Nenhum com provável acima"
+                "Todos dentro do limite estimado"
               )}
             </p>
           </a>
@@ -123,7 +131,7 @@ export async function DashboardKpis() {
 
         <li>
           {pendingTotal > 0 ? (
-            <a href="#pending-items" className={kpiLinkClass}>
+            <a href="#pending-items" className={cn(kpiLinkClass, "bg-warning-subtle/40 hover:bg-warning-subtle/60")}>
               <div className="flex items-center justify-between gap-2">
                 <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
                   <ClipboardList aria-hidden="true" className="size-3.5 shrink-0 text-warning" />
@@ -157,24 +165,21 @@ export async function DashboardKpis() {
               <div className="flex items-center justify-between gap-2">
                 <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
                   <CalendarClock aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
-                  Próximo na região
+                  Próximo no catálogo
                 </span>
                 <ArrowUpRight
                   aria-hidden="true"
                   className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-foreground"
                 />
               </div>
-              <p className="text-heading-2 font-semibold text-foreground tabular-nums">
+              <p className="text-body-lg font-semibold whitespace-nowrap text-foreground tabular-nums @md:text-heading-2">
                 {nextAuction.date ? (
                   <time dateTime={nextAuction.date.toISOString()}>{formatCompactDateTime(nextAuction.date)}</time>
                 ) : (
                   "Sem data"
                 )}
               </p>
-              <p
-                className="truncate text-caption text-muted tabular-nums"
-                title={`${plural(nextAuction.matching, "lote", "lotes")} · ${nextAuction.sourceName}`}
-              >
+              <p className="line-clamp-1 text-caption text-muted tabular-nums">
                 {plural(nextAuction.matching, "lote", "lotes")} · {nextAuction.sourceName}
               </p>
             </Link>
@@ -183,14 +188,14 @@ export async function DashboardKpis() {
               <div className="flex items-center justify-between gap-2">
                 <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
                   <CalendarClock aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
-                  Próximo na região
+                  Próximo no catálogo
                 </span>
                 <ArrowDown
                   aria-hidden="true"
                   className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-y-0.5 group-hover:text-foreground"
                 />
               </div>
-              <p className="text-heading-2 font-semibold text-muted tabular-nums">—</p>
+              <p className="text-body-lg font-semibold text-muted tabular-nums @md:text-heading-2">—</p>
               <p className="text-caption text-muted">Nenhum nos próximos 7 dias</p>
             </a>
           )}
@@ -204,7 +209,7 @@ const KPI_SKELETON_ITEMS = [
   { label: "Para analisar", icon: Calculator, valueWidth: "w-12", noteWidth: "w-32" },
   { label: "Acompanhados", icon: Eye, valueWidth: "w-10", noteWidth: "w-36" },
   { label: "Pendências", icon: ClipboardList, valueWidth: "w-10", noteWidth: "w-28" },
-  { label: "Próximo na região", icon: CalendarClock, valueWidth: "w-28", noteWidth: "w-36" },
+  { label: "Próximo no catálogo", icon: CalendarClock, valueWidth: "w-28", noteWidth: "w-36" },
 ] as const;
 
 export function DashboardKpisSkeleton() {
@@ -244,7 +249,16 @@ export async function DecisionIndicator() {
         Suas decisões antes do resultado
       </h2>
       {indicator.comparable === 0 ? (
-        <p className="text-body text-foreground-secondary">Ainda sem resultados comparáveis.</p>
+        <div className="grid gap-3">
+          <p className="text-body text-foreground-secondary">
+            Ainda sem resultados comparáveis. Fixe uma análise antes do leilão e registre o lance final para acompanhar
+            sua calibração.
+          </p>
+          <ButtonLink href="/mercado/calibracao" variant="secondary" size="sm" className="w-fit">
+            Abrir calibração
+            <ChevronRight aria-hidden="true" />
+          </ButtonLink>
+        </div>
       ) : (
         <div className="grid gap-2.5">
           <p className="grid gap-1 text-body text-foreground-secondary">
@@ -261,6 +275,13 @@ export async function DecisionIndicator() {
               {formatRatio(ratio)} dentro do limite
             </span>
           </div>
+          <Link
+            href="/mercado/calibracao"
+            className="inline-flex min-h-10 w-fit items-center gap-1 rounded-sm text-caption font-medium text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent sm:min-h-8"
+          >
+            Ver calibração
+            <ChevronRight aria-hidden="true" className="size-3.5" />
+          </Link>
         </div>
       )}
     </section>
@@ -268,5 +289,5 @@ export async function DecisionIndicator() {
 }
 
 export function DecisionIndicatorSkeleton() {
-  return <Skeleton className="h-48" aria-hidden="true" />;
+  return <Skeleton className="h-36" aria-hidden="true" />;
 }

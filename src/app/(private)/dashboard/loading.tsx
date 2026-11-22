@@ -1,5 +1,6 @@
 import { Skeleton } from "@/components/ui";
 import { DashboardKpisSkeleton, DecisionIndicatorSkeleton } from "@/features/dashboard/components/dashboard-summary";
+import { PendingItemsSkeleton } from "@/features/dashboard/components/pending-items";
 import { RegionAuctionsSkeleton } from "@/features/dashboard/components/region-auctions";
 import { ToAnalyzeSkeleton } from "@/features/dashboard/components/to-analyze";
 import { FollowedLotsSkeleton } from "@/features/lots/components/followed-lots";
@@ -19,20 +20,21 @@ export default function DashboardLoading() {
       </div>
       <div className="grid items-start gap-10 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] xl:gap-x-14">
         <div className="grid gap-10">
+          <div className="grid gap-3">
+            <Skeleton className="h-6 w-44" />
+            <ToAnalyzeSkeleton />
+          </div>
           <div className="grid gap-2">
             <Skeleton className="h-6 w-44" />
             <FollowedLotsSkeleton />
           </div>
-          <div className="grid gap-2">
+          <div className="grid gap-3">
             <Skeleton className="h-6 w-56" />
             <RegionAuctionsSkeleton />
           </div>
         </div>
         <div className="grid gap-8">
-          <div className="grid gap-2">
-            <Skeleton className="h-6 w-44" />
-            <ToAnalyzeSkeleton />
-          </div>
+          <PendingItemsSkeleton />
           <DecisionIndicatorSkeleton />
         </div>
       </div>
