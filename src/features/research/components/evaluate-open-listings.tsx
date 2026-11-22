@@ -1,4 +1,5 @@
-import { ChevronDown, ExternalLink } from "lucide-react";
+import { Car, ChevronDown, ExternalLink } from "lucide-react";
+import Image from "next/image";
 import type { ReactNode } from "react";
 
 import { Badge } from "@/components/ui";
@@ -44,7 +45,11 @@ export async function EvaluateOpenListings({
     <ResearchBlock
       id="abertos"
       title={`${OPEN_LISTINGS_TITLE} (${listings.length})`}
-      description="O lance atual ainda sobe até o fim; compare com a faixa típica sabendo disso."
+      description={
+        band === null
+          ? "O lance atual ainda sobe até o fim; compare com o histórico sabendo disso."
+          : `Faixa típica: ${formatCompactBRL(band.low)} a ${formatCompactBRL(band.high)}. O lance atual ainda sobe até o fim; compare sabendo disso.`
+      }
     >
       <ul className="grid gap-px overflow-hidden rounded-md border border-border bg-border">
         {shown.map((listing) => (
@@ -53,7 +58,7 @@ export async function EvaluateOpenListings({
       </ul>
       {rest.length === 0 ? null : (
         <details className="group">
-          <summary className="inline-flex min-h-9 cursor-pointer list-none items-center gap-1.5 text-label text-accent hover:underline [&::-webkit-details-marker]:hidden">
+          <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-1.5 text-label text-accent hover:underline [&::-webkit-details-marker]:hidden">
             <ChevronDown
               aria-hidden="true"
               className="size-4 transition-transform duration-150 group-open:rotate-180"
@@ -82,7 +87,16 @@ function OpenListingRow({
 }) {
   const position = band === null || listing.currentBid === null ? null : bandPosition(listing.currentBid, band);
   return (
-    <li className="grid gap-2 bg-surface p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4">
+    <li className="grid grid-cols-[4rem_minmax(0,1fr)] gap-x-3 gap-y-2 bg-surface p-3 sm:grid-cols-[5rem_minmax(0,1fr)_auto] sm:items-center sm:gap-4">
+      <div className="relative row-span-2 aspect-4/3 overflow-hidden rounded-sm bg-surface-subtle sm:row-span-1">
+        {listing.photoUrl ? (
+          <Image src={listing.photoUrl} alt="" fill unoptimized loading="lazy" sizes="5rem" className="object-cover" />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-muted-subtle">
+            <Car aria-hidden="true" className="size-5" />
+          </div>
+        )}
+      </div>
       <div className="grid min-w-0 gap-1">
         <p title={listing.title} className="line-clamp-2 text-body font-medium text-foreground">
           {listing.title}
@@ -110,7 +124,7 @@ function OpenListingRow({
           )}
         </p>
       </div>
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="col-start-2 flex flex-wrap items-center gap-3 sm:col-start-3 sm:row-start-1">
         {action(listing)}
         <a
           href={listing.url}
