@@ -196,54 +196,60 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
                 <DialogTitle>Mais filtros</DialogTitle>
                 <DialogDescription className="sr-only">Cada escolha aplica na hora.</DialogDescription>
               </DialogHeader>
-              <DrawerBody className="gap-5">
-                <ConditionSelect
-                  value={filters.condition}
-                  counts={facets.conditions}
-                  onChange={(condition) => apply({ ...filters, condition })}
-                />
-                <StateSelect
-                  value={filters.state}
-                  counts={facets.states}
-                  onChange={(state) => apply({ ...filters, state })}
-                />
-                <SourceSelect
-                  value={filters.source}
-                  sources={facets.sources}
-                  onChange={(source) => apply({ ...filters, source })}
-                />
-                <MileageSelect
-                  value={filters.maxKm}
-                  mileage={facets.mileage}
-                  onChange={(maxKm) => apply({ ...filters, maxKm })}
-                />
-                {filters.vehicle === null ? (
-                  <p className="text-caption text-muted">O ano-modelo aparece com um modelo escolhido.</p>
-                ) : (
-                  <div className="grid grid-cols-2 gap-3">
-                    <YearSelect
-                      label="Ano-modelo de"
-                      short={{ empty: "Ano inicial", prefix: "De" }}
-                      value={filters.yearFrom}
-                      years={facets.years}
-                      onChange={(yearFrom) => apply({ ...filters, ...normalizeYears(yearFrom, filters.yearTo) })}
-                    />
-                    <YearSelect
-                      label="Ano-modelo até"
-                      short={{ empty: "Ano final", prefix: "Até" }}
-                      value={filters.yearTo}
-                      years={facets.years}
-                      onChange={(yearTo) => apply({ ...filters, ...normalizeYears(filters.yearFrom, yearTo) })}
-                    />
-                  </div>
-                )}
-                {facets.periods.length > 0 || filters.period !== null ? (
-                  <PeriodSelect
-                    value={filters.period}
-                    periods={facets.periods}
-                    onChange={(period) => apply({ ...filters, period })}
+              <DrawerBody className="gap-6">
+                <fieldset className="grid gap-4">
+                  <legend className="mb-1 text-caption font-semibold text-muted">Veículo</legend>
+                  <ConditionSelect
+                    value={filters.condition}
+                    counts={facets.conditions}
+                    onChange={(condition) => apply({ ...filters, condition })}
                   />
-                ) : null}
+                  <MileageSelect
+                    value={filters.maxKm}
+                    mileage={facets.mileage}
+                    onChange={(maxKm) => apply({ ...filters, maxKm })}
+                  />
+                  {filters.vehicle === null ? (
+                    <p className="text-caption text-muted">O ano-modelo aparece com um modelo escolhido.</p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                      <YearSelect
+                        label="Ano-modelo de"
+                        short={{ empty: "Ano inicial", prefix: "De" }}
+                        value={filters.yearFrom}
+                        years={facets.years}
+                        onChange={(yearFrom) => apply({ ...filters, ...normalizeYears(yearFrom, filters.yearTo) })}
+                      />
+                      <YearSelect
+                        label="Ano-modelo até"
+                        short={{ empty: "Ano final", prefix: "Até" }}
+                        value={filters.yearTo}
+                        years={facets.years}
+                        onChange={(yearTo) => apply({ ...filters, ...normalizeYears(filters.yearFrom, yearTo) })}
+                      />
+                    </div>
+                  )}
+                </fieldset>
+                <fieldset className="grid gap-4 border-t border-border pt-5">
+                  <legend className="mb-1 text-caption font-semibold text-muted">Leilão</legend>
+                  <StateSelect
+                    value={filters.state}
+                    counts={facets.states}
+                    onChange={(state) => apply({ ...filters, state })}
+                  />
+                  <SourceSelect
+                    value={filters.source}
+                    sources={facets.sources}
+                    onChange={(source) => apply({ ...filters, source })}
+                  />
+                  {facets.periods.length > 0 || filters.period !== null ? (
+                    <PeriodSelect
+                      value={filters.period}
+                      periods={facets.periods}
+                      onChange={(period) => apply({ ...filters, period })}
+                    />
+                  ) : null}
+                </fieldset>
               </DrawerBody>
               <DrawerFooter>
                 <Button

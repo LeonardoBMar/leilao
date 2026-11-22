@@ -210,85 +210,95 @@ export function EvaluateFilterBar({ params, models, facets, lotLabel }: Evaluate
                       Cada escolha aplica na hora sem apagar o modelo selecionado.
                     </DialogDescription>
                   </DialogHeader>
-                  <DrawerBody className="gap-5">
-                    {facets.families.length > 0 || filters.family !== null ? (
-                      <DrawerSelect
-                        label="Família"
-                        hint="Agrupa carrocerias ou submodelos da mesma linha (ex.: Onix Plus)."
-                        allLabel="Todas as famílias"
-                        value={filters.family}
-                        options={facets.families}
-                        onChange={(family) => apply({ ...filters, family, version: null })}
-                      />
-                    ) : null}
+                  <DrawerBody className="gap-6">
+                    <fieldset className="grid gap-4">
+                      <legend className="mb-1 text-caption font-semibold text-muted">Veículo</legend>
+                      {facets.families.length > 0 || filters.family !== null ? (
+                        <DrawerSelect
+                          label="Família"
+                          hint="Agrupa carrocerias ou submodelos da mesma linha (ex.: Onix Plus)."
+                          allLabel="Todas as famílias"
+                          value={filters.family}
+                          options={facets.families}
+                          onChange={(family) => apply({ ...filters, family, version: null })}
+                        />
+                      ) : null}
 
-                    {facets.versions.length > 0 || filters.version !== null ? (
-                      <DrawerSelect
-                        label="Versão FIPE"
-                        hint="Acabamento, motor e câmbio exatos da tabela FIPE."
-                        allLabel="Todas as versões"
-                        value={filters.version}
-                        options={facets.versions}
-                        onChange={(version) => apply({ ...filters, version })}
-                      />
-                    ) : null}
+                      {facets.versions.length > 0 || filters.version !== null ? (
+                        <DrawerSelect
+                          label="Versão FIPE"
+                          hint="Acabamento, motor e câmbio exatos da tabela FIPE."
+                          allLabel="Todas as versões"
+                          value={filters.version}
+                          options={facets.versions}
+                          onChange={(version) => apply({ ...filters, version })}
+                        />
+                      ) : null}
 
-                    <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <DrawerSelect
+                          label="Ano-modelo de"
+                          allLabel="Ano inicial"
+                          value={filters.yearFrom === null ? null : String(filters.yearFrom)}
+                          options={facets.years.map(({ year, n }) => ({ value: String(year), label: `De ${year}`, n }))}
+                          onChange={(year) =>
+                            apply({
+                              ...filters,
+                              ...normalizeYears(year === null ? null : Number(year), filters.yearTo),
+                            })
+                          }
+                        />
+                        <DrawerSelect
+                          label="Ano-modelo até"
+                          allLabel="Ano final"
+                          value={filters.yearTo === null ? null : String(filters.yearTo)}
+                          options={facets.years.map(({ year, n }) => ({
+                            value: String(year),
+                            label: `Até ${year}`,
+                            n,
+                          }))}
+                          onChange={(year) =>
+                            apply({
+                              ...filters,
+                              ...normalizeYears(filters.yearFrom, year === null ? null : Number(year)),
+                            })
+                          }
+                        />
+                      </div>
+
                       <DrawerSelect
-                        label="Ano-modelo de"
-                        allLabel="Ano inicial"
-                        value={filters.yearFrom === null ? null : String(filters.yearFrom)}
-                        options={facets.years.map(({ year, n }) => ({ value: String(year), label: `De ${year}`, n }))}
-                        onChange={(year) =>
+                        label="Quilometragem máxima"
+                        allLabel="Qualquer km"
+                        value={filters.maxKm === null ? null : String(filters.maxKm)}
+                        options={RESEARCH_MILEAGE_OPTIONS.map((km) => ({
+                          value: String(km),
+                          label: `Até ${mileageLabel(km)}`,
+                        }))}
+                        onChange={(km) =>
                           apply({
                             ...filters,
-                            ...normalizeYears(year === null ? null : Number(year), filters.yearTo),
+                            maxKm: RESEARCH_MILEAGE_OPTIONS.find((option) => String(option) === km) ?? null,
                           })
                         }
                       />
+                    </fieldset>
+
+                    <fieldset className="grid gap-4 border-t border-border pt-5">
+                      <legend className="mb-1 text-caption font-semibold text-muted">Leilão</legend>
                       <DrawerSelect
-                        label="Ano-modelo até"
-                        allLabel="Ano final"
-                        value={filters.yearTo === null ? null : String(filters.yearTo)}
-                        options={facets.years.map(({ year, n }) => ({ value: String(year), label: `Até ${year}`, n }))}
-                        onChange={(year) =>
-                          apply({
-                            ...filters,
-                            ...normalizeYears(filters.yearFrom, year === null ? null : Number(year)),
-                          })
+                        label="Origem"
+                        allLabel="Qualquer origem"
+                        value={filters.origin}
+                        options={VEHICLE_ORIGINS.map((origin) => ({
+                          value: origin,
+                          label: ORIGIN_LABELS[origin],
+                          n: facets.origins[origin],
+                        }))}
+                        onChange={(value) =>
+                          apply({ ...filters, origin: VEHICLE_ORIGINS.find((key) => key === value) ?? null })
                         }
                       />
-                    </div>
-
-                    <DrawerSelect
-                      label="Quilometragem máxima"
-                      allLabel="Qualquer km"
-                      value={filters.maxKm === null ? null : String(filters.maxKm)}
-                      options={RESEARCH_MILEAGE_OPTIONS.map((km) => ({
-                        value: String(km),
-                        label: `Até ${mileageLabel(km)}`,
-                      }))}
-                      onChange={(km) =>
-                        apply({
-                          ...filters,
-                          maxKm: RESEARCH_MILEAGE_OPTIONS.find((option) => String(option) === km) ?? null,
-                        })
-                      }
-                    />
-
-                    <DrawerSelect
-                      label="Origem"
-                      allLabel="Qualquer origem"
-                      value={filters.origin}
-                      options={VEHICLE_ORIGINS.map((origin) => ({
-                        value: origin,
-                        label: ORIGIN_LABELS[origin],
-                        n: facets.origins[origin],
-                      }))}
-                      onChange={(value) =>
-                        apply({ ...filters, origin: VEHICLE_ORIGINS.find((key) => key === value) ?? null })
-                      }
-                    />
+                    </fieldset>
                   </DrawerBody>
                   <DrawerFooter>
                     <Button

@@ -86,10 +86,22 @@ export function EvaluateAnswer({
                 )}
               </Fact>
             </dl>
-            <p className="text-caption text-muted tabular-nums">
-              Base: {salesLabel(answer.n)} {EVALUATE_LEVEL_LABELS[level]} ({formatDate(answer.from)} a{" "}
-              {formatDate(answer.to)}){excluded > 0 ? `, sem as ${salesLabel(excluded)} que você tirou` : ""}.
-            </p>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-muted tabular-nums">
+              <p>
+                Base: {salesLabel(answer.n)} {EVALUATE_LEVEL_LABELS[level]} ({formatDate(answer.from)} a{" "}
+                {formatDate(answer.to)}){excluded > 0 ? `, sem as ${salesLabel(excluded)} que você tirou` : ""}.
+              </p>
+              {excluded > 0 ? (
+                <ResearchNavButton
+                  href={evaluateHref({ ...filters, excluded: [] })}
+                  variant="link"
+                  size="sm"
+                  className="h-auto px-0 py-0 text-caption"
+                >
+                  Voltar para a conta
+                </ResearchNavButton>
+              ) : null}
+            </div>
             {filters.yearFrom === null && filters.yearTo === null && evaluation.years.length > MIXED_YEARS ? (
               <div className="grid gap-2">
                 <p className="text-caption text-warning">

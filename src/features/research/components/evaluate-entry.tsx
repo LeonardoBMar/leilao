@@ -9,7 +9,7 @@ import type { ResearchModelOption } from "../types";
 import { RecentModelLinks } from "./recent-model-links";
 
 /** Mais vendidos sugeridos na entrada. */
-const TOP_MODELS = 5;
+const TOP_MODELS = 4;
 
 /**
  * Entrada do Avaliar sem veículo (docs/PLANO-MERCADO.md §5.2): a pergunta da tela e atalhos para o que o usuário
