@@ -135,56 +135,117 @@ export function CalibrationView({ items }: { items: readonly CalibrationEntry[] 
         title="Por análise"
         description="A faixa é a da época da fixação, só com vendas encerradas antes dela."
       >
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Lote</TableHead>
-              <TableHead>Fixada em</TableHead>
-              <TableHead className="text-right">Faixa da época</TableHead>
-              <TableHead className="text-right">Limite</TableHead>
-              <TableHead className="text-right">Arremate</TableHead>
-              <TableHead>Posição</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.map((item) => (
-              <TableRow key={item.analysisId}>
-                <TableCell className="max-w-64">
-                  <Link href={`/lotes/${item.lotId}`} className="text-accent hover:text-accent-hover hover:underline">
-                    {item.label}
-                  </Link>
-                </TableCell>
-                <TableCell className="tabular-nums">
-                  <Link href={`/analise/${item.analysisId}`} className="hover:text-foreground hover:underline">
-                    {formatDate(item.fixedAt)}
-                  </Link>
-                </TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {item.band === null
-                    ? "—"
-                    : `${formatCompactBRL(item.band.low)} a ${formatCompactBRL(item.band.high)}`}
-                  {item.band !== null && item.bandSource === "recomputed" ? (
-                    <span className="block text-caption text-muted">recalculada</span>
-                  ) : null}
-                </TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {item.limit === null ? <span className="text-muted">sem lance viável</span> : formatBRL(item.limit)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums">{formatBRL(item.finalBid)}</TableCell>
-                <TableCell>
-                  <span className="block">
+        <ul className="grid gap-px overflow-hidden rounded-md border border-border bg-border md:hidden">
+          {items.map((item) => (
+            <li key={item.analysisId} className="grid gap-2 bg-surface p-3.5">
+              <div className="flex items-start justify-between gap-2">
+                <Link
+                  href={`/lotes/${item.lotId}`}
+                  className="text-body font-medium text-accent hover:text-accent-hover hover:underline"
+                >
+                  {item.label}
+                </Link>
+                <Link
+                  href={`/analise/${item.analysisId}`}
+                  className="shrink-0 text-caption text-muted tabular-nums hover:text-foreground hover:underline"
+                >
+                  {formatDate(item.fixedAt)}
+                </Link>
+              </div>
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-body tabular-nums">
+                <div>
+                  <dt className="text-caption text-muted">Arremate</dt>
+                  <dd className="font-semibold text-foreground">{formatBRL(item.finalBid)}</dd>
+                </div>
+                <div>
+                  <dt className="text-caption text-muted">Limite</dt>
+                  <dd className="text-foreground">
+                    {item.limit === null ? <span className="text-muted">sem lance viável</span> : formatBRL(item.limit)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-caption text-muted">Faixa da época</dt>
+                  <dd className="text-foreground">
+                    {item.band === null
+                      ? "—"
+                      : `${formatCompactBRL(item.band.low)} a ${formatCompactBRL(item.band.high)}`}
+                    {item.band !== null && item.bandSource === "recomputed" ? (
+                      <span className="block text-caption text-muted">recalculada</span>
+                    ) : null}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-caption text-muted">Posição</dt>
+                  <dd className="text-foreground">
                     {item.band === null ? "Sem faixa" : BAND_PLACEMENT_LABELS[bandPlacement(item.finalBid, item.band)]}
-                  </span>
-                  {item.limit === null ? null : (
-                    <span className="block text-caption text-muted">
-                      Limite {deviationLabel(limitDeviation(item.limit, item.finalBid))}
-                    </span>
-                  )}
-                </TableCell>
+                    {item.limit === null ? null : (
+                      <span className="block text-caption text-muted">
+                        Limite {deviationLabel(limitDeviation(item.limit, item.finalBid))}
+                      </span>
+                    )}
+                  </dd>
+                </div>
+              </dl>
+            </li>
+          ))}
+        </ul>
+        <div className="hidden md:block">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Lote</TableHead>
+                <TableHead>Fixada em</TableHead>
+                <TableHead className="text-right">Faixa da época</TableHead>
+                <TableHead className="text-right">Limite</TableHead>
+                <TableHead className="text-right">Arremate</TableHead>
+                <TableHead>Posição</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {items.map((item) => (
+                <TableRow key={item.analysisId}>
+                  <TableCell className="max-w-64">
+                    <Link
+                      href={`/lotes/${item.lotId}`}
+                      className="text-accent hover:text-accent-hover hover:underline"
+                    >
+                      {item.label}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="tabular-nums">
+                    <Link href={`/analise/${item.analysisId}`} className="hover:text-foreground hover:underline">
+                      {formatDate(item.fixedAt)}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {item.band === null
+                      ? "—"
+                      : `${formatCompactBRL(item.band.low)} a ${formatCompactBRL(item.band.high)}`}
+                    {item.band !== null && item.bandSource === "recomputed" ? (
+                      <span className="block text-caption text-muted">recalculada</span>
+                    ) : null}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {item.limit === null ? <span className="text-muted">sem lance viável</span> : formatBRL(item.limit)}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">{formatBRL(item.finalBid)}</TableCell>
+                  <TableCell>
+                    <span className="block">
+                      {item.band === null
+                        ? "Sem faixa"
+                        : BAND_PLACEMENT_LABELS[bandPlacement(item.finalBid, item.band)]}
+                    </span>
+                    {item.limit === null ? null : (
+                      <span className="block text-caption text-muted">
+                        Limite {deviationLabel(limitDeviation(item.limit, item.finalBid))}
+                      </span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </ResearchBlock>
     </div>
   );
