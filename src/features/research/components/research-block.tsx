@@ -27,7 +27,11 @@ export function ResearchBlock({ id, title, description, actions, children }: Res
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="grid max-w-3xl gap-1">
-          <h2 id={`${id}-titulo`} className="text-heading-3 text-foreground">
+          <h2
+            id={`${id}-titulo`}
+            tabIndex={-1}
+            className="rounded-sm text-heading-3 text-foreground outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
             {title}
           </h2>
           {description ? <p className="text-body text-muted">{description}</p> : null}

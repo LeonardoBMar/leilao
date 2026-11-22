@@ -43,7 +43,7 @@ export function EvaluateComparables({ filters, evaluation }: { filters: Evaluate
           : `Todas as ${salesLabel(comparables.length)} estão na conta.`}
       </p>
       {excluded > 0 ? (
-        <div className="sticky top-2 z-20 flex flex-wrap items-center justify-between gap-3 rounded-md border border-border-strong bg-surface-subtle/95 px-3.5 py-2.5 text-label text-foreground shadow-xs backdrop-blur-xs xl:top-16">
+        <div className="sticky top-2 z-20 flex flex-wrap items-center justify-between gap-3 rounded-md border border-border-strong bg-surface-subtle px-3.5 py-2.5 text-label text-foreground shadow-xs xl:top-16">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 tabular-nums">
             {answer.kind === "band" ? (
               <>
@@ -71,7 +71,12 @@ export function EvaluateComparables({ filters, evaluation }: { filters: Evaluate
               </span>
             )}
           </div>
-          <ResearchNavButton href={evaluateHref({ ...filters, excluded: [] })} variant="secondary" size="sm">
+          <ResearchNavButton
+            href={evaluateHref({ ...filters, excluded: [] })}
+            focusTargetId="comparaveis-titulo"
+            variant="secondary"
+            size="sm"
+          >
             <RotateCcw aria-hidden="true" />
             Voltar todas para a conta
           </ResearchNavButton>
@@ -84,7 +89,7 @@ export function EvaluateComparables({ filters, evaluation }: { filters: Evaluate
       </ul>
       {rest.length === 0 ? null : (
         <details className="group">
-          <summary className="inline-flex min-h-9 cursor-pointer list-none items-center gap-1.5 text-label text-accent hover:underline [&::-webkit-details-marker]:hidden">
+          <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-1.5 text-label text-accent hover:underline [&::-webkit-details-marker]:hidden">
             <ChevronDown
               aria-hidden="true"
               className="size-4 transition-transform duration-150 group-open:rotate-180"

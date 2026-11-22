@@ -272,7 +272,7 @@ export function ScatterPlot({
           />
         ))}
       </PlotFrame>
-      <p className="min-h-5 text-label font-normal text-muted tabular-nums">
+      <p aria-live="polite" className="min-h-5 text-label font-normal text-muted tabular-nums">
         {active ? (
           <>
             <span className="text-foreground">{active.title}</span>
@@ -286,6 +286,7 @@ export function ScatterPlot({
                   className="text-accent hover:text-accent-hover hover:underline"
                 >
                   Abrir anúncio
+                  <span className="sr-only"> (abre em nova aba)</span>
                 </a>
               </>
             ) : null}

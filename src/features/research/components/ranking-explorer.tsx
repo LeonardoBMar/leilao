@@ -191,13 +191,7 @@ export function RankingExplorer({ rows, axisMax, ticks, overall }: RankingExplor
             <span />
             <span />
           </div>
-          <MotionList
-            as="ol"
-            aria-label={`Modelos por ${RANKING_SORT_LABELS[sort].toLowerCase()}: ${shown
-              .map((row) => `${row.label} ${formatRatio(row.median)}`)
-              .join(", ")}`}
-            className="grid"
-          >
+          <MotionList as="ol" aria-label={`Modelos por ${RANKING_SORT_LABELS[sort].toLowerCase()}`} className="grid">
             {shown.map((row, index) => (
               <MotionListItem key={`${row.brand}|${row.model}`}>
                 <RankingRowLink row={row} position={index + 1} domain={domain} overall={overall} />

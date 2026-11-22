@@ -36,6 +36,7 @@ export function SaleBidsPanel({ bids, closeHref }: { bids: SaleBids; closeHref: 
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     sectionRef.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+    sectionRef.current?.focus({ preventScroll: true });
   }, [bids.id]);
   const { marketValue } = bids;
   const effective: Measure = marketValue === null ? "price" : measure;
@@ -56,8 +57,9 @@ export function SaleBidsPanel({ bids, closeHref }: { bids: SaleBids; closeHref: 
   return (
     <section
       ref={sectionRef}
+      tabIndex={-1}
       aria-label="Lances da venda"
-      className="grid scroll-mt-20 gap-4 rounded-md border border-border p-4 lg:scroll-mt-60"
+      className="grid scroll-mt-20 gap-4 rounded-md border border-border p-4 outline-none focus-visible:ring-2 focus-visible:ring-accent lg:scroll-mt-60"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="grid min-w-0 gap-0.5">
