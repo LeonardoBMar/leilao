@@ -3,6 +3,7 @@ import { vehicleLabel } from "@/domain/research/filters";
 import { formatCompactBRL, formatDate, formatDateTime } from "@/lib/format";
 
 import { getOpenListingsFor } from "../queries";
+import { evaluateHref } from "../search";
 import type { EvaluationView } from "../types";
 import { EvaluateChart } from "./evaluate-chart";
 import { OPEN_LISTINGS_SHOWN } from "./evaluate-open-listings";
@@ -35,15 +36,19 @@ export async function EvaluateChartBlock({
       <EvaluateChart
         subject={filters.vehicle === null ? "modelo" : vehicleLabel(filters.vehicle)}
         band={answer.kind === "band" ? { low: answer.low, median: answer.median, high: answer.high } : null}
-        sales={evaluation.comparables.map(({ sale, excluded }) => ({
-          id: sale.id,
-          url: sale.url,
-          label: `${formatDate(sale.endsAt)} · ${sale.title} · ${formatCompactBRL(sale.finalBid)}`,
-          year: sale.modelYear,
-          endsAt: sale.endsAt.getTime(),
-          bid: sale.finalBid,
-          excluded,
-        }))}
+        sales={evaluation.comparables.map(({ sale, excluded }) => {
+          const toggled = excluded ? filters.excluded.filter((id) => id !== sale.id) : [...filters.excluded, sale.id];
+          return {
+            id: sale.id,
+            url: sale.url,
+            label: `${formatDate(sale.endsAt)} · ${sale.title} · ${formatCompactBRL(sale.finalBid)}`,
+            year: sale.modelYear,
+            endsAt: sale.endsAt.getTime(),
+            bid: sale.finalBid,
+            excluded,
+            toggleHref: evaluateHref({ ...filters, excluded: toggled }),
+          };
+        })}
         open={open.flatMap((listing) =>
           listing.currentBid === null
             ? []

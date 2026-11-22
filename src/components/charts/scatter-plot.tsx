@@ -19,6 +19,8 @@ export type ScatterPoint = {
   href?: string;
   /** Link interno a mais sob o gráfico (ex.: os lances da venda). */
   extraLink?: { href: Route; label: string };
+  /** Ação interativa sob o gráfico (ex.: tirar ou voltar venda da conta). */
+  action?: { label: string; onClick: () => void };
   /** Ponto escolhido fora do gráfico (ex.: a venda aberta): anel em tinta. */
   selected?: boolean;
   /** Pertence ao grupo em destaque: com algum ponto em destaque, os outros ficam claros. */
@@ -297,6 +299,18 @@ export function ScatterPlot({
                 >
                   {active.extraLink.label}
                 </Link>
+              </>
+            ) : null}
+            {active.action ? (
+              <>
+                {" · "}
+                <button
+                  type="button"
+                  onClick={active.action.onClick}
+                  className="cursor-pointer font-medium text-accent hover:text-accent-hover hover:underline"
+                >
+                  {active.action.label}
+                </button>
               </>
             ) : null}
           </>

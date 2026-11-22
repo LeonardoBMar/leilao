@@ -1,5 +1,7 @@
 "use client";
 
+import type { Route } from "next";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { type ContinuousAxis, ScatterPlot } from "@/components/charts/scatter-plot";
@@ -9,6 +11,7 @@ import { niceTicks } from "@/lib/charts";
 import { formatCompactBRL, formatShortMonth } from "@/lib/format";
 
 import { salesLabel } from "../labels";
+import { useResearchTransition } from "./research-shell";
 
 /** Venda do recorte para o gráfico: tudo serializável, para atravessar a fronteira servidor→cliente. */
 export type EvaluateChartSale = {
@@ -21,6 +24,8 @@ export type EvaluateChartSale = {
   /** Lance final em centavos. */
   bid: number;
   excluded: boolean;
+  /** URL que tira ou volta esta venda para a conta. */
+  toggleHref: Route;
 };
 
 /** Lote aberto do recorte: o lance atual, que ainda sobe. */
@@ -70,6 +75,8 @@ export function EvaluateChart({
   band: { low: number; median: number; high: number } | null;
   subject: string;
 }) {
+  const router = useRouter();
+  const { startTransition } = useResearchTransition();
   const [axis, setAxis] = useState<XAxis>("year");
   const xOf = (item: { year: number | null; endsAt: number | null }) => (axis === "year" ? item.year : item.endsAt);
   const points = [
@@ -85,6 +92,14 @@ export function EvaluateChart({
               title: `${sale.label}${sale.excluded ? " · fora da conta" : ""}`,
               href: sale.url,
               muted: sale.excluded,
+              action: {
+                label: sale.excluded ? "Voltar para a conta" : "Tirar da conta",
+                onClick: () => {
+                  startTransition(() => {
+                    router.push(sale.toggleHref, { scroll: false });
+                  });
+                },
+              },
             },
           ];
     }),
