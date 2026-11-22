@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { ExternalLink, X } from "lucide-react";
 import type { Route } from "next";
 import { useEffect, useRef, useState } from "react";
 
@@ -65,9 +65,11 @@ export function SaleBidsPanel({ bids, closeHref }: { bids: SaleBids; closeHref: 
             href={bids.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="line-clamp-1 text-body font-medium text-accent hover:text-accent-hover hover:underline"
+            className="inline-flex items-center gap-1.5 text-body font-medium text-accent hover:text-accent-hover hover:underline"
           >
-            {bids.title}
+            <span className="line-clamp-1">{bids.title}</span>
+            <ExternalLink aria-hidden="true" className="size-3.5 shrink-0" />
+            <span className="sr-only">(abre em nova aba)</span>
           </a>
           <p className="text-caption text-muted tabular-nums">
             Encerrada em {formatDateTime(bids.endsAt)} · lance final {formatBRL(bids.finalBid)}

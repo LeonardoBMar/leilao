@@ -251,7 +251,7 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
                   onClick={() => apply(withoutDrawerFilters(filters))}
                   disabled={chips.length === 0}
                 >
-                  Limpar estes filtros
+                  Limpar filtros
                 </Button>
                 <DialogClose asChild>
                   <Button aria-live="polite">{isPending ? "Atualizando…" : `Ver ${salesLabel(total)}`}</Button>

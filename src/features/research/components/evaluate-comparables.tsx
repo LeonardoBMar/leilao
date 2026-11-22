@@ -1,4 +1,4 @@
-import { Car, ExternalLink, RotateCcw } from "lucide-react";
+import { Car, ChevronDown, ExternalLink, RotateCcw } from "lucide-react";
 import Image from "next/image";
 
 import { Badge } from "@/components/ui";
@@ -83,8 +83,9 @@ export function EvaluateComparables({ filters, evaluation }: { filters: Evaluate
         ))}
       </ul>
       {rest.length === 0 ? null : (
-        <details>
-          <summary className="cursor-pointer text-label text-accent hover:underline">
+        <details className="group">
+          <summary className="inline-flex min-h-9 cursor-pointer list-none items-center gap-1.5 text-label text-accent hover:underline [&::-webkit-details-marker]:hidden">
+            <ChevronDown aria-hidden="true" className="size-4 transition-transform duration-150 group-open:rotate-180" />
             Ver as outras {rest.length} vendas
           </summary>
           <ul className="mt-3 grid gap-px overflow-hidden rounded-md border border-border bg-border">

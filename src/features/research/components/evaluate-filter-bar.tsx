@@ -1,7 +1,6 @@
 "use client";
 
-import { ArrowUpRight, LoaderCircle, SlidersHorizontal, Target, X } from "lucide-react";
-import Link from "next/link";
+import { LoaderCircle, SlidersHorizontal, Target, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useId, useOptimistic, useRef } from "react";
 
@@ -26,7 +25,6 @@ import {
 import { VEHICLE_ORIGINS } from "@/domain/listings/origin";
 import { DEFAULT_EVALUATE_FILTERS, type EvaluateFilters, familyLabel } from "@/domain/research/evaluate";
 import {
-  DEFAULT_RESEARCH_FILTERS,
   normalizeYears,
   RESEARCH_CONDITIONS,
   RESEARCH_MILEAGE_OPTIONS,
@@ -37,7 +35,7 @@ import { cn } from "@/lib/utils";
 
 import { CONDITION_LABELS, mileageLabel, salesLabel, yearRangeLabel } from "../labels";
 import { parseEvaluateParams } from "../schemas";
-import { evaluateHref, researchHref } from "../search";
+import { evaluateHref } from "../search";
 import type { ResearchModelOption } from "../types";
 import { DrawerField, OptionWithCount, researchActiveTriggerClass } from "./filters/research-filter-selects";
 import { ModelPicker } from "./model-picker";
@@ -132,18 +130,6 @@ export function EvaluateFilterBar({ params, models, facets, lotLabel }: Evaluate
     if (focusStatus) statusRef.current?.focus();
   }
 
-  const panoramaHref =
-    filters.vehicle === null
-      ? null
-      : researchHref({
-          ...DEFAULT_RESEARCH_FILTERS,
-          vehicle: filters.vehicle,
-          condition: filters.condition,
-          yearFrom: filters.yearFrom,
-          yearTo: filters.yearTo,
-          maxKm: filters.maxKm,
-        });
-
   return (
     <>
       <section
@@ -165,7 +151,7 @@ export function EvaluateFilterBar({ params, models, facets, lotLabel }: Evaluate
           </p>
         )}
 
-        <div className="flex flex-wrap items-center gap-2 xl:flex-nowrap">
+        <div className="flex flex-wrap items-center gap-2">
           <ModelPicker
             value={filters.vehicle === null ? null : vehicleLabel(filters.vehicle)}
             options={models}
@@ -219,12 +205,12 @@ export function EvaluateFilterBar({ params, models, facets, lotLabel }: Evaluate
                     className={cn("flex-1 md:flex-none", drawerChips.length > 0 && researchActiveTriggerClass)}
                   >
                     <SlidersHorizontal aria-hidden="true" />
-                    Refinar recorte{drawerChips.length > 0 ? ` (${drawerChips.length})` : ""}
+                    Mais filtros{drawerChips.length > 0 ? ` (${drawerChips.length})` : ""}
                   </Button>
                 </DialogTrigger>
                 <DrawerContent side="right">
                   <DialogHeader className="border-b border-border px-6 py-5">
-                    <DialogTitle>Refinar recorte</DialogTitle>
+                    <DialogTitle>Mais filtros</DialogTitle>
                     <DialogDescription className="sr-only">
                       Cada escolha aplica na hora sem apagar o modelo selecionado.
                     </DialogDescription>
@@ -315,7 +301,7 @@ export function EvaluateFilterBar({ params, models, facets, lotLabel }: Evaluate
                       onClick={() => apply(withoutRefinements(filters))}
                       disabled={totalRefinements === 0}
                     >
-                      Limpar refinamentos
+                      Limpar filtros
                     </Button>
                     <DialogClose asChild>
                       <Button aria-live="polite">
@@ -349,18 +335,9 @@ export function EvaluateFilterBar({ params, models, facets, lotLabel }: Evaluate
                     className="h-10 px-1"
                     onClick={() => apply(withoutRefinements(filters), { focusStatus: true })}
                   >
-                    Limpar refinamentos
+                    Limpar filtros
                   </Button>
                 ) : null}
-                {panoramaHref === null ? null : (
-                  <Link
-                    href={panoramaHref}
-                    className="inline-flex h-10 items-center gap-1 text-label text-accent hover:text-accent-hover hover:underline"
-                  >
-                    Ver no Panorama
-                    <ArrowUpRight aria-hidden="true" className="size-3.5" />
-                  </Link>
-                )}
               </div>
             </>
           )}
