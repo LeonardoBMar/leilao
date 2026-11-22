@@ -25,14 +25,16 @@ export function EvaluateComparables({ filters, evaluation }: { filters: Evaluate
   const { answer, comparables, excluded } = evaluation;
   const shown = comparables.slice(0, SHOWN);
   const rest = comparables.slice(SHOWN);
+  const bandPrefix =
+    answer.kind === "band" ? `Faixa típica: ${formatCompactBRL(answer.low)} a ${formatCompactBRL(answer.high)}. ` : "";
   return (
     <ResearchBlock
       id="comparaveis"
       title={`Vendas do recorte (${comparables.length})`}
       description={
         excluded > 0
-          ? `${salesLabel(excluded)} fora da conta por você. Tire da conta uma venda que não se parece com o veículo (outra versão, batida) e a faixa é refeita.`
-          : "Tire da conta uma venda que não se parece com o veículo (outra versão, batida) e a faixa é refeita."
+          ? `${bandPrefix}${salesLabel(excluded)} fora da conta nesta simulação (não altera análises salvas).`
+          : `${bandPrefix}Tire da conta uma venda que não se parece com o veículo (outra versão, batida) para refazer a faixa nesta simulação.`
       }
     >
       <p role="status" className="sr-only">
@@ -42,8 +44,29 @@ export function EvaluateComparables({ filters, evaluation }: { filters: Evaluate
             : `${salesLabel(excluded)} fora da conta. Restam ${salesLabel(answer.n)} na conta.`
           : `Todas as ${salesLabel(comparables.length)} estão na conta.`}
       </p>
+      <ul className="grid gap-px overflow-hidden rounded-md border border-border bg-border">
+        {shown.map((item) => (
+          <ComparableRow key={item.sale.id} item={item} filters={filters} />
+        ))}
+      </ul>
+      {rest.length === 0 ? null : (
+        <details className="group">
+          <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-1.5 text-label text-accent hover:underline [&::-webkit-details-marker]:hidden">
+            <ChevronDown
+              aria-hidden="true"
+              className="size-4 transition-transform duration-150 group-open:rotate-180"
+            />
+            Ver as outras {rest.length} vendas
+          </summary>
+          <ul className="mt-3 grid gap-px overflow-hidden rounded-md border border-border bg-border">
+            {rest.map((item) => (
+              <ComparableRow key={item.sale.id} item={item} filters={filters} />
+            ))}
+          </ul>
+        </details>
+      )}
       {excluded > 0 ? (
-        <div className="sticky top-2 z-20 flex flex-wrap items-center justify-between gap-3 rounded-md border border-border-strong bg-surface-subtle px-3.5 py-2.5 text-label text-foreground shadow-xs xl:top-16">
+        <div className="sticky bottom-3 z-20 flex flex-wrap items-center justify-between gap-3 rounded-md border border-border-strong bg-surface-subtle px-3.5 py-2.5 text-label text-foreground shadow-md">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 tabular-nums">
             {answer.kind === "band" ? (
               <>
@@ -82,27 +105,6 @@ export function EvaluateComparables({ filters, evaluation }: { filters: Evaluate
           </ResearchNavButton>
         </div>
       ) : null}
-      <ul className="grid gap-px overflow-hidden rounded-md border border-border bg-border">
-        {shown.map((item) => (
-          <ComparableRow key={item.sale.id} item={item} filters={filters} />
-        ))}
-      </ul>
-      {rest.length === 0 ? null : (
-        <details className="group">
-          <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-1.5 text-label text-accent hover:underline [&::-webkit-details-marker]:hidden">
-            <ChevronDown
-              aria-hidden="true"
-              className="size-4 transition-transform duration-150 group-open:rotate-180"
-            />
-            Ver as outras {rest.length} vendas
-          </summary>
-          <ul className="mt-3 grid gap-px overflow-hidden rounded-md border border-border bg-border">
-            {rest.map((item) => (
-              <ComparableRow key={item.sale.id} item={item} filters={filters} />
-            ))}
-          </ul>
-        </details>
-      )}
     </ResearchBlock>
   );
 }
