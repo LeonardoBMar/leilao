@@ -239,7 +239,7 @@ export function ScatterPlot({
             aria-label={point.title}
             onMouseEnter={() => setActiveKey(point.key)}
             onClick={() => setActiveKey((current) => (current === point.key ? null : point.key))}
-            className="absolute flex size-6 -translate-x-1/2 translate-y-1/2 cursor-pointer items-center justify-center transition-[left,bottom] duration-180"
+            className="absolute flex size-9 -translate-x-1/2 translate-y-1/2 cursor-pointer items-center justify-center transition-[left,bottom] duration-180"
             style={{ left: `${percentOf(spread(point), xDomain)}%`, bottom: `${percentOf(point.y, yDomain)}%` }}
           >
             <span

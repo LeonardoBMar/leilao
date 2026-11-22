@@ -111,7 +111,7 @@ function ComparableRow({ item, filters }: { item: EvaluateComparable<EvaluateSal
           </div>
         )}
       </div>
-      <div className={cn("grid min-w-0 gap-1", excluded && "opacity-60")}>
+      <div className="grid min-w-0 gap-1">
         <p title={sale.title} className="line-clamp-2 text-body font-medium text-foreground">
           <span className="text-muted tabular-nums">{formatDate(sale.endsAt)} · </span>
           {sale.title}
@@ -145,7 +145,7 @@ function ComparableRow({ item, filters }: { item: EvaluateComparable<EvaluateSal
           href={sale.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-label text-accent hover:underline"
+          className="inline-flex min-h-10 items-center gap-1 rounded-md px-2 text-label text-accent hover:underline sm:min-h-9"
         >
           Anúncio
           <ExternalLink aria-hidden="true" className="size-3.5" />

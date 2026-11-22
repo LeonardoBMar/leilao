@@ -112,7 +112,7 @@ function OpenListingRow({
           href={listing.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-label text-accent hover:underline"
+          className="inline-flex min-h-10 items-center gap-1 rounded-md px-2 text-label text-accent hover:underline sm:min-h-9"
         >
           Anúncio
           <ExternalLink aria-hidden="true" className="size-3.5" />
