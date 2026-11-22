@@ -1,0 +1,200 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-21T21:50:00Z",
+  "title": "Design System: Leilão Tracker",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Surgical Ink",
+        "canonical": "#111318",
+        "tonalRamp": ["#000000", "#111318", "#252932", "#3e434d", "#626773", "#8b909b", "#dadde3", "#eef0f3"]
+      },
+      "accent": {
+        "role": "secondary",
+        "displayName": "Precision Cobalt",
+        "canonical": "#1d4ed8",
+        "tonalRamp": ["#1e3a8a", "#1e40af", "#1d4ed8", "#2563eb", "#3b82f6", "#60a5fa", "#bfdbfe", "#eff4ff"]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Workbench Shell",
+        "canonical": "#fafafb",
+        "tonalRamp": ["#111318", "#3e434d", "#626773", "#8b909b", "#dadde3", "#eaecef", "#f3f4f6", "#fafafb"]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Pure Canvas",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#111318", "#3e434d", "#626773", "#8b909b", "#dadde3", "#eaecef", "#f3f4f6", "#ffffff"]
+      },
+      "success": {
+        "role": "tertiary",
+        "displayName": "Verdict Emerald",
+        "canonical": "#047857",
+        "tonalRamp": ["#064e3b", "#065f46", "#047857", "#059669", "#10b981", "#6ee7b7", "#a7f3d0", "#ecfdf5"]
+      },
+      "warning": {
+        "role": "tertiary",
+        "displayName": "Caution Amber",
+        "canonical": "#92400e",
+        "tonalRamp": ["#78350f", "#92400e", "#b45309", "#d97706", "#f59e0b", "#fcd34d", "#fde68a", "#fffbeb"]
+      },
+      "error": {
+        "role": "tertiary",
+        "displayName": "Limit Breach Crimson",
+        "canonical": "#be123c",
+        "tonalRamp": ["#881337", "#9f1239", "#be123c", "#e11d48", "#f43f5e", "#fda4af", "#fecdd3", "#fff1f2"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "O número que decide (lance máximo, folga até o limite). No máximo um por tela."
+      },
+      "headline": {
+        "displayName": "Heading 1",
+        "purpose": "Título principal da página em PageHeader."
+      },
+      "title": {
+        "displayName": "Heading 3 / Section Title",
+        "purpose": "Títulos de seção, cards e grupos de formulário."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Texto padrão, células, navegação e controles."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Rótulos de campos, abas e metadados enfatizados."
+      },
+      "mono": {
+        "displayName": "Monospace",
+        "purpose": "Códigos de lote, atalhos de teclado (⌘K, Ctrl+B) e versão de análise."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow-xs",
+        "value": "0 1px 2px rgb(17 19 24 / 5%)",
+        "purpose": "Elevação tátil mínima em botão Secondary."
+      },
+      {
+        "name": "shadow-sm",
+        "value": "0 1px 2px rgb(17 19 24 / 6%), 0 0 0 1px rgb(17 19 24 / 4%)",
+        "purpose": "Superfícies contidas com contorno sutil."
+      },
+      {
+        "name": "shadow-md",
+        "value": "0 8px 24px rgb(17 19 24 / 8%), 0 2px 6px rgb(17 19 24 / 4%), 0 0 0 1px rgb(17 19 24 / 5%)",
+        "purpose": "Menus, dropdowns, tooltips e popovers."
+      },
+      {
+        "name": "shadow-lg",
+        "value": "0 20px 48px rgb(17 19 24 / 14%), 0 4px 12px rgb(17 19 24 / 6%), 0 0 0 1px rgb(17 19 24 / 6%)",
+        "purpose": "Dialogs, drawers e CommandPalette."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.23, 1, 0.32, 1)",
+        "purpose": "Curva padrão de resposta imediata em hover, foco e colapso da sidebar."
+      },
+      {
+        "name": "ease-drawer",
+        "value": "cubic-bezier(0.32, 0.72, 0, 1)",
+        "purpose": "Entrada e saída de gavetas (ListingQuickDrawer, MobileNav)."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" },
+      { "name": "2xl", "value": "1536px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ação principal única por região (tinta #111318 com chanfro superior sutil).",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">Fixar análise</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 6px; border: none; background: var(--primary, #111318); color: #ffffff; font-family: Inter, system-ui, sans-serif; font-size: 14px; font-weight: 500; box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), 0 1px 2px rgb(17 19 24 / 0.16); cursor: pointer; transition: background-color 150ms cubic-bezier(0.23, 1, 0.32, 1), transform 150ms cubic-bezier(0.23, 1, 0.32, 1); } .ds-btn-primary:hover { background: var(--primary-hover, #252932); } .ds-btn-primary:active { background: var(--primary-active, #000000); transform: scale(0.97); } .ds-btn-primary:focus-visible { outline: 2px solid var(--accent, #1d4ed8); outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Ação complementar com superfície branca e contorno border-strong.",
+      "html": "<button class=\"ds-btn-secondary\" type=\"button\">Salvar rascunho</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 6px; border: 1px solid var(--border-strong, #dadde3); background: var(--surface, #ffffff); color: var(--foreground, #111318); font-family: Inter, system-ui, sans-serif; font-size: 14px; font-weight: 500; box-shadow: 0 1px 2px rgb(17 19 24 / 0.05); cursor: pointer; transition: background-color 150ms cubic-bezier(0.23, 1, 0.32, 1), border-color 150ms cubic-bezier(0.23, 1, 0.32, 1), transform 150ms cubic-bezier(0.23, 1, 0.32, 1); } .ds-btn-secondary:hover { background: var(--background, #fafafb); border-color: var(--control-border, #878c98); } .ds-btn-secondary:active { background: var(--surface-subtle, #f3f4f6); transform: scale(0.97); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--accent, #1d4ed8); outline-offset: 2px; }"
+    },
+    {
+      "name": "Verdict Badge (Below Limit)",
+      "kind": "chip",
+      "refersTo": "badge-success",
+      "description": "Pílula semântica para lote que cabe com folga no limite estimado ou fixado.",
+      "html": "<span class=\"ds-badge-success\">Cabe com folga</span>",
+      "css": ".ds-badge-success { display: inline-flex; align-items: center; gap: 6px; min-height: 22px; padding: 2px 8px; border-radius: 9999px; border: 1px solid var(--success-border, #a7f3d0); background: var(--success-subtle, #ecfdf5); color: var(--success, #047857); font-family: Inter, system-ui, sans-serif; font-size: 12px; font-weight: 500; line-height: 1.35; }"
+    },
+    {
+      "name": "Currency Input",
+      "kind": "input",
+      "refersTo": "input-currency",
+      "description": "Entrada monetária em reais com numerais tabulares e borda control-border.",
+      "html": "<input class=\"ds-input\" type=\"text\" value=\"R$ 33.200,00\" aria-label=\"Lance máximo\" />",
+      "css": ".ds-input { height: 40px; width: 220px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--control-border, #878c98); background: var(--surface, #ffffff); color: var(--foreground, #111318); font-family: Inter, system-ui, sans-serif; font-size: 14px; font-variant-numeric: tabular-nums; transition: border-color 150ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 150ms cubic-bezier(0.23, 1, 0.32, 1); } .ds-input:focus-visible { outline: none; border-color: var(--accent, #1d4ed8); box-shadow: 0 0 0 2px rgb(29 78 216 / 0.2); }"
+    },
+    {
+      "name": "Summary Card",
+      "kind": "card",
+      "refersTo": "card-summary",
+      "description": "Painel rebaixado em surface-subtle para resumo de análise e registros pendentes.",
+      "html": "<div class=\"ds-card-summary\"><div class=\"ds-card-label\">LANCE MÁXIMO</div><div class=\"ds-card-value\">R$ 33.200,00</div></div>",
+      "css": ".ds-card-summary { display: grid; gap: 6px; padding: 20px; border-radius: 10px; border: 1px solid var(--border, #eaecef); background: var(--surface-subtle, #f3f4f6); color: var(--foreground, #111318); font-family: Inter, system-ui, sans-serif; } .ds-card-label { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted, #626773); text-transform: uppercase; letter-spacing: 0.01em; } .ds-card-value { font-size: 28px; font-weight: 600; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Cirúrgico & Monocromático (Precision Workbench)",
+    "overview": "O Leilão Tracker é uma ferramenta privada de análise financeira e acompanhamento de leilões. Sua interface transmite organização, precisão e prudência, com casca em cinza quase-branco (#FAFAFB), canvas branco puro (#FFFFFF), linhas hairline (#EAECEF), ação principal em tinta (#111318) e cor reservada estritamente ao veredicto financeiro e foco.",
+    "keyCharacteristics": [
+      "Paleta acromática cirúrgica com ação primária em tinta (#111318) e foco em azul cobalto (#1D4ED8)",
+      "Tipografia Inter (cv02, cv03, cv04, cv11) com numerais tabulares obrigatórios em dados financeiros e JetBrains Mono em códigos",
+      "Casca de borda a borda com sidebar colapsável (264px ↔ 56px) e header fixo de 48px com CommandPalette (⌘K)"
+    ],
+    "rules": [
+      {
+        "name": "The Verdict-Only Color Rule",
+        "body": "Cor semântica (esmeralda, âmbar, carmesim) aparece apenas no veredicto financeiro e alertas, sempre pareada com texto explícito e ícone.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Money Rule",
+        "body": "Todo valor monetário, percentual ou contagem comparativa usa font-variant-numeric: tabular-nums e rótulo explícito.",
+        "section": "typography"
+      },
+      {
+        "name": "The Hairline Surface Rule",
+        "body": "A hierarquia espacial vem da troca de superfície (#FAFAFB, #FFFFFF, #F3F4F6) e de divisores hairline (#EAECEF), reservando sombras para overlays.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Usar tinta (primary) na ação principal e o azul accent só em link, foco e seleção.",
+      "Reutilizar tokens e componentes antes de criar variações.",
+      "Manter números financeiros com rótulo, unidade e numerais tabulares.",
+      "Usar texto explícito junto de cores semânticas.",
+      "Preservar uma ação principal clara por região."
+    ],
+    "donts": [
+      "Criar novas cores, fontes, sombras, raios ou espaçamentos localmente.",
+      "Usar gradientes, glassmorphism, glow, textura de carbono ou estética de velocímetro.",
+      "Tratar o produto como plataforma de apostas ou trading.",
+      "Usar verde para sugerir garantia financeira.",
+      "Reduzir texto ou alvos interativos para caber mais dados."
+    ]
+  }
+}

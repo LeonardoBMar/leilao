@@ -1,3 +1,102 @@
+---
+name: Leilão Tracker
+description: Ferramenta privada de análise financeira e acompanhamento de leilões de veículos (Cirúrgico & Monocromático v3.0).
+colors:
+  primary: "#111318"
+  primary-hover: "#252932"
+  primary-active: "#000000"
+  primary-subtle: "#eef0f3"
+  accent: "#1d4ed8"
+  accent-hover: "#1e40af"
+  accent-subtle: "#eff4ff"
+  background: "#fafafb"
+  surface: "#ffffff"
+  surface-subtle: "#f3f4f6"
+  foreground: "#111318"
+  foreground-secondary: "#3e434d"
+  muted: "#626773"
+  muted-subtle: "#8b909b"
+  border: "#eaecef"
+  border-strong: "#dadde3"
+  control-border: "#878c98"
+  success: "#047857"
+  success-subtle: "#ecfdf5"
+  warning: "#92400e"
+  warning-subtle: "#fffbeb"
+  error: "#be123c"
+  error-subtle: "#fff1f2"
+  info: "#1d4ed8"
+  info-subtle: "#eff4ff"
+typography:
+  display:
+    fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "2.625rem"
+    fontWeight: 600
+    lineHeight: 1.08
+    letterSpacing: "-0.03em"
+  headline:
+    fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "1.75rem"
+    fontWeight: 600
+    lineHeight: 1.2
+    letterSpacing: "-0.025em"
+  title:
+    fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "0.9375rem"
+    fontWeight: 600
+    lineHeight: 1.4
+    letterSpacing: "-0.01em"
+  body:
+    fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "0.875rem"
+    fontWeight: 400
+    lineHeight: 1.45
+  label:
+    fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "0.8125rem"
+    fontWeight: 500
+    lineHeight: 1.35
+  mono:
+    fontFamily: "JetBrains Mono, ui-monospace, SFMono-Regular, monospace"
+    fontSize: "0.75rem"
+    fontWeight: 500
+    lineHeight: 1.35
+rounded:
+  sm: "4px"
+  md: "6px"
+  lg: "10px"
+  xl: "14px"
+spacing:
+  xs: "4px"
+  sm: "8px"
+  md: "16px"
+  lg: "24px"
+  xl: "32px"
+components:
+  button-primary:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.surface}"
+    rounded: "{rounded.md}"
+    padding: "8px 14px"
+  button-primary-hover:
+    backgroundColor: "{colors.primary-hover}"
+  button-secondary:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.foreground}"
+    rounded: "{rounded.md}"
+    padding: "8px 14px"
+  card-default:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.foreground}"
+    rounded: "{rounded.lg}"
+    padding: "24px"
+  card-summary:
+    backgroundColor: "{colors.surface-subtle}"
+    textColor: "{colors.foreground}"
+    rounded: "{rounded.lg}"
+    padding: "24px"
+---
+
 # Leilão Tracker — Design System
 
 > Versão: 3.0 • Data: 21/11/2026 • Status: fonte de verdade visual. Direção **Cirúrgico & Monocromático** (Linear Light / Precision Workbench).
@@ -12,7 +111,7 @@ O projeto possui a fundação em Next.js 16, Tailwind CSS 4, Radix UI, `motion` 
 - Fontes obrigatórias: **Inter** (`cv02`, `cv03`, `cv04`, `cv11`) na interface e **JetBrains Mono** em códigos (número do lote, atalhos `⌘K`, identificadores).
 - Casca arquitetônica de borda a borda: **Sidebar colapsável** (`264px` expandida ↔ `56px` só ícones, atalho `Ctrl+B`) em `#FAFAFB` com **header próprio de `48px`** (marca + botão de recolher/expandir), e **Header fixo de `48px` à direita da sidebar** sobre o canvas branco puro (`#FFFFFF`) com o contexto da seção e salto rápido `⌘K`, separados por linhas hairline (`#EAECEF`).
 - Paleta acromática cirúrgica: ação principal em **tinta** (`#111318`). Cor aparece apenas no **veredicto financeiro** (`#047857` esmeralda / `#BE123C` carmesim / `#92400E` âmbar), em foco/links (`#1D4ED8`) e na escala sequencial dos gráficos de Mercado.
-- Acabamento guiado pelo combo de skills do projeto (`impeccable`, `emil-design-eng`, `jakubkrehel/skills`, `web-design-guidelines`, `frontend-design` e `modern-web-guidance`): curvas customizadas (`--ease-out`, `--ease-drawer`), `active:scale-[0.97]`, popovers orientados pelo gatilho, zero animação em ações de teclado (`⌘K`, `Ctrl+B`), `text-wrap: balance/pretty`, `line-height` sem unidade, `overscroll-behavior: contain` em overlays e inputs em `16px` no mobile (`text-base sm:text-body`).
+- Acabamento guiado pelo combo de skills do projeto (`impeccable`, `emil-design-eng`, skills de Jakub Krehel, `web-design-guidelines`, `frontend-design` e `modern-web-guidance`): curvas customizadas (`--ease-out`, `--ease-drawer`), `active:scale-[0.97]`, popovers orientados pelo gatilho, zero animação em ações de teclado (`⌘K`, `Ctrl+B`), `text-wrap: balance/pretty`, `line-height` sem unidade, `overscroll-behavior: contain` em overlays e inputs em `16px` no mobile (`text-base sm:text-body`).
 
 Alterar uma decisão deste arquivo exige atualizar primeiro o token ou contrato correspondente e depois aplicar a mudança ao código.
 
@@ -81,7 +180,9 @@ Em telas pequenas, conteúdo pode mudar de posição ou formato. Informações f
 
 Os nomes semânticos são a API visual do projeto. O código deve consumir `background`, `foreground`, `primary` e demais papéis, evitando cores literais dentro de componentes.
 
-### 3.1 Colors
+## Colors
+
+### 3.1 Paleta e papéis semânticos
 
 #### Tokens base
 
@@ -164,7 +265,9 @@ Regras:
 - Margem negativa usa `error` e sinal negativo explícito.
 - Valores desconhecidos usam travessão `—` com `muted`, nunca `R$ 0,00`.
 
-### 3.2 Typography
+## Typography
+
+### 3.2 Famílias e escala tipográfica
 
 #### Famílias
 
@@ -401,7 +504,7 @@ Cards não devem conter cards idênticos aninhados. Para subdivisões internas, 
 
 ### 5.5 Badge / StatusBadge
 
-- Pílula: altura mínima de `22px` (`min-h-5.5`), padding horizontal de `8px`, `radius-full`, texto `12/16` peso `500`, com fundo suave e borda sutil semântica (`border-{estado}-border` / `border` no neutro).
+- Pílula: altura mínima de `22px` (`min-h-5.5`), padding horizontal de `8px`, `radius-full`, texto `12px / 16px` peso `500`, com fundo suave e borda sutil semântica (`border-{estado}-border` / `border` no neutro).
 - Variante neutra para status de domínio.
 - Variantes success, warning, error e info apenas com o significado definido nos tokens.
 - Texto curto e explícito: “Rascunho”, “Fixada”, “Acima do limite”.
@@ -750,7 +853,7 @@ Easing padrão: `cubic-bezier(0.2, 0, 0, 1)`. Saída pode usar `cubic-bezier(0.4
 ### 15.1 Dashboard (`/dashboard`)
 
 1. `PageHeader` com título **“Visão geral”**, linha compacta da coleta à direita (`X veículos abertos até 150 km de … · Coleta dd mmm, hh:mm`), e ações **“Ver leilões”** (`primary`) e **“Novo leilão”** (`secondary`).
-2. Faixa de KPIs operacionais (`DashboardKpis`) em grade hairline (`2` colunas no mobile, `4` em `@3xl+`): **Para analisar**, **Acompanhados** (destaque suave em `error-subtle/40` quando houver provável acima do limite), **Pendências** (destaque suave em `warning-subtle/40` quando houver pendências) e **Próximo no catálogo**, cada célula ligada à seção ou leilão correspondente.
+2. Faixa de KPIs operacionais (`DashboardKpis`) em grade hairline (`2` colunas no mobile, `4` em `@3xl+`): **Para analisar**, **Acompanhados** (destaque suave em `error-subtle` a 40% quando houver provável acima do limite), **Pendências** (destaque suave em `warning-subtle` a 40% quando houver pendências) e **Próximo no catálogo**, cada célula ligada à seção ou leilão correspondente.
 3. Faixa compacta de alertas não lidos e saúde da coleta (`RecentAlerts`), quando houver alertas ou falha/atraso na coleta (neste caso explicando o impacto e oferecendo link para `/leiloes`).
 4. Duas colunas no desktop amplo (`1,7 : 1`):
    - à esquerda, nesta ordem (`SPEC §5`):
@@ -931,7 +1034,7 @@ Checklist para uma nova página:
 - Next.js App Router + TypeScript.
 - Tailwind CSS.
 - shadcn/ui com primitivas Radix.
-- `next/font/google` para Inter e JetBrains Mono.
+- Next.js Google Fonts (`Inter` e `JetBrains_Mono`) em `src/app/layout.tsx`.
 - Lucide React para ícones.
 
 A estrutura atual relevante ao design system é:
@@ -997,11 +1100,11 @@ Esse trecho é um resumo; a configuração completa está em `src/app/globals.cs
 
 ### Fonte
 
-Carregar Inter (`--font-inter`) e JetBrains Mono (`--font-jetbrains-mono`) por `next/font/google` no layout raiz (`src/app/layout.tsx`) e aplicar Inter com `cv02`, `cv03`, `cv04`, `cv11` no `body`. Ativar numerais tabulares (`tabular-nums`) em valores financeiros, datas e tabelas.
+Carregar Inter (`--font-inter`) e JetBrains Mono (`--font-jetbrains-mono`) via Next.js Google Fonts no layout raiz (`src/app/layout.tsx`) e aplicar Inter com `cv02`, `cv03`, `cv04`, `cv11` no `body`. Ativar numerais tabulares (`tabular-nums`) em valores financeiros, datas e tabelas.
 
 ### Componentes shadcn
 
-- Manter os componentes base em `components/ui`.
+- Manter os componentes base em `src/components/ui`.
 - Aplicar tokens semânticos e variantes centralmente.
 - Componentes de domínio, como `AnalysisSummary` e `LimitStatus`, ficam dentro da feature correspondente.
 - Não editar uma primitiva para atender apenas uma tela; compor na feature.
