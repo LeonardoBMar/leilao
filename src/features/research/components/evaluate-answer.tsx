@@ -88,14 +88,30 @@ export function EvaluateAnswer({
             </dl>
             <p className="text-caption text-muted tabular-nums">
               Base: {salesLabel(answer.n)} {EVALUATE_LEVEL_LABELS[level]} ({formatDate(answer.from)} a{" "}
-              {formatDate(answer.to)})
-              {excluded > 0 ? `, sem as ${salesLabel(excluded)} que você tirou` : ""}.
+              {formatDate(answer.to)}){excluded > 0 ? `, sem as ${salesLabel(excluded)} que você tirou` : ""}.
             </p>
             {filters.yearFrom === null && filters.yearTo === null && evaluation.years.length > MIXED_YEARS ? (
-              <p className="text-caption text-warning">
-                Sem filtro de ano, a faixa junta {evaluation.years.length} anos-modelo. Escolha o ano para uma faixa
-                mais justa.
-              </p>
+              <div className="grid gap-2">
+                <p className="text-caption text-warning">
+                  Sem filtro de ano, a faixa junta {evaluation.years.length} anos-modelo. Escolha um ano para uma faixa
+                  mais justa:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {evaluation.years
+                    .toSorted((a, b) => b.n - a.n || b.year - a.year)
+                    .slice(0, 3)
+                    .map(({ year, n }) => (
+                      <ResearchNavButton
+                        key={year}
+                        href={evaluateHref({ ...filters, yearFrom: year, yearTo: year })}
+                        variant="secondary"
+                        size="sm"
+                      >
+                        Só {year} ({salesLabel(n)})
+                      </ResearchNavButton>
+                    ))}
+                </div>
+              </div>
             ) : null}
             <details className="group text-caption text-muted">
               <summary className="inline-flex min-h-8 cursor-pointer list-none items-center gap-1 font-medium text-foreground-secondary hover:text-foreground [&::-webkit-details-marker]:hidden">

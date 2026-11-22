@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { ScatterPlot } from "@/components/charts/scatter-plot";
 import {
+  ButtonLink,
   Card,
   EmptyState,
   Skeleton,
@@ -60,6 +61,11 @@ export function CalibrationView({ items }: { items: readonly CalibrationEntry[] 
         icon={Target}
         title="Nenhum resultado para calibrar ainda"
         description="A Calibração compara o limite das análises fixadas antes do leilão com o arremate. Fixe a análise de um lote antes do fim e registre o resultado: ele aparece aqui."
+        action={
+          <ButtonLink href="/minhas-analises" variant="secondary">
+            Ir para minhas análises
+          </ButtonLink>
+        }
       />
     );
   }
@@ -275,9 +281,7 @@ function LimitChart({ items }: { items: readonly CalibrationEntry[] }) {
     >
       <ScatterPlot
         tableAnchorId="calibracao-analises"
-        ariaLabel={`Limite fixado × arremate: ${points
-          .map(({ item, limit }) => `${item.label}, limite ${formatBRL(limit)}, arremate ${formatBRL(item.finalBid)}`)
-          .join("; ")}`}
+        ariaLabel={`Limite fixado × arremate de ${points.length} ${points.length === 1 ? "lote" : "lotes"}: ${above} acima do limite, valores entre ${formatCompactBRL(cents(Math.round(domain[0])))} e ${formatCompactBRL(cents(Math.round(domain[1])))}. Detalhes na tabela abaixo.`}
         xAxis={{ domain, ticks: labelled }}
         yDomain={domain}
         yTicks={labelled}

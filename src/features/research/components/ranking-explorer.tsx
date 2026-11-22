@@ -247,7 +247,7 @@ function RankingRowLink({
         <span className="block truncate text-body font-medium text-foreground">{row.label}</span>
         <span className="block truncate text-caption text-muted tabular-nums">
           {smallSampleLabel(row.n)} · {perWeekLabel(row.perWeek)} · faixa {formatRatio(row.low)}–{formatRatio(row.high)}
-          {versus ? <span className="hidden group-hover:inline group-focus-visible:inline"> · {versus}</span> : null}
+          {versus ? ` · ${versus}` : ""}
         </span>
         <span className="block truncate text-caption text-muted tabular-nums xl:hidden">{contextLabel(row)}</span>
       </span>
@@ -278,7 +278,7 @@ function RankingRowLink({
       <span className="text-right text-body font-semibold text-foreground tabular-nums">{formatRatio(row.median)}</span>
       <ChevronRight
         aria-hidden="true"
-        className="size-4 text-muted opacity-0 transition-opacity duration-120 group-hover:opacity-100 group-focus-visible:opacity-100"
+        className="size-4 text-muted opacity-60 transition-opacity duration-120 md:opacity-0 md:group-hover:opacity-100 md:group-focus-visible:opacity-100"
       />
     </Link>
   );
