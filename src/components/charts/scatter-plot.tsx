@@ -2,7 +2,7 @@
 
 import type { Route } from "next";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -88,8 +88,19 @@ export function ScatterPlot({
   secondaryAnchor,
   ariaLabel,
 }: ScatterPlotProps) {
-  const [activeKey, setActiveKey] = useState<string | null>(null);
+  const [pinnedKey, setPinnedKey] = useState<string | null>(null);
+  const [hoveredKey, setHoveredKey] = useState<string | null>(null);
+  const activeKey = pinnedKey ?? hoveredKey;
   const active = points.find((point) => point.key === activeKey);
+
+  useEffect(() => {
+    if (pinnedKey === null) return;
+    function unpinOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setPinnedKey(null);
+    }
+    document.addEventListener("keydown", unpinOnEscape);
+    return () => document.removeEventListener("keydown", unpinOnEscape);
+  }, [pinnedKey]);
   const first = Math.min(...xValues);
   const last = Math.max(...xValues);
   const xDomain = xAxis?.domain ?? ([first - 0.5, last + 0.5] as const);
@@ -239,8 +250,9 @@ export function ScatterPlot({
             tabIndex={-1}
             title={point.title}
             aria-label={point.title}
-            onMouseEnter={() => setActiveKey(point.key)}
-            onClick={() => setActiveKey((current) => (current === point.key ? null : point.key))}
+            onMouseEnter={() => setHoveredKey(point.key)}
+            onClick={() => setPinnedKey((current) => (current === point.key ? null : point.key))}
+            aria-pressed={pinnedKey === point.key}
             className="absolute flex size-11 -translate-x-1/2 translate-y-1/2 cursor-pointer items-center justify-center transition-[left,bottom] duration-180 md:size-9"
             style={{ left: `${percentOf(spread(point), xDomain)}%`, bottom: `${percentOf(point.y, yDomain)}%` }}
           >
@@ -252,7 +264,7 @@ export function ScatterPlot({
                   : point.hollow
                     ? "size-3 bg-surface ring-foreground"
                     : point.muted
-                      ? "bg-data-1 opacity-60"
+                      ? "bg-surface ring-1 ring-border-strong"
                       : point.selected
                         ? "size-3 bg-data-5 ring-foreground"
                         : anyHighlighted
@@ -312,6 +324,18 @@ export function ScatterPlot({
                   className="cursor-pointer font-medium text-accent hover:text-accent-hover hover:underline"
                 >
                   {active.action.pending ? "Atualizando…" : active.action.label}
+                </button>
+              </>
+            ) : null}
+            {pinnedKey !== null ? (
+              <>
+                {" · "}
+                <button
+                  type="button"
+                  onClick={() => setPinnedKey(null)}
+                  className="cursor-pointer text-muted hover:text-foreground hover:underline"
+                >
+                  Desafixar
                 </button>
               </>
             ) : null}

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { type ContinuousAxis, ScatterPlot } from "@/components/charts/scatter-plot";
-import { SegmentedControl } from "@/components/ui";
+import { Button, SegmentedControl } from "@/components/ui";
 import { cents } from "@/domain/money";
 import { niceTicks } from "@/lib/charts";
 import { formatCompactBRL, formatShortMonth } from "@/lib/format";
@@ -131,6 +131,7 @@ export function EvaluateChart({
       ? Array.from({ length: Math.max(...xs) - Math.min(...xs) + 1 }, (_, i) => Math.min(...xs) + i)
       : [];
   const missing = sales.length + open.length - points.length;
+  const hasExcluded = sales.some((sale) => sale.excluded);
 
   return (
     <div className="grid gap-4">
@@ -145,7 +146,12 @@ export function EvaluateChart({
         className="sm:w-64"
       />
       {points.length === 0 ? (
-        <p className="text-body text-muted">Nenhuma venda tem {axis === "year" ? "ano-modelo" : "data"} informado.</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-body text-muted">Nenhuma venda tem {axis === "year" ? "ano-modelo" : "data"} informado.</p>
+          <Button variant="secondary" size="sm" onClick={() => setAxis(axis === "year" ? "date" : "year")}>
+            {axis === "year" ? "Ver por data" : "Ver por ano-modelo"}
+          </Button>
+        </div>
       ) : (
         <ScatterPlot
           tableAnchorId={open.length > 0 ? "abertos" : "comparaveis"}
@@ -166,6 +172,12 @@ export function EvaluateChart({
         <li className="flex items-center gap-1.5">
           <span aria-hidden="true" className="size-2 rounded-full bg-data-3" /> vendido
         </li>
+        {hasExcluded ? (
+          <li className="flex items-center gap-1.5">
+            <span aria-hidden="true" className="size-2 rounded-full bg-surface ring-1 ring-border-strong" /> fora da
+            conta
+          </li>
+        ) : null}
         {open.length > 0 ? (
           <li className="flex items-center gap-1.5">
             <span aria-hidden="true" className="size-2.5 rounded-full bg-surface ring-2 ring-foreground" /> aberto:
