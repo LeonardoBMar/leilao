@@ -2,7 +2,7 @@
 
 import { LoaderCircle, SlidersHorizontal, Target, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useOptimistic, useRef } from "react";
+import { useEffect, useId, useOptimistic, useRef, useState } from "react";
 
 import { ActiveFilterChips } from "@/components/layout/active-filter-chips";
 import {
@@ -126,8 +126,11 @@ export function EvaluateFilterBar({ params, models, facets, lotLabel }: Evaluate
   const statusRef = useRef<HTMLParagraphElement>(null);
   const { isPending, startTransition } = useResearchTransition();
   const [filters, setOptimisticFilters] = useOptimistic(parseEvaluateParams(params));
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [draft, setDraft] = useState<EvaluateFilters>(filters);
 
   const drawerChips = facets === null || filters.vehicle === null ? [] : activeRefinements(filters, facets);
+  const draftDrawerCount = facets === null || draft.vehicle === null ? 0 : activeRefinements(draft, facets).length;
   const conditionChanged = filters.condition !== DEFAULT_EVALUATE_FILTERS.condition;
   const totalRefinements = drawerChips.length + (conditionChanged ? 1 : 0);
 
@@ -213,7 +216,13 @@ export function EvaluateFilterBar({ params, models, facets, lotLabel }: Evaluate
                 </SelectContent>
               </Select>
 
-              <Dialog>
+              <Dialog
+                open={drawerOpen}
+                onOpenChange={(open) => {
+                  if (open) setDraft(filters);
+                  setDrawerOpen(open);
+                }}
+              >
                 <DialogTrigger asChild>
                   <Button
                     variant="secondary"
@@ -227,31 +236,31 @@ export function EvaluateFilterBar({ params, models, facets, lotLabel }: Evaluate
                   <DialogHeader className="border-b border-border px-6 py-5">
                     <DialogTitle>Mais filtros</DialogTitle>
                     <DialogDescription className="text-caption text-muted">
-                      Cada escolha aplica na hora sem apagar o modelo selecionado.
+                      Ajuste os filtros desejados e clique em Aplicar.
                     </DialogDescription>
                   </DialogHeader>
                   <DrawerBody className="gap-6">
                     <fieldset className="grid gap-4">
                       <legend className="mb-1 text-caption font-semibold text-muted">Veículo</legend>
-                      {facets.families.length > 0 || filters.family !== null ? (
+                      {facets.families.length > 0 || draft.family !== null ? (
                         <DrawerSelect
                           label="Família"
                           hint="Agrupa carrocerias ou submodelos da mesma linha (ex.: Onix Plus)."
                           allLabel="Todas as famílias"
-                          value={filters.family}
+                          value={draft.family}
                           options={facets.families}
-                          onChange={(family) => apply({ ...filters, family, version: null })}
+                          onChange={(family) => setDraft((current) => ({ ...current, family, version: null }))}
                         />
                       ) : null}
 
-                      {facets.versions.length > 0 || filters.version !== null ? (
+                      {facets.versions.length > 0 || draft.version !== null ? (
                         <DrawerSelect
                           label="Versão FIPE"
                           hint="Acabamento, motor e câmbio exatos da tabela FIPE."
                           allLabel="Todas as versões"
-                          value={filters.version}
+                          value={draft.version}
                           options={facets.versions}
-                          onChange={(version) => apply({ ...filters, version })}
+                          onChange={(version) => setDraft((current) => ({ ...current, version }))}
                         />
                       ) : null}
 
@@ -259,29 +268,29 @@ export function EvaluateFilterBar({ params, models, facets, lotLabel }: Evaluate
                         <DrawerSelect
                           label="Ano-modelo de"
                           allLabel="Ano inicial"
-                          value={filters.yearFrom === null ? null : String(filters.yearFrom)}
+                          value={draft.yearFrom === null ? null : String(draft.yearFrom)}
                           options={facets.years.map(({ year, n }) => ({ value: String(year), label: `De ${year}`, n }))}
                           onChange={(year) =>
-                            apply({
-                              ...filters,
-                              ...normalizeYears(year === null ? null : Number(year), filters.yearTo),
-                            })
+                            setDraft((current) => ({
+                              ...current,
+                              ...normalizeYears(year === null ? null : Number(year), current.yearTo),
+                            }))
                           }
                         />
                         <DrawerSelect
                           label="Ano-modelo até"
                           allLabel="Ano final"
-                          value={filters.yearTo === null ? null : String(filters.yearTo)}
+                          value={draft.yearTo === null ? null : String(draft.yearTo)}
                           options={facets.years.map(({ year, n }) => ({
                             value: String(year),
                             label: `Até ${year}`,
                             n,
                           }))}
                           onChange={(year) =>
-                            apply({
-                              ...filters,
-                              ...normalizeYears(filters.yearFrom, year === null ? null : Number(year)),
-                            })
+                            setDraft((current) => ({
+                              ...current,
+                              ...normalizeYears(current.yearFrom, year === null ? null : Number(year)),
+                            }))
                           }
                         />
                       </div>
@@ -289,16 +298,16 @@ export function EvaluateFilterBar({ params, models, facets, lotLabel }: Evaluate
                       <DrawerSelect
                         label="Quilometragem máxima"
                         allLabel="Qualquer km"
-                        value={filters.maxKm === null ? null : String(filters.maxKm)}
+                        value={draft.maxKm === null ? null : String(draft.maxKm)}
                         options={RESEARCH_MILEAGE_OPTIONS.map((km) => ({
                           value: String(km),
                           label: `Até ${mileageLabel(km)}`,
                         }))}
                         onChange={(km) =>
-                          apply({
-                            ...filters,
+                          setDraft((current) => ({
+                            ...current,
                             maxKm: RESEARCH_MILEAGE_OPTIONS.find((option) => String(option) === km) ?? null,
-                          })
+                          }))
                         }
                       />
                     </fieldset>
@@ -308,31 +317,41 @@ export function EvaluateFilterBar({ params, models, facets, lotLabel }: Evaluate
                       <DrawerSelect
                         label="Origem"
                         allLabel="Qualquer origem"
-                        value={filters.origin}
+                        value={draft.origin}
                         options={VEHICLE_ORIGINS.map((origin) => ({
                           value: origin,
                           label: ORIGIN_LABELS[origin],
                           n: facets.origins[origin],
                         }))}
                         onChange={(value) =>
-                          apply({ ...filters, origin: VEHICLE_ORIGINS.find((key) => key === value) ?? null })
+                          setDraft((current) => ({
+                            ...current,
+                            origin: VEHICLE_ORIGINS.find((key) => key === value) ?? null,
+                          }))
                         }
                       />
                     </fieldset>
                   </DrawerBody>
-                  <DrawerFooter>
+                  <DrawerFooter className="flex-wrap">
                     <Button
-                      variant="secondary"
-                      onClick={() => apply(withoutDrawerFilters(filters))}
-                      disabled={drawerChips.length === 0}
+                      variant="ghost"
+                      className="md:mr-auto"
+                      onClick={() => setDraft((current) => withoutDrawerFilters(current))}
+                      disabled={draftDrawerCount === 0}
                     >
                       Limpar refinamentos
                     </Button>
                     <DialogClose asChild>
-                      <Button aria-live="polite">
-                        {isPending ? "Atualizando…" : `Ver ${salesLabel(facets.total)}`}
-                      </Button>
+                      <Button variant="secondary">Cancelar</Button>
                     </DialogClose>
+                    <Button
+                      onClick={() => {
+                        setDrawerOpen(false);
+                        apply(draft, { focusStatus: true });
+                      }}
+                    >
+                      Aplicar
+                    </Button>
                   </DrawerFooter>
                 </DrawerContent>
               </Dialog>
@@ -349,6 +368,8 @@ export function EvaluateFilterBar({ params, models, facets, lotLabel }: Evaluate
                       <LoaderCircle aria-hidden="true" className="size-4 animate-spin text-muted" />
                       <span className="text-muted">Atualizando…</span>
                     </>
+                  ) : filters.excluded.length > 0 ? (
+                    `${salesLabel(facets.total)} na conta (${filters.excluded.length} ${filters.excluded.length === 1 ? "excluída" : "excluídas"})`
                   ) : (
                     `${salesLabel(facets.total)} no recorte`
                   )}

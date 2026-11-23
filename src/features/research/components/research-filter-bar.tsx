@@ -116,13 +116,17 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
   const statusRef = useRef<HTMLParagraphElement>(null);
   const { isPending, startTransition } = useResearchTransition();
   const [filters, setOptimisticFilters] = useOptimistic(parseResearchParams(params));
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [draft, setDraft] = useState<ResearchFilters>(filters);
   const compareRowId = useId();
   // A linha "Comparar com" só aparece aberta pelo botão ou com uma comparação na URL.
   const [compareOpen, setCompareOpen] = useState(false);
   const showCompare = compareOpen || filters.compare !== null;
   const total = facets.conditions[filters.condition];
   const isDefault = Object.keys(params).length === 0;
-  const chips = activeFilters(filters, Object.fromEntries(facets.sources.map(({ id, name }) => [id, name])));
+  const sourceNames = Object.fromEntries(facets.sources.map(({ id, name }) => [id, name]));
+  const chips = activeFilters(filters, sourceNames);
+  const draftChipsCount = activeFilters(draft, sourceNames).length;
 
   const resolvedSharedQuery = pickSharedQuery(params);
   useEffect(() => {
@@ -187,7 +191,13 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
               ))}
             </SelectContent>
           </Select>
-          <Dialog>
+          <Dialog
+            open={drawerOpen}
+            onOpenChange={(open) => {
+              if (open) setDraft(filters);
+              setDrawerOpen(open);
+            }}
+          >
             <DialogTrigger asChild>
               <Button
                 variant="secondary"
@@ -200,38 +210,44 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
             <DrawerContent side="right">
               <DialogHeader className="border-b border-border px-6 py-5">
                 <DialogTitle>Mais filtros</DialogTitle>
-                <DialogDescription className="text-caption text-muted">Cada escolha aplica na hora.</DialogDescription>
+                <DialogDescription className="text-caption text-muted">
+                  Ajuste os filtros desejados e clique em Aplicar.
+                </DialogDescription>
               </DialogHeader>
               <DrawerBody className="gap-6">
                 <fieldset className="grid gap-4">
                   <legend className="mb-1 text-caption font-semibold text-muted">Veículo</legend>
                   <ConditionSelect
-                    value={filters.condition}
+                    value={draft.condition}
                     counts={facets.conditions}
-                    onChange={(condition) => apply({ ...filters, condition })}
+                    onChange={(condition) => setDraft((current) => ({ ...current, condition }))}
                   />
                   <MileageSelect
-                    value={filters.maxKm}
+                    value={draft.maxKm}
                     mileage={facets.mileage}
-                    onChange={(maxKm) => apply({ ...filters, maxKm })}
+                    onChange={(maxKm) => setDraft((current) => ({ ...current, maxKm }))}
                   />
-                  {filters.vehicle === null ? (
+                  {draft.vehicle === null ? (
                     <p className="text-caption text-muted">O ano-modelo aparece com um modelo escolhido.</p>
                   ) : (
                     <div className="grid grid-cols-2 gap-3">
                       <YearSelect
                         label="Ano-modelo de"
                         short={{ empty: "Ano inicial", prefix: "De" }}
-                        value={filters.yearFrom}
+                        value={draft.yearFrom}
                         years={facets.years}
-                        onChange={(yearFrom) => apply({ ...filters, ...normalizeYears(yearFrom, filters.yearTo) })}
+                        onChange={(yearFrom) =>
+                          setDraft((current) => ({ ...current, ...normalizeYears(yearFrom, current.yearTo) }))
+                        }
                       />
                       <YearSelect
                         label="Ano-modelo até"
                         short={{ empty: "Ano final", prefix: "Até" }}
-                        value={filters.yearTo}
+                        value={draft.yearTo}
                         years={facets.years}
-                        onChange={(yearTo) => apply({ ...filters, ...normalizeYears(filters.yearFrom, yearTo) })}
+                        onChange={(yearTo) =>
+                          setDraft((current) => ({ ...current, ...normalizeYears(current.yearFrom, yearTo) }))
+                        }
                       />
                     </div>
                   )}
@@ -239,35 +255,44 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
                 <fieldset className="grid gap-4 border-t border-border pt-5">
                   <legend className="mb-1 text-caption font-semibold text-muted">Leilão</legend>
                   <StateSelect
-                    value={filters.state}
+                    value={draft.state}
                     counts={facets.states}
-                    onChange={(state) => apply({ ...filters, state })}
+                    onChange={(state) => setDraft((current) => ({ ...current, state }))}
                   />
                   <SourceSelect
-                    value={filters.source}
+                    value={draft.source}
                     sources={facets.sources}
-                    onChange={(source) => apply({ ...filters, source })}
+                    onChange={(source) => setDraft((current) => ({ ...current, source }))}
                   />
-                  {facets.periods.length > 0 || filters.period !== null ? (
+                  {facets.periods.length > 0 || draft.period !== null ? (
                     <PeriodSelect
-                      value={filters.period}
+                      value={draft.period}
                       periods={facets.periods}
-                      onChange={(period) => apply({ ...filters, period })}
+                      onChange={(period) => setDraft((current) => ({ ...current, period }))}
                     />
                   ) : null}
                 </fieldset>
               </DrawerBody>
-              <DrawerFooter>
+              <DrawerFooter className="flex-wrap">
                 <Button
-                  variant="secondary"
-                  onClick={() => apply(withoutDrawerFilters(filters))}
-                  disabled={chips.length === 0}
+                  variant="ghost"
+                  className="md:mr-auto"
+                  onClick={() => setDraft((current) => withoutDrawerFilters(current))}
+                  disabled={draftChipsCount === 0}
                 >
                   Limpar filtros
                 </Button>
                 <DialogClose asChild>
-                  <Button aria-live="polite">{isPending ? "Atualizando…" : `Ver ${salesLabel(total)}`}</Button>
+                  <Button variant="secondary">Cancelar</Button>
                 </DialogClose>
+                <Button
+                  onClick={() => {
+                    setDrawerOpen(false);
+                    apply(draft, { focusStatus: true });
+                  }}
+                >
+                  Aplicar
+                </Button>
               </DrawerFooter>
             </DrawerContent>
           </Dialog>
