@@ -8,7 +8,7 @@ import { type ContinuousAxis, ScatterPlot } from "@/components/charts/scatter-pl
 import { Button, SegmentedControl } from "@/components/ui";
 import { cents } from "@/domain/money";
 import { niceTicks } from "@/lib/charts";
-import { formatCompactBRL, formatShortMonth } from "@/lib/format";
+import { formatCompactBRL, formatDate, formatShortMonth } from "@/lib/format";
 
 import { salesLabel } from "../labels";
 import { useResearchTransition } from "./research-shell";
@@ -55,6 +55,17 @@ function dateAxis(times: readonly number[]): ContinuousAxis {
   while (cursor.getTime() <= last) {
     ticks.push({ value: cursor.getTime(), label: formatShortMonth(cursor) });
     cursor.setUTCMonth(cursor.getUTCMonth() + 1);
+  }
+  // Quando todas as vendas caem no mesmo mês calendário, gera marcas nas pontas (e meio) para o eixo não ficar vazio.
+  if (ticks.length === 0) {
+    ticks.push({ value: first, label: formatDate(new Date(first)) });
+    if (last - first >= 4 * DAY_MS) {
+      const mid = Math.round((first + last) / 2);
+      ticks.push({ value: mid, label: formatDate(new Date(mid)) });
+    }
+    if (last > first) {
+      ticks.push({ value: last, label: formatDate(new Date(last)) });
+    }
   }
   return { domain: [first - 2 * DAY_MS, last + 2 * DAY_MS], ticks };
 }

@@ -15,8 +15,13 @@ export function EvaluateActions({ filters }: { filters: EvaluateFilters }) {
   if (params === null) return null;
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <SaveWatchButton query={new URLSearchParams(params).toString()} label="Acompanhar este veículo" />
-      <ButtonLink href={withQuery(CATALOG_LISTINGS_PATH, params)} variant="ghost">
+      <SaveWatchButton
+        query={new URLSearchParams(params).toString()}
+        label="Acompanhar este veículo"
+        variant="secondary"
+        size="sm"
+      />
+      <ButtonLink href={withQuery(CATALOG_LISTINGS_PATH, params)} variant="ghost" size="sm">
         <Search aria-hidden="true" />
         Ver no catálogo
       </ButtonLink>

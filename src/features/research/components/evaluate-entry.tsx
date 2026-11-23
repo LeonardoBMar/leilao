@@ -58,7 +58,11 @@ export async function EvaluateEntry({ models }: { models: readonly ResearchModel
           </div>
         </section>
       )}
-      <RecentModelLinks />
+      {visibleLots.length === 0 && top.length === 0 ? (
+        <p className="text-body text-muted">
+          Ainda não há vendas encerradas no catálogo para sugerir modelos. Use a busca acima assim que houver histórico.
+        </p>
+      ) : null}
       {top.length === 0 ? null : (
         <section aria-labelledby="entrada-mais-vendidos" className="grid gap-2">
           <h3 id="entrada-mais-vendidos" className="text-label text-foreground">
@@ -82,6 +86,7 @@ export async function EvaluateEntry({ models }: { models: readonly ResearchModel
           </div>
         </section>
       )}
+      <RecentModelLinks />
     </Card>
   );
 }

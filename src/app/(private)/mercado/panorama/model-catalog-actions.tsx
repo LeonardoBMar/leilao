@@ -19,7 +19,7 @@ export function ModelCatalogActions({ filters }: { filters: ResearchFilters }) {
         <Search aria-hidden="true" />
         Ver lotes abertos deste modelo
       </ButtonLink>
-      <SaveWatchButton query={new URLSearchParams(params).toString()} label="Acompanhar este modelo" />
+      <SaveWatchButton query={new URLSearchParams(params).toString()} label="Acompanhar este modelo" size="sm" />
     </div>
   );
 }

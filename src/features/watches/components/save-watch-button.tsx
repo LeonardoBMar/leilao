@@ -4,7 +4,7 @@ import { BellPlus } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useActionState, useState } from "react";
+import { type ComponentProps, useActionState, useState } from "react";
 
 import { Button, Input, Popover, PopoverContent, PopoverTrigger, toast } from "@/components/ui";
 import { type ActionState, fieldError, fieldValue, idleState } from "@/lib/action-state";
@@ -15,12 +15,22 @@ import { createWatchFromSearchAction } from "../actions";
  * "Salvar como monitor" em Leilões: pede só o nome e grava a busca atual, sem sair da lista. Para ajustar critérios,
  * o link abre o formulário completo já preenchido.
  */
-export function SaveWatchButton({ query, label = "Salvar como monitor" }: { query: string; label?: string }) {
+export function SaveWatchButton({
+  query,
+  label = "Salvar como monitor",
+  variant = "ghost",
+  size,
+}: {
+  query: string;
+  label?: string;
+  variant?: ComponentProps<typeof Button>["variant"];
+  size?: ComponentProps<typeof Button>["size"];
+}) {
   const [open, setOpen] = useState(false);
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost">
+        <Button variant={variant} size={size}>
           <BellPlus aria-hidden="true" />
           {label}
         </Button>

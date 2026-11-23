@@ -9,9 +9,15 @@ import { vehicleLabel } from "@/domain/research/filters";
 import { recentModelsServerSnapshot, recentModelsSnapshot, subscribeRecentModels } from "../recent-models";
 import { evaluateHref } from "../search";
 
+/** Máximo de modelos recentes exibidos na entrada. */
+const MAX_RECENT_LINKS = 4;
+
 /** Modelos buscados por último neste navegador (D-62), como atalhos do Avaliar. Sem nenhum, nada. */
 export function RecentModelLinks() {
-  const recent = useSyncExternalStore(subscribeRecentModels, recentModelsSnapshot, recentModelsServerSnapshot);
+  const recent = useSyncExternalStore(subscribeRecentModels, recentModelsSnapshot, recentModelsServerSnapshot).slice(
+    0,
+    MAX_RECENT_LINKS,
+  );
   if (recent.length === 0) return null;
   return (
     <section aria-labelledby="entrada-recentes" className="grid gap-2">

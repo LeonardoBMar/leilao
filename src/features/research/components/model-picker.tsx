@@ -58,6 +58,7 @@ export function ModelPicker({
   const inputId = useId();
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
+  const skipNextFocusOpenRef = useRef(false);
   const recent = useSyncExternalStore(subscribeRecentModels, recentModelsSnapshot, recentModelsServerSnapshot);
   const [text, setText] = useState(value ?? "");
   const [open, setOpen] = useState(false);
@@ -110,10 +111,20 @@ export function ModelPicker({
     onChange(option);
   }
 
+  useEffect(() => {
+    if (active < 0) return;
+    document.getElementById(`${listId}-${active}`)?.scrollIntoView({ block: "nearest" });
+  }, [active, listId]);
+
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "ArrowDown" && matches.length > 0) {
+    if (event.key === "ArrowDown") {
       event.preventDefault();
-      setActive((index) => (index + 1) % matches.length);
+      if (!open) {
+        setOpen(true);
+        setActive(0);
+      } else if (matches.length > 0) {
+        setActive((index) => (index + 1) % matches.length);
+      }
     } else if (event.key === "ArrowUp" && matches.length > 0) {
       event.preventDefault();
       setActive((index) => (index <= 0 ? matches.length - 1 : index - 1));
@@ -159,6 +170,10 @@ export function ModelPicker({
           onKeyDown={handleKeyDown}
           onFocus={(event) => {
             event.target.select();
+            if (skipNextFocusOpenRef.current) {
+              skipNextFocusOpenRef.current = false;
+              return;
+            }
             setOpen(true);
           }}
           onBlur={close}
@@ -178,7 +193,10 @@ export function ModelPicker({
             aria-label={clearLabel}
             onClick={() => {
               setText("");
+              setOpen(false);
+              setActive(-1);
               onChange(null);
+              skipNextFocusOpenRef.current = true;
               inputRef.current?.focus();
             }}
             className="absolute top-0 right-0 flex size-10 items-center justify-center rounded-md text-muted outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent"
