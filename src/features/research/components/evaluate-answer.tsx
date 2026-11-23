@@ -191,7 +191,7 @@ export function EvaluateAnswer({
                   </span>
                 </p>
               ) : null}
-              <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <details className="group text-caption text-muted">
                   <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-1 rounded-sm font-medium text-foreground-secondary outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
                     <ChevronDown
