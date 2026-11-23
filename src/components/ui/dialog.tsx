@@ -76,7 +76,7 @@ function DrawerContent({ className, children, side = "right", ...props }: Drawer
           side === "bottom" &&
             "inset-x-0 bottom-0 max-h-[85dvh] translate-y-full rounded-t-xl border-t border-border data-[state=open]:translate-y-0 starting:translate-y-full",
           side === "responsive" &&
-            "inset-x-0 bottom-0 max-h-[85dvh] translate-y-full rounded-t-xl border-t border-border data-[state=open]:translate-y-0 md:inset-x-auto md:inset-y-0 md:right-0 md:max-h-none md:w-full md:max-w-110 md:translate-x-full md:translate-y-0 md:rounded-none md:border-t-0 md:border-l md:data-[state=open]:translate-x-0 starting:translate-y-full md:starting:translate-x-full",
+            "inset-x-0 bottom-0 max-h-[85dvh] translate-y-full rounded-t-xl border-t border-border data-[state=open]:translate-y-0 md:inset-x-auto md:inset-y-0 md:right-0 md:max-h-none md:w-full md:max-w-110 md:translate-x-full md:translate-y-0 md:rounded-none md:border-t-0 md:border-l md:data-[state=open]:translate-x-0 starting:translate-y-full md:starting:translate-x-full md:starting:translate-y-0",
           className,
         )}
         {...props}

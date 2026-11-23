@@ -137,7 +137,7 @@ export function ModelPicker({
       event.preventDefault();
       const option = matches[active] ?? matches[0];
       if (option) choose(option);
-    } else if (event.key === "Escape" && open) {
+    } else if (event.key === "Escape" && (open || text !== (value ?? ""))) {
       event.preventDefault();
       reset();
     }

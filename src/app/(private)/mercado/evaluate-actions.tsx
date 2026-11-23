@@ -14,7 +14,7 @@ export function EvaluateActions({ filters }: { filters: EvaluateFilters }) {
   const params = evaluateCatalogParams(filters);
   if (params === null) return null;
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2 border-t border-border pt-4">
       <SaveWatchButton
         query={new URLSearchParams(params).toString()}
         label="Acompanhar este veículo"

@@ -41,7 +41,6 @@ export function EvaluateAnswer({
 }) {
   const { answer, excluded, loosen, level } = evaluation;
   const scope = evaluateScopeLabel(filters, evaluation.versionLabels);
-  const band = answer.kind === "band" ? answer : null;
   const hasLotComparison = lot !== null && (lot.maxBid !== null || lot.currentBid !== null);
   const showMixedYears = filters.yearFrom === null && filters.yearTo === null && evaluation.years.length > MIXED_YEARS;
   const loosenLinks =
@@ -122,11 +121,9 @@ export function EvaluateAnswer({
                   <Fact label="Seu limite">
                     <span className="inline-flex items-center gap-2">
                       <span className="font-semibold">{formatCompactBRL(lot.maxBid)}</span>
-                      {band === null ? null : (
-                        <Badge variant={BAND_POSITION_VARIANTS[bandPosition(lot.maxBid, band)]}>
-                          {BAND_POSITION_LABELS[bandPosition(lot.maxBid, band)]}
-                        </Badge>
-                      )}
+                      <Badge variant={BAND_POSITION_VARIANTS[bandPosition(lot.maxBid, answer)]}>
+                        {BAND_POSITION_LABELS[bandPosition(lot.maxBid, answer)]}
+                      </Badge>
                     </span>
                   </Fact>
                 )}
@@ -134,11 +131,9 @@ export function EvaluateAnswer({
                   <Fact label="Lance atual do lote">
                     <span className="inline-flex items-center gap-2">
                       <span className="font-semibold">{formatCompactBRL(lot.currentBid)}</span>
-                      {band === null ? null : (
-                        <Badge variant={BAND_POSITION_VARIANTS[bandPosition(lot.currentBid, band)]}>
-                          {BAND_POSITION_LABELS[bandPosition(lot.currentBid, band)]}
-                        </Badge>
-                      )}
+                      <Badge variant={BAND_POSITION_VARIANTS[bandPosition(lot.currentBid, answer)]}>
+                        {BAND_POSITION_LABELS[bandPosition(lot.currentBid, answer)]}
+                      </Badge>
                     </span>
                   </Fact>
                 )}
@@ -234,7 +229,7 @@ export function EvaluateAnswer({
             {loosenLinks}
           </div>
         )}
-        <div className="border-t border-border pt-4">{actions}</div>
+        {actions}
       </Card>
     </section>
   );

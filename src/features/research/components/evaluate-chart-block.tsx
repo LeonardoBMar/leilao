@@ -23,7 +23,10 @@ export async function EvaluateChartBlock({
 }) {
   const listings = await getOpenListingsFor(filters);
   // Só os que encerram primeiro (os da lista aberta): com dezenas de abertos, o gráfico viraria uma nuvem.
-  const open = listings.slice(0, OPEN_LISTINGS_SHOWN);
+  // Se o lote alvo já entra como ponto dedicado no gráfico, não o duplicamos como ponto aberto.
+  const open = listings
+    .slice(0, OPEN_LISTINGS_SHOWN)
+    .filter((listing) => !(lot !== null && lot.currentBid !== null && listing.trackedLotId === lot.id));
   const { answer } = evaluation;
   const lotTarget =
     lot === null || (lot.maxBid === null && lot.currentBid === null)
