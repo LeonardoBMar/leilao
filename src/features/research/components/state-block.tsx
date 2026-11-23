@@ -1,3 +1,4 @@
+import { ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { BRAZIL_MAP_CREDIT } from "@/components/charts/brazil-geometry";
@@ -42,7 +43,7 @@ export async function StateBlock({ filters, noSales }: { filters: ResearchFilter
     <>
       <BrazilMap ariaLabel={`Mapa do Brasil: mediana ${METRIC_LABELS[map.metric]} por estado`} regions={regions} />
       <MapLegend title={legendTitle} items={legend} />
-      <p className="text-caption text-muted-subtle">{BRAZIL_MAP_CREDIT}</p>
+      <p className="text-caption text-muted">{BRAZIL_MAP_CREDIT}</p>
     </>
   );
 
@@ -107,8 +108,12 @@ export async function StateBlock({ filters, noSales }: { filters: ResearchFilter
               ) : null}
             </section>
           </div>
-          <details open={filters.state !== null}>
-            <summary className="w-fit cursor-pointer text-label text-accent hover:text-accent-hover hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+          <details open={filters.state !== null} className="group">
+            <summary className="inline-flex min-h-10 w-fit cursor-pointer list-none items-center gap-1.5 rounded-sm text-label text-accent outline-none hover:text-accent-hover hover:underline focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
+              <ChevronDown
+                aria-hidden="true"
+                className="size-4 transition-transform duration-150 group-open:rotate-180"
+              />
               <span className="hidden md:inline">Ver no mapa</span>
               <span className="md:hidden">Ver por estado</span>
             </summary>
@@ -132,7 +137,11 @@ export async function StateBlock({ filters, noSales }: { filters: ResearchFilter
                     </p>
                   ) : null}
                   <details className="group">
-                    <summary className="w-fit cursor-pointer text-label text-accent hover:text-accent-hover hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                    <summary className="inline-flex min-h-10 w-fit cursor-pointer list-none items-center gap-1.5 rounded-sm text-label text-accent outline-none hover:text-accent-hover hover:underline focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
+                      <ChevronDown
+                        aria-hidden="true"
+                        className="size-4 transition-transform duration-150 group-open:rotate-180"
+                      />
                       Ver o mapa
                     </summary>
                     <div className="mt-3 grid content-start gap-4">{mapPanel}</div>

@@ -1,3 +1,4 @@
+import { ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui";
@@ -16,13 +17,15 @@ type ChartDataTableProps = {
  * todo gráfico e o lugar dos valores que o gráfico não escreve.
  */
 export function ChartDataTable({ columns, rows, summary = "Ver dados em tabela" }: ChartDataTableProps) {
+  const hasQuartiles = columns.some((column) => column.label === "P25" || column.label === "P75");
   return (
     <details className="group">
-      <summary className="w-fit cursor-pointer text-label text-accent hover:text-accent-hover hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+      <summary className="inline-flex min-h-10 w-fit cursor-pointer list-none items-center gap-1.5 rounded-sm text-label text-accent outline-none hover:text-accent-hover hover:underline focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
+        <ChevronDown aria-hidden="true" className="size-4 transition-transform duration-150 group-open:rotate-180" />
         {summary}
       </summary>
-      <div className="mt-3">
-        <Table>
+      <div className="mt-3 grid gap-2">
+        <Table regionLabel={summary}>
           <TableHeader>
             <TableRow>
               {columns.map((column) => (
@@ -44,6 +47,9 @@ export function ChartDataTable({ columns, rows, summary = "Ver dados em tabela" 
             ))}
           </TableBody>
         </Table>
+        {hasQuartiles ? (
+          <p className="text-caption text-muted">P25 e P75 delimitam a metade central das vendas (faixa típica).</p>
+        ) : null}
       </div>
     </details>
   );

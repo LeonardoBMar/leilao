@@ -1,8 +1,15 @@
 import { cn } from "@/lib/utils";
 
-function Table({ className, ...props }: React.ComponentProps<"table">) {
+type TableProps = React.ComponentProps<"table"> & {
+  /** Rótulo acessível da região rolável da tabela. */
+  regionLabel?: string;
+};
+
+function Table({ className, regionLabel = "Tabela de dados", ...props }: TableProps) {
   return (
     <div
+      role="region"
+      aria-label={regionLabel}
       tabIndex={0}
       className="relative w-full max-w-full min-w-0 overflow-x-auto rounded-sm bg-surface outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent"
     >

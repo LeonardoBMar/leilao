@@ -199,7 +199,7 @@ function StateLabel({ shape: { state, label }, region }: { shape: StateShape; re
     <span
       className={cn(
         "absolute flex -translate-1/2 flex-col items-center leading-none whitespace-nowrap tabular-nums",
-        tone.kind === "colored" ? LABEL_CLASSES[tone.step] : tone.kind === "few" ? "text-muted" : "text-muted-subtle",
+        tone.kind === "colored" ? LABEL_CLASSES[tone.step] : "text-muted",
       )}
       style={{ left: percentX(label.x), top: percentY(label.y) }}
     >

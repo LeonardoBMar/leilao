@@ -98,6 +98,17 @@ export function DistributionChart({ rows, axisMax, ticks, format, unit, ariaLabe
     return Math.min(binCount - 1, Math.max(0, Math.floor(share * binCount)));
   }
 
+  const activeRow = active === null ? null : (rows.find((row) => row.key === active.row) ?? null);
+  const activeAnnouncement =
+    active === null || activeRow === null
+      ? ""
+      : (() => {
+          const total = activeRow.bins.reduce((sum, count) => sum + count, 0);
+          const count = activeRow.bins[active.bin] ?? 0;
+          const share = total === 0 ? "0%" : formatRatio(count / total);
+          return `${rangeLabel(active.bin)}: ${count.toLocaleString("pt-BR")} ${count === 1 ? "venda" : "vendas"}, ${share} do grupo.`;
+        })();
+
   return (
     <div className="@container grid gap-3">
       <div
@@ -108,7 +119,11 @@ export function DistributionChart({ rows, axisMax, ticks, format, unit, ariaLabe
         onBlur={() => setHover(null)}
         className="rounded-md outline-none focus-visible:ring-2 focus-visible:ring-accent"
       >
-        <div role="img" aria-label={ariaLabel} className="grid gap-1">
+        <span role="img" aria-label={ariaLabel} className="sr-only" />
+        <p aria-live="polite" className="sr-only">
+          {activeAnnouncement}
+        </p>
+        <div className="grid gap-1">
           {rows.map((row) => {
             const peak = Math.max(1, ...row.bins);
             const total = row.bins.reduce((sum, count) => sum + count, 0);
@@ -136,10 +151,8 @@ export function DistributionChart({ rows, axisMax, ticks, format, unit, ariaLabe
                   <Link
                     href={row.href}
                     scroll={false}
-                    tabIndex={-1}
-                    aria-hidden="true"
                     title="Aplicar esta condição"
-                    className="-mx-1 flex min-w-0 items-baseline gap-2 rounded-sm px-1 py-0.5 hover:bg-surface-subtle @xl:block"
+                    className="-mx-1 flex min-w-0 items-baseline gap-2 rounded-sm px-1 py-0.5 outline-none hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-accent @xl:block"
                   >
                     {label}
                   </Link>

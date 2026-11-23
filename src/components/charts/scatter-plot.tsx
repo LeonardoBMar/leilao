@@ -140,162 +140,167 @@ export function ScatterPlot({
           ) : null}
         </div>
       ) : null}
-      <PlotFrame
-        ariaLabel={ariaLabel}
-        yDomain={yDomain}
-        yTicks={yTicks}
-        xTicks={
-          xAxis
-            ? xAxis.ticks.map(({ value, label }) => ({ key: String(value), at: percentOf(value, xDomain), label }))
-            : xValues.map((value, index) => ({
-                key: String(value),
-                at: percentOf(value, xDomain),
-                label: String(value),
-                // No celular cabem uns 7 anos: os outros rótulos somem, contando do último (o mais novo fica).
-                minor: (xValues.length - 1 - index) % labelEvery !== 0,
-              }))
-        }
-      >
-        {band ? (
-          <span
-            className="absolute inset-x-0 bg-data-1/60"
-            style={{
-              bottom: `${percentOf(band.low, yDomain)}%`,
-              height: `${percentOf(band.high, yDomain) - percentOf(band.low, yDomain)}%`,
-            }}
-          >
-            <span className="absolute top-1 left-1 rounded-sm bg-surface/90 px-1 py-0.5 text-caption leading-none font-medium text-foreground">
-              {band.label}
+      <div onMouseLeave={() => setHoveredKey(null)}>
+        <PlotFrame
+          ariaLabel={ariaLabel}
+          yDomain={yDomain}
+          yTicks={yTicks}
+          xTicks={
+            xAxis
+              ? xAxis.ticks.map(({ value, label }) => ({ key: String(value), at: percentOf(value, xDomain), label }))
+              : xValues.map((value, index) => ({
+                  key: String(value),
+                  at: percentOf(value, xDomain),
+                  label: String(value),
+                  // No celular cabem uns 7 anos: os outros rótulos somem, contando do último (o mais novo fica).
+                  minor: (xValues.length - 1 - index) % labelEvery !== 0,
+                }))
+          }
+        >
+          {band ? (
+            <span
+              className="absolute inset-x-0 bg-data-1/60"
+              style={{
+                bottom: `${percentOf(band.low, yDomain)}%`,
+                height: `${percentOf(band.high, yDomain) - percentOf(band.low, yDomain)}%`,
+              }}
+            >
+              <span className="absolute top-1 left-1 rounded-sm bg-surface/90 px-1 py-0.5 text-caption leading-none font-medium text-foreground">
+                {band.label}
+              </span>
             </span>
-          </span>
-        ) : null}
-        {points.flatMap((point) =>
-          point.guideTo === undefined
-            ? []
-            : [
-                <span
-                  key={`guia-${point.key}`}
-                  aria-hidden="true"
-                  className="pointer-events-none absolute border-l border-dashed border-foreground/50"
-                  style={{
-                    left: `${percentOf(spread(point), xDomain)}%`,
-                    bottom: `${percentOf(Math.min(point.y, point.guideTo), yDomain)}%`,
-                    height: `${Math.abs(percentOf(point.guideTo, yDomain) - percentOf(point.y, yDomain))}%`,
-                  }}
-                />,
-              ],
-        )}
-        {reference ? (
-          <span
-            className="absolute inset-x-0 border-t border-dashed border-border-strong"
-            style={{ bottom: `${percentOf(reference.value, yDomain)}%` }}
-          >
-            <span className="absolute right-0 bottom-1 text-caption leading-none text-muted">{reference.label}</span>
-          </span>
-        ) : null}
-        {diagonal && diagonalEnds[0] < diagonalEnds[1] ? (
-          <>
+          ) : null}
+          {points.flatMap((point) =>
+            point.guideTo === undefined
+              ? []
+              : [
+                  <span
+                    key={`guia-${point.key}`}
+                    aria-hidden="true"
+                    className="pointer-events-none absolute border-l border-dashed border-foreground/50"
+                    style={{
+                      left: `${percentOf(spread(point), xDomain)}%`,
+                      bottom: `${percentOf(Math.min(point.y, point.guideTo), yDomain)}%`,
+                      height: `${Math.abs(percentOf(point.guideTo, yDomain) - percentOf(point.y, yDomain))}%`,
+                    }}
+                  />,
+                ],
+          )}
+          {reference ? (
+            <span
+              className="absolute inset-x-0 border-t border-dashed border-border-strong"
+              style={{ bottom: `${percentOf(reference.value, yDomain)}%` }}
+            >
+              <span className="absolute right-0 bottom-1 text-caption leading-none text-muted">{reference.label}</span>
+            </span>
+          ) : null}
+          {diagonal && diagonalEnds[0] < diagonalEnds[1] ? (
+            <>
+              <svg
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+                className="pointer-events-none absolute inset-0 size-full overflow-visible"
+                focusable="false"
+                aria-hidden="true"
+              >
+                <line
+                  x1={percentOf(diagonalEnds[0], xDomain)}
+                  y1={100 - percentOf(diagonalEnds[0], yDomain)}
+                  x2={percentOf(diagonalEnds[1], xDomain)}
+                  y2={100 - percentOf(diagonalEnds[1], yDomain)}
+                  className="stroke-border-strong"
+                  strokeWidth={1}
+                  strokeDasharray="4 4"
+                  vectorEffect="non-scaling-stroke"
+                />
+              </svg>
+              <span
+                className="pointer-events-none absolute -translate-x-full text-caption leading-none text-muted"
+                style={{
+                  left: `${percentOf(diagonalEnds[1], xDomain)}%`,
+                  bottom: `${percentOf(diagonalEnds[1], yDomain)}%`,
+                }}
+              >
+                {diagonal.label}
+              </span>
+            </>
+          ) : null}
+          {medians.length > 1 ? (
             <svg
               viewBox="0 0 100 100"
               preserveAspectRatio="none"
               className="pointer-events-none absolute inset-0 size-full overflow-visible"
               focusable="false"
-              aria-hidden="true"
             >
-              <line
-                x1={percentOf(diagonalEnds[0], xDomain)}
-                y1={100 - percentOf(diagonalEnds[0], yDomain)}
-                x2={percentOf(diagonalEnds[1], xDomain)}
-                y2={100 - percentOf(diagonalEnds[1], yDomain)}
-                className="stroke-border-strong"
-                strokeWidth={1}
-                strokeDasharray="4 4"
+              <polyline
+                points={medianLine}
+                fill="none"
+                className="stroke-foreground"
+                strokeOpacity={0.5}
+                strokeWidth={1.5}
+                strokeLinejoin="round"
                 vectorEffect="non-scaling-stroke"
               />
             </svg>
-            <span
-              className="pointer-events-none absolute -translate-x-full text-caption leading-none text-muted"
-              style={{
-                left: `${percentOf(diagonalEnds[1], xDomain)}%`,
-                bottom: `${percentOf(diagonalEnds[1], yDomain)}%`,
-              }}
+          ) : null}
+          {points.map((point) => (
+            // Área de toque maior que o ponto; fora da ordem de tabulação, porque o gráfico é só para ver (a tabela serve ao teclado).
+            <button
+              key={point.key}
+              type="button"
+              tabIndex={-1}
+              title={point.title}
+              aria-label={point.title}
+              onMouseEnter={() => setHoveredKey(point.key)}
+              onClick={() => setPinnedKey((current) => (current === point.key ? null : point.key))}
+              aria-pressed={pinnedKey === point.key}
+              className="absolute flex size-11 -translate-x-1/2 translate-y-1/2 cursor-pointer items-center justify-center transition-[left,bottom] duration-180 md:size-9"
+              style={{ left: `${percentOf(spread(point), xDomain)}%`, bottom: `${percentOf(point.y, yDomain)}%` }}
             >
-              {diagonal.label}
-            </span>
-          </>
-        ) : null}
-        {medians.length > 1 ? (
-          <svg
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-            className="pointer-events-none absolute inset-0 size-full overflow-visible"
-            focusable="false"
-          >
-            <polyline
-              points={medianLine}
-              fill="none"
-              className="stroke-foreground"
-              strokeOpacity={0.5}
-              strokeWidth={1.5}
-              strokeLinejoin="round"
-              vectorEffect="non-scaling-stroke"
-            />
-          </svg>
-        ) : null}
-        {points.map((point) => (
-          // Área de toque maior que o ponto; fora da ordem de tabulação, porque o gráfico é só para ver (a tabela serve ao teclado).
-          <button
-            key={point.key}
-            type="button"
-            tabIndex={-1}
-            title={point.title}
-            aria-label={point.title}
-            onMouseEnter={() => setHoveredKey(point.key)}
-            onClick={() => setPinnedKey((current) => (current === point.key ? null : point.key))}
-            aria-pressed={pinnedKey === point.key}
-            className="absolute flex size-11 -translate-x-1/2 translate-y-1/2 cursor-pointer items-center justify-center transition-[left,bottom] duration-180 md:size-9"
-            style={{ left: `${percentOf(spread(point), xDomain)}%`, bottom: `${percentOf(point.y, yDomain)}%` }}
-          >
+              <span
+                className={cn(
+                  "size-2 rounded-full ring-2 ring-surface",
+                  point.key === activeKey
+                    ? "size-3 bg-accent"
+                    : point.hollow
+                      ? "size-3 bg-surface ring-foreground"
+                      : point.muted
+                        ? "bg-surface ring-1 ring-border-strong"
+                        : point.selected
+                          ? "size-3 bg-data-5 ring-foreground"
+                          : anyHighlighted
+                            ? point.highlighted
+                              ? "size-3 bg-data-5"
+                              : "bg-data-1"
+                            : "bg-data-3",
+                )}
+              />
+            </button>
+          ))}
+          {medians.map((median) => (
             <span
-              className={cn(
-                "size-2 rounded-full ring-2 ring-surface",
-                point.key === activeKey
-                  ? "size-3 bg-accent"
-                  : point.hollow
-                    ? "size-3 bg-surface ring-foreground"
-                    : point.muted
-                      ? "bg-surface ring-1 ring-border-strong"
-                      : point.selected
-                        ? "size-3 bg-data-5 ring-foreground"
-                        : anyHighlighted
-                          ? point.highlighted
-                            ? "size-3 bg-data-5"
-                            : "bg-data-1"
-                          : "bg-data-3",
-              )}
+              key={median.x}
+              className="pointer-events-none absolute h-0.5 w-5 -translate-x-1/2 translate-y-1/2 rounded-full bg-foreground transition-[left,bottom] duration-180"
+              style={{ left: `${percentOf(median.x, xDomain)}%`, bottom: `${percentOf(median.y, yDomain)}%` }}
             />
-          </button>
-        ))}
-        {medians.map((median) => (
-          <span
-            key={median.x}
-            className="pointer-events-none absolute h-0.5 w-5 -translate-x-1/2 translate-y-1/2 rounded-full bg-foreground transition-[left,bottom] duration-180"
-            style={{ left: `${percentOf(median.x, xDomain)}%`, bottom: `${percentOf(median.y, yDomain)}%` }}
-          />
-        ))}
-      </PlotFrame>
-      <p aria-live="polite" className="min-h-5 text-label font-normal text-muted tabular-nums">
+          ))}
+        </PlotFrame>
+      </div>
+      <p
+        aria-live="polite"
+        className="flex min-h-9 flex-wrap items-center gap-x-2 gap-y-1 text-label font-normal text-muted tabular-nums"
+      >
         {active ? (
           <>
             <span className="text-foreground">{active.title}</span>
             {active.href ? (
               <>
-                {" · "}
+                <span aria-hidden="true">·</span>
                 <a
                   href={active.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-accent hover:text-accent-hover hover:underline"
+                  className="inline-flex min-h-9 items-center rounded-sm text-accent outline-none hover:text-accent-hover hover:underline focus-visible:ring-2 focus-visible:ring-accent"
                 >
                   Abrir anúncio
                   <span className="sr-only"> (abre em nova aba)</span>
@@ -304,11 +309,11 @@ export function ScatterPlot({
             ) : null}
             {active.extraLink ? (
               <>
-                {" · "}
+                <span aria-hidden="true">·</span>
                 <Link
                   href={active.extraLink.href}
                   scroll={false}
-                  className="text-accent hover:text-accent-hover hover:underline"
+                  className="inline-flex min-h-9 items-center rounded-sm text-accent outline-none hover:text-accent-hover hover:underline focus-visible:ring-2 focus-visible:ring-accent"
                 >
                   {active.extraLink.label}
                 </Link>
@@ -316,12 +321,12 @@ export function ScatterPlot({
             ) : null}
             {active.action ? (
               <>
-                {" · "}
+                <span aria-hidden="true">·</span>
                 <button
                   type="button"
                   aria-busy={active.action.pending || undefined}
                   onClick={active.action.onClick}
-                  className="cursor-pointer font-medium text-accent hover:text-accent-hover hover:underline"
+                  className="inline-flex min-h-9 cursor-pointer items-center rounded-sm font-medium text-accent outline-none hover:text-accent-hover hover:underline focus-visible:ring-2 focus-visible:ring-accent"
                 >
                   {active.action.pending ? "Atualizando…" : active.action.label}
                 </button>
@@ -329,11 +334,11 @@ export function ScatterPlot({
             ) : null}
             {pinnedKey !== null ? (
               <>
-                {" · "}
+                <span aria-hidden="true">·</span>
                 <button
                   type="button"
                   onClick={() => setPinnedKey(null)}
-                  className="cursor-pointer text-muted hover:text-foreground hover:underline"
+                  className="inline-flex min-h-9 cursor-pointer items-center rounded-sm text-muted outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-accent"
                 >
                   Desafixar
                 </button>

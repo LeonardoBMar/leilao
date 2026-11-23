@@ -86,7 +86,11 @@ export function ModelSalesTable({
   }
 
   return (
-    <div id="pesquisa-vendas-tabela" className="grid gap-3">
+    <div
+      id="pesquisa-vendas-tabela"
+      tabIndex={-1}
+      className="grid gap-3 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-accent"
+    >
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <span id={stateLabelId} className="sr-only">
           Estado das vendas na tabela

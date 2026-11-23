@@ -51,7 +51,7 @@ export function EvaluateComparables({ filters, evaluation }: { filters: Evaluate
       </ul>
       {rest.length === 0 ? null : (
         <details className="group">
-          <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-1.5 text-label text-accent hover:underline [&::-webkit-details-marker]:hidden">
+          <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-1.5 rounded-sm text-label text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
             <ChevronDown
               aria-hidden="true"
               className="size-4 transition-transform duration-150 group-open:rotate-180"

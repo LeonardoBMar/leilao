@@ -143,7 +143,7 @@ export function EvaluateAnswer({
               </div>
             ) : null}
             <details className="group text-caption text-muted">
-              <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-1 font-medium text-foreground-secondary hover:text-foreground [&::-webkit-details-marker]:hidden">
+              <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-1 rounded-sm font-medium text-foreground-secondary outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
                 <ChevronDown
                   aria-hidden="true"
                   className="size-3.5 transition-transform duration-150 group-open:rotate-180"

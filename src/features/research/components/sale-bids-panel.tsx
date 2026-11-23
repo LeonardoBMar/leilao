@@ -5,13 +5,14 @@ import type { Route } from "next";
 import { useEffect, useRef, useState } from "react";
 
 import { StepLine } from "@/components/charts/step-line";
-import { ButtonLink, SegmentedControl } from "@/components/ui";
+import { SegmentedControl } from "@/components/ui";
 import { cents } from "@/domain/money";
 import { MIN_SALE_BID_STEPS, saleBidsAxisHours } from "@/domain/research/sale-bids";
 import { niceRange } from "@/lib/charts";
 import { formatBRL, formatCompactBRL, formatDateTime, formatRatio } from "@/lib/format";
 
 import type { SaleBids } from "../types";
+import { ResearchNavButton } from "./research-nav-button";
 
 type Measure = "price" | "ratio";
 
@@ -78,9 +79,15 @@ export function SaleBidsPanel({ bids, closeHref }: { bids: SaleBids; closeHref: 
             {marketValue === null ? "" : ` (${formatRatio(bids.finalBid / marketValue)} da FIPE)`}
           </p>
         </div>
-        <ButtonLink href={closeHref} scroll={false} variant="ghost" size="icon" aria-label="Fechar os lances da venda">
+        <ResearchNavButton
+          href={closeHref}
+          focusTargetId="pesquisa-vendas-tabela"
+          variant="ghost"
+          size="icon"
+          aria-label="Fechar os lances da venda"
+        >
           <X aria-hidden="true" />
-        </ButtonLink>
+        </ResearchNavButton>
       </div>
       {bids.steps.length < MIN_SALE_BID_STEPS ? (
         <p className="text-body text-muted">O coletor só viu o lance final desta venda.</p>

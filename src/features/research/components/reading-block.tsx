@@ -31,7 +31,7 @@ export async function ReadingBlock({ filters }: { filters: ResearchFilters }) {
       description="A curva do lance, de onde vem a FIPE e as regras de amostra."
     >
       <details className="group">
-        <summary className="inline-flex min-h-10 w-fit cursor-pointer list-none items-center gap-1.5 text-label text-accent hover:text-accent-hover hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent [&::-webkit-details-marker]:hidden">
+        <summary className="inline-flex min-h-10 w-fit cursor-pointer list-none items-center gap-1.5 rounded-sm text-label text-accent outline-none hover:text-accent-hover hover:underline focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
           <ChevronDown aria-hidden="true" className="size-4 transition-transform duration-150 group-open:rotate-180" />
           Mostrar metodologia e regras
         </summary>

@@ -263,7 +263,7 @@ describe("ChartDataTable", () => {
         rows={[{ key: "AC", state: "Acre" }]}
       />,
     );
-    expect(html).toMatch(/<details[^>]*>(?!.*open)/);
+    expect(html).not.toMatch(/<details[^>]*\bopen\b/);
     expect(html).toContain("Ver dados em tabela");
     expect(html).toContain(">—<");
   });

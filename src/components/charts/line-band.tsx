@@ -57,6 +57,13 @@ export function LineBand({ points, yDomain, yTicks, format, ariaLabel }: LineBan
     setActive(points[Math.min(points.length - 1, Math.max(0, next))]?.key ?? null);
   }
 
+  const activeAnnouncement =
+    activePoint === undefined
+      ? ""
+      : activePoint.tooltip
+        ? `${activePoint.tooltip.title}: ${activePoint.tooltip.lines.join(", ")}.`
+        : `${activePoint.label}: mediana ${formatY(activePoint.median)}.`;
+
   return (
     <div
       role="group"
@@ -66,6 +73,9 @@ export function LineBand({ points, yDomain, yTicks, format, ariaLabel }: LineBan
       onBlur={() => setActive(null)}
       className="rounded-md outline-none focus-visible:ring-2 focus-visible:ring-accent"
     >
+      <p aria-live="polite" className="sr-only">
+        {activeAnnouncement}
+      </p>
       <PlotFrame
         ariaLabel={ariaLabel}
         yDomain={yDomain}
