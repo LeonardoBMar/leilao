@@ -142,7 +142,7 @@ export function EvaluateFilterBar({ params, models, facets, lotLabel }: Evaluate
     <>
       <section
         aria-label="Veículo avaliado"
-        className="grid gap-3 border-b border-border bg-surface pb-3 xl:sticky xl:top-0 xl:z-30 xl:py-2.5"
+        className="grid gap-3 border-b border-border bg-surface pb-3 xl:sticky xl:top-12 xl:z-30 xl:py-2.5"
       >
         {lotLabel === null || filters.lot === null ? null : (
           <p className="flex flex-wrap items-center gap-2 text-label text-foreground">

@@ -23,7 +23,7 @@ export function ResearchBlock({ id, title, description, actions, children }: Res
     <section
       id={id}
       aria-labelledby={`${id}-titulo`}
-      className="grid min-w-0 scroll-mt-20 gap-5 border-t border-border pt-6 lg:scroll-mt-60"
+      className="grid min-w-0 scroll-mt-16 gap-5 border-t border-border pt-6 xl:scroll-mt-32"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="grid max-w-3xl gap-1">
