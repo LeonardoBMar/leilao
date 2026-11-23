@@ -45,8 +45,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Modelo de renderização atual: dinâmico por padrão, cache explícito com "use cache" e streaming com <Suspense>.
   cacheComponents: true,
-  // Preserva o prefetch atual no Next 16.4.6 até auditarmos `partialPrefetching: true` (D-84).
-  partialPrefetching: false,
+  // Partial Prefetching habilitado após auditoria de links e limites de Suspense (D-87).
+  partialPrefetching: true,
   // Bases do catálogo global entre requisições (D-78): a coleta roda a cada 12 h, então 15 min de atraso não mudam nada.
   cacheLife: {
     catalog: { stale: 300, revalidate: 900, expire: 7200 },
