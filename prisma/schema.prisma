@@ -523,17 +523,6 @@ model ListingObservation {
   @@map("listing_observations")
 }
 
-/// Respostas da API da FIPE guardadas (D-47). Sem uso desde D-51 (o catálogo vem do dataset mensal); sai numa
-/// migration de contração.
-model FipeResponse {
-  /// Pedido: método e parâmetros (ex.: "valor:338:1:59:2370:2008-1").
-  key       String   @id
-  payload   Json
-  fetchedAt DateTime @default(now()) @map("fetched_at") @db.Timestamptz(3)
-
-  @@map("fipe_responses")
-}
-
 /// Catálogo de preços da FIPE (D-49, D-51): a tabela do mês inteira, importada do dataset fipeX (espelho da tabela
 /// oficial). Um valor por mês, versão (código FIPE), ano-modelo e combustível. Global e só do servidor.
 model FipePrice {
@@ -629,8 +618,6 @@ model Watch {
   maxMileageKm  Int?     @map("max_mileage_km")
   /// Nulo: qualquer distância.
   radiusKm      Int?     @map("radius_km") @db.SmallInt
-  /// Substituída por `categories` (D-43). Sem uso; sai num release seguinte (expandir → migrar → contrair).
-  category      String?  @db.VarChar(20)
   /// Chaves de `CATEGORY_KEYS`. Vazio = todas as categorias.
   categories    String[] @default([])
   condition     String   @db.VarChar(20)

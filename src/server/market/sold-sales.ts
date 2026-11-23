@@ -1,7 +1,5 @@
 import "server-only";
 
-import { cacheLife } from "next/cache";
-
 import type { BacktestSale } from "@/domain/listings/backtest";
 import {
   buildEstimateIndex,
@@ -52,20 +50,6 @@ export function toEstimateSale(row: EstimateSaleRow): EstimateSale | null {
     finalBid: cents(finalBidCents),
     marketValue: marketValueCents === null ? null : cents(marketValueCents),
   };
-}
-
-/**
- * Vendas do catálogo na janela das estimativas, base do preço provável de todos os cartões. Catálogo global, igual para
- * todos os usuários: cache entre requisições pelo perfil `catalog` (D-78). Quem chama exige a sessão.
- */
-export async function loadRecentSales(): Promise<EstimateSale[]> {
-  "use cache";
-  cacheLife("catalog");
-  const rows = await db.listing.findMany({
-    where: { ...soldSaleWhere, endsAt: { gte: new Date(Date.now() - SALES_WINDOW_MS) } },
-    select: estimateSaleSelect,
-  });
-  return rows.flatMap((row) => toEstimateSale(row) ?? []);
 }
 
 const ESTIMATE_INDEX_TTL_MS = 15 * 60 * 1000;
