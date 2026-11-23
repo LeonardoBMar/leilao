@@ -149,12 +149,11 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
 
   return (
     <>
-      {/* Só a linha principal fica fixa, numa linha só, a partir de `xl`: com o menu lateral, a `lg` tem ~650 px de conteúdo. */}
       <section
         aria-label="Filtros"
         className="border-b border-border bg-surface pb-3 xl:sticky xl:top-12 xl:z-30 xl:py-2.5"
       >
-        <div className="flex flex-wrap items-center gap-2 xl:flex-nowrap">
+        <div className="flex flex-wrap items-center gap-2">
           <ModelPicker
             value={filters.vehicle === null ? null : vehicleLabel(filters.vehicle)}
             options={facets.models}
