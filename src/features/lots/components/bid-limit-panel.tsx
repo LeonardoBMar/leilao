@@ -9,6 +9,7 @@ import { updateCurrentBidAction } from "../actions";
 import { toFixedLimit } from "../limit";
 import type { LotDetail } from "../types";
 import { CurrentBidForm } from "./current-bid-form";
+import { LotBidHistory } from "./lot-bid-history";
 
 type Tracking = NonNullable<LotDetail["tracking"]>;
 
@@ -53,6 +54,10 @@ export function BidLimitPanel({ lot, bidNote }: { lot: LotDetail; bidNote: strin
       ) : null}
 
       {lot.tracking ? <ListingFacts tracking={lot.tracking} /> : null}
+
+      {lot.tracking ? (
+        <LotBidHistory steps={lot.tracking.bidSteps} lastCheckedAt={lot.tracking.lastCheckedAt} maxBid={maxBid} />
+      ) : null}
     </Card>
   );
 }

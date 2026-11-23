@@ -1,5 +1,6 @@
 import type { LimitFit, PriceEstimate } from "@/domain/listings/estimates";
 import type { MarketValueOrigin } from "@/domain/listings/fipe-match";
+import type { LotBidStep } from "@/domain/lots/bid-history";
 import type { Cents } from "@/domain/money";
 
 /** Limite da análise fixada mais recente do lote. */
@@ -73,5 +74,7 @@ export type LotDetail = LotListItem & {
     /** Provável lance final, só com o anúncio aberto (D-36). */
     price: PriceEstimate | null;
     fit: LimitFit | null;
+    /** Evolução de lances observados pelo coletor no anúncio ligado (D-87). */
+    bidSteps: LotBidStep[];
   } | null;
 };

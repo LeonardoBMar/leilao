@@ -114,6 +114,11 @@ const lot: LotDetail = {
     market: { value: cents(9_800_000), origin: "source", refMonth: null },
     price: listing.estimate?.price ?? null,
     fit: "comfortable",
+    bidSteps: [
+      { observedAt: new Date("2026-10-11T15:00:00Z"), bid: cents(2_600_000) },
+      { observedAt: new Date("2026-10-12T03:00:00Z"), bid: cents(2_900_000) },
+      { observedAt: FIXED_AT, bid: cents(3_150_000) },
+    ],
   },
 };
 

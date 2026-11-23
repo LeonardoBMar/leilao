@@ -4,6 +4,7 @@ import { cache } from "react";
 
 import { compareToFixedLimit, roomToFixedLimit } from "@/domain/finance/calculator";
 import { estimatePrice, limitFit, type PriceEstimate } from "@/domain/listings/estimates";
+import { lotBidSteps } from "@/domain/lots/bid-history";
 import { cents } from "@/domain/money";
 import { getEstimateContext } from "@/features/listings/queries";
 import type { Prisma } from "@/generated/prisma/client";
@@ -355,6 +356,11 @@ export async function getLot(id: string): Promise<LotDetail | null> {
           marketValueCents: true,
           marketValueOrigin: true,
           marketValueRefMonth: true,
+          observations: {
+            where: { bidCents: { gt: 0 } },
+            orderBy: { observedAt: "asc" },
+            select: { observedAt: true, bidCents: true },
+          },
         },
       },
       _count: { select: { results: true, analyses: { where: { status: "fixed" } } } },
@@ -405,6 +411,13 @@ export async function getLot(id: string): Promise<LotDetail | null> {
           : { value: marketValue, origin: listing.marketValueOrigin, refMonth: listing.marketValueRefMonth },
       price,
       fit: price === null ? null : limitFit(price, maxBid),
+      bidSteps: lotBidSteps(
+        listing.observations.flatMap((observation) =>
+          observation.bidCents === null
+            ? []
+            : [{ observedAt: observation.observedAt, bid: cents(observation.bidCents) }],
+        ),
+      ),
     },
   };
 }
