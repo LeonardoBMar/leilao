@@ -143,6 +143,7 @@ export function ScatterPlot({
       <div onMouseLeave={() => setHoveredKey(null)}>
         <PlotFrame
           ariaLabel={ariaLabel}
+          interactive
           yDomain={yDomain}
           yTicks={yTicks}
           xTicks={
@@ -159,6 +160,7 @@ export function ScatterPlot({
         >
           {band ? (
             <span
+              aria-hidden="true"
               className="absolute inset-x-0 bg-data-1/60"
               style={{
                 bottom: `${percentOf(band.low, yDomain)}%`,
@@ -188,6 +190,7 @@ export function ScatterPlot({
           )}
           {reference ? (
             <span
+              aria-hidden="true"
               className="absolute inset-x-0 border-t border-dashed border-border-strong"
               style={{ bottom: `${percentOf(reference.value, yDomain)}%` }}
             >
@@ -215,6 +218,7 @@ export function ScatterPlot({
                 />
               </svg>
               <span
+                aria-hidden="true"
                 className="pointer-events-none absolute -translate-x-full text-caption leading-none text-muted"
                 style={{
                   left: `${percentOf(diagonalEnds[1], xDomain)}%`,
@@ -231,6 +235,7 @@ export function ScatterPlot({
               preserveAspectRatio="none"
               className="pointer-events-none absolute inset-0 size-full overflow-visible"
               focusable="false"
+              aria-hidden="true"
             >
               <polyline
                 points={medianLine}
@@ -244,7 +249,7 @@ export function ScatterPlot({
             </svg>
           ) : null}
           {points.map((point) => (
-            // Área de toque maior que o ponto; fora da ordem de tabulação, porque o gráfico é só para ver (a tabela serve ao teclado).
+            // Área de toque maior que o ponto; fora da ordem de tabulação, porque a tabela/lista serve ao teclado.
             <button
               key={point.key}
               type="button"
@@ -254,7 +259,7 @@ export function ScatterPlot({
               onMouseEnter={() => setHoveredKey(point.key)}
               onClick={() => setPinnedKey((current) => (current === point.key ? null : point.key))}
               aria-pressed={pinnedKey === point.key}
-              className="absolute flex size-11 -translate-x-1/2 translate-y-1/2 cursor-pointer items-center justify-center transition-[left,bottom] duration-180 md:size-9"
+              className="absolute flex size-11 -translate-x-1/2 translate-y-1/2 cursor-pointer items-center justify-center rounded-full outline-none transition-[left,bottom] duration-180 focus-visible:ring-2 focus-visible:ring-accent md:size-9"
               style={{ left: `${percentOf(spread(point), xDomain)}%`, bottom: `${percentOf(point.y, yDomain)}%` }}
             >
               <span
@@ -280,6 +285,7 @@ export function ScatterPlot({
           {medians.map((median) => (
             <span
               key={median.x}
+              aria-hidden="true"
               className="pointer-events-none absolute h-0.5 w-5 -translate-x-1/2 translate-y-1/2 rounded-full bg-foreground transition-[left,bottom] duration-180"
               style={{ left: `${percentOf(median.x, xDomain)}%`, bottom: `${percentOf(median.y, yDomain)}%` }}
             />

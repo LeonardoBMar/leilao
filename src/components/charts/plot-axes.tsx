@@ -11,6 +11,8 @@ type PlotFrameProps = {
   /** Rótulos do eixo horizontal, com a posição em % (`at`) a partir da esquerda; `minor` some abaixo de `sm`. */
   xTicks: readonly { key: string; at: number; label: string; minor?: boolean }[];
   ariaLabel: string;
+  /** Quando `children` contém controles focáveis (ex.: botões no `ScatterPlot`), evita `role="img"` + `aria-hidden` sobre eles. */
+  interactive?: boolean;
   children: ReactNode;
 };
 
@@ -18,9 +20,13 @@ type PlotFrameProps = {
  * Moldura comum da dispersão e da linha (D-45): rótulos do eixo y à esquerda, grade horizontal em `border` e rótulos do
  * eixo x embaixo, em HTML para o texto não escalar com o SVG. O conteúdo ocupa a área de plotagem (`relative`).
  */
-export function PlotFrame({ yTicks, yDomain, xTicks, ariaLabel, children }: PlotFrameProps) {
+export function PlotFrame({ yTicks, yDomain, xTicks, ariaLabel, interactive = false, children }: PlotFrameProps) {
   return (
-    <div role="img" aria-label={ariaLabel} className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-2">
+    <div
+      role={interactive ? "group" : "img"}
+      aria-label={ariaLabel}
+      className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-2"
+    >
       <div aria-hidden="true" className="relative h-52 min-w-10">
         {yTicks.map((tick) => (
           <span
@@ -32,10 +38,11 @@ export function PlotFrame({ yTicks, yDomain, xTicks, ariaLabel, children }: Plot
           </span>
         ))}
       </div>
-      <div aria-hidden="true" className="relative h-52 border-b border-border-strong">
+      <div aria-hidden={interactive ? undefined : true} className="relative h-52 border-b border-border-strong">
         {yTicks.map((tick) => (
           <span
             key={tick.value}
+            aria-hidden="true"
             className="absolute inset-x-0 border-t border-border"
             style={{ bottom: `${percentOf(tick.value, yDomain)}%` }}
           />

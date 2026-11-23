@@ -131,7 +131,7 @@ function OpenListingRow({
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`Abrir anúncio: ${listing.title} (abre em nova aba)`}
-          className="inline-flex min-h-10 items-center gap-1 rounded-md px-2 text-label text-accent hover:underline sm:min-h-9"
+          className="inline-flex min-h-10 items-center gap-1 rounded-md px-2 text-label text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent sm:min-h-9"
         >
           Anúncio
           <ExternalLink aria-hidden="true" className="size-3.5" />
