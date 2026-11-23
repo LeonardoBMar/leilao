@@ -172,7 +172,7 @@ export function EvaluateFilterBar({ params, models, facets, lotTarget }: Evaluat
             ) : null}
             <Link
               href={`/lotes/${lotTarget.id}`}
-              className="rounded-sm text-caption text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent"
+              className="inline-flex min-h-10 items-center rounded-sm px-1 text-caption text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent"
             >
               Ver ficha do lote
             </Link>
@@ -250,7 +250,7 @@ export function EvaluateFilterBar({ params, models, facets, lotTarget }: Evaluat
                     Mais filtros{drawerChips.length > 0 ? ` (${drawerChips.length})` : ""}
                   </Button>
                 </DialogTrigger>
-                <DrawerContent side="right">
+                <DrawerContent side="responsive">
                   <DialogHeader className="border-b border-border px-6 py-5">
                     <DialogTitle>Mais filtros</DialogTitle>
                     <DialogDescription className="text-caption text-muted">

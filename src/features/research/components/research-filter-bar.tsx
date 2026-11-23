@@ -207,7 +207,7 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
                 Mais filtros{chips.length > 0 ? ` (${chips.length})` : ""}
               </Button>
             </DialogTrigger>
-            <DrawerContent side="right">
+            <DrawerContent side="responsive">
               <DialogHeader className="border-b border-border px-6 py-5">
                 <DialogTitle>Mais filtros</DialogTitle>
                 <DialogDescription className="text-caption text-muted">

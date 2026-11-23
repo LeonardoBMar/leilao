@@ -56,8 +56,8 @@ function DialogContent({ className, children, hideClose = false, ...props }: Dia
 }
 
 type DrawerContentProps = DialogPrimitive.DialogContentProps & {
-  /** `right`: painel lateral (desktop). `bottom`: gaveta inferior (celular), até 85% da altura. */
-  side?: "right" | "bottom";
+  /** `right`: painel lateral (desktop). `bottom`: gaveta inferior (celular), até 85% da altura. `responsive`: inferior no celular e lateral a partir de `md`. */
+  side?: "right" | "bottom" | "responsive";
 };
 
 /**
@@ -75,6 +75,8 @@ function DrawerContent({ className, children, side = "right", ...props }: Drawer
             "inset-y-0 right-0 w-full max-w-110 translate-x-full border-l border-border data-[state=open]:translate-x-0 starting:translate-x-full",
           side === "bottom" &&
             "inset-x-0 bottom-0 max-h-[85dvh] translate-y-full rounded-t-xl border-t border-border data-[state=open]:translate-y-0 starting:translate-y-full",
+          side === "responsive" &&
+            "inset-x-0 bottom-0 max-h-[85dvh] translate-y-full rounded-t-xl border-t border-border data-[state=open]:translate-y-0 starting:translate-y-full md:inset-x-auto md:inset-y-0 md:right-0 md:max-h-none md:w-full md:max-w-110 md:translate-x-full md:translate-y-0 md:rounded-none md:border-t-0 md:border-l md:data-[state=open]:translate-x-0 md:starting:translate-x-full",
           className,
         )}
         {...props}

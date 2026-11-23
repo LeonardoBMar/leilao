@@ -97,7 +97,12 @@ export function ModelPicker({
   const noMatches = open && typed.trim() !== "" && matches.length === 0;
   const expanded = matches.length > 0 || noMatches;
 
-  function close() {
+  function dismiss() {
+    setOpen(false);
+    setActive(-1);
+  }
+
+  function reset() {
     setOpen(false);
     setActive(-1);
     setText(value ?? "");
@@ -134,7 +139,7 @@ export function ModelPicker({
       if (option) choose(option);
     } else if (event.key === "Escape" && open) {
       event.preventDefault();
-      close();
+      reset();
     }
   }
 
@@ -169,17 +174,17 @@ export function ModelPicker({
           }}
           onKeyDown={handleKeyDown}
           onFocus={(event) => {
-            event.target.select();
+            if (value !== null && text === value) event.target.select();
             if (skipNextFocusOpenRef.current) {
               skipNextFocusOpenRef.current = false;
               return;
             }
             setOpen(true);
           }}
-          onBlur={close}
+          onBlur={dismiss}
           className="h-10 w-full rounded-md border border-control-border bg-surface pr-10 pl-9 text-base text-foreground transition-[border-color,box-shadow] duration-120 outline-none placeholder:text-placeholder focus:border-accent focus:ring-2 focus:ring-accent/20 sm:text-body"
         />
-        {value || !shortcut ? null : (
+        {value || text !== "" || !shortcut ? null : (
           <kbd
             aria-hidden="true"
             className="pointer-events-none absolute top-1/2 right-3 hidden -translate-y-1/2 rounded-sm border border-border px-1.5 text-caption text-muted md:block"
@@ -187,15 +192,15 @@ export function ModelPicker({
             /
           </kbd>
         )}
-        {value ? (
+        {value || text !== "" ? (
           <button
             type="button"
-            aria-label={clearLabel}
+            aria-label={value ? clearLabel : "Limpar busca"}
             onClick={() => {
               setText("");
               setOpen(false);
               setActive(-1);
-              onChange(null);
+              if (value !== null) onChange(null);
               skipNextFocusOpenRef.current = true;
               inputRef.current?.focus();
             }}

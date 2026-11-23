@@ -38,7 +38,10 @@ export async function EvaluateEntry({ models }: { models: readonly ResearchModel
               Seus lotes em acompanhamento
             </h3>
             {lots.length > LOT_SHORTCUTS_SHOWN ? (
-              <Link href="/minhas-analises" className="text-caption text-accent hover:underline">
+              <Link
+                href="/minhas-analises"
+                className="inline-flex min-h-10 items-center rounded-sm px-1 text-caption text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent"
+              >
                 Ver todos em Minhas análises
               </Link>
             ) : null}

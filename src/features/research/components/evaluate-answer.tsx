@@ -154,7 +154,7 @@ export function EvaluateAnswer({
                   focusTargetId="resposta-titulo"
                   variant="link"
                   size="sm"
-                  className="h-auto px-0 py-0 text-caption"
+                  className="min-h-10 px-1 text-caption"
                 >
                   Voltar para a conta
                 </ResearchNavButton>
