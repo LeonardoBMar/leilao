@@ -135,9 +135,17 @@ export function EvaluateFilterBar({ params, models, facets, lotTarget }: Evaluat
   const [filters, setOptimisticFilters] = useOptimistic(parseEvaluateParams(params));
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [draft, setDraft] = useState<EvaluateFilters>(filters);
+  const [unlinkedLot, setUnlinkedLot] = useState<{ label: string; previous: EvaluateFilters } | null>(null);
 
   const drawerChips = facets === null || filters.vehicle === null ? [] : activeRefinements(filters, facets);
   const draftDrawerCount = facets === null || draft.vehicle === null ? 0 : activeRefinements(draft, facets).length;
+  const draftChanged =
+    draft.family !== filters.family ||
+    draft.version !== filters.version ||
+    draft.yearFrom !== filters.yearFrom ||
+    draft.yearTo !== filters.yearTo ||
+    draft.maxKm !== filters.maxKm ||
+    draft.origin !== filters.origin;
   const conditionChanged = filters.condition !== DEFAULT_EVALUATE_FILTERS.condition;
   const totalRefinements = drawerChips.length + (conditionChanged ? 1 : 0);
 
@@ -161,7 +169,37 @@ export function EvaluateFilterBar({ params, models, facets, lotTarget }: Evaluat
         aria-label="Veículo avaliado"
         className="grid gap-3 border-b border-border bg-surface pb-3 xl:sticky xl:top-12 xl:z-30 xl:py-2.5"
       >
-        {lotTarget === null || filters.lot === null ? null : (
+        {lotTarget === null || filters.lot === null ? (
+          unlinkedLot === null ? null : (
+            <div
+              role="status"
+              className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md bg-surface-subtle px-3 py-1.5 text-caption text-foreground-secondary"
+            >
+              <span>Comparação com {unlinkedLot.label} encerrada ao trocar de modelo.</span>
+              <Button
+                variant="link"
+                size="sm"
+                className="h-10 px-1 text-caption"
+                onClick={() => {
+                  const previous = unlinkedLot.previous;
+                  setUnlinkedLot(null);
+                  apply(previous, { focusStatus: true });
+                }}
+              >
+                Desfazer
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Fechar aviso de lote desvinculado"
+                className="ml-auto"
+                onClick={() => setUnlinkedLot(null)}
+              >
+                <X aria-hidden="true" />
+              </Button>
+            </div>
+          )
+        ) : (
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-label text-foreground">
             <span className="inline-flex items-center gap-2">
               <Target aria-hidden="true" className="size-4 shrink-0 text-muted" />
@@ -180,7 +218,10 @@ export function EvaluateFilterBar({ params, models, facets, lotTarget }: Evaluat
               variant="ghost"
               size="icon"
               aria-label="Deixar de comparar com o lote"
-              onClick={() => apply({ ...filters, lot: null }, { focusStatus: true })}
+              onClick={() => {
+                setUnlinkedLot(null);
+                apply({ ...filters, lot: null }, { focusStatus: true });
+              }}
             >
               <X aria-hidden="true" />
             </Button>
@@ -193,13 +234,18 @@ export function EvaluateFilterBar({ params, models, facets, lotTarget }: Evaluat
             options={models}
             placeholder="Busque um modelo: onix, cg 160, hilux…"
             clearLabel="Escolher outro modelo"
-            onChange={(option) =>
+            onChange={(option) => {
+              if (lotTarget !== null && filters.lot !== null) {
+                setUnlinkedLot({ label: lotTarget.label, previous: filters });
+              } else {
+                setUnlinkedLot(null);
+              }
               apply({
                 ...DEFAULT_EVALUATE_FILTERS,
                 vehicle: option === null ? null : { brand: option.brand, model: option.model },
                 condition: filters.condition,
-              })
-            }
+              });
+            }}
             className="w-full md:w-auto md:min-w-60 md:flex-1"
           />
 
@@ -258,6 +304,11 @@ export function EvaluateFilterBar({ params, models, facets, lotTarget }: Evaluat
                     </DialogDescription>
                   </DialogHeader>
                   <DrawerBody className="gap-6">
+                    {draftChanged ? (
+                      <p role="status" className="rounded-md bg-surface-subtle px-3 py-2 text-caption text-muted">
+                        As contagens refletem o recorte atual e serão atualizadas ao clicar em Aplicar.
+                      </p>
+                    ) : null}
                     <fieldset className="grid gap-4">
                       <legend className="mb-1 text-caption font-semibold text-muted">Veículo</legend>
                       {facets.families.length > 0 || draft.family !== null ? (
@@ -267,6 +318,7 @@ export function EvaluateFilterBar({ params, models, facets, lotTarget }: Evaluat
                           allLabel="Todas as famílias"
                           value={draft.family}
                           options={facets.families}
+                          allowZero={draftChanged}
                           onChange={(family) => setDraft((current) => ({ ...current, family, version: null }))}
                         />
                       ) : null}
@@ -278,6 +330,7 @@ export function EvaluateFilterBar({ params, models, facets, lotTarget }: Evaluat
                           allLabel="Todas as versões"
                           value={draft.version}
                           options={facets.versions}
+                          allowZero={draftChanged}
                           onChange={(version) => setDraft((current) => ({ ...current, version }))}
                         />
                       ) : null}
@@ -288,6 +341,7 @@ export function EvaluateFilterBar({ params, models, facets, lotTarget }: Evaluat
                           allLabel="Ano inicial"
                           value={draft.yearFrom === null ? null : String(draft.yearFrom)}
                           options={facets.years.map(({ year, n }) => ({ value: String(year), label: `De ${year}`, n }))}
+                          allowZero={draftChanged}
                           onChange={(year) =>
                             setDraft((current) => ({
                               ...current,
@@ -304,6 +358,7 @@ export function EvaluateFilterBar({ params, models, facets, lotTarget }: Evaluat
                             label: `Até ${year}`,
                             n,
                           }))}
+                          allowZero={draftChanged}
                           onChange={(year) =>
                             setDraft((current) => ({
                               ...current,
@@ -341,6 +396,7 @@ export function EvaluateFilterBar({ params, models, facets, lotTarget }: Evaluat
                           label: ORIGIN_LABELS[origin],
                           n: facets.origins[origin],
                         }))}
+                        allowZero={draftChanged}
                         onChange={(value) =>
                           setDraft((current) => ({
                             ...current,
@@ -430,6 +486,7 @@ function DrawerSelect({
   allLabel,
   value,
   options,
+  allowZero = false,
   onChange,
 }: {
   label: string;
@@ -437,6 +494,7 @@ function DrawerSelect({
   allLabel: string;
   value: string | null;
   options: readonly { value: string; label: string; n?: number }[];
+  allowZero?: boolean;
   onChange: (value: string | null) => void;
 }) {
   const labelId = useId();
@@ -451,7 +509,11 @@ function DrawerSelect({
         <SelectContent>
           <SelectItem value={ALL}>{allLabel}</SelectItem>
           {options.map((option) => (
-            <SelectItem key={option.value} value={option.value} disabled={option.n === 0 && option.value !== value}>
+            <SelectItem
+              key={option.value}
+              value={option.value}
+              disabled={!allowZero && option.n === 0 && option.value !== value}
+            >
               {option.n === undefined ? option.label : <OptionWithCount label={option.label} count={option.n} />}
             </SelectItem>
           ))}

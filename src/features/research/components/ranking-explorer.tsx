@@ -3,7 +3,7 @@
 import { ChevronRight } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
-import { useId, useState } from "react";
+import { useId, useSyncExternalStore } from "react";
 
 import { percentOf } from "@/components/charts/data-steps";
 import {
@@ -38,6 +38,84 @@ import {
 
 /** Linhas visíveis antes de "Mostrar todos". */
 const RANKING_VISIBLE = 15;
+
+const RANKING_STORAGE_KEY = "leilao-mercado-ranking-state";
+
+type RankingViewState = {
+  sort: RankingSort;
+  age: RankingAge;
+  typed: string;
+  expanded: boolean;
+  includeSmall: boolean;
+};
+
+const DEFAULT_RANKING_STATE: RankingViewState = {
+  sort: "sales",
+  age: "all",
+  typed: "",
+  expanded: false,
+  includeSmall: false,
+};
+
+const rankingListeners = new Set<() => void>();
+let cachedRankingRaw: string | null = null;
+let cachedRankingState: RankingViewState = DEFAULT_RANKING_STATE;
+
+function subscribeRankingState(listener: () => void): () => void {
+  rankingListeners.add(listener);
+  return () => rankingListeners.delete(listener);
+}
+
+function rankingServerSnapshot(): RankingViewState {
+  return DEFAULT_RANKING_STATE;
+}
+
+function rankingSnapshot(): RankingViewState {
+  if (typeof window === "undefined") return DEFAULT_RANKING_STATE;
+  try {
+    const raw = window.sessionStorage.getItem(RANKING_STORAGE_KEY);
+    if (raw === cachedRankingRaw) return cachedRankingState;
+    cachedRankingRaw = raw;
+    if (!raw) {
+      cachedRankingState = DEFAULT_RANKING_STATE;
+      return cachedRankingState;
+    }
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed === "object" && parsed !== null) {
+      const sortValue = "sort" in parsed ? parsed.sort : undefined;
+      const ageValue = "age" in parsed ? parsed.age : undefined;
+      const typedValue = "typed" in parsed ? parsed.typed : undefined;
+      const expandedValue = "expanded" in parsed ? parsed.expanded : undefined;
+      const includeSmallValue = "includeSmall" in parsed ? parsed.includeSmall : undefined;
+      const sort = RANKING_SORTS.find((key) => key === sortValue) ?? DEFAULT_RANKING_STATE.sort;
+      const age = RANKING_AGES.find((key) => key === ageValue) ?? DEFAULT_RANKING_STATE.age;
+      const typed = typeof typedValue === "string" ? typedValue : "";
+      const expanded = typeof expandedValue === "boolean" ? expandedValue : false;
+      const includeSmall = typeof includeSmallValue === "boolean" ? includeSmallValue : false;
+      cachedRankingState = { sort, age, typed, expanded, includeSmall };
+      return cachedRankingState;
+    }
+  } catch {
+    // sessionStorage indisponível
+  }
+  cachedRankingState = DEFAULT_RANKING_STATE;
+  return cachedRankingState;
+}
+
+function updateRankingState(patch: Partial<RankingViewState>): void {
+  const next: RankingViewState = { ...rankingSnapshot(), ...patch };
+  cachedRankingState = next;
+  if (typeof window !== "undefined") {
+    try {
+      const raw = JSON.stringify(next);
+      window.sessionStorage.setItem(RANKING_STORAGE_KEY, raw);
+      cachedRankingRaw = raw;
+    } catch {
+      // sessionStorage indisponível
+    }
+  }
+  for (const listener of rankingListeners) listener();
+}
 
 /** Ano e lance viram colunas só no `xl`: antes disso a faixa ficaria estreita demais, e eles vão na legenda. */
 const ROW_GRID =
@@ -74,11 +152,11 @@ function contextLabel({ year, bid }: RankingRow): string {
  * para o geral. A ordem e a busca são só desta tela.
  */
 export function RankingExplorer({ rows, axisMax, ticks, overall }: RankingExplorerProps) {
-  const [sort, setSort] = useState<RankingSort>("sales");
-  const [age, setAge] = useState<RankingAge>("all");
-  const [typed, setTyped] = useState("");
-  const [expanded, setExpanded] = useState(false);
-  const [includeSmall, setIncludeSmall] = useState(false);
+  const { sort, age, typed, expanded, includeSmall } = useSyncExternalStore(
+    subscribeRankingState,
+    rankingSnapshot,
+    rankingServerSnapshot,
+  );
   const sortLabelId = useId();
   const ageLabelId = useId();
   const domain = [0, axisMax] as const;
@@ -96,7 +174,7 @@ export function RankingExplorer({ rows, axisMax, ticks, overall }: RankingExplor
           aria-label="Filtrar modelos na lista do ranking"
           placeholder="Filtrar modelos na lista…"
           value={typed}
-          onChange={(event) => setTyped(event.target.value)}
+          onChange={(event) => updateRankingState({ typed: event.target.value })}
           containerClassName="w-full sm:w-56"
         />
         <span id={ageLabelId} className="sr-only">
@@ -106,7 +184,7 @@ export function RankingExplorer({ rows, axisMax, ticks, overall }: RankingExplor
           value={age}
           onValueChange={(value) => {
             const next = RANKING_AGES.find((key) => key === value);
-            if (next) setAge(next);
+            if (next) updateRankingState({ age: next });
           }}
         >
           <SelectTrigger aria-labelledby={ageLabelId} className="w-40">
@@ -127,7 +205,7 @@ export function RankingExplorer({ rows, axisMax, ticks, overall }: RankingExplor
           value={sort}
           onValueChange={(value) => {
             const next = RANKING_SORTS.find((key) => key === value);
-            if (next) setSort(next);
+            if (next) updateRankingState({ sort: next });
           }}
         >
           <SelectTrigger aria-labelledby={sortLabelId} className="w-44">
@@ -142,7 +220,11 @@ export function RankingExplorer({ rows, axisMax, ticks, overall }: RankingExplor
           </SelectContent>
         </Select>
         {smallCount > 0 ? (
-          <ToggleChip pressed={includeSmall} onPressedChange={setIncludeSmall} count={smallCount}>
+          <ToggleChip
+            pressed={includeSmall}
+            onPressedChange={(pressed) => updateRankingState({ includeSmall: pressed })}
+            count={smallCount}
+          >
             Amostra pequena
           </ToggleChip>
         ) : null}
@@ -206,7 +288,12 @@ export function RankingExplorer({ rows, axisMax, ticks, overall }: RankingExplor
       )}
 
       {matching.length > RANKING_VISIBLE ? (
-        <Button variant="link" size="sm" className="h-10 w-fit px-0" onClick={() => setExpanded((open) => !open)}>
+        <Button
+          variant="link"
+          size="sm"
+          className="h-10 w-fit px-0"
+          onClick={() => updateRankingState({ expanded: !expanded })}
+        >
           {expanded ? "Mostrar só os primeiros" : `Mostrar todos os ${matching.length} modelos`}
         </Button>
       ) : null}
