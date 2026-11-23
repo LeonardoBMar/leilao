@@ -39,6 +39,12 @@ async function main() {
       process.stdout.write(`Tabela FIPE ${item.month}: ainda não publicada no dataset\n`);
     }
   }
+  if (summary.maintenance.rawPruned > 0 || summary.maintenance.runsDeleted > 0) {
+    process.stdout.write(
+      `Manutenção: ${summary.maintenance.rawPruned} payloads raw compactados · ` +
+        `${summary.maintenance.runsDeleted} execuções antigas removidas\n`,
+    );
+  }
   for (const warning of summary.warnings) process.stdout.write(`  aviso: ${warning}\n`);
   if (summary.status === "failed") process.exitCode = 1;
 }

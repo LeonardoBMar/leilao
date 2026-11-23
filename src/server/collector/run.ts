@@ -13,6 +13,7 @@ import { enrichMarketValues } from "../fipe/enrich";
 import { createAlerts } from "./alerts";
 import { createPoliteFetcher, DEADLINE_ERROR, type PoliteFetcher } from "./http";
 import { recordTrackedResults, syncTrackedLots } from "./lots";
+import { pruneCatalogStorage, type RetentionSummary } from "./retention";
 import {
   findDueVisits,
   findKnownIds,
@@ -74,6 +75,8 @@ export type CollectionSummary = {
   marketValuesMatched: number;
   /** Meses da tabela FIPE baixados (ou tentados) do dataset nesta execução (D-51); vazio se nada faltava. */
   fipeImports: FipeImportResult[];
+  /** Manutenção de armazenamento executada ao fim da coleta (D-87). */
+  maintenance: RetentionSummary;
   /**
    * Problemas do valor de mercado (importação da tabela, casamento). Só aviso no log: não marcam a coleta como falha,
    * porque o anúncio fica pendente e a próxima execução tenta de novo.
@@ -193,6 +196,15 @@ export async function runCollection({
     errors.push({ url: "(alertas)", error: describeError(error) });
   }
 
+  // Manutenção de armazenamento (D-87): compactação de `listings.raw` antigo e expurgo de `collector_runs`.
+  // Só aviso em caso de falha, sem marcar a coleta como falha.
+  let maintenance: RetentionSummary = { rawPruned: 0, runsDeleted: 0 };
+  try {
+    maintenance = await pruneCatalogStorage(now());
+  } catch (error) {
+    warn(`manutenção do catálogo: ${describeError(error)}`);
+  }
+
   // Falha dos passos comuns aparece no registro de cada fonte, para o app mostrar (o cartão lê `collector_runs`).
   const summaries = await Promise.all(runs.map((run) => run.finish({ errors, alertsCreated, finishedAt: now() })));
   const failed = errors.length > 0 || summaries.some((summary) => summary.status === "failed");
@@ -204,6 +216,7 @@ export async function runCollection({
     alertsCreated,
     marketValuesMatched,
     fipeImports,
+    maintenance,
     warnings,
     errors: errors.slice(0, MAX_ERROR_SAMPLES),
   };
