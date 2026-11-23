@@ -2,6 +2,8 @@ import { type ReactNode, Suspense } from "react";
 
 import { Skeleton } from "@/components/ui";
 import { type EvaluateFilters, familyLabel, targetFilters } from "@/domain/research/evaluate";
+import { ORIGIN_LABELS } from "@/features/listings/filter-labels";
+import { formatCompactBRL, formatKm } from "@/lib/format";
 
 import { getEvaluateModels, getEvaluation, getLotTarget } from "../queries";
 import { evaluateParams, parseEvaluateParams } from "../schemas";
@@ -47,6 +49,21 @@ export async function EvaluateView({
 }) {
   const { filters, lot, lotNotFound } = await resolveEvaluation(searchParams);
   const [models, evaluation] = await Promise.all([getEvaluateModels(), getEvaluation(filters, lot?.target ?? null)]);
+  const lotTarget =
+    lot === null
+      ? null
+      : {
+          id: lot.id,
+          label: lot.label,
+          details: [
+            lot.target.mileageKm === null ? null : formatKm(lot.target.mileageKm),
+            lot.target.marketValue === null ? null : `FIPE ${formatCompactBRL(lot.target.marketValue)}`,
+            lot.target.origin === null ? null : ORIGIN_LABELS[lot.target.origin],
+          ]
+            .filter((part) => part !== null)
+            .join(" · "),
+        };
+
   return (
     <ResearchShell
       filterBar={
@@ -54,7 +71,7 @@ export async function EvaluateView({
           params={evaluateParams(filters)}
           models={models}
           facets={evaluation === null ? null : facetsOf(evaluation)}
-          lotLabel={lot?.label ?? null}
+          lotTarget={lotTarget}
         />
       }
     >

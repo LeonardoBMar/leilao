@@ -1,6 +1,7 @@
 "use client";
 
 import { LoaderCircle, SlidersHorizontal, Target, X } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useOptimistic, useRef, useState } from "react";
 
@@ -53,6 +54,12 @@ export type EvaluateFacets = {
   total: number;
 };
 
+export type EvaluateLotContext = {
+  id: string;
+  label: string;
+  details: string;
+};
+
 type EvaluateFilterBarProps = {
   /** Recorte em vigor como parâmetros (o do lote, quando a URL só traz `lote`). */
   params: Readonly<Record<string, string>>;
@@ -60,7 +67,7 @@ type EvaluateFilterBarProps = {
   /** `null` sem modelo escolhido. */
   facets: EvaluateFacets | null;
   /** Lote que serve de alvo, se houver. */
-  lotLabel: string | null;
+  lotTarget: EvaluateLotContext | null;
 };
 
 type ActiveRefinement = { id: string; label: string; without: EvaluateFilters };
@@ -120,7 +127,7 @@ function withoutRefinements(filters: EvaluateFilters): EvaluateFilters {
  * modelo, condição, gaveta "Refinar recorte" (família, versão FIPE, ano, km e origem com rótulos visíveis) e chips
  * removíveis abaixo. "Limpar refinamentos" preserva o modelo escolhido; trocar o modelo recomeça o recorte.
  */
-export function EvaluateFilterBar({ params, models, facets, lotLabel }: EvaluateFilterBarProps) {
+export function EvaluateFilterBar({ params, models, facets, lotTarget }: EvaluateFilterBarProps) {
   const router = useRouter();
   const conditionLabelId = useId();
   const statusRef = useRef<HTMLParagraphElement>(null);
@@ -154,10 +161,21 @@ export function EvaluateFilterBar({ params, models, facets, lotLabel }: Evaluate
         aria-label="Veículo avaliado"
         className="grid gap-3 border-b border-border bg-surface pb-3 xl:sticky xl:top-12 xl:z-30 xl:py-2.5"
       >
-        {lotLabel === null || filters.lot === null ? null : (
-          <p className="flex flex-wrap items-center gap-2 text-label text-foreground">
-            <Target aria-hidden="true" className="size-4 text-muted" />
-            Comparando com o {lotLabel}
+        {lotTarget === null || filters.lot === null ? null : (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-label text-foreground">
+            <span className="inline-flex items-center gap-2">
+              <Target aria-hidden="true" className="size-4 shrink-0 text-muted" />
+              <span>Comparando com o {lotTarget.label}</span>
+            </span>
+            {lotTarget.details ? (
+              <span className="text-caption font-normal text-muted tabular-nums">{lotTarget.details}</span>
+            ) : null}
+            <Link
+              href={`/lotes/${lotTarget.id}`}
+              className="rounded-sm text-caption text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent"
+            >
+              Ver ficha do lote
+            </Link>
             <Button
               variant="ghost"
               size="icon"
@@ -166,7 +184,7 @@ export function EvaluateFilterBar({ params, models, facets, lotLabel }: Evaluate
             >
               <X aria-hidden="true" />
             </Button>
-          </p>
+          </div>
         )}
 
         <div className="flex flex-wrap items-center gap-2">
