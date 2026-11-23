@@ -72,11 +72,33 @@ export async function ResearchView({
 
   const noSales = <NoSales since={since} suggestions={noSalesSuggestions(filters, facets)} />;
 
+  const sectionAnchors = [
+    filters.vehicle === null
+      ? { href: "#pesquisa-modelos", label: "Modelos" }
+      : { href: "#pesquisa-vendas", label: "Vendas do modelo" },
+    { href: "#pesquisa-origem", label: "Origem" },
+    { href: "#pesquisa-condicao", label: "Condição" },
+    { href: "#pesquisa-estado", label: "Onde" },
+    { href: "#pesquisa-leitura", label: "Como lemos" },
+  ] as const;
+
   return (
     <ResearchShell filterBar={<ResearchFilterBar params={researchParams(filters)} facets={facets} />}>
       <Suspense fallback={<ResearchSummarySkeleton />}>
         <ResearchSummary filters={filters} />
       </Suspense>
+      <nav aria-label="Seções do panorama" className="flex flex-wrap items-center gap-x-4 gap-y-1">
+        <span className="text-caption text-muted">Ir para:</span>
+        {sectionAnchors.map((item) => (
+          <a
+            key={item.href}
+            href={item.href}
+            className="inline-flex min-h-10 items-center rounded-sm text-caption font-medium text-foreground-secondary outline-none hover:text-accent hover:underline focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            {item.label}
+          </a>
+        ))}
+      </nav>
       {filters.compare === null ? null : (
         <Suspense fallback={<ResearchBlockSkeleton title={COMPARISON_BLOCK_TITLE} />}>
           <ComparisonBlock filters={filters} noSales={noSales} />

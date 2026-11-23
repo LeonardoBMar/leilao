@@ -10,7 +10,7 @@ import { recentModelsServerSnapshot, recentModelsSnapshot, subscribeRecentModels
 import { evaluateHref } from "../search";
 
 /** Máximo de modelos recentes exibidos na entrada. */
-const MAX_RECENT_LINKS = 4;
+const MAX_RECENT_LINKS = 3;
 
 /** Modelos buscados por último neste navegador (D-62), como atalhos do Avaliar. Sem nenhum, nada. */
 export function RecentModelLinks() {

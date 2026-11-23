@@ -1,4 +1,4 @@
-import { ChevronDown, RotateCcw } from "lucide-react";
+import { AlertTriangle, ChevronDown, RotateCcw } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Badge, Card } from "@/components/ui";
@@ -139,76 +139,87 @@ export function EvaluateAnswer({
                 )}
               </dl>
             ) : null}
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-muted tabular-nums">
-              <p>
-                Base: {salesLabel(answer.n)} {EVALUATE_LEVEL_LABELS[level]} ({formatDate(answer.from)} a{" "}
-                {formatDate(answer.to)}){excluded > 0 ? `, sem as ${salesLabel(excluded)} que você tirou` : ""}.
-              </p>
-              {excluded > 0 ? (
-                <ResearchNavButton
-                  href={evaluateHref({ ...filters, excluded: [] })}
-                  focusTargetId="resposta-titulo"
-                  variant="link"
-                  size="sm"
-                  className="min-h-10 px-1 text-caption"
-                >
-                  Voltar para a conta
-                </ResearchNavButton>
-              ) : null}
-            </div>
-            {showMixedYears ? (
-              <div className="grid gap-2">
-                <p className="text-caption text-warning">
-                  Sem filtro de ano, a faixa junta {evaluation.years.length} anos-modelo. Escolha um ano para uma faixa
-                  mais justa:
+            <div className="grid gap-3 border-t border-border pt-4">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-muted tabular-nums">
+                <p>
+                  Base: {salesLabel(answer.n)} {EVALUATE_LEVEL_LABELS[level]} ({formatDate(answer.from)} a{" "}
+                  {formatDate(answer.to)}){excluded > 0 ? `, sem as ${salesLabel(excluded)} que você tirou` : ""}.
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {evaluation.years
-                    .toSorted((a, b) => b.n - a.n || b.year - a.year)
-                    .slice(0, 3)
-                    .map(({ year, n }) => (
-                      <ResearchNavButton
-                        key={year}
-                        href={evaluateHref({ ...filters, yearFrom: year, yearTo: year })}
-                        variant="secondary"
-                        size="sm"
-                      >
-                        Só {year} ({salesLabel(n)})
-                      </ResearchNavButton>
-                    ))}
+                {excluded > 0 ? (
+                  <ResearchNavButton
+                    href={evaluateHref({ ...filters, excluded: [] })}
+                    focusTargetId="resposta-titulo"
+                    variant="link"
+                    size="sm"
+                    className="min-h-10 px-1 text-caption"
+                  >
+                    Voltar para a conta
+                  </ResearchNavButton>
+                ) : null}
+              </div>
+              {showMixedYears ? (
+                <div className="grid gap-2">
+                  <p className="flex items-start gap-1.5 text-caption text-warning">
+                    <AlertTriangle aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
+                    <span>
+                      Sem filtro de ano, a faixa junta {evaluation.years.length} anos-modelo. Escolha um ano para uma
+                      faixa mais justa:
+                    </span>
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {evaluation.years
+                      .toSorted((a, b) => b.n - a.n || b.year - a.year)
+                      .slice(0, 3)
+                      .map(({ year, n }) => (
+                        <ResearchNavButton
+                          key={year}
+                          href={evaluateHref({ ...filters, yearFrom: year, yearTo: year })}
+                          variant="secondary"
+                          size="sm"
+                        >
+                          Só {year} ({salesLabel(n)})
+                        </ResearchNavButton>
+                      ))}
+                  </div>
                 </div>
+              ) : answer.confidence === "low" ? (
+                <p className="flex items-start gap-1.5 text-caption text-warning">
+                  <AlertTriangle aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
+                  <span>
+                    Para estreitar a faixa, refine versão FIPE ou km em Mais filtros, ou tire vendas fora do padrão na
+                    lista abaixo.
+                  </span>
+                </p>
+              ) : null}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <details className="group text-caption text-muted">
+                  <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-1 rounded-sm font-medium text-foreground-secondary outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
+                    <ChevronDown
+                      aria-hidden="true"
+                      className="size-3.5 transition-transform duration-150 group-open:rotate-180"
+                    />
+                    Como calculamos
+                  </summary>
+                  <div className="mt-2 grid max-w-3xl gap-1.5">
+                    <p>
+                      Lances finais das vendas arrematadas no catálogo nos últimos 12 meses, de qualquer região, dentro
+                      do recorte acima. A faixa é onde deve cair metade das próximas vendas: com poucas vendas ela se
+                      alarga, porque a amostra ainda não mostra toda a variação.
+                    </p>
+                    <p>
+                      A confiança olha o número de vendas e a largura da faixa: alta com 20 vendas ou mais e faixa
+                      estreita; baixa com faixa larga. Sem descrição do estado de cada veículo, a mediana erra em torno
+                      de 13% com confiança alta e 25% com confiança baixa.
+                    </p>
+                    <p>
+                      &ldquo;Sem monta declarada&rdquo; significa que a fonte não informou a classificação de avaria —
+                      não equivale a veículo sem sinistro.
+                    </p>
+                  </div>
+                </details>
+                {actions}
               </div>
-            ) : answer.confidence === "low" ? (
-              <p className="text-caption text-warning">
-                Para estreitar a faixa, refine versão FIPE ou km em Mais filtros, ou tire vendas fora do padrão na lista
-                abaixo.
-              </p>
-            ) : null}
-            <details className="group text-caption text-muted">
-              <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-1 rounded-sm font-medium text-foreground-secondary outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
-                <ChevronDown
-                  aria-hidden="true"
-                  className="size-3.5 transition-transform duration-150 group-open:rotate-180"
-                />
-                Como calculamos
-              </summary>
-              <div className="mt-2 grid max-w-3xl gap-1.5">
-                <p>
-                  Lances finais das vendas arrematadas no catálogo nos últimos 12 meses, de qualquer região, dentro do
-                  recorte acima. A faixa é onde deve cair metade das próximas vendas: com poucas vendas ela se alarga,
-                  porque a amostra ainda não mostra toda a variação.
-                </p>
-                <p>
-                  A confiança olha o número de vendas e a largura da faixa: alta com 20 vendas ou mais e faixa estreita;
-                  baixa com faixa larga. Sem descrição do estado de cada veículo, a mediana erra em torno de 13% com
-                  confiança alta e 25% com confiança baixa.
-                </p>
-                <p>
-                  &ldquo;Sem monta declarada&rdquo; significa que a fonte não informou a classificação de avaria — não
-                  equivale a veículo sem sinistro.
-                </p>
-              </div>
-            </details>
+            </div>
           </>
         ) : (
           <div className="grid gap-3">
@@ -227,9 +238,9 @@ export function EvaluateAnswer({
                 : `A faixa precisa de ${answer.needed} vendas. As que existem aparecem abaixo, uma a uma.`}
             </p>
             {loosenLinks}
+            {actions}
           </div>
         )}
-        {actions}
       </Card>
     </section>
   );

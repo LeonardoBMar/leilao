@@ -10,10 +10,10 @@ import type { ResearchModelOption } from "../types";
 import { RecentModelLinks } from "./recent-model-links";
 
 /** Lotes do usuário mostrados de início na entrada. */
-const LOT_SHORTCUTS_SHOWN = 4;
+const LOT_SHORTCUTS_SHOWN = 3;
 
 /** Mais vendidos sugeridos na entrada. */
-const TOP_MODELS = 4;
+const TOP_MODELS = 3;
 
 /**
  * Entrada do Avaliar sem veículo (docs/PLANO-MERCADO.md §5.2): a pergunta da tela e atalhos para o que o usuário

@@ -244,7 +244,7 @@ function RankingRowLink({
       <span className="col-span-3 min-w-0 md:col-span-1">
         <span className="block truncate text-body font-medium text-foreground">{row.label}</span>
         <span className="block truncate text-caption text-muted tabular-nums">
-          {smallSampleLabel(row.n)} · {perWeekLabel(row.perWeek)} · faixa {formatRatio(row.low)}–{formatRatio(row.high)}
+          {smallSampleLabel(row.n)} · {perWeekLabel(row.perWeek)}
           {versus ? ` · ${versus}` : ""}
         </span>
         <span className="block truncate text-caption text-muted tabular-nums xl:hidden">{contextLabel(row)}</span>
