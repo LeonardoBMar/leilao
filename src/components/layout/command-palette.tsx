@@ -18,15 +18,19 @@ import {
 } from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, useSyncExternalStore } from "react";
 
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
+import { matchesCommandQuery, normalizeCommandText } from "./command-palette-search";
+import { getCommandItemsServerSnapshot, getCommandItemsSnapshot, subscribeCommandItems } from "./command-palette-store";
+
 type CommandDestination = {
   href: Route;
   label: string;
-  group: "Navegação" | "Mercado" | "Ações" | "Buscar";
+  meta?: string;
+  group: "Navegação" | "Mercado" | "Ações" | "Acompanhando" | "Buscar";
   keywords: string;
   icon: LucideIcon;
 };
@@ -108,17 +112,31 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const listboxId = useId();
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const quickItems = useSyncExternalStore(
+    subscribeCommandItems,
+    getCommandItemsSnapshot,
+    getCommandItemsServerSnapshot,
+  );
 
   const trimmedQuery = query.trim();
-  const normalized = trimmedQuery.toLowerCase();
-  const filtered = normalized
-    ? DESTINATIONS.filter(
-        (item) =>
-          item.label.toLowerCase().includes(normalized) ||
-          item.keywords.includes(normalized) ||
-          item.group.toLowerCase().includes(normalized),
-      )
+  const normalized = normalizeCommandText(trimmedQuery);
+  const filteredDestinations = normalized
+    ? DESTINATIONS.filter((item) => matchesCommandQuery([item.label, item.keywords, item.group], normalized))
     : DESTINATIONS;
+
+  const followedDestinations: readonly CommandDestination[] = quickItems.map((item) => ({
+    href: item.href,
+    label: item.label,
+    meta: item.meta,
+    group: "Acompanhando",
+    keywords: item.keywords ?? "",
+    icon: Eye,
+  }));
+  const filteredFollowed = normalized
+    ? followedDestinations.filter((item) =>
+        matchesCommandQuery([item.label, item.meta, item.keywords, item.group], normalized),
+      )
+    : followedDestinations.slice(0, 5);
 
   const searchActions: readonly CommandDestination[] =
     normalized.length >= 2
@@ -140,7 +158,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         ]
       : [];
 
-  const items = [...filtered, ...searchActions];
+  const items = [...filteredDestinations, ...filteredFollowed, ...searchActions];
   const activeIndex = items.length > 0 ? Math.min(selectedIndex, items.length - 1) : -1;
   const activeOptionId = activeIndex >= 0 ? `${listboxId}-option-${activeIndex}` : undefined;
 
@@ -242,8 +260,11 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                       strokeWidth={1.75}
                       className={cn("size-4 shrink-0", isSelected ? "text-foreground" : "text-muted-subtle")}
                     />
-                    <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                    <span className="text-caption text-muted">{item.group}</span>
+                    <span className="min-w-0 flex-1 truncate">
+                      <span>{item.label}</span>
+                      {item.meta ? <span className="ml-2 text-caption font-normal text-muted">{item.meta}</span> : null}
+                    </span>
+                    <span className="shrink-0 text-caption text-muted">{item.group}</span>
                   </li>
                 );
               })}

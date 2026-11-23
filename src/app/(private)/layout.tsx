@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui";
 import { UnreadAlertsBadge } from "@/features/alerts/components/unread-alerts-badge";
 import { NextAuctionCard } from "@/features/auctions/components/next-auction-card";
 import { UserMenu } from "@/features/auth/components/user-menu";
+import { FollowedLotsCommandItems } from "@/features/lots/components/followed-lots-command-items";
 import { FollowedLotsNav } from "@/features/lots/components/followed-lots-nav";
 
 /**
@@ -36,9 +37,20 @@ export default function PrivateLayout({ children }: LayoutProps<"/">) {
       <NextAuctionCard />
     </Suspense>
   );
+  const commandItems = (
+    <Suspense fallback={null}>
+      <FollowedLotsCommandItems />
+    </Suspense>
+  );
 
   return (
-    <AppShell account={account} badges={badges} followed={followed} nextAuction={nextAuction}>
+    <AppShell
+      account={account}
+      badges={badges}
+      followed={followed}
+      nextAuction={nextAuction}
+      commandItems={commandItems}
+    >
       {children}
     </AppShell>
   );

@@ -110,6 +110,7 @@ type AppShellProps = {
   badges?: NavBadges;
   followed?: ReactNode;
   nextAuction?: ReactNode;
+  commandItems?: ReactNode;
   children: ReactNode;
 };
 
@@ -131,7 +132,7 @@ function getIsMacServerSnapshot(): boolean {
  * Sidebar colapsável à esquerda (264px ↔ 56px) com header próprio de 48px e transição suave (220ms --ease-out) +
  * Coluna principal à direita com header fixo de 48px alinhado à mesma linha hairline + Canvas branco puro.
  */
-export function AppShell({ account, badges, followed, nextAuction, children }: AppShellProps) {
+export function AppShell({ account, badges, followed, nextAuction, commandItems, children }: AppShellProps) {
   const collapsed = useSyncExternalStore(subscribeSidebar, getSidebarSnapshot, getSidebarServerSnapshot);
   const isMac = useSyncExternalStore(subscribeNoop, getIsMacSnapshot, getIsMacServerSnapshot);
   const [commandOpen, setCommandOpen] = useState(false);
@@ -272,6 +273,7 @@ export function AppShell({ account, badges, followed, nextAuction, children }: A
         </main>
       </div>
 
+      {commandItems}
       <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
     </div>
   );
