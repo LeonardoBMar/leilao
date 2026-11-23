@@ -14,17 +14,12 @@ export function EvaluateActions({ filters }: { filters: EvaluateFilters }) {
   const params = evaluateCatalogParams(filters);
   if (params === null) return null;
   return (
-    <div className="flex flex-wrap items-center gap-2 border-t border-border pt-4">
-      <SaveWatchButton
-        query={new URLSearchParams(params).toString()}
-        label="Acompanhar este veículo"
-        variant="secondary"
-        size="sm"
-      />
-      <ButtonLink href={withQuery(CATALOG_LISTINGS_PATH, params)} variant="ghost" size="sm">
+    <div className="flex flex-wrap items-center gap-2">
+      <ButtonLink href={withQuery(CATALOG_LISTINGS_PATH, params)} variant="secondary" size="sm">
         <Search aria-hidden="true" />
         Ver no catálogo
       </ButtonLink>
+      <SaveWatchButton query={new URLSearchParams(params).toString()} label="Acompanhar este veículo" size="sm" />
     </div>
   );
 }

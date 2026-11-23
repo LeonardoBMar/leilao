@@ -28,6 +28,7 @@ import {
   normalizeComparison,
   normalizeYears,
   RESEARCH_CATEGORIES,
+  RESEARCH_CONDITIONS,
   type ResearchFilters,
   vehicleLabel,
 } from "@/domain/research/filters";
@@ -42,7 +43,6 @@ import { pickSharedQuery, rememberMarketContext } from "../tab-context";
 import type { ResearchFacets } from "../types";
 import {
   CompareStateSelect,
-  ConditionSelect,
   MileageSelect,
   OptionWithCount,
   PeriodSelect,
@@ -63,17 +63,10 @@ type ResearchFilterBarProps = {
 /** Filtro ativo da gaveta, como chip removível. */
 type ActiveFilter = { id: string; label: string; without: ResearchFilters };
 
-/** Os filtros da gaveta que fogem do padrão, na ordem da gaveta. Modelo e categoria ficam na barra. */
+/** Os filtros da gaveta que fogem do padrão, na ordem da gaveta. Modelo, condição e categoria ficam na barra. */
 function activeFilters(filters: ResearchFilters, sourceNames: Readonly<Record<string, string>>): ActiveFilter[] {
   const years = yearRangeLabel(filters);
   return [
-    filters.condition === DEFAULT_RESEARCH_FILTERS.condition
-      ? null
-      : {
-          id: "condicao",
-          label: CONDITION_LABELS[filters.condition],
-          without: { ...filters, condition: DEFAULT_RESEARCH_FILTERS.condition },
-        },
     filters.state === null
       ? null
       : { id: "uf", label: STATE_NAMES[filters.state], without: { ...filters, state: null } },
@@ -90,17 +83,24 @@ function activeFilters(filters: ResearchFilters, sourceNames: Readonly<Record<st
   ].filter((chip) => chip !== null);
 }
 
-/** Os filtros com a gaveta no padrão: modelo, categoria e comparação ficam. */
+/** Os filtros com a gaveta no padrão: modelo, condição, categoria e comparação ficam. */
 function withoutDrawerFilters(filters: ResearchFilters): ResearchFilters {
   return {
     ...filters,
-    condition: DEFAULT_RESEARCH_FILTERS.condition,
     state: null,
     source: null,
     maxKm: null,
     yearFrom: null,
     yearTo: null,
     period: null,
+  };
+}
+
+/** Mantém o modelo escolhido, voltando condição, categoria, gaveta e comparação ao padrão (como no Avaliar). */
+function withoutRefinements(filters: ResearchFilters): ResearchFilters {
+  return {
+    ...DEFAULT_RESEARCH_FILTERS,
+    vehicle: filters.vehicle,
   };
 }
 
@@ -111,8 +111,9 @@ function withoutDrawerFilters(filters: ResearchFilters): ResearchFilters {
  */
 export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
   const router = useRouter();
+  const conditionLabelId = useId();
   const categoryLabelId = useId();
-  // Chip e "Limpar tudo" somem ao aplicar: o foco vai para o total, que anuncia o resultado.
+  // Chip e "Limpar filtros" somem ao aplicar: o foco vai para o total, que anuncia o resultado.
   const statusRef = useRef<HTMLParagraphElement>(null);
   const { isPending, startTransition } = useResearchTransition();
   const [filters, setOptimisticFilters] = useOptimistic(parseResearchParams(params));
@@ -123,10 +124,12 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
   const [compareOpen, setCompareOpen] = useState(false);
   const showCompare = compareOpen || filters.compare !== null;
   const total = facets.conditions[filters.condition];
-  const isDefault = Object.keys(params).length === 0;
   const sourceNames = Object.fromEntries(facets.sources.map(({ id, name }) => [id, name]));
   const chips = activeFilters(filters, sourceNames);
   const draftChipsCount = activeFilters(draft, sourceNames).length;
+  const conditionChanged = filters.condition !== DEFAULT_RESEARCH_FILTERS.condition;
+  const categoryChanged = filters.category !== DEFAULT_RESEARCH_FILTERS.category;
+  const hasRefinements = chips.length > 0 || conditionChanged || categoryChanged || filters.compare !== null;
 
   const resolvedSharedQuery = pickSharedQuery(params);
   useEffect(() => {
@@ -166,6 +169,37 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
             }
             className="w-full md:w-auto md:min-w-56 md:flex-1"
           />
+          <span id={conditionLabelId} className="sr-only">
+            Condição
+          </span>
+          <Select
+            value={filters.condition}
+            onValueChange={(value) => {
+              const condition = RESEARCH_CONDITIONS.find((key) => key === value);
+              if (condition) apply({ ...filters, condition });
+            }}
+          >
+            <SelectTrigger
+              aria-labelledby={conditionLabelId}
+              className={cn("flex-1 md:w-60 md:flex-none", conditionChanged && researchActiveTriggerClass)}
+            >
+              <SelectValue>
+                <span className="text-muted">Condição: </span>
+                {CONDITION_LABELS[filters.condition]}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {RESEARCH_CONDITIONS.map((condition) => (
+                <SelectItem
+                  key={condition}
+                  value={condition}
+                  disabled={facets.conditions[condition] === 0 && condition !== filters.condition}
+                >
+                  <OptionWithCount label={CONDITION_LABELS[condition]} count={facets.conditions[condition]} />
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <span id={categoryLabelId} className="sr-only">
             Categoria
           </span>
@@ -176,7 +210,10 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
               if (category) apply({ ...filters, category });
             }}
           >
-            <SelectTrigger aria-labelledby={categoryLabelId} className="flex-1 md:w-44 md:flex-none">
+            <SelectTrigger
+              aria-labelledby={categoryLabelId}
+              className={cn("flex-1 md:w-44 md:flex-none", categoryChanged && researchActiveTriggerClass)}
+            >
               <SelectValue>
                 <span className="text-muted">Categoria: </span>
                 {CATEGORY_LABELS[filters.category]}
@@ -220,11 +257,6 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
               <DrawerBody className="gap-6">
                 <fieldset className="grid gap-4">
                   <legend className="mb-1 text-caption font-semibold text-muted">Veículo</legend>
-                  <ConditionSelect
-                    value={draft.condition}
-                    counts={facets.conditions}
-                    onChange={(condition) => setDraft((current) => ({ ...current, condition }))}
-                  />
                   <MileageSelect
                     value={draft.maxKm}
                     mileage={facets.mileage}
@@ -334,16 +366,16 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
                 </span>
               )}
             </p>
-            {isDefault ? null : (
+            {hasRefinements ? (
               <Button
                 variant="link"
                 size="sm"
                 className="h-10 px-1"
-                onClick={() => apply(DEFAULT_RESEARCH_FILTERS, { focusStatus: true })}
+                onClick={() => apply(withoutRefinements(filters), { focusStatus: true })}
               >
-                Limpar tudo
+                Limpar filtros
               </Button>
-            )}
+            ) : null}
           </div>
         </div>
       </section>

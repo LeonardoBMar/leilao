@@ -17,7 +17,7 @@ export function ModelCatalogActions({ filters }: { filters: ResearchFilters }) {
     <div className="flex flex-wrap items-center gap-2">
       <ButtonLink href={withQuery(CATALOG_LISTINGS_PATH, params)} variant="secondary" size="sm">
         <Search aria-hidden="true" />
-        Ver lotes abertos deste modelo
+        Ver no catálogo
       </ButtonLink>
       <SaveWatchButton query={new URLSearchParams(params).toString()} label="Acompanhar este modelo" size="sm" />
     </div>
