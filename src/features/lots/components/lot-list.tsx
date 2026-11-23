@@ -299,7 +299,8 @@ function StateBadges({ lot }: { lot: LotListItem }) {
       {lot.openDraftId ? (
         <Link
           href={`/analise/${lot.openDraftId}`}
-          className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          aria-label={`Continuar rascunho do ${rowLabel(lot)}`}
+          className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
         >
           <Badge variant="warning" className="hover:underline">
             Rascunho

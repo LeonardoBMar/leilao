@@ -26,9 +26,10 @@ const listSelect = {
   currentBidObservedAt: true,
   archivedAt: true,
   auction: { select: { id: true, name: true, startsAt: true, archivedAt: true } },
-  // Versões do lote (da mais recente para a mais antiga): extrai o limite fixado mais recente e eventual rascunho.
+  // No máximo 1 rascunho por lote, sempre na maior versão (RF-05); as 2 mais recentes cobrem rascunho + última fixada.
   analyses: {
     orderBy: { version: "desc" },
+    take: 2,
     select: { id: true, status: true, isViable: true, maxBidCents: true, version: true, fixedAt: true },
   },
   _count: { select: { results: true } },
