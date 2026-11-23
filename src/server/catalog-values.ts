@@ -26,6 +26,21 @@ export async function municipalitiesWithin(radiusKm: number): Promise<number[]> 
   );
 }
 
+export type CatalogSource = { id: string; name: string; active: boolean };
+
+/** Fontes registradas no catálogo (poucas linhas; só mudam quando uma fonte é adicionada ou pausada). */
+export async function catalogSources(): Promise<CatalogSource[]> {
+  "use cache";
+  cacheLife("catalog");
+  return db.source.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, active: true } });
+}
+
+/** Fontes ativas do catálogo, ordenadas pelo nome. */
+export async function activeCatalogSources(): Promise<{ id: string; name: string }[]> {
+  const sources = await catalogSources();
+  return sources.flatMap(({ id, name, active }) => (active ? [{ id, name }] : []));
+}
+
 /** Grafias de combustível presentes no catálogo (poucas dezenas); a classificação é do domínio (`fuelOf`). */
 export async function fuelSpellings(): Promise<string[]> {
   "use cache";

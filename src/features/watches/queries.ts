@@ -4,6 +4,7 @@ import { criteriaFromStored } from "@/domain/listings/criteria";
 import { countOpenListings } from "@/features/listings/queries";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
+import { catalogSources } from "@/server/catalog-values";
 import { storedCriteriaSelect } from "@/server/collector/alerts";
 import { db } from "@/server/db";
 
@@ -31,7 +32,7 @@ export async function listWatches(): Promise<WatchListItem[]> {
   const [rows, unread, sources] = await Promise.all([
     db.watch.findMany({ where: { ownerId: user.id }, orderBy: { createdAt: "desc" }, select: watchSelect }),
     db.alert.groupBy({ by: ["watchId"], where: { ownerId: user.id, readAt: null }, _count: { _all: true } }),
-    db.source.findMany({ select: { id: true, name: true } }),
+    catalogSources(),
   ]);
   const unreadByWatch = new Map(unread.map((group) => [group.watchId, group._count._all]));
   const sourceNames = Object.fromEntries(sources.map((source) => [source.id, source.name]));

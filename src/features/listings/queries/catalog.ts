@@ -10,7 +10,7 @@ import { collectorHealth, overallHealth } from "@/domain/listings/health";
 import { DEFAULT_REGION } from "@/domain/listings/region";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
-import { municipalitiesWithin } from "@/server/catalog-values";
+import { activeCatalogSources, municipalitiesWithin } from "@/server/catalog-values";
 import { db } from "@/server/db";
 
 import { type ListingFilters, LISTINGS_PAGE_SIZE } from "../schemas";
@@ -154,7 +154,7 @@ export async function getListingFacets(
       orderBy: { _count: { brand: "desc" } },
       take: MAX_SUGGESTION_GROUPS,
     }),
-    db.source.findMany({ where: { active: true }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    activeCatalogSources(),
   ]);
   const facets = facetsFromGroups({
     ...facetGroupsFromCombos(
@@ -179,7 +179,7 @@ export async function getListingFacets(
 /** Fontes ativas, para escolher nos filtros e nos monitores. */
 export async function listActiveSources(): Promise<{ id: string; name: string }[]> {
   await requireUser();
-  return db.source.findMany({ where: { active: true }, orderBy: { name: "asc" }, select: { id: true, name: true } });
+  return activeCatalogSources();
 }
 
 /** Quantos anúncios abertos atendem aos critérios agora (ex.: "12 lotes combinam com este monitor"). */

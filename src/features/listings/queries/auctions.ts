@@ -7,6 +7,7 @@ import {
 } from "@/domain/listings/catalog-auctions";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
+import { catalogSources } from "@/server/catalog-values";
 import { db } from "@/server/db";
 
 import { CATALOG_AUCTIONS_PAGE_SIZE, type ListingFilters } from "../schemas";
@@ -62,7 +63,7 @@ export async function loadCatalogAuctionStats(
       where: { ownerId, listing: inKeys },
       select: { listing: { select: { sourceId: true, auctionExternalId: true } } },
     }),
-    db.source.findMany({ select: { id: true, name: true } }),
+    catalogSources(),
   ]);
 
   const openByKey = countByAuction(opens.map((group) => ({ ...group, count: group._count._all })));

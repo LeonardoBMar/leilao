@@ -49,6 +49,7 @@ import {
 } from "@/domain/research/summary";
 import { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
+import { catalogSources } from "@/server/catalog-values";
 import { db } from "@/server/db";
 
 import type {
@@ -129,7 +130,7 @@ export async function getResearchFacets(filters: ResearchFilters): Promise<Resea
         WHERE ${salesWhere(filters, { condition: false, category: false, state: false, source: false, mileage: false })}
         GROUP BY 1, 2, 3, 4, 5`,
     ),
-    db.source.findMany({ select: { id: true, name: true } }),
+    catalogSources(),
     // Anos do modelo escolhido, sem o próprio filtro de ano (senão a lista encolheria para a faixa).
     filters.vehicle === null
       ? Promise.resolve([])
