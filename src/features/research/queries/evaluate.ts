@@ -134,6 +134,13 @@ export const lotTargetSelect = {
   model: true,
   modelYear: true,
   mileageKm: true,
+  currentBidCents: true,
+  analyses: {
+    where: { maxBidCents: { not: null } },
+    orderBy: { version: "desc" },
+    take: 1,
+    select: { maxBidCents: true },
+  },
   listing: {
     select: {
       mileageKm: true,
@@ -143,6 +150,7 @@ export const lotTargetSelect = {
       marketValueFipeCode: true,
       vehicleOrigin: true,
       marketValueCents: true,
+      currentBidCents: true,
       status: true,
       endsAt: true,
     },
@@ -151,10 +159,14 @@ export const lotTargetSelect = {
 
 export function toLotTarget(lot: Prisma.LotGetPayload<{ select: typeof lotTargetSelect }>): LotTarget {
   const { listing } = lot;
+  const currentBidCents = lot.currentBidCents ?? listing?.currentBidCents ?? null;
+  const maxBidCents = lot.analyses[0]?.maxBidCents ?? null;
   return {
     id: lot.id,
     label: `Lote ${lot.lotNumber} · ${lot.brand} ${lot.model} ${lot.modelYear}`,
     endsAt: listing?.status === "open" ? listing.endsAt : null,
+    currentBid: currentBidCents !== null && currentBidCents > 0 ? cents(currentBidCents) : null,
+    maxBid: maxBidCents !== null && maxBidCents > 0 ? cents(maxBidCents) : null,
     target: {
       brand: lot.brand,
       model: lot.model,

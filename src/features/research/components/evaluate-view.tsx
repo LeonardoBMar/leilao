@@ -89,12 +89,12 @@ export async function EvaluateView({
         </Suspense>
       ) : (
         <>
-          <EvaluateAnswer filters={filters} evaluation={evaluation} actions={vehicleActions(filters)} />
+          <EvaluateAnswer filters={filters} evaluation={evaluation} lot={lot} actions={vehicleActions(filters)} />
           {evaluation.comparables.length === 0 ? null : (
             // No celular o gráfico vem depois das listas, que dizem o mesmo em texto (§5.2).
             <div className="order-last min-w-0 md:order-none">
               <Suspense fallback={<ResearchBlockSkeleton title={EVALUATE_CHART_TITLE} />}>
-                <EvaluateChartBlock filters={filters} evaluation={evaluation} />
+                <EvaluateChartBlock filters={filters} evaluation={evaluation} lot={lot} />
               </Suspense>
             </div>
           )}

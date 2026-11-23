@@ -39,6 +39,15 @@ export type EvaluateChartOpen = {
   bid: number;
 };
 
+/** Lote do usuário quando aberto por `?lote=<id>`: limite máximo e/ou lance atual como referência no gráfico. */
+export type EvaluateChartLotTarget = {
+  label: string;
+  maxBid: number | null;
+  currentBid: number | null;
+  year: number | null;
+  endsAt: number | null;
+};
+
 type XAxis = "year" | "date";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -79,11 +88,13 @@ export function EvaluateChart({
   sales,
   open,
   band,
+  lotTarget = null,
   subject,
 }: {
   sales: readonly EvaluateChartSale[];
   open: readonly EvaluateChartOpen[];
   band: { low: number; median: number; high: number } | null;
+  lotTarget?: EvaluateChartLotTarget | null;
   subject: string;
 }) {
   const router = useRouter();
@@ -91,6 +102,19 @@ export function EvaluateChart({
   const [pendingSaleId, setPendingSaleId] = useState<string | null>(null);
   const [axis, setAxis] = useState<XAxis>("year");
   const xOf = (item: { year: number | null; endsAt: number | null }) => (axis === "year" ? item.year : item.endsAt);
+  const targetPoint = (() => {
+    if (lotTarget === null || lotTarget.currentBid === null) return null;
+    const x = xOf(lotTarget);
+    if (x === null) return null;
+    return {
+      key: "lote-alvo",
+      x,
+      y: lotTarget.currentBid,
+      title: `${lotTarget.label} · lance atual ${formatCompactBRL(cents(lotTarget.currentBid))}`,
+      selected: true,
+      guideTo: band?.median,
+    };
+  })();
   const points = [
     ...sales.flatMap((sale) => {
       const x = xOf(sale);
@@ -133,16 +157,21 @@ export function EvaluateChart({
             },
           ];
     }),
+    ...(targetPoint === null ? [] : [targetPoint]),
   ];
-  const yMax = Math.max(0, band?.high ?? 0, ...points.map(({ y }) => y));
+  const yMax = Math.max(0, band?.high ?? 0, lotTarget?.maxBid ?? 0, ...points.map(({ y }) => y));
   const yTicks = niceTicks(yMax).map((value) => ({ value, label: formatCompactBRL(cents(value)) }));
   const xs = points.map(({ x }) => x);
   const xValues =
     axis === "year" && xs.length > 0
       ? Array.from({ length: Math.max(...xs) - Math.min(...xs) + 1 }, (_, i) => Math.min(...xs) + i)
       : [];
-  const missing = sales.length + open.length - points.length;
+  const missing = sales.length + open.length - (points.length - (targetPoint === null ? 0 : 1));
   const hasExcluded = sales.some((sale) => sale.excluded);
+  const limitReference =
+    lotTarget?.maxBid == null
+      ? undefined
+      : { value: lotTarget.maxBid, label: `seu limite · ${formatCompactBRL(cents(lotTarget.maxBid))}` };
 
   return (
     <div className="grid gap-4">
@@ -170,11 +199,14 @@ export function EvaluateChart({
           secondaryAnchor={open.length > 0 ? { id: "comparaveis", label: "Ir para as vendas do recorte" } : undefined}
           ariaLabel={`Lances finais do ${subject} por ${axis === "year" ? "ano-modelo" : "data"}: ${salesLabel(sales.length)}${
             open.length > 0 ? ` e ${open.length} ${open.length === 1 ? "lote aberto" : "lotes abertos"}` : ""
-          }${band ? `; faixa típica de ${formatCompactBRL(cents(band.low))} a ${formatCompactBRL(cents(band.high))}` : ""}.`}
+          }${band ? `; faixa típica de ${formatCompactBRL(cents(band.low))} a ${formatCompactBRL(cents(band.high))}` : ""}${
+            limitReference ? `; ${limitReference.label}` : ""
+          }.`}
           xValues={xValues}
           xAxis={axis === "date" ? dateAxis(xs) : undefined}
           yDomain={[0, yTicks.at(-1)?.value ?? 1]}
           yTicks={yTicks}
+          reference={limitReference}
           band={band === null ? undefined : { low: band.low, high: band.high, label: "faixa típica" }}
           points={points}
         />
@@ -193,6 +225,17 @@ export function EvaluateChart({
           <li className="flex items-center gap-1.5">
             <span aria-hidden="true" className="size-2.5 rounded-full bg-surface ring-2 ring-foreground" /> aberto:
             lance atual, com traço até a mediana
+          </li>
+        ) : null}
+        {targetPoint ? (
+          <li className="flex items-center gap-1.5">
+            <span aria-hidden="true" className="size-2.5 rounded-full bg-data-5 ring-2 ring-foreground" /> lote em
+            comparação
+          </li>
+        ) : null}
+        {limitReference ? (
+          <li className="flex items-center gap-1.5">
+            <span aria-hidden="true" className="w-4 border-t border-dashed border-border-strong" /> seu limite
           </li>
         ) : null}
         {band ? (

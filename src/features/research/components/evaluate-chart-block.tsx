@@ -4,7 +4,7 @@ import { formatCompactBRL, formatDate, formatDateTime } from "@/lib/format";
 
 import { getOpenListingsFor } from "../queries";
 import { evaluateHref } from "../search";
-import type { EvaluationView } from "../types";
+import type { EvaluationView, LotTarget } from "../types";
 import { EvaluateChart } from "./evaluate-chart";
 import { OPEN_LISTINGS_SHOWN } from "./evaluate-open-listings";
 import { ResearchBlock } from "./research-block";
@@ -15,14 +15,26 @@ export const EVALUATE_CHART_TITLE = "Vendas e lotes abertos";
 export async function EvaluateChartBlock({
   filters,
   evaluation,
+  lot = null,
 }: {
   filters: EvaluateFilters;
   evaluation: EvaluationView;
+  lot?: LotTarget | null;
 }) {
   const listings = await getOpenListingsFor(filters);
   // Só os que encerram primeiro (os da lista aberta): com dezenas de abertos, o gráfico viraria uma nuvem.
   const open = listings.slice(0, OPEN_LISTINGS_SHOWN);
   const { answer } = evaluation;
+  const lotTarget =
+    lot === null || (lot.maxBid === null && lot.currentBid === null)
+      ? null
+      : {
+          label: lot.label,
+          maxBid: lot.maxBid,
+          currentBid: lot.currentBid,
+          year: lot.target.modelYear,
+          endsAt: lot.endsAt?.getTime() ?? null,
+        };
   return (
     <ResearchBlock
       id="vendas"
@@ -36,6 +48,7 @@ export async function EvaluateChartBlock({
       <EvaluateChart
         subject={filters.vehicle === null ? "modelo" : vehicleLabel(filters.vehicle)}
         band={answer.kind === "band" ? { low: answer.low, median: answer.median, high: answer.high } : null}
+        lotTarget={lotTarget}
         sales={evaluation.comparables.map(({ sale, excluded }) => {
           const toggled = excluded ? filters.excluded.filter((id) => id !== sale.id) : [...filters.excluded, sale.id];
           return {

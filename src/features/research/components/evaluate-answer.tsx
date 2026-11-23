@@ -2,12 +2,20 @@ import { ChevronDown, RotateCcw } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Badge, Card } from "@/components/ui";
-import { type EvaluateFilters, loosened } from "@/domain/research/evaluate";
+import { bandPosition, type EvaluateFilters, loosened } from "@/domain/research/evaluate";
 import { formatCompactBRL, formatDate, formatRatio } from "@/lib/format";
 
-import { CONFIDENCE_SHORT_LABELS, EVALUATE_LEVEL_LABELS, evaluateScopeLabel, loosenLabel, salesLabel } from "../labels";
+import {
+  BAND_POSITION_LABELS,
+  BAND_POSITION_VARIANTS,
+  CONFIDENCE_SHORT_LABELS,
+  EVALUATE_LEVEL_LABELS,
+  evaluateScopeLabel,
+  loosenLabel,
+  salesLabel,
+} from "../labels";
 import { evaluateHref } from "../search";
-import type { EvaluationView } from "../types";
+import type { EvaluationView, LotTarget } from "../types";
 import { ResearchNavButton } from "./research-nav-button";
 
 /** Com mais anos-modelo que isto sem filtro de ano, a faixa avisa que mistura anos. */
@@ -21,15 +29,20 @@ const MIXED_YEARS = 3;
 export function EvaluateAnswer({
   filters,
   evaluation,
+  lot = null,
   actions,
 }: {
   filters: EvaluateFilters;
   evaluation: EvaluationView;
+  /** Lote do usuário quando o Avaliar foi aberto por `?lote=<id>`. */
+  lot?: LotTarget | null;
   /** Monitor e catálogo, compostos pela rota. */
   actions: ReactNode;
 }) {
   const { answer, excluded, loosen, level } = evaluation;
   const scope = evaluateScopeLabel(filters, evaluation.versionLabels);
+  const band = answer.kind === "band" ? answer : null;
+  const hasLotComparison = lot !== null && (lot.maxBid !== null || lot.currentBid !== null);
   const loosenLinks =
     loosen.length === 0 && excluded === 0 ? null : (
       <div className="flex flex-wrap gap-2">
@@ -102,6 +115,34 @@ export function EvaluateAnswer({
                 )}
               </Fact>
             </dl>
+            {hasLotComparison ? (
+              <dl className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border pt-3 text-body text-foreground tabular-nums">
+                {lot.maxBid === null ? null : (
+                  <Fact label="Seu limite">
+                    <span className="inline-flex items-center gap-2">
+                      <span className="font-semibold">{formatCompactBRL(lot.maxBid)}</span>
+                      {band === null ? null : (
+                        <Badge variant={BAND_POSITION_VARIANTS[bandPosition(lot.maxBid, band)]}>
+                          {BAND_POSITION_LABELS[bandPosition(lot.maxBid, band)]}
+                        </Badge>
+                      )}
+                    </span>
+                  </Fact>
+                )}
+                {lot.currentBid === null ? null : (
+                  <Fact label="Lance atual do lote">
+                    <span className="inline-flex items-center gap-2">
+                      <span className="font-semibold">{formatCompactBRL(lot.currentBid)}</span>
+                      {band === null ? null : (
+                        <Badge variant={BAND_POSITION_VARIANTS[bandPosition(lot.currentBid, band)]}>
+                          {BAND_POSITION_LABELS[bandPosition(lot.currentBid, band)]}
+                        </Badge>
+                      )}
+                    </span>
+                  </Fact>
+                )}
+              </dl>
+            ) : null}
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-muted tabular-nums">
               <p>
                 Base: {salesLabel(answer.n)} {EVALUATE_LEVEL_LABELS[level]} ({formatDate(answer.from)} a{" "}

@@ -167,6 +167,10 @@ export type LotTarget = {
   target: EstimateTarget;
   /** Fim do anúncio ligado ainda aberto; `null` sem anúncio ou já encerrado. */
   endsAt: Date | null;
+  /** Lance atual observado no lote ou no anúncio ligado. */
+  currentBid: Cents | null;
+  /** Lance máximo da análise mais recente do lote, quando calculado. */
+  maxBid: Cents | null;
 };
 
 /**
