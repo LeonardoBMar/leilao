@@ -53,6 +53,7 @@ export const LOTS_PAGE_SIZE = 25;
 export const LOT_GROUPS_PAGE_SIZE = 10;
 
 const presence = z.enum(["com", "sem"]).optional().catch(undefined);
+const analysisFilter = z.enum(["com", "sem", "rascunho"]).optional().catch(undefined);
 const flag = z
   .literal("1")
   .optional()
@@ -76,7 +77,7 @@ export type LotSortKey = (typeof LOT_SORT_KEYS)[number];
 export type LotFilters = {
   search: string | undefined;
   followedOnly: boolean;
-  analysis: "com" | "sem" | undefined;
+  analysis: "com" | "sem" | "rascunho" | undefined;
   result: "com" | "sem" | undefined;
   archived: boolean;
   position: LotPositionKey | undefined;
@@ -97,7 +98,7 @@ export const lotFiltersSchema = z
       .optional()
       .catch(undefined),
     acompanhados: flag,
-    analise: presence,
+    analise: analysisFilter,
     resultado: presence,
     arquivados: flag,
     posicao: z.enum(LOT_POSITION_KEYS).optional().catch(undefined),

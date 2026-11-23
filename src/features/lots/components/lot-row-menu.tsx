@@ -1,6 +1,7 @@
 "use client";
 
-import { Archive, ArchiveRestore, Ellipsis, Eye, EyeOff, Pencil } from "lucide-react";
+import { Archive, ArchiveRestore, Ellipsis, Eye, EyeOff, FilePen, Pencil } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useActionState, useState, useTransition } from "react";
 
 import {
@@ -28,12 +29,14 @@ type LotRowMenuProps = {
   lotId: string;
   lotLabel: string;
   currentBid: Cents | null;
+  openDraftId?: string | null;
   isFollowed: boolean;
   isArchived: boolean;
 };
 
-/** Ações rápidas de uma linha de lote, sem abrir a ficha: lance, acompanhar e arquivar. */
-export function LotRowMenu({ lotId, lotLabel, currentBid, isFollowed, isArchived }: LotRowMenuProps) {
+/** Ações rápidas de uma linha de lote, sem abrir a ficha: rascunho, lance, acompanhar e arquivar. */
+export function LotRowMenu({ lotId, lotLabel, currentBid, openDraftId, isFollowed, isArchived }: LotRowMenuProps) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isBidOpen, setIsBidOpen] = useState(false);
 
@@ -54,6 +57,12 @@ export function LotRowMenu({ lotId, lotLabel, currentBid, isFollowed, isArchived
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          {openDraftId ? (
+            <DropdownMenuItem onSelect={() => router.push(`/analise/${openDraftId}`)}>
+              <FilePen aria-hidden="true" />
+              Continuar rascunho
+            </DropdownMenuItem>
+          ) : null}
           <DropdownMenuItem onSelect={() => setIsBidOpen(true)}>
             <Pencil aria-hidden="true" />
             Atualizar lance

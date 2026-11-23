@@ -99,7 +99,7 @@ export async function PendingItems() {
           footer={
             draftsTotal > drafts.length ? (
               <Link
-                href="/minhas-analises"
+                href="/minhas-analises?analise=rascunho"
                 className={cn(
                   "inline-flex min-h-10 w-fit items-center text-caption font-medium text-accent hover:underline sm:min-h-8",
                   linkFocusClass,

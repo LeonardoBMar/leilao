@@ -97,6 +97,7 @@ describe("lotFiltersSchema", () => {
     expect(
       lotFiltersSchema.parse({ busca: "corolla", acompanhados: "1", analise: "com", resultado: "sem" }),
     ).toMatchObject({ search: "corolla", followedOnly: true, analysis: "com", result: "sem" });
+    expect(lotFiltersSchema.parse({ analise: "rascunho" })).toMatchObject({ analysis: "rascunho" });
   });
 
   it("lance × limite, leilão e ordem; a URL canônica não leva padrões nem página", () => {

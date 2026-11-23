@@ -20,6 +20,7 @@ export type LotListItem = {
   archivedAt: Date | null;
   auction: LotAuctionRef;
   limit: LotLimit | null;
+  openDraftId: string | null;
   hasResult: boolean;
 };
 

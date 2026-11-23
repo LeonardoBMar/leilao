@@ -281,6 +281,7 @@ function RowMenu({ lot }: { lot: LotListItem }) {
       lotId={lot.id}
       lotLabel={rowLabel(lot)}
       currentBid={lot.currentBid}
+      openDraftId={lot.openDraftId}
       isFollowed={lot.isFollowed}
       isArchived={lot.archivedAt !== null}
     />
@@ -295,6 +296,16 @@ function StateBadges({ lot }: { lot: LotListItem }) {
   const isArchived = lot.archivedAt !== null || lot.auction.archivedAt !== null;
   return (
     <span className="flex flex-wrap gap-1 empty:hidden">
+      {lot.openDraftId ? (
+        <Link
+          href={`/analise/${lot.openDraftId}`}
+          className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        >
+          <Badge variant="warning" className="hover:underline">
+            Rascunho
+          </Badge>
+        </Link>
+      ) : null}
       {lot.isFollowed ? <Badge>Acompanhando</Badge> : null}
       {lot.hasResult ? <Badge>Com resultado</Badge> : null}
       {isArchived ? <Badge variant="outline">Arquivado</Badge> : null}

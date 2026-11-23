@@ -26,12 +26,10 @@ const listSelect = {
   currentBidObservedAt: true,
   archivedAt: true,
   auction: { select: { id: true, name: true, startsAt: true, archivedAt: true } },
-  // Limite da análise fixada mais recente (a análise só vira histórico, nunca é sobrescrita).
+  // Versões do lote (da mais recente para a mais antiga): extrai o limite fixado mais recente e eventual rascunho.
   analyses: {
-    where: { status: "fixed" },
     orderBy: { version: "desc" },
-    take: 1,
-    select: { isViable: true, maxBidCents: true, version: true, fixedAt: true },
+    select: { id: true, status: true, isViable: true, maxBidCents: true, version: true, fixedAt: true },
   },
   _count: { select: { results: true } },
 } satisfies Prisma.LotSelect;
@@ -39,7 +37,8 @@ const listSelect = {
 type ListRow = Prisma.LotGetPayload<{ select: typeof listSelect }>;
 
 function toListItem(row: ListRow): LotListItem {
-  const [latest] = row.analyses;
+  const latestFixed = row.analyses.find((analysis) => analysis.status === "fixed");
+  const openDraft = row.analyses.find((analysis) => analysis.status === "draft");
   return {
     id: row.id,
     lotNumber: row.lotNumber,
@@ -53,14 +52,15 @@ function toListItem(row: ListRow): LotListItem {
     archivedAt: row.archivedAt,
     auction: row.auction,
     limit:
-      latest?.isViable != null && latest.fixedAt
+      latestFixed?.isViable != null && latestFixed.fixedAt
         ? {
-            isViable: latest.isViable,
-            maxBid: latest.maxBidCents === null ? null : cents(latest.maxBidCents),
-            version: latest.version,
-            fixedAt: latest.fixedAt,
+            isViable: latestFixed.isViable,
+            maxBid: latestFixed.maxBidCents === null ? null : cents(latestFixed.maxBidCents),
+            version: latestFixed.version,
+            fixedAt: latestFixed.fixedAt,
           }
         : null,
+    openDraftId: openDraft?.id ?? null,
     hasResult: row._count.results > 0,
   };
 }
@@ -83,6 +83,7 @@ function lotWhere(ownerId: string, filters: LotFilters, auctionId?: string, now 
       filters.followedOnly ? { isFollowed: true } : {},
       filters.analysis === "com" ? { analyses: { some: { status: "fixed" } } } : {},
       filters.analysis === "sem" ? { analyses: { none: { status: "fixed" } } } : {},
+      filters.analysis === "rascunho" ? { analyses: { some: { status: "draft" } } } : {},
       filters.result === "com" ? { results: { some: {} } } : {},
       filters.result === "sem" ? { results: { none: {} } } : {},
       filters.timing === "proximos" ? { auction: { startsAt: { gte: now } } } : {},

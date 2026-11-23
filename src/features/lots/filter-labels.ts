@@ -41,7 +41,13 @@ export function activeLotFilters(filters: LotFilters): ActiveLotFilter[] {
   );
   add(
     "analise",
-    filters.analysis === undefined ? null : filters.analysis === "com" ? "Com análise fixada" : "Sem análise fixada",
+    filters.analysis === undefined
+      ? null
+      : filters.analysis === "com"
+        ? "Com análise fixada"
+        : filters.analysis === "sem"
+          ? "Sem análise fixada"
+          : "Com rascunho",
     without({ analysis: undefined }),
   );
   add(

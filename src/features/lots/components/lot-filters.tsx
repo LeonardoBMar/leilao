@@ -132,6 +132,7 @@ export function LotFilters({
           { value: "todas", label: "Todas" },
           { value: "com", label: "Com fixada" },
           { value: "sem", label: "Sem fixada" },
+          { value: "rascunho", label: "Com rascunho" },
         ]}
         onValueChange={(value) => apply({ ...filters, analysis: value === "todas" ? undefined : value })}
       />

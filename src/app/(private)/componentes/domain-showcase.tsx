@@ -97,6 +97,7 @@ const lot: LotDetail = {
     archivedAt: null,
   },
   limit,
+  openDraftId: null,
   hasResult: false,
   manufactureYear: 2019,
   mileageKm: 84_000,

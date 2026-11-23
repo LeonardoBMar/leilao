@@ -9,9 +9,21 @@ describe("activeLotFilters", () => {
   });
 
   it("um chip por filtro, e o '×' remove só aquele", () => {
-    const filters = parseLotParams({ busca: "fox", posicao: "abaixo", leilao: "proximos", arquivados: "1" });
+    const filters = parseLotParams({
+      busca: "fox",
+      posicao: "abaixo",
+      leilao: "proximos",
+      analise: "rascunho",
+      arquivados: "1",
+    });
     const chips = activeLotFilters(filters);
-    expect(chips.map((chip) => chip.label)).toEqual(["“fox”", "Abaixo do limite", "Leilões próximos", "Só arquivados"]);
+    expect(chips.map((chip) => chip.label)).toEqual([
+      "“fox”",
+      "Abaixo do limite",
+      "Leilões próximos",
+      "Com rascunho",
+      "Só arquivados",
+    ]);
     const withoutPosition = chips.find((chip) => chip.id === "posicao")?.without;
     expect(withoutPosition?.position).toBeUndefined();
     expect(withoutPosition?.search).toBe("fox");

@@ -19,7 +19,7 @@ export async function FollowedLotsNav() {
   if (rows.length === 0) return null;
 
   const items: FollowedLotNavItem[] = rows.slice(0, SHOWN).map((row) => {
-    const [latest] = row.analyses;
+    const latest = row.analyses.find((analysis) => analysis.status === "fixed");
     const limit =
       latest?.isViable != null && latest.fixedAt
         ? {
