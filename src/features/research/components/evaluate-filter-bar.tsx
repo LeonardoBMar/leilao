@@ -2,7 +2,7 @@
 
 import { LoaderCircle, SlidersHorizontal, Target, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useId, useOptimistic, useRef } from "react";
+import { useEffect, useId, useOptimistic, useRef } from "react";
 
 import { ActiveFilterChips } from "@/components/layout/active-filter-chips";
 import {
@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { CONDITION_LABELS, mileageLabel, salesLabel, yearRangeLabel } from "../labels";
 import { parseEvaluateParams } from "../schemas";
 import { evaluateHref } from "../search";
+import { pickSharedQuery, rememberMarketContext } from "../tab-context";
 import type { ResearchModelOption } from "../types";
 import { DrawerField, OptionWithCount, researchActiveTriggerClass } from "./filters/research-filter-selects";
 import { ModelPicker } from "./model-picker";
@@ -129,6 +130,12 @@ export function EvaluateFilterBar({ params, models, facets, lotLabel }: Evaluate
   const drawerChips = facets === null || filters.vehicle === null ? [] : activeRefinements(filters, facets);
   const conditionChanged = filters.condition !== DEFAULT_EVALUATE_FILTERS.condition;
   const totalRefinements = drawerChips.length + (conditionChanged ? 1 : 0);
+
+  const resolvedEvaluateQuery = new URLSearchParams(params).toString();
+  const resolvedSharedQuery = pickSharedQuery(params);
+  useEffect(() => {
+    rememberMarketContext({ shared: resolvedSharedQuery, evaluate: resolvedEvaluateQuery });
+  }, [resolvedSharedQuery, resolvedEvaluateQuery]);
 
   function apply(next: EvaluateFilters, { focusStatus = false } = {}) {
     startTransition(() => {

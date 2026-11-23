@@ -3,7 +3,7 @@
 import { GitCompareArrows, LoaderCircle, SlidersHorizontal } from "lucide-react";
 import { AnimatePresence, m } from "motion/react";
 import { useRouter } from "next/navigation";
-import { useId, useOptimistic, useRef, useState } from "react";
+import { useEffect, useId, useOptimistic, useRef, useState } from "react";
 
 import { ActiveFilterChips } from "@/components/layout/active-filter-chips";
 import {
@@ -38,6 +38,7 @@ import { cn } from "@/lib/utils";
 import { CATEGORY_LABELS, CONDITION_LABELS, mileageLabel, periodLabel, salesLabel, yearRangeLabel } from "../labels";
 import { parseResearchParams } from "../schemas";
 import { researchHref } from "../search";
+import { pickSharedQuery, rememberMarketContext } from "../tab-context";
 import type { ResearchFacets } from "../types";
 import {
   CompareStateSelect,
@@ -122,6 +123,11 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
   const total = facets.conditions[filters.condition];
   const isDefault = Object.keys(params).length === 0;
   const chips = activeFilters(filters, Object.fromEntries(facets.sources.map(({ id, name }) => [id, name])));
+
+  const resolvedSharedQuery = pickSharedQuery(params);
+  useEffect(() => {
+    rememberMarketContext({ shared: resolvedSharedQuery });
+  }, [resolvedSharedQuery]);
 
   function apply(changed: ResearchFilters, { focusStatus = false } = {}) {
     // A comparação acompanha os filtros: outro modelo ou estado igual ao principal deixa de ser comparação. A venda

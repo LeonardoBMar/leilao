@@ -2,7 +2,7 @@ import { type ReactNode, Suspense } from "react";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { Skeleton } from "@/components/ui";
-import type { ResearchFilters } from "@/domain/research/filters";
+import { RESEARCH_CATEGORIES, type ResearchFilters } from "@/domain/research/filters";
 import { formatDate } from "@/lib/format";
 
 import { salesLabel } from "../labels";
@@ -55,8 +55,20 @@ export async function ResearchView({
   /** Ações do modelo escolhido (lotes abertos, monitor), compostas pela rota: elas juntam outras features. */
   modelActions: (filters: ResearchFilters) => ReactNode;
 }) {
-  const filters = parseResearchParams(await searchParams);
-  const [facets, { since }] = await Promise.all([getResearchFacets(filters), getResearchOverview()]);
+  const rawParams = await searchParams;
+  let filters = parseResearchParams(rawParams);
+  const [initialFacets, { since }] = await Promise.all([getResearchFacets(filters), getResearchOverview()]);
+  let facets = initialFacets;
+
+  // Ao chegar do Avaliar com moto ou utilitário sem `categoria` explícita na URL, escolhe a categoria com mais vendas
+  // do modelo em vez de cair em 0 vendas sob o padrão `carros`.
+  if (rawParams.categoria === undefined && filters.vehicle !== null && facets.categories[filters.category] === 0) {
+    const dominant = RESEARCH_CATEGORIES.toSorted((a, b) => facets.categories[b] - facets.categories[a])[0];
+    if (dominant && facets.categories[dominant] > 0) {
+      filters = { ...filters, category: dominant };
+      facets = await getResearchFacets(filters);
+    }
+  }
 
   const noSales = <NoSales since={since} suggestions={noSalesSuggestions(filters, facets)} />;
 
