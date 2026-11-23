@@ -71,7 +71,8 @@ export async function StateBlock({ filters, noSales }: { filters: ResearchFilter
           <div className="grid gap-8 lg:grid-cols-2">
             <section aria-labelledby="pesquisa-onde-distancia" className="grid min-w-0 content-start gap-3">
               <h3 id="pesquisa-onde-distancia" className="text-heading-3 text-foreground">
-                Distância de {DEFAULT_REGION.label}
+                Distância de {DEFAULT_REGION.label}{" "}
+                <span className="text-caption font-normal text-muted">(região-base)</span>
               </h3>
               {bands.distance.length === 0 ? (
                 <p className="text-body text-muted">Poucas vendas em cada faixa para uma mediana.</p>

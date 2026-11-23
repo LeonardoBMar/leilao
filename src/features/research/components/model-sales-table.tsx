@@ -76,6 +76,8 @@ export function ModelSalesTable({
   const filtered = state === ALL_STATES ? sales : sales.filter((sale) => sale.state === state);
   const sorted = sortSales(filtered, sort.key, sort.direction);
   const shown = expanded ? sorted : sorted.slice(0, VISIBLE_SALES);
+  const hasOutOfBounds = shown.some((sale) => sale.ratio !== null && !sale.ratioInBounds);
+  const hasApproxFipe = shown.some((sale) => sale.marketValue !== null && sale.marketValueOrigin === "fipe_family");
 
   function sortBy(key: SaleSortKey) {
     // Primeiro toque: do maior para o menor (mais recente, maior lance); o segundo inverte.
@@ -149,9 +151,7 @@ export function ModelSalesTable({
                 </TableHead>
               );
             })}
-            <TableHead>
-              <span className="sr-only">Lances</span>
-            </TableHead>
+            <TableHead className="text-right">Lances</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -193,11 +193,11 @@ export function ModelSalesTable({
                     href={sale.bidsHref}
                     scroll={false}
                     variant="ghost"
-                    size="icon"
-                    aria-label={`Ver os lances de ${sale.title}`}
-                    title="Ver os lances antes do fim"
+                    size="sm"
+                    aria-label={`Ver histórico de lances de ${sale.title}`}
                   >
                     <ChartSpline aria-hidden="true" />
+                    Lances
                   </ButtonLink>
                 )}
               </TableCell>
@@ -205,6 +205,16 @@ export function ModelSalesTable({
           ))}
         </TableBody>
       </Table>
+      {hasOutOfBounds || hasApproxFipe ? (
+        <p className="text-caption text-muted">
+          {[
+            hasOutOfBounds ? "fora do %: proporção fora da faixa esperada (venda não entra nos gráficos em %)." : null,
+            hasApproxFipe ? "FIPE aprox.: valor de mercado estimado pela família do modelo." : null,
+          ]
+            .filter((part) => part !== null)
+            .join(" ")}
+        </p>
+      ) : null}
       {sorted.length > VISIBLE_SALES ? (
         <Button variant="link" size="sm" className="h-10 w-fit px-0" onClick={() => setExpanded((open) => !open)}>
           {expanded ? "Mostrar só as primeiras" : `Ver todas as ${sorted.length} vendas`}

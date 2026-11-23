@@ -93,8 +93,8 @@ export function RankingExplorer({ rows, axisMax, ticks, overall }: RankingExplor
       <div className="flex flex-wrap items-center gap-3">
         <Input
           type="search"
-          aria-label="Buscar no ranking"
-          placeholder="Buscar modelo"
+          aria-label="Filtrar modelos na lista do ranking"
+          placeholder="Filtrar modelos na lista…"
           value={typed}
           onChange={(event) => setTyped(event.target.value)}
           containerClassName="w-full sm:w-56"

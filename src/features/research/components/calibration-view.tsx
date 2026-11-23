@@ -60,7 +60,7 @@ export function CalibrationView({ items }: { items: readonly CalibrationEntry[] 
       <EmptyState
         icon={Target}
         title="Nenhum resultado para calibrar ainda"
-        description="A Calibração compara o limite das análises fixadas antes do leilão com o arremate. Fixe a análise de um lote antes do fim e registre o resultado: ele aparece aqui."
+        description="A Calibração compara o limite máximo fixado antes do leilão (na ficha do lote) com o arremate real. Salve uma análise fixada antes do fim e registre o resultado para acompanhar sua precisão aqui."
         action={
           <ButtonLink href="/minhas-analises" variant="secondary">
             Ir para minhas análises
