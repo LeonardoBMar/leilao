@@ -67,9 +67,9 @@ export async function ConditionBlock({ filters, noSales }: { filters: ResearchFi
             columns={[
               { key: "condition", label: "Condição" },
               { key: "sales", label: "Vendas", align: "right" },
-              { key: "low", label: "P25", align: "right" },
+              { key: "low", label: "25% (baixo)", align: "right" },
               { key: "median", label: "Mediana", align: "right" },
-              { key: "high", label: "P75", align: "right" },
+              { key: "high", label: "75% (alto)", align: "right" },
             ]}
             rows={rows.map(({ condition, summary }) => ({
               key: condition,

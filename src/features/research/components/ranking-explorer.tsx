@@ -119,7 +119,7 @@ function updateRankingState(patch: Partial<RankingViewState>): void {
 
 /** Ano e lance viram colunas só no `xl`: antes disso a faixa ficaria estreita demais, e eles vão na legenda. */
 const ROW_GRID =
-  "grid grid-cols-[1.5rem_minmax(0,1fr)_3rem_1rem] items-center gap-x-3 md:grid-cols-[1.75rem_minmax(0,13rem)_minmax(0,1fr)_3.5rem_1rem] xl:grid-cols-[1.75rem_minmax(0,12rem)_3rem_5.5rem_minmax(0,1fr)_3.5rem_1rem]";
+  "grid grid-cols-[1.5rem_minmax(0,1fr)_3rem_auto] items-center gap-x-3 md:grid-cols-[1.75rem_minmax(0,13rem)_minmax(0,1fr)_3.5rem_4.5rem] xl:grid-cols-[1.75rem_minmax(0,12rem)_3rem_5.5rem_minmax(0,1fr)_3.5rem_4.5rem]";
 
 type LinkedRow = RankingRow & { href: Route };
 
@@ -187,8 +187,11 @@ export function RankingExplorer({ rows, axisMax, ticks, overall }: RankingExplor
             if (next) updateRankingState({ age: next });
           }}
         >
-          <SelectTrigger aria-labelledby={ageLabelId} className="w-40">
-            <SelectValue>{RANKING_AGE_LABELS[age]}</SelectValue>
+          <SelectTrigger aria-labelledby={ageLabelId} className="w-48">
+            <SelectValue>
+              <span className="text-muted">Idade: </span>
+              {RANKING_AGE_LABELS[age]}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {RANKING_AGES.map((key) => (
@@ -208,8 +211,11 @@ export function RankingExplorer({ rows, axisMax, ticks, overall }: RankingExplor
             if (next) updateRankingState({ sort: next });
           }}
         >
-          <SelectTrigger aria-labelledby={sortLabelId} className="w-44">
-            <SelectValue>{RANKING_SORT_LABELS[sort]}</SelectValue>
+          <SelectTrigger aria-labelledby={sortLabelId} className="w-52">
+            <SelectValue>
+              <span className="text-muted">Ordenar: </span>
+              {RANKING_SORT_LABELS[sort]}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {RANKING_SORTS.map((key) => (
@@ -361,10 +367,10 @@ function RankingRowLink({
         />
       </span>
       <span className="text-right text-body font-semibold text-foreground tabular-nums">{formatRatio(row.median)}</span>
-      <ChevronRight
-        aria-hidden="true"
-        className="size-4 text-muted opacity-60 transition-opacity duration-120 md:opacity-0 md:group-hover:opacity-100 md:group-focus-visible:opacity-100"
-      />
+      <span className="inline-flex items-center justify-end gap-0.5 text-caption font-medium text-muted opacity-70 transition-opacity duration-120 group-hover:text-accent group-hover:opacity-100 group-focus-visible:text-accent group-focus-visible:opacity-100">
+        <span className="hidden md:inline">Avaliar</span>
+        <ChevronRight aria-hidden="true" className="size-4 shrink-0" />
+      </span>
     </Link>
   );
 }

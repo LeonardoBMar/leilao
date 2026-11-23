@@ -263,9 +263,12 @@ export function EvaluateFilterBar({ params, models, facets, lotTarget }: Evaluat
               >
                 <SelectTrigger
                   aria-labelledby={conditionLabelId}
-                  className={cn("flex-1 md:w-52 md:flex-none", conditionChanged && researchActiveTriggerClass)}
+                  className={cn("flex-1 md:w-64 md:flex-none", conditionChanged && researchActiveTriggerClass)}
                 >
-                  <SelectValue>{CONDITION_LABELS[filters.condition]}</SelectValue>
+                  <SelectValue>
+                    <span className="text-muted">Condição: </span>
+                    {CONDITION_LABELS[filters.condition]}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {RESEARCH_CONDITIONS.map((condition) => (

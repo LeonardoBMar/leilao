@@ -98,8 +98,11 @@ export function ModelSalesTable({
           Estado das vendas na tabela
         </span>
         <Select value={state} onValueChange={setState}>
-          <SelectTrigger aria-labelledby={stateLabelId} className="sm:w-56">
-            <SelectValue>{isStateCode(state) ? STATE_NAMES[state] : "Todos os estados"}</SelectValue>
+          <SelectTrigger aria-labelledby={stateLabelId} className="sm:w-64">
+            <SelectValue>
+              <span className="text-muted">Estado: </span>
+              {isStateCode(state) ? STATE_NAMES[state] : "Todos"}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={ALL_STATES}>Todos os estados</SelectItem>
@@ -182,11 +185,18 @@ export function ModelSalesTable({
               </TableCell>
               <Cell>{sale.modelYear === null ? null : String(sale.modelYear)}</Cell>
               <Cell>{sale.mileageKm === null ? null : formatKm(sale.mileageKm)}</Cell>
-              <Cell>
-                {sale.marketValue === null
-                  ? null
-                  : `${formatBRL(sale.marketValue)}${MARKET_ORIGIN_MARKS[sale.marketValueOrigin ?? "source"]}`}
-              </Cell>
+              <TableCell className="text-right whitespace-nowrap tabular-nums">
+                {sale.marketValue === null ? (
+                  "—"
+                ) : sale.marketValueOrigin === "fipe_family" ? (
+                  <span title="Valor de mercado estimado pela família do modelo">
+                    {formatBRL(sale.marketValue)}
+                    {MARKET_ORIGIN_MARKS.fipe_family}
+                  </span>
+                ) : (
+                  `${formatBRL(sale.marketValue)}${MARKET_ORIGIN_MARKS[sale.marketValueOrigin ?? "source"]}`
+                )}
+              </TableCell>
               <TableCell className="text-right">
                 {sale.bidsHref === null ? null : (
                   <ButtonLink

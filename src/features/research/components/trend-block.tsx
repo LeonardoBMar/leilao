@@ -59,9 +59,9 @@ export async function TrendBlock({ filters }: { filters: ResearchFilters }) {
         columns={[
           { key: "week", label: "Semana de" },
           { key: "sales", label: "Vendas", align: "right" },
-          { key: "low", label: "P25", align: "right" },
+          { key: "low", label: "25% (baixo)", align: "right" },
           { key: "median", label: "Mediana", align: "right" },
-          { key: "high", label: "P75", align: "right" },
+          { key: "high", label: "75% (alto)", align: "right" },
         ]}
         rows={weeks.map(({ start, summary }) => ({
           key: start.toISOString(),

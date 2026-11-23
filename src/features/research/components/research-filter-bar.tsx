@@ -176,8 +176,11 @@ export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
               if (category) apply({ ...filters, category });
             }}
           >
-            <SelectTrigger aria-labelledby={categoryLabelId} className="flex-1 md:w-36 md:flex-none">
-              <SelectValue>{CATEGORY_LABELS[filters.category]}</SelectValue>
+            <SelectTrigger aria-labelledby={categoryLabelId} className="flex-1 md:w-44 md:flex-none">
+              <SelectValue>
+                <span className="text-muted">Categoria: </span>
+                {CATEGORY_LABELS[filters.category]}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {RESEARCH_CATEGORIES.map((category) => (

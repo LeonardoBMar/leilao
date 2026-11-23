@@ -77,9 +77,9 @@ export async function OriginBlock({ filters }: { filters: ResearchFilters }) {
             columns={[
               { key: "origin", label: "Origem" },
               { key: "sales", label: "Vendas", align: "right" },
-              { key: "low", label: "P25", align: "right" },
+              { key: "low", label: "25% (baixo)", align: "right" },
               { key: "median", label: "Mediana", align: "right" },
-              { key: "high", label: "P75", align: "right" },
+              { key: "high", label: "75% (alto)", align: "right" },
             ]}
             rows={rows.map(({ origin, summary }) => ({
               key: origin,
