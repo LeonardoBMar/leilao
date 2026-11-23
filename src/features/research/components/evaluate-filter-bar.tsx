@@ -357,7 +357,7 @@ export function EvaluateFilterBar({ params, models, facets, lotTarget }: Evaluat
                       onClick={() => setDraft((current) => withoutDrawerFilters(current))}
                       disabled={draftDrawerCount === 0}
                     >
-                      Limpar refinamentos
+                      Limpar filtros
                     </Button>
                     <DialogClose asChild>
                       <Button variant="secondary">Cancelar</Button>

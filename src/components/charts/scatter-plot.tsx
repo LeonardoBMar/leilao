@@ -259,7 +259,7 @@ export function ScatterPlot({
               onMouseEnter={() => setHoveredKey(point.key)}
               onClick={() => setPinnedKey((current) => (current === point.key ? null : point.key))}
               aria-pressed={pinnedKey === point.key}
-              className="absolute flex size-11 -translate-x-1/2 translate-y-1/2 cursor-pointer items-center justify-center rounded-full outline-none transition-[left,bottom] duration-180 focus-visible:ring-2 focus-visible:ring-accent md:size-9"
+              className="absolute flex size-11 -translate-x-1/2 translate-y-1/2 cursor-pointer items-center justify-center rounded-full transition-[left,bottom] duration-180 outline-none focus-visible:ring-2 focus-visible:ring-accent md:size-9"
               style={{ left: `${percentOf(spread(point), xDomain)}%`, bottom: `${percentOf(point.y, yDomain)}%` }}
             >
               <span

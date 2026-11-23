@@ -43,6 +43,7 @@ export function EvaluateAnswer({
   const scope = evaluateScopeLabel(filters, evaluation.versionLabels);
   const band = answer.kind === "band" ? answer : null;
   const hasLotComparison = lot !== null && (lot.maxBid !== null || lot.currentBid !== null);
+  const showMixedYears = filters.yearFrom === null && filters.yearTo === null && evaluation.years.length > MIXED_YEARS;
   const loosenLinks =
     loosen.length === 0 && excluded === 0 ? null : (
       <div className="flex flex-wrap gap-2">
@@ -160,7 +161,7 @@ export function EvaluateAnswer({
                 </ResearchNavButton>
               ) : null}
             </div>
-            {filters.yearFrom === null && filters.yearTo === null && evaluation.years.length > MIXED_YEARS ? (
+            {showMixedYears ? (
               <div className="grid gap-2">
                 <p className="text-caption text-warning">
                   Sem filtro de ano, a faixa junta {evaluation.years.length} anos-modelo. Escolha um ano para uma faixa
@@ -182,6 +183,11 @@ export function EvaluateAnswer({
                     ))}
                 </div>
               </div>
+            ) : answer.confidence === "low" ? (
+              <p className="text-caption text-warning">
+                Para estreitar a faixa, refine versão FIPE ou km em Mais filtros, ou tire vendas fora do padrão na lista
+                abaixo.
+              </p>
             ) : null}
             <details className="group text-caption text-muted">
               <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-1 rounded-sm font-medium text-foreground-secondary outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent [&::-webkit-details-marker]:hidden">
@@ -228,7 +234,7 @@ export function EvaluateAnswer({
             {loosenLinks}
           </div>
         )}
-        {actions}
+        <div className="border-t border-border pt-4">{actions}</div>
       </Card>
     </section>
   );

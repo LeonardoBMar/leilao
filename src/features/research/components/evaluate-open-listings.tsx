@@ -2,7 +2,7 @@ import { Car, ChevronDown, ExternalLink } from "lucide-react";
 import Image from "next/image";
 import type { ReactNode } from "react";
 
-import { Badge } from "@/components/ui";
+import { Badge, EmptyState } from "@/components/ui";
 import type { Cents } from "@/domain/money";
 import type { EvaluateFilters } from "@/domain/research/evaluate";
 import { bandPosition } from "@/domain/research/evaluate";
@@ -36,7 +36,17 @@ export async function EvaluateOpenListings({
   action: OpenListingAction;
 }) {
   const listings = await getOpenListingsFor(filters);
-  if (listings.length === 0) return null;
+  if (listings.length === 0) {
+    return (
+      <ResearchBlock id="abertos" title={`${OPEN_LISTINGS_TITLE} (0)`}>
+        <EmptyState
+          variant="inline"
+          title="Nenhum lote aberto neste recorte"
+          description="Nenhum veículo em leilão aberto combina com os filtros atuais. Use Acompanhar este veículo acima para receber alertas quando surgir um."
+        />
+      </ResearchBlock>
+    );
+  }
   const { answer } = evaluation;
   const band = answer.kind === "band" ? answer : null;
   const shown = listings.slice(0, OPEN_LISTINGS_SHOWN);
