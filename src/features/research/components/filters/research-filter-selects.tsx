@@ -11,16 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui";
-import {
-  RESEARCH_CONDITIONS,
-  RESEARCH_MILEAGE_OPTIONS,
-  type ResearchCondition,
-  type ResearchFilters,
-  type ResearchPeriod,
-} from "@/domain/research/filters";
+import { RESEARCH_MILEAGE_OPTIONS, type ResearchFilters, type ResearchPeriod } from "@/domain/research/filters";
 import { isStateCode, STATE_CODES, STATE_NAMES, type StateCode } from "@/domain/research/states";
 
-import { CONDITION_LABELS, mileageLabel, periodLabel, salesLabel } from "../../labels";
+import { mileageLabel, periodLabel, salesLabel } from "../../labels";
 import type { ResearchFacets } from "../../types";
 
 const ALL_STATES = "todos";
@@ -52,40 +46,6 @@ export function OptionWithCount({ label, count }: { label: string; count: number
       {label}
       <span className="text-caption text-muted tabular-nums">{count.toLocaleString("pt-BR")}</span>
     </span>
-  );
-}
-
-export function ConditionSelect({
-  value,
-  counts,
-  onChange,
-}: {
-  value: ResearchCondition;
-  counts: ResearchFacets["conditions"];
-  onChange: (condition: ResearchCondition) => void;
-}) {
-  const labelId = useId();
-  return (
-    <DrawerField labelId={labelId} label="Condição">
-      <Select
-        value={value}
-        onValueChange={(next) => {
-          const condition = RESEARCH_CONDITIONS.find((key) => key === next);
-          if (condition) onChange(condition);
-        }}
-      >
-        <SelectTrigger aria-labelledby={labelId}>
-          <SelectValue>{CONDITION_LABELS[value]}</SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          {RESEARCH_CONDITIONS.map((condition) => (
-            <SelectItem key={condition} value={condition} disabled={counts[condition] === 0 && condition !== value}>
-              <OptionWithCount label={CONDITION_LABELS[condition]} count={counts[condition]} />
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </DrawerField>
   );
 }
 

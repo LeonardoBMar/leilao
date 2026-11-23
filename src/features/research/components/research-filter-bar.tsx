@@ -105,9 +105,10 @@ function withoutRefinements(filters: ResearchFilters): ResearchFilters {
 }
 
 /**
- * Barra de filtros do Panorama (DESIGN.md §15.8, docs/PLANO-MERCADO.md §6): na linha fixa, o modelo, a categoria,
- * "Mais filtros" (gaveta com condição, estado, fonte, km, ano e, quando a base cobre, período), a comparação e o total; embaixo, os filtros ativos em
- * chips. Cada escolha aplica na hora e vai para a URL; enquanto a tela recarrega, os controles já mostram a escolha.
+ * Barra de filtros do Panorama (DESIGN.md §15.8, docs/PLANO-MERCADO.md §6): na linha fixa, o modelo, a condição, a
+ * categoria, "Mais filtros" (gaveta com estado, fonte, km, ano e, quando a base cobre, período), a comparação e o
+ * total; embaixo, os filtros ativos em chips. Cada escolha aplica na hora e vai para a URL; enquanto a tela recarrega,
+ * os controles já mostram a escolha.
  */
 export function ResearchFilterBar({ params, facets }: ResearchFilterBarProps) {
   const router = useRouter();
