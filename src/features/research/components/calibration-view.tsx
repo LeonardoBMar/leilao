@@ -332,12 +332,8 @@ export function EngineQualityBlock({ data }: { data: EngineQualityData }) {
     <ResearchBlock
       id="calibracao-motor"
       title="Qualidade do preço provável"
-      description={`Teste com as vendas do catálogo desde ${formatDate(latest.from)}, atualizado em ${formatDate(latest.computedAt)} (${source === "auto" ? "automático" : "estático"}).`}
-      actions={
-        <Badge variant={source === "auto" ? "primary" : "default"}>
-          {source === "auto" ? "Automático" : "Estático"}
-        </Badge>
-      }
+      description={`Teste com as vendas do catálogo desde ${formatDate(latest.from)}, atualizado em ${formatDate(latest.computedAt)}.`}
+      actions={<Badge variant="default">{source === "auto" ? "Automático" : "Estático"}</Badge>}
     >
       <p className="max-w-3xl text-body text-foreground">
         Cada venda foi estimada só com as vendas de dias anteriores a ela. O preço provável saiu em{" "}
