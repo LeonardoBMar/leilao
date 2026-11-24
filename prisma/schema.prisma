@@ -602,6 +602,20 @@ model CollectorRun {
   @@map("collector_runs")
 }
 
+/// Resumo do backtest de qualidade do motor do preço provável (D-76). Global, gravado semanalmente pelo coletor ou
+/// sob demanda (`scripts/estimate-backtest.ts --save-db`).
+model EngineQualitySnapshot {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  version    Int
+  computedAt DateTime @map("computed_at") @db.Timestamptz(3)
+  fromDate   DateTime @map("from_date") @db.Timestamptz(3)
+  payload    Json
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([version, computedAt(sort: Desc)], map: "engine_quality_snapshots_version_computed_at_idx")
+  @@map("engine_quality_snapshots")
+}
+
 /// Monitor do usuário (docs/PLANO-COLETA.md, etapa 2): critérios de busca no catálogo que geram alertas.
 /// Os critérios são os mesmos da tela "Leilões" (src/domain/listings/criteria.ts); categoria e condição guardam a chave.
 model Watch {
