@@ -17,7 +17,12 @@ import { FollowedLotsNav } from "@/features/lots/components/followed-lots-nav";
 export default function PrivateLayout({ children }: LayoutProps<"/">) {
   const account = (
     <Suspense fallback={<Skeleton className="size-10 rounded-full sm:size-8 pointer-coarse:size-10" />}>
-      <UserMenu />
+      <UserMenu variant="header" />
+    </Suspense>
+  );
+  const sidebarAccount = (
+    <Suspense fallback={<Skeleton className="h-10 w-full rounded-md" />}>
+      <UserMenu variant="sidebar" />
     </Suspense>
   );
   const notifications = (
@@ -58,6 +63,7 @@ export default function PrivateLayout({ children }: LayoutProps<"/">) {
   return (
     <AppShell
       account={account}
+      sidebarAccount={sidebarAccount}
       notifications={notifications}
       badges={badges}
       followed={followed}

@@ -166,6 +166,7 @@ function HideOnDashboard({ children }: { children: ReactNode }) {
 
 type AppShellProps = {
   account: ReactNode;
+  sidebarAccount?: ReactNode;
   notifications?: ReactNode;
   badges?: NavBadges;
   followed?: ReactNode;
@@ -194,6 +195,7 @@ function getIsMacServerSnapshot(): boolean {
  */
 export function AppShell({
   account,
+  sidebarAccount,
   notifications,
   badges,
   followed,
@@ -332,6 +334,8 @@ export function AppShell({
             ) : null}
           </div>
         </div>
+
+        {sidebarAccount ? <div className="shrink-0 border-t border-border/70 px-2.5 py-2">{sidebarAccount}</div> : null}
       </aside>
 
       {/* Coluna principal encaixada (Inset Canvas no desktop lg+) */}
@@ -382,7 +386,7 @@ export function AppShell({
                   <Search aria-hidden="true" strokeWidth={1.75} className="size-4" />
                 </Button>
                 {notifications}
-                {account}
+                {sidebarAccount ? <div className="lg:hidden">{account}</div> : account}
               </div>
             </div>
           </header>
