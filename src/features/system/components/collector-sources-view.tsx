@@ -134,8 +134,8 @@ export async function CollectorSourcesView() {
                   </summary>
                   <ul className="mt-2.5 grid gap-1.5 font-mono text-caption text-foreground-secondary">
                     {latestErrors.map((sample, index) => (
-                      <li key={`${sample.url}-${index}`} className="break-all">
-                        <span className="text-muted">{sample.url}</span> → {sample.error}
+                      <li key={`${sample.url}-${index}`} className="wrap-break-word">
+                        <span className="break-all text-muted">{sample.url}</span> → {sample.error}
                       </li>
                     ))}
                   </ul>
