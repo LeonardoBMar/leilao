@@ -234,33 +234,11 @@ export function AppShell({
   const canvasRef = useRef<HTMLDivElement>(null);
   const sidebarNavRef = useRef<HTMLDivElement>(null);
   const sidebarContentRef = useRef<HTMLDivElement>(null);
-  const collapseButtonRef = useRef<HTMLButtonElement>(null);
-  const expandButtonRef = useRef<HTMLButtonElement>(null);
-  const pendingToggleFocusRef = useRef<"collapse" | "expand" | null>(null);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => setSidebarTransitionReady(true));
     return () => window.cancelAnimationFrame(frame);
   }, []);
-
-  useEffect(() => {
-    const target = pendingToggleFocusRef.current;
-    if (!target) return;
-    pendingToggleFocusRef.current = null;
-    const frame = window.requestAnimationFrame(() => {
-      if (target === "expand") {
-        expandButtonRef.current?.focus();
-      } else {
-        collapseButtonRef.current?.focus();
-      }
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [collapsed]);
-
-  function handleToggleSidebar(nextCollapsed: boolean) {
-    pendingToggleFocusRef.current = nextCollapsed ? "expand" : "collapse";
-    setSidebarCollapsed(nextCollapsed);
-  }
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -347,33 +325,37 @@ export function AppShell({
       >
         <div
           className={cn(
-            "flex h-12 shrink-0 items-center justify-between",
-            collapsed ? "justify-center px-2.5" : "pr-2.5 pl-4",
+            "flex shrink-0 items-center",
+            collapsed ? "flex-col gap-2 px-2.5 pt-2 pb-0.5" : "h-12 justify-between pr-2.5 pl-4",
           )}
         >
           <Brand href="/dashboard" compact={collapsed} />
 
-          {!collapsed ? (
-            <Tooltip delayDuration={200}>
-              <TooltipTrigger asChild>
-                <button
-                  ref={collapseButtonRef}
-                  type="button"
-                  onClick={() => handleToggleSidebar(true)}
-                  aria-label="Recolher barra lateral"
-                  aria-expanded={true}
-                  aria-controls="sidebar-nav"
-                  aria-keyshortcuts="Control+B Meta+B"
-                  className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-subtle transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-primary-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.95] motion-reduce:transition-none motion-reduce:active:scale-100 pointer-coarse:size-10"
-                >
+          <Tooltip delayDuration={200}>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => setSidebarCollapsed(!collapsed)}
+                aria-label={collapsed ? "Expandir barra lateral" : "Recolher barra lateral"}
+                aria-expanded={!collapsed}
+                aria-controls="sidebar-nav"
+                aria-keyshortcuts="Control+B Meta+B"
+                className={cn(
+                  "inline-flex shrink-0 items-center justify-center rounded-md text-muted-subtle transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-primary-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.95] motion-reduce:transition-none motion-reduce:active:scale-100",
+                  collapsed ? "h-9 w-full pointer-coarse:h-11" : "size-8 pointer-coarse:size-10",
+                )}
+              >
+                {collapsed ? (
+                  <PanelLeftOpen aria-hidden="true" strokeWidth={1.75} className="size-4" />
+                ) : (
                   <PanelLeftClose aria-hidden="true" strokeWidth={1.75} className="size-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={8}>
-                Recolher barra lateral ({isMac ? "⌘B" : "Ctrl+B"})
-              </TooltipContent>
-            </Tooltip>
-          ) : null}
+                )}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={8}>
+              {collapsed ? "Expandir barra lateral" : "Recolher barra lateral"} ({isMac ? "⌘B" : "Ctrl+B"})
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         {/* Gatilho da paleta de comandos integrado ao topo da sidebar (padrão Linear/Attio) */}
@@ -462,27 +444,6 @@ export function AppShell({
                 <MobileNav badges={badges} followed={followed} nextAuction={nextAuction} />
                 <Brand href="/dashboard" hideLabelOnNarrow />
               </div>
-              {collapsed ? (
-                <Tooltip delayDuration={200}>
-                  <TooltipTrigger asChild>
-                    <button
-                      ref={expandButtonRef}
-                      type="button"
-                      onClick={() => handleToggleSidebar(false)}
-                      aria-label="Expandir barra lateral"
-                      aria-expanded={false}
-                      aria-controls="sidebar-nav"
-                      aria-keyshortcuts="Control+B Meta+B"
-                      className="-ml-1.5 hidden size-8 shrink-0 items-center justify-center rounded-md text-muted transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-primary-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.95] motion-reduce:transition-none motion-reduce:active:scale-100 lg:inline-flex pointer-coarse:size-10"
-                    >
-                      <PanelLeftOpen aria-hidden="true" strokeWidth={1.75} className="size-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" sideOffset={8}>
-                    Expandir barra lateral ({isMac ? "⌘B" : "Ctrl+B"})
-                  </TooltipContent>
-                </Tooltip>
-              ) : null}
               <Suspense fallback={null}>
                 <HeaderRouteContext />
               </Suspense>
