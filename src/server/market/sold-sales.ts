@@ -87,10 +87,13 @@ export async function getRecentEstimateIndex(now: Date = new Date()): Promise<Es
 }
 
 /**
- * Todas as vendas do catálogo, para o backtest do preço provável (docs/PLANO-MERCADO.md, T0.1). Catálogo global, sem
- * dono (D-45); só os scripts usam, e só leem.
+ * Vendas do catálogo para o backtest do preço provável (docs/PLANO-MERCADO.md, T0.1). Catálogo global, sem dono
+ * (D-45); só os scripts e o backtest semanal usam, e só leem. `since` limita a janela lida do banco quando informado.
  */
-export async function loadSoldSales(): Promise<BacktestSale[]> {
-  const rows = await db.listing.findMany({ where: soldSaleWhere, select: estimateSaleSelect });
+export async function loadSoldSales(since?: Date): Promise<BacktestSale[]> {
+  const rows = await db.listing.findMany({
+    where: { ...soldSaleWhere, ...(since === undefined ? {} : { endsAt: { gte: since } }) },
+    select: estimateSaleSelect,
+  });
   return rows.flatMap((row) => toEstimateSale(row) ?? []);
 }

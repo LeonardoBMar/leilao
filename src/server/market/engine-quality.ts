@@ -3,9 +3,9 @@ import "server-only";
 import { runBacktest } from "@/domain/listings/backtest";
 import {
   buildEngineQualityReport,
-  DEFAULT_ENGINE_QUALITY_FROM,
   ENGINE_QUALITY_VERSION,
   type EngineQualityReport,
+  engineQualityWindowStart,
   isEngineQualityStale,
   serializeEngineQualityReport,
 } from "@/domain/listings/engine-quality";
@@ -53,8 +53,8 @@ export async function refreshEngineQualitySnapshot(
     }
   }
 
-  const from = options.from ?? DEFAULT_ENGINE_QUALITY_FROM;
-  const sales = await loadSoldSales();
+  const from = options.from ?? engineQualityWindowStart(now);
+  const sales = await loadSoldSales(new Date(from.getTime() - SALES_WINDOW_MS));
   const outcomes = runBacktest(
     sales,
     (prior) => {
