@@ -258,4 +258,54 @@ describe("createPoliteFetcher", () => {
       error: "fetch failed (UNABLE_TO_VERIFY_LEAF_SIGNATURE: unable to verify the first certificate)",
     });
   });
+
+  it("trata AggregateError, cause com mensagem vazia, cause aninhado e truncamento sem quebras de linha", async () => {
+    const clock = fakeClock();
+    const codeOnly = new TypeError("fetch failed", {
+      cause: Object.assign(new Error(""), { code: "ECONNREFUSED" }),
+    });
+    const aggregate = new TypeError("fetch failed", {
+      cause: new AggregateError(
+        [
+          Object.assign(new Error("connect ECONNREFUSED ::1:443"), { code: "ECONNREFUSED" }),
+          Object.assign(new Error("connect ECONNREFUSED 127.0.0.1:443"), { code: "ECONNREFUSED" }),
+        ],
+        "",
+      ),
+    });
+    const nested = new TypeError("fetch failed", {
+      cause: new Error("", { cause: new Error("socket\nhang up") }),
+    });
+    const verbose = new TypeError("fetch failed", {
+      cause: new Error("x".repeat(600)),
+    });
+    const { impl } = fakeFetch([codeOnly, aggregate, nested, verbose]);
+    const fetcher = createPoliteFetcher({
+      fetchImpl: impl,
+      sleep: clock.sleep,
+      now: clock.now,
+      minIntervalMs: 0,
+      maxAttempts: 1,
+    });
+
+    expect(await fetcher.get("https://fonte/1")).toMatchObject({
+      ok: false,
+      error: "fetch failed (ECONNREFUSED)",
+    });
+    expect(await fetcher.get("https://fonte/2")).toMatchObject({
+      ok: false,
+      error:
+        "fetch failed (ECONNREFUSED: connect ECONNREFUSED ::1:443; ECONNREFUSED: connect ECONNREFUSED 127.0.0.1:443)",
+    });
+    expect(await fetcher.get("https://fonte/3")).toMatchObject({
+      ok: false,
+      error: "fetch failed (socket hang up)",
+    });
+    const truncated = await fetcher.get("https://fonte/4");
+    expect(truncated.ok).toBe(false);
+    if (!truncated.ok) {
+      expect(truncated.error.length).toBe(500);
+      expect(truncated.error.endsWith("…")).toBe(true);
+    }
+  });
 });

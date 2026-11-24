@@ -163,13 +163,44 @@ export function createPoliteFetcher({
   };
 }
 
+const MAX_ERROR_LENGTH = 500;
+const MAX_CAUSE_DEPTH = 3;
+
 function formatFetchError(error: unknown): string {
-  if (!(error instanceof Error)) return String(error);
-  const cause = error.cause;
-  if (!(cause instanceof Error)) return error.message;
-  const code = "code" in cause && typeof cause.code === "string" ? cause.code : null;
-  const detail = code ? `${code}: ${cause.message}` : cause.message;
-  return detail ? `${error.message} (${detail})` : error.message;
+  if (!(error instanceof Error)) return normalizeErrorText(String(error));
+  const detail = extractCauseDetail(error.cause, MAX_CAUSE_DEPTH);
+  const base = normalizeErrorText(error.message);
+  return truncateError(detail ? `${base} (${detail})` : base);
+}
+
+function extractCauseDetail(cause: unknown, remainingDepth: number): string {
+  if (remainingDepth <= 0 || !(cause instanceof Error)) return "";
+  if (cause instanceof AggregateError && cause.errors.length > 0) {
+    const parts = new Set<string>();
+    for (const item of cause.errors) {
+      const text = formatSingleCause(item, remainingDepth - 1);
+      if (text) parts.add(text);
+    }
+    if (parts.size > 0) return [...parts].join("; ");
+  }
+  return formatSingleCause(cause, remainingDepth - 1);
+}
+
+function formatSingleCause(error: unknown, remainingDepth: number): string {
+  if (!(error instanceof Error)) return "";
+  const code = "code" in error && typeof error.code === "string" ? error.code.trim() : "";
+  const message = normalizeErrorText(error.message);
+  const direct = [code, message].filter(Boolean).join(": ");
+  if (direct) return direct;
+  return extractCauseDetail(error.cause, remainingDepth);
+}
+
+function normalizeErrorText(text: string): string {
+  return text.replace(/\s+/g, " ").trim();
+}
+
+function truncateError(text: string): string {
+  return text.length > MAX_ERROR_LENGTH ? `${text.slice(0, MAX_ERROR_LENGTH - 1)}…` : text;
 }
 
 function parseRetryAfter(value: string | null, nowMs: number): number | undefined {
