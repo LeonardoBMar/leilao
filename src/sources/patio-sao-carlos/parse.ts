@@ -6,34 +6,43 @@ import {
 } from "@/domain/listings/condition";
 import { normalizePlaceName, stateCode } from "@/domain/listings/place";
 import type { ListingCategory, ListingInput, ListingStatus } from "@/domain/listings/types";
-import { bps, type Cents, parseBRL } from "@/domain/money";
+import { bps, type Cents, cents, parseBRL } from "@/domain/money";
 import { formatDate } from "@/lib/format";
 import { err, ok, type Result } from "@/lib/result";
 
 import { PATIO_IMAGE_ORIGIN } from "../image-origins";
-import { brasiliaDateUtc, decodeHtmlEntities, htmlToLines } from "../shared/extract";
+import { brasiliaDateUtc, decodeHtmlEntities, extractNextFlightJson, htmlToLines } from "../shared/extract";
 import { redactVehicleIds } from "../shared/redact";
-import type { DiscoveredListing, ListingDetails, ParseError } from "../types";
-import { type PatioDateParts, type PatioLiveLot, patioLiveLotSchema, patioLiveResponseSchema } from "./schema";
+import type { ListingDetails, ParseError } from "../types";
+import {
+  type PatioAuction,
+  patioAuctionSchema,
+  type PatioLegacyDateParts,
+  patioLegacyLiveLotSchema,
+  type PatioListItem,
+  type PatioLot,
+  patioLotListSchema,
+  patioLotSchema,
+} from "./schema";
 
 export const PATIO_BASE_URL = "https://patioestadualsc.org";
 export const PATIO_NAME = "Pátio Estadual São Carlos";
-/** Consulta interna que o site usa para atualizar lance e situação na tela. */
-export const PATIO_LIVE_URL = `${PATIO_BASE_URL}/app/Ajax/Leiloes/atualizar_leiloes.php`;
 
-/** O site aceita qualquer texto no lugar do nome do veículo na URL; o id basta. */
-export const patioListingUrl = (externalId: string) => `${PATIO_BASE_URL}/lote/-/${externalId}/`;
+/** Comissão fixa do leiloeiro (5%), confirmada no edital e no `ModalConfirmarLance` do site. */
+const PATIO_COMMISSION_BPS = bps(500);
 
-/** Listas por categoria do site (`/lotes/?cate[]=N`): 1 veículos, 2 motocicletas. Paginação começa em 0. */
+export const patioListingUrl = (externalId: string) => `${PATIO_BASE_URL}/lote/${externalId}/`;
+
+/** Listas por categoria (`/lotes/?categoriaId=N&pagina=P`): 1 veículos, 2 motocicletas. Paginação começa em 1. */
 export const patioListUrl = (category: number, page: number) =>
-  `${PATIO_BASE_URL}/lotes/?cate%5B0%5D=${category}&pag=${page}`;
+  `${PATIO_BASE_URL}/lotes/?categoriaId=${category}&pagina=${page}`;
 
-/**
- * Situações do site, como o próprio site as mostra (`eventos.js`): 2 "Lote Arrematado", 3 "Não Arrematado",
- * 10 "Leilão Condicional". Confirmadas na consulta de 30/09/2026 (fixtures). "Venda direta" (20) não é leilão e fica
- * sem mapa: vira `open` antes do fim e `unknown` depois, como toda situação desconhecida.
- */
-const STATUS_BY_SITUACAO: Record<number, ListingStatus> = {
+/** Edital do lote: é onde o site informa o endereço real do pátio para visitação. */
+export const patioEditalUrl = (externalId: string) =>
+  `${PATIO_BASE_URL}/painel-api/v1/publico/edital?lote=${externalId}`;
+
+/** Situações legadas (`atualizar_leiloes.php`), usadas apenas para `detailsFromRaw` em `raw` antigo. */
+const LEGACY_STATUS_BY_SITUACAO: Record<number, ListingStatus> = {
   0: "open",
   1: "open",
   2: "sold",
@@ -60,13 +69,9 @@ const CATEGORY_BY_NAME: Record<string, ListingCategory> = {
   ONIBUS: "Pesados",
   SUCATAS: "Sucatas",
 };
-/**
- * Sem "Categoria" na página (ex.: motos), vale o grupo da consulta interna. "Veículos" é o grupo de carros e
- * utilitários; sem como separar, fica em "Carros", que é o que o fluxo de análise cobre.
- */
 const CATEGORY_BY_GROUP: Record<string, ListingCategory> = { VEICULOS: "Carros", MOTOCICLETAS: "Motos" };
 
-/** Rótulos da ficha "Informações do bem" (normalizados), que muda de leilão para leilão. */
+/** Rótulos da ficha na descrição do lote (normalizados). */
 const FIELD_BY_LABEL: Record<string, InfoField> = {
   MARCA: "brand",
   MODELO: "model",
@@ -103,38 +108,16 @@ type InfoField =
   | "key"
   | "recovery";
 
-/** Página de lote que o site já tirou do ar: responde 200 com este aviso. */
-const GONE_MARKER = "Nenhum Lote Encontrado";
-
-/** Lista de lotes de uma categoria: os anúncios da página e o número da última página. */
-export function parsePatioLotList(html: string): { listings: DiscoveredListing[]; lastPage: number | null } {
-  const found = new Map<string, DiscoveredListing>();
-  for (const [, id] of html.matchAll(/href="\/lote\/[^"/]*\/(\d+)\/"/g)) {
-    if (id && !found.has(id)) found.set(id, { externalId: id, url: patioListingUrl(id), lastModified: null });
-  }
-  const last = /href="[^"]*pag=(\d+)"[^>]*aria-label="Última página"/.exec(html)?.[1];
-  return { listings: [...found.values()], lastPage: last === undefined ? null : Number(last) };
+/** Lista de lotes de uma categoria extraída do `initialLotes` embutido no HTML Next.js. */
+export function parsePatioLotList(html: string): Result<{ items: PatioListItem[]; totalPages: number }, ParseError> {
+  const raw = extractNextFlightJson(html, "initialLotes");
+  if (raw === null) return err("missing_data");
+  const parsed = patioLotListSchema.safeParse(raw);
+  if (!parsed.success) return err("invalid_data");
+  const { itens, porPagina, total } = parsed.data;
+  const totalPages = Math.max(1, Math.ceil(total / porPagina));
+  return ok({ items: itens, totalPages });
 }
-
-/** Confirma que uma lista vazia veio de uma página de lotes válida (e não de erro/manutenção). */
-export function isPatioLotListPage(html: string): boolean {
-  return /lotes-page-layout|pg_lotes|Nenhum Lote Encontrado/i.test(html);
-}
-
-/** Situação de vários lotes na resposta da consulta interna, por id. Lote ausente ou fora do formato fica de fora. */
-export function parsePatioLive(json: string): Result<Map<string, PatioLiveLot>, ParseError> {
-  const response = patioLiveResponseSchema.safeParse(parseJson(json));
-  if (!response.success) return err("invalid_data");
-  const lots = new Map<string, PatioLiveLot>();
-  for (const [id, value] of Object.entries(response.data.item)) {
-    const lot = patioLiveLotSchema.safeParse(value);
-    if (lot.success) lots.set(id, lot.data);
-  }
-  return ok(lots);
-}
-
-/** Edital do lote (botão "Edital do leilão"): é onde o site diz onde o veículo está para visitação. */
-export const patioEditalUrl = (externalId: string) => `${PATIO_BASE_URL}/views/edital.php?lote=${externalId}`;
 
 /** "Endereço Pátio: Estr. ..., 2840, ÁGUA FRIA, São Carlos, SÃO PAULO, 13575-675" do edital. */
 export function parsePatioEditalAddress(html: string): string | null {
@@ -143,99 +126,117 @@ export function parsePatioEditalAddress(html: string): string | null {
   return address === "" ? null : address;
 }
 
-/** A página diz que o lote não existe mais. */
-export function isPatioPageGone(html: string): boolean {
-  return html.includes(GONE_MARKER) && !html.includes("lote-page__panel-body--info");
-}
-
-/** Dado bruto guardado em `listings.raw`: a ficha, a descrição e a situação, sem quem deu lance. */
+/** Dado bruto guardado em `listings.raw` (sem `metadados` de placa/chassi/Renavam e sem quem deu lance). */
 type PatioRaw = {
   info: Record<string, string>;
   notes: string[];
   description: string | null;
-  live: PatioLiveLot;
-  /** Endereço do pátio no edital; `null` se o edital não carregou. */
+  lote: SanitizedPatioLot;
+  leilao: SanitizedPatioAuction | null;
   yardAddress: string | null;
-  /**
-   * O que só a página do lote traz além da ficha, para a revisita montar o anúncio sem baixá-la de novo (só a
-   * consulta de situação). Ausente no `raw` gravado antes de 10/10/2026: a revisita lê a página.
-   */
-  page?: PatioPageInfo;
 };
 
-type PatioPageInfo = { lotNumber: string | null; commission: string | null; photoUrls: string[] };
+type SanitizedPatioLot = {
+  id: string;
+  titulo: string;
+  auctionId: string;
+  numero: number | null;
+  categoria: string | null;
+  status: string;
+  lanceAtualCentavos: number | null;
+  lanceInicialCentavos: number | null;
+  valorFipeCentavos: number | null;
+  qtdLances: number;
+  aberturaIso: string | null;
+  fechamentoIso: string | null;
+};
+
+type SanitizedPatioAuction = {
+  id: string;
+  titulo: string | null;
+  comitente: string | null;
+  aberturaIso: string | null;
+  fechamentoIso: string | null;
+  taxaAdministrativa: string | null;
+  outrosCustos: string | null;
+};
 
 /**
- * Página do lote + situação da consulta interna + endereço do edital → anúncio no formato único. O local da consulta
- * interna não é usado: é o de origem do comitente, não onde o veículo está (o edital diz o pátio).
+ * Reaproveita o endereço do pátio já coletado no `raw` da visita anterior para o mesmo lote, evitando uma nova
+ * requisição ao edital a cada revisita.
+ */
+export function storedYardAddressFor(stored: unknown, externalId: string): string | null {
+  if (!isRecord(stored) || typeof stored.yardAddress !== "string" || stored.yardAddress === "") return null;
+  if (isRecord(stored.lote) && String(stored.lote.id) === externalId) return stored.yardAddress;
+  if (isRecord(stored.live) && String(stored.live.box_id) === externalId) return stored.yardAddress;
+  return null;
+}
+
+/**
+ * Página do lote (`/lote/{id}/`) + endereço do edital → anúncio no formato único.
+ * `cidade`/`uf` do `initialLote` não são usados: continuam sendo o local de origem do comitente, não o pátio.
  */
 export function parsePatioListing(
   html: string,
-  live: PatioLiveLot,
   yardAddress: string | null,
   now: Date,
 ): Result<ListingInput, ParseError> {
-  const infoHtml = sliceBetween(html, "lote-page__panel-body--info", "<h2");
-  if (infoHtml === null) return err("missing_data");
-  const { info, notes } = readInfo(htmlToLines(infoHtml));
+  const rawLote = extractNextFlightJson(html, "initialLote");
+  if (rawLote === null) return err("missing_data");
+  const parsedLote = patioLotSchema.safeParse(rawLote);
+  if (!parsedLote.success) return err("invalid_data");
+
+  const rawLeilao = extractNextFlightJson(html, "initialLeilao");
+  const parsedLeilao = rawLeilao === null ? null : patioAuctionSchema.safeParse(rawLeilao);
+  const leilao = parsedLeilao?.success ? sanitizeAuction(parsedLeilao.data) : null;
+
+  const lote = parsedLote.data;
+  const { info, notes } = readInfo(htmlToLines(lote.descricao ?? ""));
   const redactedInfo = Object.fromEntries(Object.entries(info).map(([key, value]) => [key, redactVehicleIds(value)]));
   const redactedNotes = notes.map(redactVehicleIds);
-  const descriptionHtml = sliceBetween(html, "lote-page__descricao-texto", "</div>");
-  const descriptionText = descriptionHtml === null ? null : htmlToLines(descriptionHtml).join("\n");
-  const description = descriptionText === null ? null : redactVehicleIds(descriptionText);
-  const page: PatioPageInfo = {
-    lotNumber: /class="lote-page__title-lote">\s*Lote\s+(\w+)/.exec(html)?.[1] ?? null,
-    commission: /id="lote6ModalComissaoPct">\s*([\d.,]+)\s*</.exec(html)?.[1] ?? null,
-    photoUrls: photosOf(html),
-  };
+  const extraText = lote.condicoesVenda ? htmlToLines(lote.condicoesVenda).join("\n") : null;
+  const description = extraText && extraText !== "" ? redactVehicleIds(extraText) : null;
+
   const raw: PatioRaw = {
     info: redactedInfo,
     notes: redactedNotes,
     description,
-    live: sanitizeLive(live),
+    lote: sanitizeLot(lote),
+    leilao,
     yardAddress,
-    page,
   };
-  return ok(fromRaw(raw, page, now));
+
+  return ok(fromRaw(raw, photosOf(lote), now));
 }
 
-/**
- * Revisita com uma requisição só: o `raw` da última leitura (ficha, descrição, edital, página) + a situação nova da
- * consulta interna. `null` se o `raw` não serve (formato antigo, sem os dados da página, ou de outro lote): a
- * revisita lê a página inteira.
- */
-export function parsePatioRevisit(stored: unknown, live: PatioLiveLot, now: Date): ListingInput | null {
-  const previous = readRaw(stored);
-  if (!previous?.page || previous.live.box_id !== live.box_id) return null;
-  return fromRaw({ ...previous, live: sanitizeLive(live) }, previous.page, now);
-}
-
-/** Descrição, condição e situação a partir de `raw`. */
+/** Descrição, condição e situação a partir de `raw` (suporta formato novo e legado para `db:reparse`). */
 export function patioDetailsFromRaw(raw: unknown, now: Date): ListingDetails | null {
-  const parsed = readRaw(raw);
-  if (!parsed) return null;
-  const endsAt = brasiliaDate(parsed.live.cronometro.data.fim);
-  return {
-    description: describe(parsed),
-    condition: conditionOf(parsed),
-    status: mapStatus(parsed.live.situacao, endsAt, now),
-    sourceStatus: String(parsed.live.situacao),
-  };
+  const current = readRaw(raw);
+  if (current) {
+    const endsAt = parseIsoDate(current.lote.fechamentoIso);
+    return {
+      description: describe(current),
+      condition: conditionOf(current),
+      status: mapStatus(current.lote.status, current.lote.qtdLances, endsAt, now),
+      sourceStatus: current.lote.status,
+    };
+  }
+  return legacyDetailsFromRaw(raw, now);
 }
 
-function fromRaw(raw: PatioRaw, page: PatioPageInfo, now: Date): ListingInput {
-  const { info, live } = raw;
+function fromRaw(raw: PatioRaw, photoUrls: string[], now: Date): ListingInput {
+  const { info, lote, leilao } = raw;
   const field = (name: InfoField) => info[name] ?? null;
-  const externalId = live.box_id;
-  const startsAt = brasiliaDate(live.cronometro.data.ini);
-  const endsAt = brasiliaDate(live.cronometro.data.fim);
-  const { lotNumber, commission } = page;
+  const externalId = lote.id;
+  const startsAt = parseIsoDate(lote.aberturaIso);
+  const endsAt = parseIsoDate(lote.fechamentoIso);
+  const auctionTitle = leilao?.titulo?.trim() ?? "";
 
   return {
     externalId,
     url: patioListingUrl(externalId),
-    lotNumber,
-    title: live.nome.trim(),
+    lotNumber: lote.numero === null ? null : String(lote.numero),
+    title: lote.titulo.trim(),
     vehicle: {
       brand: field("brand"),
       model: field("model"),
@@ -246,39 +247,70 @@ function fromRaw(raw: PatioRaw, page: PatioPageInfo, now: Date): ListingInput {
       mileageKm: toKm(field("mileage")),
       fuel: field("fuel"),
       color: field("color"),
-      category: categoryOf(field("category"), live.categorias),
+      category: categoryOf(field("category"), lote.categoria),
       recoveryType: field("recovery"),
       hasKey: toYesNo(field("key")),
     },
     auction: {
-      externalId: live.leiloes,
-      // A página do lote não traz o nome do leilão; o dia do fechamento identifica o evento para o usuário.
-      name: endsAt === null ? `Leilão ${live.leiloes}` : `Leilão de ${formatDate(endsAt)}`,
-      startsAt: null,
+      externalId: lote.auctionId,
+      name:
+        auctionTitle !== ""
+          ? auctionTitle
+          : endsAt === null
+            ? `Leilão ${lote.auctionId}`
+            : `Leilão de ${formatDate(endsAt)}`,
+      startsAt: parseIsoDate(leilao?.aberturaIso ?? null),
     },
-    sellerName: null,
+    sellerName: leilao?.comitente?.trim() || null,
     description: describe(raw),
     condition: conditionOf(raw),
     startsAt,
     endsAt,
     location: placeOf(raw.yardAddress),
-    status: mapStatus(live.situacao, endsAt, now),
-    sourceStatus: String(live.situacao),
-    currentBid: live.count_lances > 0 ? money(live.lance.atual) : null,
-    minimumBid: money(live.lance.ini),
-    bidCount: live.count_lances,
-    marketValue: money(field("fipe")),
+    status: mapStatus(lote.status, lote.qtdLances, endsAt, now),
+    sourceStatus: lote.status,
+    currentBid:
+      lote.qtdLances > 0 && lote.lanceAtualCentavos !== null && lote.lanceAtualCentavos > 0
+        ? cents(lote.lanceAtualCentavos)
+        : null,
+    minimumBid:
+      lote.lanceInicialCentavos !== null && lote.lanceInicialCentavos > 0 ? cents(lote.lanceInicialCentavos) : null,
+    bidCount: lote.qtdLances,
+    marketValue:
+      lote.valorFipeCentavos !== null && lote.valorFipeCentavos > 0
+        ? cents(lote.valorFipeCentavos)
+        : money(field("fipe")),
     costs: {
-      commissionRate: commission === null ? null : toBps(commission),
+      commissionRate: PATIO_COMMISSION_BPS,
       dispatcherFee: null,
       removalFee: null,
       storageFee: null,
       inspectionFee: null,
-      otherFees: null,
+      otherFees: otherFeesOf(leilao),
     },
-    photoUrls: page.photoUrls,
+    photoUrls,
     raw,
   };
+}
+
+/**
+ * Situações confirmadas no bundle do site (`situacaoLote` e cartão de lote):
+ * - `OPEN` → `open`
+ * - `CONDITIONAL` → `conditional`
+ * - `CLOSED` com `qtdLances > 0` ("Lote Arrematado") → `sold`; sem lances → `unsold`
+ * - `DIRECT_SALE` e qualquer outra situação não mapeada → `open` antes do fim e `unknown` depois.
+ */
+function mapStatus(status: string, bidCount: number, endsAt: Date | null, now: Date): ListingStatus {
+  switch (status) {
+    case "OPEN":
+      return "open";
+    case "CONDITIONAL":
+      return "conditional";
+    case "CLOSED":
+      return bidCount > 0 ? "sold" : "unsold";
+    default:
+      return endsAt !== null && endsAt < now ? "unknown" : "open";
+  }
 }
 
 /** Linhas "Rótulo: valor" da ficha. Rótulo conhecido vira campo; o resto (e linhas soltas) vai para as notas. */
@@ -286,12 +318,11 @@ function readInfo(lines: readonly string[]): { info: Record<string, string>; not
   const info: Record<string, string> = {};
   const notes: string[] = [];
   for (const line of lines) {
-    // "Tabela FIPE R$ 67.847,00" vem sem dois-pontos.
+    // "Tabela FIPE R$ 39.984,00" vem sem dois-pontos.
     const match = /^([^:]{1,40}):\s*(.*)$/.exec(line) ?? /^(Tabela FIPE|Valor FIPE)\s+(R\$.*)$/i.exec(line);
     const label = match?.[1] ? normalizePlaceName(match[1].replace(/\.$/, "")) : null;
     const name = label === null ? undefined : FIELD_BY_LABEL[label];
     const value = match?.[2]?.trim() ?? "";
-    // Campo conhecido em branco ("KM: -") não diz nada: nem campo, nem nota.
     if (name && (value === "" || value === "-")) continue;
     if (name && info[name] === undefined) info[name] = value;
     else notes.push(line);
@@ -303,8 +334,7 @@ function describe(raw: Pick<PatioRaw, "notes" | "description">): string | null {
   return cleanDescription(redactVehicleIds([...raw.notes, raw.description ?? ""].join("\n")));
 }
 
-/** Condição declarada: a mesma leitura de texto do Leilo, sobre a ficha inteira e a descrição. Sem laudo cautelar. */
-function conditionOf(raw: PatioRaw): ListingCondition {
+function conditionOf(raw: Pick<PatioRaw, "info" | "notes" | "description">): ListingCondition {
   const text = [...Object.values(raw.info), ...raw.notes, raw.description ?? ""].join("\n");
   return { ...parseConditionNotes(text), inspection: null, inspectionNotes: null };
 }
@@ -312,12 +342,6 @@ function conditionOf(raw: PatioRaw): ListingCondition {
 function categoryOf(name: string | null, group: string | null | undefined): ListingCategory | null {
   const byName = name === null ? undefined : CATEGORY_BY_NAME[normalizePlaceName(name)];
   return byName ?? (group ? (CATEGORY_BY_GROUP[normalizePlaceName(group)] ?? null) : null);
-}
-
-function mapStatus(situacao: number, endsAt: Date | null, now: Date): ListingStatus {
-  const known = STATUS_BY_SITUACAO[situacao];
-  if (known) return known;
-  return endsAt !== null && endsAt < now ? "unknown" : "open";
 }
 
 /**
@@ -338,54 +362,92 @@ function placeOf(address: string | null): ListingInput["location"] {
   return { yardName: PATIO_NAME, city, state, address: parts.join(", ") || null };
 }
 
-function photosOf(html: string): string[] {
-  const gallery = sliceBetween(html, "Galeria_Produtos_Img_Maior", "lote-page__gallery-arrow--next") ?? "";
-  const paths = [...gallery.matchAll(/src="(\/web\/fotos\/[^"]+)"/g)].flatMap(([, path]) => (path ? [path] : []));
-  return [...new Set(paths)].filter((path) => !path.includes("/thumbs/")).map((path) => `${PATIO_IMAGE_ORIGIN}${path}`);
+function photosOf(lote: PatioLot): string[] {
+  const urls = lote.imagens
+    .map((image) => image.src.trim())
+    .filter((src) => src.startsWith(`${PATIO_IMAGE_ORIGIN}/`) && !src.includes("/thumbs/"));
+  return [...new Set(urls)];
 }
 
-/**
- * Só os campos usados da consulta, um a um: um campo novo do site (ex.: quem deu lance) nunca chega a `raw` sem
- * passar por aqui. Fica de fora o que muda a cada acesso (cronômetros, visualizações).
- */
-function sanitizeLive(live: PatioLiveLot): PatioLiveLot {
+function otherFeesOf(leilao: SanitizedPatioAuction | null): Cents | null {
+  if (!leilao) return null;
+  const admin = money(leilao.taxaAdministrativa) ?? 0;
+  const other = money(leilao.outrosCustos) ?? 0;
+  const total = admin + other;
+  return total > 0 ? cents(total) : null;
+}
+
+function sanitizeLot(lote: PatioLot): SanitizedPatioLot {
   return {
-    box_id: live.box_id,
-    nome: live.nome,
-    situacao: live.situacao,
-    count_lances: live.count_lances,
-    leiloes: live.leiloes,
-    local: live.local ?? null,
-    categorias: live.categorias ?? null,
-    lance: { ini: live.lance.ini ?? null, atual: live.lance.atual ?? null },
-    cronometro: { data: live.cronometro.data },
+    id: lote.id,
+    titulo: lote.titulo,
+    auctionId: lote.auctionId,
+    numero: lote.numero ?? null,
+    categoria: lote.categoria ?? null,
+    status: lote.status,
+    lanceAtualCentavos: lote.lanceAtualCentavos ?? null,
+    lanceInicialCentavos: lote.lanceInicialCentavos ?? null,
+    valorFipeCentavos: lote.valorFipeCentavos ?? null,
+    qtdLances: lote.qtdLances,
+    aberturaIso: lote.aberturaIso ?? null,
+    fechamentoIso: lote.fechamentoIso ?? null,
+  };
+}
+
+function sanitizeAuction(leilao: PatioAuction): SanitizedPatioAuction {
+  return {
+    id: leilao.id,
+    titulo: leilao.titulo ?? null,
+    comitente: leilao.comitente ?? null,
+    aberturaIso: leilao.aberturaIso ?? null,
+    fechamentoIso: leilao.fechamentoIso ?? null,
+    taxaAdministrativa: leilao.taxaAdministrativa == null ? null : String(leilao.taxaAdministrativa),
+    outrosCustos: leilao.outrosCustos == null ? null : String(leilao.outrosCustos),
   };
 }
 
 function readRaw(raw: unknown): PatioRaw | null {
-  if (!isRecord(raw) || !isRecord(raw.info) || !Array.isArray(raw.notes)) return null;
-  const live = patioLiveLotSchema.safeParse(raw.live);
-  if (!live.success) return null;
+  if (!isRecord(raw) || !isRecord(raw.info) || !Array.isArray(raw.notes) || !isRecord(raw.lote)) return null;
+  const lote = patioLotSchema.safeParse(raw.lote);
+  if (!lote.success) return null;
+  const leilao = isRecord(raw.leilao) ? patioAuctionSchema.safeParse(raw.leilao) : null;
   const info = Object.fromEntries(
     Object.entries(raw.info).flatMap(([key, value]) => (typeof value === "string" ? [[key, value]] : [])),
   );
   const notes = raw.notes.filter((note): note is string => typeof note === "string");
   const description = typeof raw.description === "string" ? raw.description : null;
   const yardAddress = typeof raw.yardAddress === "string" ? raw.yardAddress : null;
-  const page = readPage(raw.page);
-  return { info, notes, description, live: live.data, yardAddress, ...(page ? { page } : {}) };
-}
-
-function readPage(value: unknown): PatioPageInfo | null {
-  if (!isRecord(value) || !Array.isArray(value.photoUrls)) return null;
   return {
-    lotNumber: typeof value.lotNumber === "string" ? value.lotNumber : null,
-    commission: typeof value.commission === "string" ? value.commission : null,
-    photoUrls: value.photoUrls.filter((url): url is string => typeof url === "string"),
+    info,
+    notes,
+    description,
+    lote: sanitizeLot(lote.data),
+    leilao: leilao?.success ? sanitizeAuction(leilao.data) : null,
+    yardAddress,
   };
 }
 
-function brasiliaDate(parts: PatioDateParts): Date | null {
+function legacyDetailsFromRaw(raw: unknown, now: Date): ListingDetails | null {
+  if (!isRecord(raw) || !isRecord(raw.info) || !Array.isArray(raw.notes)) return null;
+  const live = patioLegacyLiveLotSchema.safeParse(raw.live);
+  if (!live.success) return null;
+  const info = Object.fromEntries(
+    Object.entries(raw.info).flatMap(([key, value]) => (typeof value === "string" ? [[key, value]] : [])),
+  );
+  const notes = raw.notes.filter((note): note is string => typeof note === "string");
+  const description = typeof raw.description === "string" ? raw.description : null;
+  const endsAt = legacyBrasiliaDate(live.data.cronometro.data.fim);
+  const known = LEGACY_STATUS_BY_SITUACAO[live.data.situacao];
+  const status: ListingStatus = known ?? (endsAt !== null && endsAt < now ? "unknown" : "open");
+  return {
+    description: describe({ notes, description }),
+    condition: conditionOf({ info, notes, description }),
+    status,
+    sourceStatus: String(live.data.situacao),
+  };
+}
+
+function legacyBrasiliaDate(parts: PatioLegacyDateParts): Date | null {
   const year = Number(parts.ano);
   if (!Number.isInteger(year) || year < 2000) return null;
   return brasiliaDateUtc({
@@ -398,16 +460,17 @@ function brasiliaDate(parts: PatioDateParts): Date | null {
   });
 }
 
+function parseIsoDate(iso: string | null | undefined): Date | null {
+  if (!iso) return null;
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 function money(text: string | null | undefined): Cents | null {
   const cleaned = text?.replace(/[^\d.,-]/g, "") ?? "";
   if (cleaned === "") return null;
   const value = parseBRL(cleaned);
   return value !== null && value > 0 ? value : null;
-}
-
-function toBps(percent: string) {
-  const value = Number(percent.replace(",", "."));
-  return Number.isFinite(value) && value >= 0 && value <= 100 ? bps(Math.round(value * 100)) : null;
 }
 
 function toYear(value: string | null): number | null {
@@ -425,24 +488,6 @@ function toYesNo(value: string | null): boolean | null {
   if (normalized.startsWith("SIM")) return true;
   if (normalized.startsWith("NAO")) return false;
   return null;
-}
-
-/** Conteúdo depois da tag que contém `start` (ex.: uma classe), até o `end` seguinte. */
-function sliceBetween(html: string, start: string, end: string): string | null {
-  const at = html.indexOf(start);
-  if (at < 0) return null;
-  const from = html.indexOf(">", at) + 1;
-  const to = html.indexOf(end, from);
-  return html.slice(from, to < 0 ? undefined : to);
-}
-
-function parseJson(text: string): unknown {
-  try {
-    const value: unknown = JSON.parse(text);
-    return value;
-  } catch {
-    return null;
-  }
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { extractAssignedJson } from "./extract";
+import { extractAssignedJson, extractNextFlightJson } from "./extract";
 
 describe("extractAssignedJson", () => {
   it("extrai JSON padrão atribuído a um marcador", () => {
@@ -17,5 +17,15 @@ describe("extractAssignedJson", () => {
       inf: null,
       txt: 'keep undefined and new Date("x")',
     });
+  });
+});
+
+describe("extractNextFlightJson", () => {
+  it("decodifica chunks self.__next_f.push e extrai objeto ou array pela chave", () => {
+    const payload = JSON.stringify('1:["$","div",null,{"initialLote":{"id":"1628","itens":[1,2]}}]');
+    const html = `<script>self.__next_f.push([1,${payload}])</script>`;
+    expect(extractNextFlightJson(html, "initialLote")).toEqual({ id: "1628", itens: [1, 2] });
+    expect(extractNextFlightJson(html, "itens")).toEqual([1, 2]);
+    expect(extractNextFlightJson(html, "ausente")).toBeNull();
   });
 });

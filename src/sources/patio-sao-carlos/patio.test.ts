@@ -8,137 +8,120 @@ import { listingContractProblems } from "../shared/contract";
 import type { FetchOutcome, SourceHttp } from "../types";
 import { patioSaoCarlosSource } from ".";
 import {
-  isPatioPageGone,
   parsePatioEditalAddress,
   parsePatioListing,
-  parsePatioLive,
   parsePatioLotList,
   patioDetailsFromRaw,
   patioEditalUrl,
   patioListingUrl,
+  patioListUrl,
 } from "./parse";
-import type { PatioLiveLot } from "./schema";
 
 const fixture = (name: string) => readFileSync(join(import.meta.dirname, "fixtures", name), "utf8");
+const listPage1 = fixture("lista-veiculos-pag1.html");
 const openPage = fixture("lote-aberto.html");
 const endedPage = fixture("lote-encerrado.html");
 const motoPage = fixture("lote-moto.html");
-const gonePage = fixture("lote-fora-do-ar.html");
-const liveJson = fixture("situacao.json");
 const yardAddress = parsePatioEditalAddress(fixture("edital.html"));
-const now = new Date("2026-09-30T21:00:00Z");
+const now = new Date("2026-11-24T01:00:00Z");
 
-function liveLot(id: string): PatioLiveLot {
-  const parsed = parsePatioLive(liveJson);
-  const lot = parsed.ok ? parsed.value.get(id) : undefined;
-  if (!lot) throw new Error(`lote ${id} fora da fixture`);
-  return lot;
+function nextFlightPage(payload: Record<string, unknown>): string {
+  const chunk = JSON.stringify(`1:["$","div",null,${JSON.stringify(payload)}]`);
+  return `<!doctype html><html><body><script>self.__next_f.push([1,${chunk}])</script></body></html>`;
 }
 
-function parseOk(html: string, id: string) {
-  const result = parsePatioListing(html, liveLot(id), yardAddress, now);
+function parseOk(html: string, address: string | null = yardAddress, at: Date = now) {
+  const result = parsePatioListing(html, address, at);
   if (!result.ok) throw new Error(`parse falhou: ${result.error}`);
   return result.value;
 }
 
 describe("parsePatioLotList", () => {
-  it("lê os lotes da lista com a URL canônica e a última página", () => {
-    const { listings, lastPage } = parsePatioLotList(fixture("lista-veiculos-pag0.html"));
-    expect(listings).toHaveLength(40);
-    expect(listings[0]).toEqual({ externalId: "1005", url: patioListingUrl("1005"), lastModified: null });
-    expect(lastPage).toBe(5);
+  it("lê os lotes da lista paginada no RSC Flight e calcula o total de páginas", () => {
+    const parsed = parsePatioLotList(listPage1);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.value.items).toHaveLength(12);
+    expect(parsed.value.items[0]).toMatchObject({ id: "1628", status: "OPEN" });
+    expect(parsed.value.totalPages).toBe(14);
   });
 
-  it("na última página não há link para a última página", () => {
-    const { listings, lastPage } = parsePatioLotList(fixture("lista-veiculos-ultima.html"));
-    expect(listings.length).toBeGreaterThan(0);
-    expect(lastPage).toBeNull();
-  });
-});
-
-describe("parsePatioLive", () => {
-  it("lê a situação de vários lotes de uma vez", () => {
-    const parsed = parsePatioLive(liveJson);
-    expect(parsed.ok && [...parsed.value.keys()].sort()).toEqual(["1225", "1406", "1559", "1701", "991"]);
-  });
-
-  it("sem nenhum lote o site devolve lista vazia; resposta que não é JSON é dado inválido", () => {
-    expect(parsePatioLive('{"item":[]}')).toEqual({ ok: true, value: new Map() });
-    expect(parsePatioLive("<html>")).toEqual({ ok: false, error: "invalid_data" });
+  it("HTML sem initialLotes é missing_data; formato inválido é invalid_data", () => {
+    expect(parsePatioLotList("<html><body>Manutenção</body></html>")).toEqual({ ok: false, error: "missing_data" });
+    expect(parsePatioLotList(nextFlightPage({ initialLotes: { itens: "errado" } }))).toEqual({
+      ok: false,
+      error: "invalid_data",
+    });
   });
 });
 
-describe("parsePatioListing — lote aberto (Yaris, lote 20 do leilão 39)", () => {
-  const listing = parseOk(openPage, "991");
+describe("parsePatioListing — lote aberto (Grand Siena, lote 60 do leilão 52)", () => {
+  const listing = parseOk(openPage);
 
   it("cumpre o contrato comum dos adaptadores", () => {
-    expect(listingContractProblems(listing, { externalId: "991", url: patioListingUrl("991") })).toEqual([]);
+    expect(listingContractProblems(listing, { externalId: "1628", url: patioListingUrl("1628") })).toEqual([]);
   });
 
-  it("lê a ficha do veículo, com a FIPE como valor de mercado e a categoria no vocabulário comum", () => {
-    expect(listing).toMatchObject({ externalId: "991", lotNumber: "20", title: "YARIS SEDA XLS CVT 1.5 2020" });
+  it("lê a ficha do veículo, FIPE, comissão de 5% e taxa administrativa do leilão", () => {
+    expect(listing).toMatchObject({
+      externalId: "1628",
+      lotNumber: "60",
+      title: "FIAT GRAND SIENA 1.6 16/16",
+      sellerName: "Bancos e Seguradoras",
+    });
     expect(listing.vehicle).toMatchObject({
-      brand: "TOYOTA",
-      model: "YARIS SEDA",
-      fipeName: "YARIS SEDA XLS CVT 1.5 16V DUAL VVT-I",
-      modelYear: 2020,
+      brand: "FIAT",
+      model: "GRAND SIENA",
+      fipeName: "GRAND SIENA ESSENCE 1.6 16V E.TORQ",
+      modelYear: 2016,
+      manufactureYear: 2016,
+      mileageKm: null,
       category: "Carros",
-      fuel: "FLEXIVEL ALCOOL/GASOLINA",
-      recoveryType: "RECUPERADO FINANCIAMENTO",
+      fuel: "FLEX",
+      recoveryType: "RECUPERADO DE FINANCIAMENTO",
       hasKey: true,
     });
-    expect(listing.marketValue).toBe(8_291_800);
+    expect(listing.marketValue).toBe(3_998_400);
     expect(listing.costs.commissionRate).toBe(500);
+    expect(listing.costs.otherFees).toBe(62_000);
   });
 
-  it("descrição em texto puro: linhas da ficha que não são campo e o texto do leiloeiro", () => {
-    expect(listing.description).toMatch(/^Condição de Func.:Motor da partida /);
-    expect(listing.description).toMatch(/IPVA 2026 PAGO/);
-    expect(listing.description).not.toMatch(/[<>]/);
+  it("lance, situação, datas em UTC e evento vêm do RSC Flight", () => {
+    expect(listing).toMatchObject({
+      status: "open",
+      sourceStatus: "OPEN",
+      currentBid: 1_760_000,
+      minimumBid: 1_580_000,
+      bidCount: 7,
+    });
+    expect(listing.startsAt).toEqual(new Date("2026-11-23T22:15:00Z"));
+    expect(listing.endsAt).toEqual(new Date("2026-11-26T13:59:00Z"));
+    expect(listing.auction).toEqual({
+      externalId: "52",
+      name: "Leilão de Veículos",
+      startsAt: new Date("2026-11-23T22:15:00Z"),
+    });
   });
 
-  it("lance, situação e datas vêm da consulta interna, no horário de Brasília", () => {
-    expect(listing).toMatchObject({ status: "open", sourceStatus: "1", currentBid: 3_430_000, bidCount: 23 });
-    expect(listing.minimumBid).toBe(2_990_000);
-    expect(listing.startsAt).toEqual(new Date("2026-09-29T11:00:00Z"));
-    expect(listing.endsAt).toEqual(new Date("2026-10-02T13:18:00Z"));
-    expect(listing.auction).toEqual({ externalId: "39", name: "Leilão de 02/10/2026", startsAt: null });
-  });
-
-  it("local vem do edital (pátio de visitação), não do local de origem da consulta interna", () => {
+  it("local vem do edital (pátio de visitação), não do cidade/uf do initialLote", () => {
     expect(listing.location).toEqual({
       yardName: "Pátio Estadual São Carlos",
       city: "São Carlos",
       state: "SP",
       address: "Estr. Mun. Washington José Pêra, 2840, ÁGUA FRIA",
     });
+    expect(parseOk(openPage, null).location).toEqual({ yardName: null, city: null, state: null, address: null });
   });
 
-  it("sem edital: local desconhecido, nunca adivinhado", () => {
-    const result = parsePatioListing(openPage, liveLot("991"), null, now);
-    expect(result.ok && result.value.location).toEqual({ yardName: null, city: null, state: null, address: null });
-  });
-
-  it("fotos da galeria do lote, sem miniaturas nem fotos de outros lotes", () => {
+  it("fotos da galeria sem duplicadas nem miniaturas, todas na origem autorizada", () => {
     expect(listing.photoUrls.length).toBeGreaterThan(1);
-    expect(listing.photoUrls[0]).toBe("https://patioestadualsc.org/web/fotos/principal_import_68bb8030d6d7f.jpg");
+    expect(listing.photoUrls[0]).toBe("https://patioestadualsc.org/web/fotos/principal_import_6a2b74533ce55.jpg");
     expect(new Set(listing.photoUrls).size).toBe(listing.photoUrls.length);
   });
 
-  it("guarda o dado bruto sem quem deu lance, e dele rederiva descrição, condição e situação", () => {
-    expect(JSON.stringify(listing.raw)).not.toMatch(/lances_cadastro|cronometro_atual|removido/);
-    const { live } = z.object({ live: z.record(z.string(), z.unknown()) }).parse(listing.raw);
-    expect(Object.keys(live).sort()).toEqual([
-      "box_id",
-      "categorias",
-      "count_lances",
-      "cronometro",
-      "lance",
-      "leiloes",
-      "local",
-      "nome",
-      "situacao",
-    ]);
+  it("guarda raw sanitizado (sem metadados de placa/chassi/Renavam) e rederiva detalhes", () => {
+    const rawStr = JSON.stringify(listing.raw);
+    expect(rawStr).not.toMatch(/metadados|visualizacoes|retirada|formaPagamento/);
     expect(z.object({ yardAddress: z.string() }).parse(listing.raw).yardAddress).toMatch(/São Carlos, SÃO PAULO/);
     expect(patioDetailsFromRaw(listing.raw, now)).toEqual({
       description: listing.description,
@@ -149,72 +132,118 @@ describe("parsePatioListing — lote aberto (Yaris, lote 20 do leilão 39)", () 
     expect(patioDetailsFromRaw({ outro: "formato" }, now)).toBeNull();
   });
 
-  it("apaga placa, chassi e Renavam da descrição, notas e raw", () => {
-    const tainted = openPage.replace(
-      "IPVA 2026 PAGO",
-      "IPVA 2026 PAGO PLACA ABC1D23 CHASSI 9BWZZZ377VT004251 RENAVAM 12345678901",
-    );
-    const listing = parseOk(tainted, "991");
-    expect(listing.description).not.toMatch(/ABC1D23|9BWZZZ377VT004251|12345678901/);
-    expect(JSON.stringify(listing.raw)).not.toMatch(/ABC1D23|9BWZZZ377VT004251|12345678901/);
-  });
-});
-
-describe("parsePatioListing — lote encerrado (BYD, 30/09/2026)", () => {
-  const listing = parseOk(endedPage, "1701");
-
-  it("arrematado: vendido, com lance final e número de lances", () => {
-    expect(listing).toMatchObject({ status: "sold", sourceStatus: "2", currentBid: 6_810_000, bidCount: 32 });
-  });
-
-  it("ficha em outro formato (rótulos em negrito, km, ano de fabricação, SUV)", () => {
-    expect(listing.vehicle).toMatchObject({
-      brand: "BYD",
-      model: "Song Plus",
-      modelYear: 2023,
-      manufactureYear: 2022,
-      mileageKm: 43_729,
-      category: "Carros",
-      recoveryType: "Recuperado de Financiamento",
+  it("apaga placa, chassi e Renavam da descrição, notas, metadados e raw", () => {
+    const page = nextFlightPage({
+      initialLote: {
+        id: "9999",
+        titulo: "CARRO TESTE 2020",
+        auctionId: "52",
+        numero: 1,
+        categoria: "Veículos",
+        status: "OPEN",
+        lanceAtualCentavos: null,
+        lanceInicialCentavos: 1_000_000,
+        valorFipeCentavos: 2_500_000,
+        qtdLances: 0,
+        aberturaIso: "2026-11-23T22:15:00Z",
+        fechamentoIso: "2026-11-26T13:59:00Z",
+        descricao: "<p>Obs: PLACA ABC1D23 CHASSI 9BWZZZ377VT004251 RENAVAM 12345678901</p>",
+        metadados: { Placa: "QLI3F08", Chassi: "9C2KC2200JR107392", Renavam: "01132958218" },
+        imagens: [],
+      },
     });
-    expect(listing.marketValue).toBe(16_093_500);
-    expect(listing.description).toMatch(/chave reserva/);
+    const parsed = parseOk(page);
+    expect(parsed.marketValue).toBe(2_500_000);
+    expect(parsed.description).not.toMatch(/ABC1D23|9BWZZZ377VT004251|12345678901/);
+    expect(JSON.stringify(parsed.raw)).not.toMatch(
+      /ABC1D23|9BWZZZ377VT004251|12345678901|QLI3F08|9C2KC2200JR107392|01132958218/,
+    );
   });
 });
 
-describe("parsePatioListing — moto (BMW F 850)", () => {
-  const listing = parseOk(motoPage, "1406");
+describe("parsePatioListing — lote encerrado (Africa Twin 2020)", () => {
+  const listing = parseOk(endedPage);
 
-  it("FIPE sem dois-pontos, km em branco e categoria pelo grupo da consulta", () => {
-    expect(listing.vehicle).toMatchObject({ brand: "BMW", model: "F 850", mileageKm: null, category: "Motos" });
-    expect(listing.marketValue).toBe(6_784_700);
+  it("CLOSED com lances vira sold com lance final e contagem de lances", () => {
+    expect(listing).toMatchObject({
+      externalId: "1100",
+      status: "sold",
+      sourceStatus: "CLOSED",
+      currentBid: 2_830_000,
+      minimumBid: 2_290_000,
+      bidCount: 19,
+    });
+    expect(listing.vehicle.category).toBe("Motos");
   });
 });
 
-describe("situações da consulta interna", () => {
-  it("não arrematado sem nenhum lance: sem lance atual, com o lance inicial", () => {
-    const listing = parseOk(openPage, "1559");
-    expect(listing).toMatchObject({ status: "unsold", currentBid: null, bidCount: 0, minimumBid: 1_950_000 });
-  });
+describe("parsePatioListing — moto aberta sem lances (Fazer 150)", () => {
+  const listing = parseOk(motoPage);
 
-  it("condicional e situação desconhecida (antes e depois do fim)", () => {
-    expect(parseOk(openPage, "1225").status).toBe("conditional");
-    const directSale = { ...liveLot("991"), situacao: 20 };
-    const before = parsePatioListing(openPage, directSale, yardAddress, now);
-    const after = parsePatioListing(openPage, directSale, yardAddress, new Date("2026-10-03T00:00:00Z"));
-    expect(before.ok && before.value.status).toBe("open");
-    expect(after.ok && after.value.status).toBe("unknown");
-  });
-});
-
-describe("isPatioPageGone", () => {
-  it("o site responde 200 com 'Nenhum Lote Encontrado' quando tira a página do ar", () => {
-    expect(isPatioPageGone(gonePage)).toBe(true);
-    expect(isPatioPageGone(openPage)).toBe(false);
+  it("sem lances: currentBid é null, minimumBid preenchido e categoria Motos", () => {
+    expect(listing).toMatchObject({
+      externalId: "1446",
+      status: "open",
+      currentBid: null,
+      minimumBid: 520_000,
+      bidCount: 0,
+    });
+    expect(listing.vehicle.category).toBe("Motos");
   });
 });
 
-/** Acesso falso: GET pela URL, POST sempre com a fixture de situação. */
+describe("situações do site e compatibilidade com raw legado", () => {
+  const baseLote = {
+    id: "2000",
+    titulo: "VEICULO TESTE",
+    auctionId: "52",
+    numero: 5,
+    categoria: "Veículos",
+    status: "CLOSED",
+    lanceAtualCentavos: null,
+    lanceInicialCentavos: 1_500_000,
+    qtdLances: 0,
+    aberturaIso: "2026-11-20T12:00:00Z",
+    fechamentoIso: "2026-11-25T12:00:00Z",
+    descricao: "<p>Marca: FIAT</p>",
+    imagens: [],
+  };
+
+  it("CLOSED sem lances é unsold; CONDITIONAL é conditional; DIRECT_SALE vira open antes e unknown depois do fim", () => {
+    expect(parseOk(nextFlightPage({ initialLote: baseLote }))).toMatchObject({
+      status: "unsold",
+      currentBid: null,
+      bidCount: 0,
+    });
+    expect(parseOk(nextFlightPage({ initialLote: { ...baseLote, status: "CONDITIONAL" } })).status).toBe("conditional");
+
+    const directSalePage = nextFlightPage({ initialLote: { ...baseLote, status: "DIRECT_SALE" } });
+    expect(parseOk(directSalePage, yardAddress, new Date("2026-11-24T00:00:00Z")).status).toBe("open");
+    expect(parseOk(directSalePage, yardAddress, new Date("2026-11-26T00:00:00Z")).status).toBe("unknown");
+  });
+
+  it("patioDetailsFromRaw ainda lê raw legado (formato PHP) para o db:reparse", () => {
+    const legacyRaw = {
+      info: { brand: "TOYOTA" },
+      notes: ["IPVA PAGO"],
+      description: "Sem sinistro",
+      live: {
+        box_id: "991",
+        situacao: 2,
+        cronometro: {
+          data: { fim: { dia: "02", mes: "10", ano: "2026", hora: "10", min: "18", seg: "00" } },
+        },
+      },
+      yardAddress,
+    };
+    expect(patioDetailsFromRaw(legacyRaw, now)).toMatchObject({
+      status: "sold",
+      sourceStatus: "2",
+      description: expect.stringContaining("IPVA PAGO"),
+    });
+  });
+});
+
 function fakeHttp(pages: Record<string, FetchOutcome>) {
   const calls: string[] = [];
   const http: SourceHttp = {
@@ -222,120 +251,94 @@ function fakeHttp(pages: Record<string, FetchOutcome>) {
       calls.push(`GET ${url}`);
       return Promise.resolve(pages[url] ?? { ok: false, status: 404, error: "HTTP 404" });
     },
-    post: (url, form) => {
-      calls.push(`POST ${url} ${form.lotes}`);
-      return Promise.resolve({ ok: true, text: liveJson });
+    post: (url) => {
+      calls.push(`POST ${url}`);
+      return Promise.resolve({ ok: false, status: 405, error: "HTTP 405" });
     },
   };
   return { http, calls };
 }
 
 describe("patioSaoCarlosSource", () => {
-  it("descoberta: listas por categoria e só lotes abertos ou encerrados há até 3 dias", async () => {
-    const list = ["991", "1701", "1559", "1225", "1406"].map((id) => `<a href="/lote/x/${id}/">`).join("");
-    const html = { ok: true as const, text: list };
-    const { http, calls } = fakeHttp({
-      "https://patioestadualsc.org/lotes/?cate%5B0%5D=1&pag=0": html,
-      "https://patioestadualsc.org/lotes/?cate%5B0%5D=2&pag=0": html,
+  it("descoberta: pagina categorias 1 e 2 e mantém só abertos ou encerrados há até 3 dias", async () => {
+    const cat1 = nextFlightPage({
+      initialLotes: {
+        itens: [
+          { id: "1628", status: "OPEN", fechamentoIso: "2026-11-26T13:59:00Z" },
+          { id: "1100", status: "CLOSED", fechamentoIso: "2026-11-23T13:25:00Z" },
+          { id: "500", status: "CLOSED", fechamentoIso: "2026-11-01T13:00:00Z" },
+        ],
+        pagina: 1,
+        porPagina: 12,
+        total: 3,
+      },
+    });
+    const cat2 = nextFlightPage({
+      initialLotes: {
+        itens: [{ id: "1446", status: "OPEN", fechamentoIso: "2026-11-27T13:11:00Z" }],
+        pagina: 1,
+        porPagina: 12,
+        total: 1,
+      },
+    });
+    const { http } = fakeHttp({
+      [patioListUrl(1, 1)]: { ok: true, text: cat1 },
+      [patioListUrl(2, 1)]: { ok: true, text: cat2 },
     });
     const discovery = await patioSaoCarlosSource.discover(http, now);
     expect(discovery.complete).toBe(true);
-    expect(discovery.listings.map((item) => item.externalId).sort()).toEqual(["1406", "1701", "991"]);
-    // Uma consulta de situação para todos os lotes, não uma por lote.
-    expect(calls.filter((call) => call.startsWith("POST"))).toHaveLength(1);
+    expect(discovery.listings.map((item) => item.externalId).sort()).toEqual(["1100", "1446", "1628"]);
   });
 
-  it("lista maior que o teto de páginas: descoberta incompleta, para não concluir que lotes saíram da lista", async () => {
-    const page = '<a href="/lote/x/991/"><a href="/lotes/?cate%5B0%5D=1&amp;pag=99" aria-label="Última página">';
+  it("lista maior que o teto de páginas volta incompleta", async () => {
+    const huge = nextFlightPage({
+      initialLotes: {
+        itens: [{ id: "1628", status: "OPEN", fechamentoIso: "2026-11-26T13:59:00Z" }],
+        pagina: 1,
+        porPagina: 12,
+        total: 1200,
+      },
+    });
     const http: SourceHttp = {
-      get: (url) => Promise.resolve({ ok: true, text: url.endsWith("pag=0") ? page : '<a href="/lote/x/991/">' }),
-      post: () => Promise.resolve({ ok: true, text: liveJson }),
+      get: () => Promise.resolve({ ok: true, text: huge }),
+      post: () => Promise.resolve({ ok: false, status: 405, error: "HTTP 405" }),
     };
     const discovery = await patioSaoCarlosSource.discover(http, now);
     expect(discovery.complete).toBe(false);
     expect(discovery.errors[0]?.error).toMatch(/100 páginas/);
   });
 
-  it("descoberta sem a consulta de situação: incompleta e sem anúncios (não tenta páginas que podem estar fora do ar)", async () => {
-    const http: SourceHttp = {
-      get: () => Promise.resolve({ ok: true, text: '<a href="/lote/x/991/">' }),
-      post: () => Promise.resolve({ ok: false, status: 503, error: "HTTP 503" }),
-    };
-    const discovery = await patioSaoCarlosSource.discover(http, now);
-    expect(discovery).toMatchObject({ complete: false, listings: [] });
-  });
-
-  it("descoberta com HTML sem estrutura de lista (manutenção) volta incompleta", async () => {
+  it("HTML sem initialLotes (manutenção) volta descoberta incompleta", async () => {
     const http: SourceHttp = {
       get: () => Promise.resolve({ ok: true, text: "<html><body>Site em manutenção</body></html>" }),
-      post: () => Promise.resolve({ ok: true, text: '{"item":[]}' }),
+      post: () => Promise.resolve({ ok: false, status: 405, error: "HTTP 405" }),
     };
     const discovery = await patioSaoCarlosSource.discover(http, now);
     expect(discovery.complete).toBe(false);
     expect(discovery.errors.length).toBeGreaterThan(0);
   });
 
-  it("lê um lote juntando a página, a consulta interna e o edital", async () => {
-    const { http, calls } = fakeHttp({
-      [patioListingUrl("991")]: { ok: true, text: openPage },
-      [patioEditalUrl("991")]: { ok: true, text: fixture("edital.html") },
+  it("lê um lote juntando a página e o edital; na revisita reaproveita o endereço do pátio sem refazer o edital", async () => {
+    const firstRun = fakeHttp({
+      [patioListingUrl("1628")]: { ok: true, text: openPage },
+      [patioEditalUrl("1628")]: { ok: true, text: fixture("edital.html") },
     });
-    const fetched = await patioSaoCarlosSource.fetchListing(http, "991", now);
-    expect(fetched.ok && fetched.value.location.city).toBe("São Carlos");
-    expect(calls).toContain(`GET ${patioEditalUrl("991")}`);
-  });
-
-  it("edital fora do ar não impede a leitura: só o local fica desconhecido", async () => {
-    const { http } = fakeHttp({ [patioListingUrl("991")]: { ok: true, text: openPage } });
-    const fetched = await patioSaoCarlosSource.fetchListing(http, "991", now);
-    expect(fetched.ok && fetched.value.location.state).toBeNull();
-  });
-
-  it("revisita com o `raw` guardado: só a consulta de situação, e o anúncio sai igual ao da leitura completa", async () => {
-    const full = fakeHttp({
-      [patioListingUrl("991")]: { ok: true, text: openPage },
-      [patioEditalUrl("991")]: { ok: true, text: fixture("edital.html") },
-    });
-    const first = await patioSaoCarlosSource.fetchListing(full.http, "991", now);
+    const first = await patioSaoCarlosSource.fetchListing(firstRun.http, "1628", now);
     if (!first.ok) throw new Error(first.error);
+    expect(first.value.location.city).toBe("São Carlos");
+    expect(firstRun.calls).toContain(`GET ${patioEditalUrl("1628")}`);
 
-    const { http, calls } = fakeHttp({});
-    const revisit = await patioSaoCarlosSource.fetchListing(http, "991", now, first.value.raw);
-    expect(calls).toEqual([expect.stringMatching(/^POST /)]);
+    const revisitRun = fakeHttp({ [patioListingUrl("1628")]: { ok: true, text: openPage } });
+    const revisit = await patioSaoCarlosSource.fetchListing(revisitRun.http, "1628", now, first.value.raw);
     expect(revisit).toEqual(first);
+    expect(revisitRun.calls).toEqual([`GET ${patioListingUrl("1628")}`]);
   });
 
-  it("revisita com `raw` antigo (sem os dados da página) ou de outro lote lê a página inteira", async () => {
-    const full = fakeHttp({ [patioListingUrl("991")]: { ok: true, text: openPage } });
-    const first = await patioSaoCarlosSource.fetchListing(full.http, "991", now);
-    if (!first.ok) throw new Error(first.error);
-    const { page: _page, ...oldRaw } = z.record(z.string(), z.unknown()).parse(first.value.raw);
+  it("edital fora do ar não impede a leitura; 404 ou 410 na página do lote é gone", async () => {
+    const { http } = fakeHttp({ [patioListingUrl("1628")]: { ok: true, text: openPage } });
+    const fetched = await patioSaoCarlosSource.fetchListing(http, "1628", now);
+    expect(fetched.ok && fetched.value.location.state).toBeNull();
 
-    const { http, calls } = fakeHttp({ [patioListingUrl("991")]: { ok: true, text: openPage } });
-    expect(await patioSaoCarlosSource.fetchListing(http, "991", now, oldRaw)).toMatchObject({ ok: true });
-    expect(calls).toContain(`GET ${patioListingUrl("991")}`);
-
-    const other = fakeHttp({ [patioListingUrl("1406")]: { ok: true, text: gonePage } });
-    expect(await patioSaoCarlosSource.fetchListing(other.http, "1406", now, first.value.raw)).toMatchObject({
-      ok: false,
-      gone: true,
-    });
-  });
-
-  it("revisita de lote que sumiu da consulta: a página confirma que saiu do ar", async () => {
-    const full = fakeHttp({ [patioListingUrl("991")]: { ok: true, text: openPage } });
-    const first = await patioSaoCarlosSource.fetchListing(full.http, "991", now);
-    if (!first.ok) throw new Error(first.error);
-    const { http } = fakeHttp({ [patioListingUrl("777")]: { ok: true, text: gonePage } });
-    expect(await patioSaoCarlosSource.fetchListing(http, "777", now, first.value.raw)).toMatchObject({
-      ok: false,
-      gone: true,
-    });
-  });
-
-  it("página fora do ar ('Nenhum Lote Encontrado', 404 ou 410) é `gone`", async () => {
-    const { http } = fakeHttp({ [patioListingUrl("1225")]: { ok: true, text: gonePage } });
-    expect(await patioSaoCarlosSource.fetchListing(http, "1225", now)).toMatchObject({ ok: false, gone: true });
     expect(await patioSaoCarlosSource.fetchListing(http, "777", now)).toMatchObject({ ok: false, gone: true });
     const removed: SourceHttp = { ...http, get: () => Promise.resolve({ ok: false, status: 410, error: "HTTP 410" }) };
     expect(await patioSaoCarlosSource.fetchListing(removed, "778", now)).toMatchObject({ ok: false, gone: true });

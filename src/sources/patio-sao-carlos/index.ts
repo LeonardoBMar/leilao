@@ -1,38 +1,32 @@
 import type { DiscoveredListing, Discovery, SourceAdapter, SourceHttp } from "../types";
 import {
-  isPatioLotListPage,
-  isPatioPageGone,
   parsePatioEditalAddress,
   parsePatioListing,
-  parsePatioLive,
   parsePatioLotList,
-  parsePatioRevisit,
   PATIO_BASE_URL,
-  PATIO_LIVE_URL,
   PATIO_NAME,
   patioDetailsFromRaw,
   patioEditalUrl,
   patioListingUrl,
   patioListUrl,
+  storedYardAddressFor,
 } from "./parse";
-import type { PatioLiveLot } from "./schema";
+import type { PatioListItem } from "./schema";
 
-/** Categorias do site coletadas: 1 veículos, 2 motocicletas (embarcações, imóveis e equipamentos ficam de fora). */
+/** Categorias coletadas: 1 veículos, 2 motocicletas (embarcações, imóveis e equipamentos ficam de fora). */
 const CATEGORIES = [1, 2] as const;
-/** Teto de páginas por categoria (40 lotes cada), contra uma paginação que não termina. */
+/** Teto de páginas por categoria (12 lotes cada), contra uma paginação que não termina. */
 const MAX_PAGES = 30;
-/** Lotes por consulta interna, para não montar um pedido gigante. */
-const LIVE_BATCH = 100;
 /**
- * A lista do site mantém lotes encerrados há semanas, mas a página deles sai do ar ("Nenhum Lote Encontrado") em
- * poucos dias. Só entram na descoberta os abertos e os encerrados há até 3 dias, cuja página ainda tem a ficha.
+ * A lista do site mantém lotes encerrados há semanas, mas páginas antigas podem sair do ar (404).
+ * Só entram na descoberta os abertos/condicionais e os encerrados há até 3 dias.
  */
 const ENDED_WINDOW_MS = 3 * 24 * 60 * 60 * 1000;
 
 /**
- * Pátio Estadual São Carlos (patioestadualsc.org): segunda fonte (docs/PLANO-COLETA.md §2, D-37). Sem sitemap:
- * a descoberta lê as listas por categoria; o lote junta a página (ficha do veículo, fotos) com a consulta interna do
- * site (situação, lance, datas), que responde por vários lotes de uma vez.
+ * Pátio Estadual São Carlos (patioestadualsc.org): site em Next.js App Router.
+ * A descoberta lê `initialLotes` nas listas paginadas por categoria; cada lote lê `initialLote` e `initialLeilao`
+ * diretamente em `/lote/{id}/` e busca o endereço do pátio no edital na primeira visita (reaproveitado em revisitas).
  */
 export const patioSaoCarlosSource: SourceAdapter = {
   id: "patio-sao-carlos",
@@ -40,32 +34,18 @@ export const patioSaoCarlosSource: SourceAdapter = {
   baseUrl: PATIO_BASE_URL,
   listingUrl: patioListingUrl,
   discover,
-  // Revisita só com a consulta de situação (1 requisição em vez de 3): o resto vem do `raw` da última leitura.
   usesStoredRaw: true,
   async fetchListing(http, externalId, now, stored) {
-    if (stored !== undefined && stored !== null) {
-      const live = await fetchLive(http, [externalId]);
-      if (!live.ok) return { ok: false, gone: false, error: live.error };
-      const lot = live.lots.get(externalId);
-      const revisit = lot ? parsePatioRevisit(stored, lot, now) : null;
-      // Fora da consulta (lote retirado?) ou `raw` antigo: a página decide, inclusive se saiu do ar.
-      if (revisit) return { ok: true, value: revisit };
-    }
-
     const page = await http.get(patioListingUrl(externalId));
     if (!page.ok) return { ok: false, gone: page.status === 404 || page.status === 410, error: page.error };
-    if (isPatioPageGone(page.text)) return { ok: false, gone: true, error: "lote fora do ar no site" };
 
-    const live = await fetchLive(http, [externalId]);
-    if (!live.ok) return { ok: false, gone: false, error: live.error };
-    const lot = live.lots.get(externalId);
-    if (!lot) return { ok: false, gone: false, error: "lote ausente na consulta de situação" };
+    let yardAddress = storedYardAddressFor(stored, externalId);
+    if (yardAddress === null) {
+      const edital = await http.get(patioEditalUrl(externalId));
+      yardAddress = edital.ok ? parsePatioEditalAddress(edital.text) : null;
+    }
 
-    // Onde o veículo está só aparece no edital. Se ele falhar, o local fica desconhecido (nunca o da consulta).
-    const edital = await http.get(patioEditalUrl(externalId));
-    const yardAddress = edital.ok ? parsePatioEditalAddress(edital.text) : null;
-
-    const parsed = parsePatioListing(page.text, lot, yardAddress, now);
+    const parsed = parsePatioListing(page.text, yardAddress, now);
     return parsed.ok ? parsed : { ok: false, gone: false, error: parsed.error };
   },
   detailsFromRaw: patioDetailsFromRaw,
@@ -76,8 +56,8 @@ async function discover(http: SourceHttp, now: Date): Promise<Discovery> {
   const found = new Map<string, DiscoveredListing>();
 
   for (const category of CATEGORIES) {
-    let lastPage = 0;
-    for (let page = 0; page <= Math.min(lastPage, MAX_PAGES - 1); page++) {
+    let totalPages = 1;
+    for (let page = 1; page <= Math.min(totalPages, MAX_PAGES); page++) {
       const url = patioListUrl(category, page);
       const response = await http.get(url);
       if (!response.ok) {
@@ -86,58 +66,37 @@ async function discover(http: SourceHttp, now: Date): Promise<Discovery> {
         break;
       }
       const list = parsePatioLotList(response.text);
-      if (page === 0) {
-        if (list.listings.length === 0 && !isPatioLotListPage(response.text)) {
+      if (!list.ok) {
+        discovery.complete = false;
+        discovery.errors.push({ url, error: `lista de lotes: ${list.error}` });
+        break;
+      }
+      if (page === 1) {
+        totalPages = list.value.totalPages;
+        if (totalPages > MAX_PAGES) {
           discovery.complete = false;
-          discovery.errors.push({ url, error: "página de lotes sem a lista esperada" });
-          break;
-        }
-        lastPage = list.lastPage ?? 0;
-        // Lista maior que o teto: o que ficar de fora não pode ser lido como "saiu da lista" (goneStatus).
-        if (lastPage >= MAX_PAGES) {
-          discovery.complete = false;
-          discovery.errors.push({ url, error: `lista com ${lastPage + 1} páginas; lidas só ${MAX_PAGES}` });
+          discovery.errors.push({ url, error: `lista com ${totalPages} páginas; lidas só ${MAX_PAGES}` });
         }
       }
-      const before = found.size;
-      for (const listing of list.listings) found.set(listing.externalId, listing);
-      // Página além da última repete a anterior: nada novo, fim da lista.
-      if (found.size === before) break;
+      let added = 0;
+      for (const item of list.value.items) {
+        if (!isRecent(item, now)) continue;
+        if (!found.has(item.id)) {
+          found.set(item.id, { externalId: item.id, url: patioListingUrl(item.id), lastModified: null });
+          added++;
+        }
+      }
+      if (list.value.items.length === 0 || (added === 0 && list.value.items.every((item) => found.has(item.id)))) break;
     }
   }
 
-  // Situação de todos de uma vez, para deixar de fora os encerrados cuja página já saiu do ar.
-  const live = await fetchLive(http, [...found.keys()]);
-  if (!live.ok) {
-    discovery.errors.push({ url: PATIO_LIVE_URL, error: live.error });
-    return { ...discovery, complete: false };
-  }
-  discovery.listings = [...found.values()].filter((listing) => {
-    const lot = live.lots.get(listing.externalId);
-    return lot !== undefined && isRecent(lot, now);
-  });
+  discovery.listings = [...found.values()];
   return discovery;
 }
 
-function isRecent(lot: PatioLiveLot, now: Date): boolean {
-  const { ano, mes, dia } = lot.cronometro.data.fim;
-  const endsOn = Date.UTC(Number(ano), Number(mes) - 1, Number(dia));
-  return lot.situacao <= 1 || Number.isNaN(endsOn) || now.getTime() - endsOn <= ENDED_WINDOW_MS;
-}
-
-async function fetchLive(
-  http: SourceHttp,
-  ids: readonly string[],
-): Promise<{ ok: true; lots: Map<string, PatioLiveLot> } | { ok: false; error: string }> {
-  const lots = new Map<string, PatioLiveLot>();
-  for (let start = 0; start < ids.length; start += LIVE_BATCH) {
-    // O site separa os ids por hífen, com um no fim ("991-972-").
-    const batch = ids.slice(start, start + LIVE_BATCH);
-    const response = await http.post(PATIO_LIVE_URL, { leiloes: "", lotes: `${batch.join("-")}-`, lote: "" });
-    if (!response.ok) return { ok: false, error: response.error };
-    const parsed = parsePatioLive(response.text);
-    if (!parsed.ok) return { ok: false, error: `consulta de situação: ${parsed.error}` };
-    for (const [id, lot] of parsed.value) lots.set(id, lot);
-  }
-  return { ok: true, lots };
+function isRecent(item: PatioListItem, now: Date): boolean {
+  if (item.status !== "CLOSED") return true;
+  if (!item.fechamentoIso) return true;
+  const endsAt = new Date(item.fechamentoIso);
+  return Number.isNaN(endsAt.getTime()) || now.getTime() - endsAt.getTime() <= ENDED_WINDOW_MS;
 }

@@ -15,12 +15,45 @@ export function extractAssignedJson(html: string, marker: string): unknown {
   if (markerAt < 0) return null;
   const start = html.indexOf("{", markerAt + marker.length);
   if (start < 0) return null;
+  return extractBalancedJson(html, start);
+}
+
+/**
+ * Decodifica os blocos `self.__next_f.push([1,"..."])` (Next.js App Router / RSC Flight) de uma página HTML
+ * e extrai o objeto ou array JSON associado à chave `key` (ex.: `"initialLote"`).
+ */
+export function extractNextFlightJson(html: string, key: string): unknown {
+  const chunks: string[] = [];
+  for (const match of html.matchAll(/self\.__next_f\.push\(\[1,"((?:\\.|[^"\\])*)"\]\)/g)) {
+    const raw = match[1];
+    if (raw === undefined) continue;
+    const decoded = parseJson(`"${raw}"`);
+    if (typeof decoded === "string") chunks.push(decoded);
+  }
+  if (chunks.length === 0) return null;
+
+  const flight = chunks.join("");
+  const needle = `"${key}":`;
+  const idx = flight.indexOf(needle);
+  if (idx < 0) return null;
+
+  let start = idx + needle.length;
+  while (start < flight.length && /\s/.test(flight[start] ?? "")) start++;
+  const open = flight[start];
+  if (open !== "{" && open !== "[") return null;
+  return extractBalancedJson(flight, start);
+}
+
+function extractBalancedJson(source: string, start: number): unknown {
+  const open = source[start];
+  const close = open === "[" ? "]" : "}";
+  if (open !== "{" && open !== "[") return null;
 
   let depth = 0;
   let inString = false;
   let escaped = false;
-  for (let i = start; i < html.length; i++) {
-    const char = html[i];
+  for (let i = start; i < source.length; i++) {
+    const char = source[i];
     if (inString) {
       if (escaped) escaped = false;
       else if (char === "\\") escaped = true;
@@ -28,11 +61,11 @@ export function extractAssignedJson(html: string, marker: string): unknown {
       continue;
     }
     if (char === '"') inString = true;
-    else if (char === "{") depth++;
-    else if (char === "}") {
+    else if (char === open) depth++;
+    else if (char === close) {
       depth--;
       if (depth === 0) {
-        const raw = html.slice(start, i + 1);
+        const raw = source.slice(start, i + 1);
         return parseJson(raw) ?? parseJson(normalizeJsObjectLiteral(raw));
       }
     }
