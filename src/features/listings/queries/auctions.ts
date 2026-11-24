@@ -1,12 +1,14 @@
 import "server-only";
 
+import { z } from "zod";
+
 import {
   catalogAuctionDate,
   type CatalogAuctionStats,
   selectCatalogAuctions,
 } from "@/domain/listings/catalog-auctions";
 import { getUserPreferences } from "@/features/preferences/queries";
-import type { Prisma } from "@/generated/prisma/client";
+import { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
 import { catalogSources } from "@/server/catalog-values";
 import { db } from "@/server/db";
@@ -31,28 +33,53 @@ export function countByAuction(
   return counts;
 }
 
+const auctionCoreRowSchema = z.object({
+  source_id: z.string(),
+  auction_external_id: z.string(),
+  total: z.number().int(),
+  open: z.number().int(),
+  auction_starts_at: z.date().nullable(),
+  first_starts_at: z.date().nullable(),
+  first_ends_at: z.date().nullable(),
+});
+
 type CatalogAuctionStatsRow = CatalogAuctionStats & { sourceName: string };
 
-/** Números de cada leilão do catálogo. `matching` sai zerado: depende dos filtros da tela. */
-export async function loadCatalogAuctionStats(
-  ownerId: string,
-  keys: readonly CatalogAuctionKey[],
-  now: Date,
-): Promise<CatalogAuctionStatsRow[]> {
+/**
+ * Fase 1: totais, abertos e datas de um conjunto arbitrário de leilões em uma única query parametrizada via
+ * `unnest` (sem `OR` gigante nem limite de parâmetros do Postgres).
+ */
+async function loadCatalogAuctionCore(keys: readonly CatalogAuctionKey[], now: Date) {
   if (keys.length === 0) return [];
-  const inKeys: Prisma.ListingWhereInput = { OR: keys.map(auctionWhere) };
-  const [totals, opens, names, lots, sources] = await Promise.all([
-    db.listing.groupBy({
-      by: ["sourceId", "auctionExternalId"],
-      where: inKeys,
-      _count: { _all: true },
-      _min: { auctionStartsAt: true, startsAt: true, endsAt: true },
-    }),
-    db.listing.groupBy({
-      by: ["sourceId", "auctionExternalId"],
-      where: { AND: [inKeys, openWhere(now)] },
-      _count: { _all: true },
-    }),
+  const sourceIds = keys.map((key) => key.sourceId);
+  const externalIds = keys.map((key) => key.externalId);
+  const raw = await db.$queryRaw<unknown[]>(Prisma.sql`
+    SELECT
+      l.source_id,
+      l.auction_external_id,
+      count(*)::int AS total,
+      count(*) FILTER (WHERE l.status = 'open' AND (l.ends_at IS NULL OR l.ends_at > ${now}))::int AS open,
+      min(l.auction_starts_at) AS auction_starts_at,
+      min(l.starts_at) AS first_starts_at,
+      min(l.ends_at) AS first_ends_at
+    FROM unnest(${sourceIds}::text[], ${externalIds}::text[]) AS k(source_id, auction_external_id)
+    JOIN listings l
+      ON l.source_id = k.source_id AND l.auction_external_id = k.auction_external_id
+    GROUP BY l.source_id, l.auction_external_id
+  `);
+  return z.array(auctionCoreRowSchema).parse(raw);
+}
+
+/** Fase 2: nome mais recente, contagem de lotes analisados e nome da fonte só para os leilões exibidos. */
+async function enrichCatalogAuctions(
+  ownerId: string,
+  items: readonly (CatalogAuctionStats & { date: Date | null; isOpen: boolean })[],
+) {
+  if (items.length === 0) return [];
+  const inKeys: Prisma.ListingWhereInput = {
+    OR: items.map(({ sourceId, externalId }) => auctionWhere({ sourceId, externalId })),
+  };
+  const [names, lots, sources] = await Promise.all([
     // Nome do anúncio visto mais recentemente: o leilão pode mudar de nome entre coletas.
     db.listing.findMany({
       where: inKeys,
@@ -67,8 +94,6 @@ export async function loadCatalogAuctionStats(
     catalogSources(),
   ]);
 
-  const openByKey = countByAuction(opens.map((group) => ({ ...group, count: group._count._all })));
-  const countOf = (counts: ReturnType<typeof countByAuction>, key: string) => counts.get(key)?.count ?? 0;
   const analyzedByKey = countByAuction(lots.flatMap(({ listing }) => (listing ? [listing] : [])));
   const nameByKey = new Map(
     names.flatMap((row) =>
@@ -77,25 +102,40 @@ export async function loadCatalogAuctionStats(
   );
   const sourceNames = new Map(sources.map((source) => [source.id, source.name]));
 
-  return totals.flatMap((group) => {
-    if (group.auctionExternalId === null) return [];
-    const key = keyOf(group.sourceId, group.auctionExternalId);
-    return [
-      {
-        sourceId: group.sourceId,
-        sourceName: sourceNames.get(group.sourceId) ?? group.sourceId,
-        externalId: group.auctionExternalId,
-        name: nameByKey.get(key) ?? null,
-        auctionStartsAt: group._min.auctionStartsAt,
-        firstStartsAt: group._min.startsAt,
-        firstEndsAt: group._min.endsAt,
-        total: group._count._all,
-        open: countOf(openByKey, key),
-        matching: 0,
-        analyzed: countOf(analyzedByKey, key),
-      },
-    ];
+  return items.map((item) => {
+    const key = keyOf(item.sourceId, item.externalId);
+    return {
+      ...item,
+      sourceName: sourceNames.get(item.sourceId) ?? item.sourceId,
+      name: nameByKey.get(key) ?? null,
+      analyzed: analyzedByKey.get(key)?.count ?? 0,
+    };
   });
+}
+
+/** Números completos de um conjunto pequeno de leilões (ex.: cabeçalho do detalhe). */
+export async function loadCatalogAuctionStats(
+  ownerId: string,
+  keys: readonly CatalogAuctionKey[],
+  now: Date,
+): Promise<CatalogAuctionStatsRow[]> {
+  const core = await loadCatalogAuctionCore(keys, now);
+  const base = core.map((row) => {
+    const stats: CatalogAuctionStats = {
+      sourceId: row.source_id,
+      externalId: row.auction_external_id,
+      name: null,
+      auctionStartsAt: row.auction_starts_at,
+      firstStartsAt: row.first_starts_at,
+      firstEndsAt: row.first_ends_at,
+      total: row.total,
+      open: row.open,
+      matching: 0,
+      analyzed: 0,
+    };
+    return { ...stats, date: catalogAuctionDate(stats), isOpen: stats.open > 0 };
+  });
+  return enrichCatalogAuctions(ownerId, base);
 }
 
 /**
@@ -118,15 +158,27 @@ export async function listCatalogAuctions(filters: ListingFilters): Promise<Cata
   const groups = await db.listing.groupBy({ by: ["sourceId", "auctionExternalId"], where, _count: { _all: true } });
   const matching = countByAuction(groups.map((group) => ({ ...group, count: group._count._all })));
 
-  const stats = await loadCatalogAuctionStats(user.id, [...matching.values()], now);
+  const core = await loadCatalogAuctionCore([...matching.values()], now);
   const selected = selectCatalogAuctions(
-    stats.map((item) => ({ ...item, matching: matching.get(keyOf(item.sourceId, item.externalId))?.count ?? 0 })),
+    core.map((row) => ({
+      sourceId: row.source_id,
+      externalId: row.auction_external_id,
+      name: null,
+      auctionStartsAt: row.auction_starts_at,
+      firstStartsAt: row.first_starts_at,
+      firstEndsAt: row.first_ends_at,
+      total: row.total,
+      open: row.open,
+      matching: matching.get(keyOf(row.source_id, row.auction_external_id))?.count ?? 0,
+      analyzed: 0,
+    })),
     filters.ended,
   );
   const start = (filters.page - 1) * CATALOG_AUCTIONS_PAGE_SIZE;
+  const pageItems = await enrichCatalogAuctions(user.id, selected.slice(start, start + CATALOG_AUCTIONS_PAGE_SIZE));
 
   return {
-    items: selected.slice(start, start + CATALOG_AUCTIONS_PAGE_SIZE),
+    items: pageItems,
     total: selected.length,
     page: filters.page,
     pageSize: CATALOG_AUCTIONS_PAGE_SIZE,
