@@ -2,32 +2,25 @@ import { Radar } from "lucide-react";
 import Link from "next/link";
 
 import { Badge, Skeleton } from "@/components/ui";
-import type { CollectorHealth } from "@/domain/listings/health";
 import { formatCompactDateTime, formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 import { getCollectorStatus } from "../queries";
 
-const HEALTH_BADGES = {
-  never: { label: "Nenhuma coleta ainda", variant: "outline" },
-  running: { label: "Coleta em andamento", variant: "default" },
-  ok: null,
-  late: { label: "Coleta atrasada", variant: "warning" },
-  failed: { label: "Coleta falhou", variant: "destructive" },
-} as const satisfies Record<
-  CollectorHealth,
-  { label: string; variant: "outline" | "default" | "warning" | "destructive" } | null
->;
-
 /**
- * Saúde da coleta automática: última execução de cada fonte, atraso do agendamento e veículos abertos na região.
- * No modo `compact` (Dashboard), omite badges de falha — que vão para as notificações — e comprime a data.
+ * Resumo operacional da coleta: veículos abertos na região e horário da última execução.
+ * Falhas e atrasos de coleta ficam concentrados na central de notificações do header e em `/sistema`.
  * Lê a sessão: renderizar dentro de <Suspense>.
  */
 export async function CollectorStatusLine({ compact = false }: { compact?: boolean }) {
-  const { health, lastFinishedAt, failingSources, failedListings, openInRegion, regionLabel, radiusKm } =
-    await getCollectorStatus();
-  const badge = compact ? null : HEALTH_BADGES[health];
+  const { health, lastFinishedAt, openInRegion, regionLabel, radiusKm } = await getCollectorStatus();
+  const neutralBadge = compact
+    ? null
+    : health === "running"
+      ? ({ label: "Coleta em andamento", variant: "default" } as const)
+      : health === "never"
+        ? ({ label: "Nenhuma coleta ainda", variant: "outline" } as const)
+        : null;
 
   return (
     <div
@@ -49,25 +42,17 @@ export async function CollectorStatusLine({ compact = false }: { compact?: boole
       {lastFinishedAt ? (
         <>
           <span aria-hidden="true">·</span>
-          <Link href="/sistema" className="tabular-nums hover:text-foreground hover:underline">
+          <Link
+            href="/sistema"
+            className="rounded-sm tabular-nums outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent"
+          >
             {compact
               ? `Coleta ${formatCompactDateTime(lastFinishedAt)}`
               : `Última coleta em ${formatDateTime(lastFinishedAt)}`}
           </Link>
         </>
       ) : null}
-      {badge ? (
-        <Badge variant={badge.variant}>
-          {health === "failed" && failingSources.length > 0
-            ? `${badge.label}: ${failingSources.join(", ")}`
-            : badge.label}
-        </Badge>
-      ) : null}
-      {!compact && health === "ok" && failedListings > 0 ? (
-        <Badge variant="warning">
-          {failedListings === 1 ? "1 lote com falha" : `${failedListings} lotes com falha`}
-        </Badge>
-      ) : null}
+      {neutralBadge ? <Badge variant={neutralBadge.variant}>{neutralBadge.label}</Badge> : null}
     </div>
   );
 }
