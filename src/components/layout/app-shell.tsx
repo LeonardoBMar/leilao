@@ -4,7 +4,7 @@ import { type LucideIcon, PanelLeftClose, PanelLeftOpen, Search, Settings, Slide
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { type ReactNode, Suspense, useEffect, useState, useSyncExternalStore } from "react";
+import { type ReactNode, Suspense, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { Button, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -189,9 +189,9 @@ function getIsMacServerSnapshot(): boolean {
 }
 
 /**
- * Casca privada v3.0 ("Cirúrgico & Monocromático", DESIGN.md §4):
- * Sidebar colapsável à esquerda (264px ↔ 56px) com header próprio de 56px e toggle centralizado na divisão +
- * Coluna principal à direita com header fixo de 56px (breadcrumb, busca centralizada, notificações e conta).
+ * Casca privada v3.1 ("Cirúrgico & Monocromático", DESIGN.md §4):
+ * Sidebar colapsável à esquerda (264px ↔ 56px) sobre `bg-background` com busca integrada e dock da conta no rodapé +
+ * Painel encaixado (Inset Canvas) à direita com header compacto de 48px reativo ao scroll.
  */
 export function AppShell({
   account,
@@ -206,6 +206,10 @@ export function AppShell({
   const collapsed = useSyncExternalStore(subscribeSidebar, getSidebarSnapshot, getSidebarServerSnapshot);
   const isMac = useSyncExternalStore(subscribeNoop, getIsMacSnapshot, getIsMacServerSnapshot);
   const [commandOpen, setCommandOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [sidebarFade, setSidebarFade] = useState({ top: false, bottom: false });
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const sidebarNavRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -217,6 +221,53 @@ export function AppShell({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+
+    function updateScrolled() {
+      const next = (canvas?.scrollTop ?? 0) > 4 || window.scrollY > 4;
+      setScrolled((prev) => (prev === next ? prev : next));
+    }
+
+    updateScrolled();
+    canvas?.addEventListener("scroll", updateScrolled, { passive: true });
+    window.addEventListener("scroll", updateScrolled, { passive: true });
+    return () => {
+      canvas?.removeEventListener("scroll", updateScrolled);
+      window.removeEventListener("scroll", updateScrolled);
+    };
+  }, []);
+
+  useEffect(() => {
+    const nav = sidebarNavRef.current;
+    if (!nav) return;
+
+    function updateFade() {
+      if (!nav) return;
+      const top = nav.scrollTop > 4;
+      const bottom = nav.scrollTop + nav.clientHeight < nav.scrollHeight - 4;
+      setSidebarFade((prev) => (prev.top === top && prev.bottom === bottom ? prev : { top, bottom }));
+    }
+
+    updateFade();
+    nav.addEventListener("scroll", updateFade, { passive: true });
+    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateFade) : null;
+    observer?.observe(nav);
+    return () => {
+      nav.removeEventListener("scroll", updateFade);
+      observer?.disconnect();
+    };
+  }, [collapsed]);
+
+  const sidebarMaskClass =
+    sidebarFade.top && sidebarFade.bottom
+      ? "[mask-image:linear-gradient(to_bottom,transparent,black_16px,black_calc(100%-16px),transparent)]"
+      : sidebarFade.top
+        ? "[mask-image:linear-gradient(to_bottom,transparent,black_16px,black)]"
+        : sidebarFade.bottom
+          ? "[mask-image:linear-gradient(to_bottom,black,black_calc(100%-16px),transparent)]"
+          : undefined;
 
   return (
     <div className="flex min-h-dvh bg-background lg:h-dvh lg:overflow-hidden">
@@ -306,10 +357,12 @@ export function AppShell({
 
         {/* Padding lateral fixo (px-2.5 = 10px) mantém os ícones ancorados no mesmo eixo X durante a animação */}
         <div
+          ref={sidebarNavRef}
           id="sidebar-nav"
           className={cn(
             "flex min-h-0 flex-1 flex-col gap-5 overflow-x-hidden overflow-y-auto overscroll-contain px-2.5 py-2.5",
             !collapsed && "[scrollbar-gutter:stable]",
+            sidebarMaskClass,
           )}
         >
           <nav aria-label="Principal" className="w-full">
@@ -340,8 +393,16 @@ export function AppShell({
 
       {/* Coluna principal encaixada (Inset Canvas no desktop lg+) */}
       <div className="flex min-h-dvh min-w-0 flex-1 flex-col lg:h-dvh lg:min-h-0 lg:p-2 lg:pl-0">
-        <div className="flex min-h-dvh min-w-0 flex-1 flex-col bg-surface lg:min-h-0 lg:scroll-pt-12 lg:overflow-y-auto lg:rounded-xl lg:border lg:border-border lg:shadow-xs">
-          <header className="sticky top-0 z-30 h-12 shrink-0 border-b border-border bg-surface">
+        <div
+          ref={canvasRef}
+          className="flex min-h-dvh min-w-0 flex-1 flex-col bg-surface lg:min-h-0 lg:scroll-pt-12 lg:overflow-y-auto lg:rounded-xl lg:border lg:border-border lg:shadow-xs"
+        >
+          <header
+            className={cn(
+              "sticky top-0 z-30 h-12 shrink-0 border-b bg-surface transition-colors duration-150 ease-[var(--ease-out)] motion-reduce:transition-none",
+              scrolled ? "border-border" : "border-transparent",
+            )}
+          >
             <div className="mx-auto flex h-full w-full max-w-360 items-center justify-between gap-3 px-4 md:px-6 lg:px-8">
               <div className="flex min-w-0 items-center gap-2.5">
                 <div className="flex min-w-0 items-center gap-2 lg:hidden">
