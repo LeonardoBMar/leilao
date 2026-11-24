@@ -27,12 +27,17 @@ export async function pruneCatalogStorage(
   now: Date,
   options: { rawBatchLimit?: number } = {},
 ): Promise<RetentionSummary> {
-  const rawBatchLimit = options.rawBatchLimit ?? DEFAULT_RAW_PRUNE_BATCH;
+  const requestedLimit = options.rawBatchLimit ?? DEFAULT_RAW_PRUNE_BATCH;
+  const rawBatchLimit = Number.isFinite(requestedLimit) ? Math.max(0, Math.trunc(requestedLimit)) : 0;
   const rawCutoff = rawRetentionCutoff(now);
   const runCutoff = collectorRunRetentionCutoff(now);
   const statuses = Prisma.join(PRUNABLE_RAW_STATUSES.map((status) => Prisma.sql`${status}::listing_status`));
 
-  const rawPruned = await db.$executeRaw`
+  // Não atualiza `updated_at` de propósito: preserva ordenação de atividade real e favorece HOT update no Postgres.
+  const rawPruned =
+    rawBatchLimit === 0
+      ? 0
+      : await db.$executeRaw`
     WITH target AS (
       SELECT id
       FROM listings
@@ -56,7 +61,7 @@ export async function pruneCatalogStorage(
       AND id NOT IN (
         SELECT DISTINCT ON (source_id) id
         FROM collector_runs
-        ORDER BY source_id, started_at DESC
+        ORDER BY source_id, started_at DESC, id DESC
       )
   `;
 

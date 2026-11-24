@@ -196,8 +196,11 @@ export async function runCollection({
     errors.push({ url: "(alertas)", error: describeError(error) });
   }
 
-  // Manutenção de armazenamento (D-87): compactação de `listings.raw` antigo e expurgo de `collector_runs`.
-  // Só aviso em caso de falha, sem marcar a coleta como falha.
+  // Falha dos passos comuns aparece no registro de cada fonte, para o app mostrar (o cartão lê `collector_runs`).
+  const summaries = await Promise.all(runs.map((run) => run.finish({ errors, alertsCreated, finishedAt: now() })));
+
+  // Manutenção de armazenamento (D-87): roda após `run.finish` para não inflar a duração das fontes nem depender de
+  // execuções ainda `running` ao preservar a última execução por fonte. Só aviso em caso de falha.
   let maintenance: RetentionSummary = { rawPruned: 0, runsDeleted: 0 };
   try {
     maintenance = await pruneCatalogStorage(now());
@@ -205,8 +208,6 @@ export async function runCollection({
     warn(`manutenção do catálogo: ${describeError(error)}`);
   }
 
-  // Falha dos passos comuns aparece no registro de cada fonte, para o app mostrar (o cartão lê `collector_runs`).
-  const summaries = await Promise.all(runs.map((run) => run.finish({ errors, alertsCreated, finishedAt: now() })));
   const failed = errors.length > 0 || summaries.some((summary) => summary.status === "failed");
   return {
     status: failed ? "failed" : "succeeded",
