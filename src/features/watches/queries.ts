@@ -2,6 +2,7 @@ import "server-only";
 
 import { criteriaFromStored } from "@/domain/listings/criteria";
 import { countOpenListings } from "@/features/listings/queries";
+import { getUserPreferences } from "@/features/preferences/queries";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
 import { catalogSources } from "@/server/catalog-values";
@@ -26,28 +27,41 @@ export function toWatchItem({ id, name, active, createdAt, updatedAt, ...stored 
   return { id, name, criteria: criteriaFromStored(stored), active, createdAt, updatedAt };
 }
 
+/** Limite de contagens concorrentes para não saturar o pool (`DB_POOL_MAX = 5`) com muitos monitores. */
+const WATCH_COUNT_CONCURRENCY = 3;
+
 /** Monitores do usuário, com quantos lotes abertos combinam agora e alertas não lidos. */
 export async function listWatches(): Promise<WatchListItem[]> {
   const user = await requireUser();
-  const [rows, unread, sources] = await Promise.all([
+  const [rows, unread, sources, { region }] = await Promise.all([
     db.watch.findMany({ where: { ownerId: user.id }, orderBy: { createdAt: "desc" }, select: watchSelect }),
     db.alert.groupBy({ by: ["watchId"], where: { ownerId: user.id, readAt: null }, _count: { _all: true } }),
     catalogSources(),
+    getUserPreferences(),
   ]);
   const unreadByWatch = new Map(unread.map((group) => [group.watchId, group._count._all]));
   const sourceNames = Object.fromEntries(sources.map((source) => [source.id, source.name]));
+  const now = new Date();
 
-  return Promise.all(
-    rows.map(async (row) => {
+  const results = new Array<WatchListItem>(rows.length);
+  let cursor = 0;
+  const worker = async () => {
+    while (cursor < rows.length) {
+      const index = cursor;
+      cursor += 1;
+      const row = rows[index];
+      if (!row) continue;
       const watch = toWatchItem(row);
-      return {
+      results[index] = {
         ...watch,
         description: describeCriteria(watch.criteria, sourceNames),
-        openMatches: await countOpenListings(watch.criteria),
+        openMatches: await countOpenListings(watch.criteria, { region, now }),
         unreadAlerts: unreadByWatch.get(row.id) ?? 0,
       };
-    }),
-  );
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(WATCH_COUNT_CONCURRENCY, rows.length) }, worker));
+  return results;
 }
 
 /** Devolve `null` para inexistente ou de outro dono; quem renderiza decide `notFound()`. */

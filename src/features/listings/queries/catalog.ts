@@ -184,10 +184,14 @@ export async function listActiveSources(): Promise<{ id: string; name: string }[
 }
 
 /** Quantos anúncios abertos atendem aos critérios agora (ex.: "12 lotes combinam com este monitor"). */
-export async function countOpenListings(criteria: ListingCriteria): Promise<number> {
-  const { region } = await getUserPreferences();
+export async function countOpenListings(
+  criteria: ListingCriteria,
+  context?: { region: RegionConfig; now: Date },
+): Promise<number> {
+  const region = context?.region ?? (await getUserPreferences()).region;
+  const now = context?.now ?? new Date();
   const where: Prisma.ListingWhereInput = {
-    AND: [openWhere(new Date()), criteriaWhere(criteria, await loadCriteriaValues(criteria, region))],
+    AND: [openWhere(now), criteriaWhere(criteria, await loadCriteriaValues(criteria, region))],
   };
   return db.listing.count({ where });
 }
