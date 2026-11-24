@@ -30,7 +30,6 @@ export type DiffMoneyField =
 
 export type DiffValue =
   | { kind: "money"; value: Cents | null }
-  | { kind: "rate"; value: Bps | null }
   | { kind: "commission"; mode: CommissionMode | null; fixed: Cents | null; rate: Bps | null }
   | { kind: "rate_or_money"; amount: Cents | null; rate: Bps | null };
 

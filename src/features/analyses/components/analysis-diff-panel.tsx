@@ -34,8 +34,6 @@ function formatDiffValue(value: DiffValue): string {
   switch (value.kind) {
     case "money":
       return value.value === null ? "—" : formatBRL(value.value);
-    case "rate":
-      return value.value === null ? "—" : formatBps(value.value);
     case "commission":
       if (value.mode === "fixed") return value.fixed === null ? "Fixa (—)" : `${formatBRL(value.fixed)} (fixa)`;
       if (value.mode === "percentage") return value.rate === null ? "Percentual (—)" : `${formatBps(value.rate)} (%)`;
@@ -49,7 +47,6 @@ function formatDiffValue(value: DiffValue): string {
 function isEmptyDiffValue(value: DiffValue): boolean {
   switch (value.kind) {
     case "money":
-    case "rate":
       return value.value === null;
     case "commission":
       return (
