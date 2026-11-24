@@ -5,6 +5,7 @@ import {
   type CatalogAuctionStats,
   selectCatalogAuctions,
 } from "@/domain/listings/catalog-auctions";
+import { getUserPreferences } from "@/features/preferences/queries";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
 import { catalogSources } from "@/server/catalog-values";
@@ -102,14 +103,14 @@ export async function loadCatalogAuctionStats(
  * se tem lote no filtro. Na aba de abertos, conta só lotes abertos; na de encerrados, todos.
  */
 export async function listCatalogAuctions(filters: ListingFilters): Promise<CatalogAuctionPage> {
-  const user = await requireUser();
+  const [user, { region }] = await Promise.all([requireUser(), getUserPreferences()]);
   const now = new Date();
   // Na aba de encerrados, o leilão entra com qualquer lote no filtro: a situação é do leilão (`selectCatalogAuctions`).
   const where: Prisma.ListingWhereInput = {
     AND: [
       { auctionExternalId: { not: null } },
       filters.ended ? {} : openWhere(now),
-      criteriaWhere(filters.criteria, await loadCriteriaValues(filters.criteria)),
+      criteriaWhere(filters.criteria, await loadCriteriaValues(filters.criteria, region)),
       screenWhere(filters, user.id, now),
     ],
   };

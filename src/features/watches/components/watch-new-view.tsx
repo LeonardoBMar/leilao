@@ -1,9 +1,9 @@
 import { FreshOnNavigation } from "@/components/layout/fresh-on-navigation";
 import { Skeleton } from "@/components/ui";
-import { DEFAULT_REGION } from "@/domain/listings/region";
 import { listActiveSources } from "@/features/listings/queries";
 import { parseListingParams } from "@/features/listings/schemas";
 import type { SearchParams } from "@/features/listings/search";
+import { getUserPreferences } from "@/features/preferences/queries";
 
 import { createWatchAction } from "../actions";
 import { WatchForm } from "./watch-form";
@@ -13,8 +13,7 @@ import { WatchForm } from "./watch-form";
  * Lê `searchParams` e a sessão: renderizar dentro de <Suspense>.
  */
 export async function WatchNewView({ searchParams }: { searchParams: SearchParams }) {
-  const raw = await searchParams;
-  const sources = await listActiveSources();
+  const [raw, sources, { region }] = await Promise.all([searchParams, listActiveSources(), getUserPreferences()]);
   const initialCriteria = Object.keys(raw).length > 0 ? parseListingParams(raw).criteria : undefined;
 
   return (
@@ -23,7 +22,7 @@ export async function WatchNewView({ searchParams }: { searchParams: SearchParam
         action={createWatchAction}
         initialCriteria={initialCriteria}
         sources={sources}
-        regionLabel={DEFAULT_REGION.label}
+        regionLabel={region.label}
         currentYear={new Date().getUTCFullYear()}
         submitLabel="Criar monitor"
       />

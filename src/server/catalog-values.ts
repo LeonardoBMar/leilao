@@ -2,7 +2,7 @@ import "server-only";
 
 import { cacheLife } from "next/cache";
 
-import { distanceKm } from "@/domain/listings/geo";
+import { type Coordinates, distanceKm } from "@/domain/listings/geo";
 import { DEFAULT_REGION } from "@/domain/listings/region";
 
 import { db } from "./db";
@@ -15,14 +15,17 @@ import { db } from "./db";
  * Municípios a até `radiusKm` do centro da região, pela mesma `distanceKm` dos cartões. O filtro de raio vira
  * `municipality_id IN (...)` e fica exato no banco. A tabela é a carga do IBGE e não muda com o uso.
  */
-export async function municipalitiesWithin(radiusKm: number): Promise<number[]> {
+export async function municipalitiesWithin(
+  radiusKm: number,
+  center: Coordinates = DEFAULT_REGION.center,
+): Promise<number[]> {
   "use cache";
   cacheLife("max");
   const municipalities = await db.municipality.findMany({
     select: { ibgeCode: true, latitude: true, longitude: true },
   });
   return municipalities.flatMap((municipality) =>
-    distanceKm(DEFAULT_REGION.center, municipality) <= radiusKm ? [municipality.ibgeCode] : [],
+    distanceKm(center, municipality) <= radiusKm ? [municipality.ibgeCode] : [],
   );
 }
 

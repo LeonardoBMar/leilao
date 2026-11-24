@@ -16,7 +16,7 @@ import {
 } from "@/domain/listings/criteria";
 import { estimateLimit, estimatePrice, limitFit, limitMaxBid } from "@/domain/listings/estimates";
 import { distanceKm } from "@/domain/listings/geo";
-import { DEFAULT_REGION } from "@/domain/listings/region";
+import { DEFAULT_REGION, type RegionConfig } from "@/domain/listings/region";
 import { trackerMissing } from "@/domain/listings/tracker";
 import { cents } from "@/domain/money";
 import { defaultsInputFromListing, type ListingForDefaults } from "@/features/analyses/draft-defaults";
@@ -113,11 +113,20 @@ export function estimateFor(row: EstimateRow, context: EstimateContext | null): 
     marketValue: toCents(row.marketValueCents),
   };
   const price = estimatePrice(target, context.index);
-  const limit = estimateLimit(target, context.analyses, defaultsInputFromListing(row));
+  const limit = estimateLimit(
+    target,
+    context.analyses,
+    defaultsInputFromListing(row, context.region),
+    context.costOverrides,
+  );
   return { price, limit, fit: limitFit(price, limitMaxBid(limit)) };
 }
 
-export function toListItem(row: ListingCardRow, estimates: EstimateContext | null = null): ListingListItem {
+export function toListItem(
+  row: ListingCardRow,
+  estimates: EstimateContext | null = null,
+  region: RegionConfig = estimates?.region ?? DEFAULT_REGION,
+): ListingListItem {
   return {
     id: row.id,
     sourceName: row.source.name,
@@ -134,7 +143,7 @@ export function toListItem(row: ListingCardRow, estimates: EstimateContext | nul
     inspectionNotes: row.inspectionNotes,
     city: row.city,
     state: row.state,
-    distanceKm: row.municipality ? distanceKm(DEFAULT_REGION.center, row.municipality) : null,
+    distanceKm: row.municipality ? distanceKm(region.center, row.municipality) : null,
     auctionName: row.auctionName,
     endsAt: row.endsAt,
     status: row.status,
@@ -213,10 +222,13 @@ export function searchWhere(search: string | null): Prisma.ListingWhereInput {
  */
 export type CriteriaValues = { fuels: string[]; nearby: number[] | null };
 
-export async function loadCriteriaValues(criteria: ListingCriteria): Promise<CriteriaValues> {
+export async function loadCriteriaValues(
+  criteria: ListingCriteria,
+  region: RegionConfig = DEFAULT_REGION,
+): Promise<CriteriaValues> {
   const [fuels, nearby] = await Promise.all([
     criteria.fuels.length === 0 ? [] : fuelSpellings(),
-    criteria.radiusKm === null ? null : municipalitiesWithin(criteria.radiusKm),
+    criteria.radiusKm === null ? null : municipalitiesWithin(criteria.radiusKm, region.center),
   ]);
   return { fuels, nearby };
 }

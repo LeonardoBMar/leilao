@@ -11,8 +11,8 @@ import {
 } from "@/domain/listings/criteria";
 import { byAnalysisPriority } from "@/domain/listings/estimates";
 import { distanceKm } from "@/domain/listings/geo";
-import { DEFAULT_REGION } from "@/domain/listings/region";
 import { listingForDefaultsSelect } from "@/features/analyses/draft-defaults";
+import { getUserPreferences } from "@/features/preferences/queries";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
 import { storedCriteriaSelect } from "@/server/collector/alerts";
@@ -113,16 +113,18 @@ function toMatchable(row: RegionCandidateRow, distance: number | null): Matchabl
 export const getRegionOverview = cache(async (): Promise<RegionOverview> => {
   const user = await requireUser();
   const now = new Date();
-  const [watches, dismissals, context] = await Promise.all([
+  const [watches, dismissals, context, { region }] = await Promise.all([
     db.watch.findMany({ where: { ownerId: user.id, active: true }, select: storedCriteriaSelect }),
     // Dispensados (D-56) saem só das sugestões; buscar todos do usuário em paralelo evita 1 RTT e `IN` gigante (D-85).
     db.listingDismissal.findMany({ where: { ownerId: user.id }, select: { listingId: true } }),
     getEstimateContext(),
+    getUserPreferences(),
   ]);
   const dismissed = new Set(dismissals.map(({ listingId }) => listingId));
-  const criteriaList = [DEFAULT_CRITERIA, ...watches.map(criteriaFromStored)];
+  const userDefaultCriteria = { ...DEFAULT_CRITERIA, radiusKm: region.radiusKm };
+  const criteriaList = [userDefaultCriteria, ...watches.map(criteriaFromStored)];
   const wheres = await Promise.all(
-    criteriaList.map(async (criteria) => criteriaWhere(criteria, await loadCriteriaValues(criteria))),
+    criteriaList.map(async (criteria) => criteriaWhere(criteria, await loadCriteriaValues(criteria, region))),
   );
 
   // Fase 1 (D-82, D-85): só o que o filtro exato, a estimativa e o resumo de leilões leem, sem fotos nem textos longos.
@@ -138,7 +140,7 @@ export const getRegionOverview = cache(async (): Promise<RegionOverview> => {
 
   // Filtra por `matchesCriteria` antes de estimar e só calcula estimativa para quem entra em sugestões ou nos 7 dias.
   const matching = rows.slice(0, MAX_CANDIDATES).flatMap((row) => {
-    const distance = row.municipality ? distanceKm(DEFAULT_REGION.center, row.municipality) : null;
+    const distance = row.municipality ? distanceKm(region.center, row.municipality) : null;
     if (!criteriaList.some((criteria) => matchesCriteria(criteria, toMatchable(row, distance), now))) return [];
     const isSoon = row.endsAt !== null && row.endsAt.getTime() - nowMs <= REGION_AUCTIONS_WINDOW_MS;
     const isCandidate = row.lots.length === 0 && !dismissed.has(row.id);
@@ -165,7 +167,7 @@ export const getRegionOverview = cache(async (): Promise<RegionOverview> => {
   const cardById = new Map(cards.map((row) => [row.id, row]));
   const toAnalyze = shownIds.flatMap((id) => {
     const row = cardById.get(id);
-    return row ? [toListItem(row, context)] : [];
+    return row ? [toListItem(row, context, region)] : [];
   });
 
   // Leilões dos próximos 7 dias agregados diretamente dos candidatos abertos (elimina 5 queries em cascata, D-85).

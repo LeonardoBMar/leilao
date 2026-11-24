@@ -9,6 +9,7 @@ import {
   draftSourceOf,
   listingForDefaultsSelect,
 } from "@/features/analyses/draft-defaults";
+import { getUserPreferences } from "@/features/preferences/queries";
 import type { Prisma } from "@/generated/prisma/client";
 import { err, ok, type Result } from "@/lib/result";
 import { requireUser } from "@/server/auth";
@@ -85,7 +86,12 @@ async function createFromListing(listingId: string): Promise<Result<AddToTracker
   // A tela só oferece o botão com marca, modelo e ano; aqui cobre o anúncio que mudou nesse meio-tempo.
   if (!planned.ok) return err("incomplete");
   const { auction, lot } = planned.value;
-  const premises = draftDefaults(defaultsInputFromListing(listing), draftSourceOf(listing));
+  const preferences = await getUserPreferences();
+  const premises = draftDefaults(
+    defaultsInputFromListing(listing, preferences.region),
+    draftSourceOf(listing),
+    preferences.costOverrides,
+  );
 
   try {
     return await db.$transaction(async (tx) => {

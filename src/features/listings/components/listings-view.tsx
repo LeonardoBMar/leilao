@@ -2,7 +2,7 @@ import { Radar } from "lucide-react";
 
 import { ListPagination } from "@/components/layout/list-pagination";
 import { Alert, AlertDescription, ButtonLink, EmptyState, MotionList, MotionListItem, Skeleton } from "@/components/ui";
-import { DEFAULT_REGION } from "@/domain/listings/region";
+import { getUserPreferences } from "@/features/preferences/queries";
 
 import { activeFilters, clearedFilters } from "../filter-labels";
 import { getListingFacets, listListings } from "../queries";
@@ -28,9 +28,10 @@ type ListingsViewProps = {
 /** Anúncios coletados, com filtros na URL. Renderizar dentro de <Suspense>. */
 export async function ListingsView({ searchParams, basePath, auction, renderSaveWatch }: ListingsViewProps) {
   const { filters, params } = readListingSearch(await searchParams);
-  const [page, facets] = await Promise.all([
+  const [page, facets, { region }] = await Promise.all([
     listListings(filters, { auction }),
     getListingFacets(filters, { auction }),
+    getUserPreferences(),
   ]);
   const hasFilters = activeFilters(filters, {}).length > 0;
   const saveWatch = auction ? undefined : renderSaveWatch?.(new URLSearchParams(listingParams(filters)).toString());
@@ -44,7 +45,7 @@ export async function ListingsView({ searchParams, basePath, auction, renderSave
         scope={auction ? "auction" : "listings"}
         total={page.total}
         facets={facets}
-        regionLabel={DEFAULT_REGION.label}
+        regionLabel={region.label}
         currentYear={new Date().getUTCFullYear()}
         saveWatch={saveWatch}
       />

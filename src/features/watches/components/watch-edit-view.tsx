@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 
 import { PageHeader } from "@/components/layout/page-header";
-import { DEFAULT_REGION } from "@/domain/listings/region";
 import { listActiveSources } from "@/features/listings/queries";
+import { getUserPreferences } from "@/features/preferences/queries";
 
 import { updateWatchAction } from "../actions";
 import { getWatch } from "../queries";
@@ -13,7 +13,11 @@ import { WatchForm } from "./watch-form";
 export async function WatchEditView({ params }: { params: Promise<{ id: string }> }) {
   const parsed = watchIdSchema.safeParse((await params).id);
   if (!parsed.success) notFound();
-  const [watch, sources] = await Promise.all([getWatch(parsed.data), listActiveSources()]);
+  const [watch, sources, { region }] = await Promise.all([
+    getWatch(parsed.data),
+    listActiveSources(),
+    getUserPreferences(),
+  ]);
   if (!watch) notFound();
 
   return (
@@ -27,7 +31,7 @@ export async function WatchEditView({ params }: { params: Promise<{ id: string }
         action={updateWatchAction.bind(null, watch.id)}
         watch={watch}
         sources={sources}
-        regionLabel={DEFAULT_REGION.label}
+        regionLabel={region.label}
         currentYear={new Date().getUTCFullYear()}
         submitLabel="Salvar alterações"
       />

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { FORMULA_VERSION, prepareFixedAnalysis } from "@/domain/finance/calculator";
+import { getUserPreferences } from "@/features/preferences/queries";
 import { getLotMarketReference, getLotMarketReferences } from "@/features/research/queries";
 import { err, ok, type Result } from "@/lib/result";
 import { requireUser } from "@/server/auth";
@@ -86,11 +87,16 @@ export async function createDraft(lotId: string, sourceId?: string): Promise<Res
   });
   if (sourceId && !source) return err("source_not_found");
   const { listing } = lot;
+  const preferences = source ? null : await getUserPreferences();
   const premises =
     source ??
     (listing
-      ? draftDefaults(defaultsInputFromListing(listing), draftSourceOf(listing))
-      : draftDefaults(UNKNOWN_VEHICLE, null));
+      ? draftDefaults(
+          defaultsInputFromListing(listing, preferences?.region),
+          draftSourceOf(listing),
+          preferences?.costOverrides,
+        )
+      : draftDefaults(UNKNOWN_VEHICLE, null, preferences?.costOverrides));
 
   try {
     const draft = await db.$transaction(async (tx) => {

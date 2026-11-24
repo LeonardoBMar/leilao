@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { ListPagination } from "@/components/layout/list-pagination";
 import { ButtonLink, EmptyState, Skeleton } from "@/components/ui";
-import { DEFAULT_REGION } from "@/domain/listings/region";
+import { getUserPreferences } from "@/features/preferences/queries";
 import { formatDateTime } from "@/lib/format";
 
 import { activeFilters, clearedFilters } from "../filter-labels";
@@ -23,7 +23,11 @@ export async function CatalogAuctionsView({
   renderSaveWatch?: (query: string) => React.ReactNode;
 }) {
   const { filters, params } = readListingSearch(await searchParams);
-  const [page, facets] = await Promise.all([listCatalogAuctions(filters), getListingFacets(filters)]);
+  const [page, facets, { region }] = await Promise.all([
+    listCatalogAuctions(filters),
+    getListingFacets(filters),
+    getUserPreferences(),
+  ]);
   const hasFilters = activeFilters(filters, {}).length > 0;
   const saveWatch = renderSaveWatch?.(new URLSearchParams(listingParams(filters)).toString());
 
@@ -36,7 +40,7 @@ export async function CatalogAuctionsView({
         scope="auctions"
         total={page.total}
         facets={facets}
-        regionLabel={DEFAULT_REGION.label}
+        regionLabel={region.label}
         currentYear={new Date().getUTCFullYear()}
         saveWatch={saveWatch}
       />

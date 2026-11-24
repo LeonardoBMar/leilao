@@ -7,7 +7,8 @@ import { DEFAULT_CATEGORIES, type ListingCriteria } from "@/domain/listings/crit
 import { facetGroupsFromCombos, facetsFromGroups } from "@/domain/listings/facets";
 import { distanceKm } from "@/domain/listings/geo";
 import { collectorHealth, overallHealth } from "@/domain/listings/health";
-import { DEFAULT_REGION } from "@/domain/listings/region";
+import type { RegionConfig } from "@/domain/listings/region";
+import { getUserPreferences } from "@/features/preferences/queries";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
 import { activeCatalogSources, municipalitiesWithin } from "@/server/catalog-values";
@@ -40,10 +41,10 @@ export async function listListings(
   filters: ListingFilters,
   scope: { auction?: CatalogAuctionKey } = {},
 ): Promise<ListingPage> {
-  const user = await requireUser();
+  const [user, { region }] = await Promise.all([requireUser(), getUserPreferences()]);
   const select = listingCardSelect(user.id);
   const now = new Date();
-  const where = listingsWhere(filters, await loadCriteriaValues(filters.criteria), user.id, now, scope.auction);
+  const where = listingsWhere(filters, await loadCriteriaValues(filters.criteria, region), user.id, now, scope.auction);
   const orderBy = listingsOrderBy(filters);
   const start = (filters.page - 1) * LISTINGS_PAGE_SIZE;
 
@@ -56,7 +57,7 @@ export async function listListings(
       filters.ended ? Promise.resolve(null) : loadEstimateContext(now),
     ]);
     return {
-      items: rows.map((row) => toListItem(row, context)),
+      items: rows.map((row) => toListItem(row, context, region)),
       total,
       page: filters.page,
       pageSize: LISTINGS_PAGE_SIZE,
@@ -77,7 +78,7 @@ export async function listListings(
     .slice(0, MAX_CANDIDATES)
     .map((row) => ({
       id: row.id,
-      distanceKm: row.municipality ? distanceKm(DEFAULT_REGION.center, row.municipality) : null,
+      distanceKm: row.municipality ? distanceKm(region.center, row.municipality) : null,
     }))
     .sort(byDistance);
   const pageIds = sorted.slice(start, start + LISTINGS_PAGE_SIZE).map((item) => item.id);
@@ -98,7 +99,7 @@ export async function listListings(
   const byId = new Map(rows.map((row) => [row.id, row]));
   const items = pageIds.flatMap((id) => {
     const row = byId.get(id);
-    return row ? [toListItem(row, context)] : [];
+    return row ? [toListItem(row, context, region)] : [];
   });
 
   return {
@@ -123,10 +124,10 @@ export async function getListingFacets(
   filters: ListingFilters,
   scope: { auction?: CatalogAuctionKey } = {},
 ): Promise<ListingFacetsView> {
-  const user = await requireUser();
+  const [user, { region }] = await Promise.all([requireUser(), getUserPreferences()]);
   const now = new Date();
   const { criteria } = filters;
-  const values = await loadCriteriaValues(criteria);
+  const values = await loadCriteriaValues(criteria, region);
   const withoutFacets: ListingFilters = {
     ...filters,
     criteria: { ...criteria, search: null, categories: null, sources: [], origins: [], fuels: [] },
@@ -184,9 +185,9 @@ export async function listActiveSources(): Promise<{ id: string; name: string }[
 
 /** Quantos anúncios abertos atendem aos critérios agora (ex.: "12 lotes combinam com este monitor"). */
 export async function countOpenListings(criteria: ListingCriteria): Promise<number> {
-  await requireUser();
+  const { region } = await getUserPreferences();
   const where: Prisma.ListingWhereInput = {
-    AND: [openWhere(new Date()), criteriaWhere(criteria, await loadCriteriaValues(criteria))],
+    AND: [openWhere(new Date()), criteriaWhere(criteria, await loadCriteriaValues(criteria, region))],
   };
   return db.listing.count({ where });
 }
@@ -195,7 +196,7 @@ export async function countOpenListings(criteria: ListingCriteria): Promise<numb
  * Leitura global da saúde do coletor com cache `catalog` (D-78, D-85): não lê sessão nem dado de usuário.
  * Quem chama exige `requireUser()`.
  */
-async function loadCollectorStatusCached(): Promise<CollectorStatus> {
+async function loadCollectorStatusCached(region: RegionConfig): Promise<CollectorStatus> {
   "use cache";
   cacheLife("catalog");
   cacheTag("collector-status");
@@ -214,7 +215,7 @@ async function loadCollectorStatusCached(): Promise<CollectorStatus> {
         },
       },
     }),
-    municipalitiesWithin(DEFAULT_REGION.radiusKm).then((nearby) =>
+    municipalitiesWithin(region.radiusKm, region.center).then((nearby) =>
       db.listing.count({ where: { AND: [openWhere(now), radiusWhere(nearby), categoriesWhere(DEFAULT_CATEGORIES)] } }),
     ),
   ]);
@@ -229,13 +230,13 @@ async function loadCollectorStatusCached(): Promise<CollectorStatus> {
     failingSources: runs.filter((run) => run.health === "failed").map((run) => run.name),
     failedListings: runs.reduce((total, run) => total + run.failed, 0),
     openInRegion,
-    regionLabel: DEFAULT_REGION.label,
-    radiusKm: DEFAULT_REGION.radiusKm,
+    regionLabel: region.label,
+    radiusKm: region.radiusKm,
   };
 }
 
 /** Saúde do coletor para o dashboard e para "Leilões": última execução de cada fonte e abertos na região. */
 export const getCollectorStatus = cache(async (): Promise<CollectorStatus> => {
-  await requireUser();
-  return loadCollectorStatusCached();
+  const { region } = await getUserPreferences();
+  return loadCollectorStatusCached(region);
 });

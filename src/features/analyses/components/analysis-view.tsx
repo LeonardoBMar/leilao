@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Alert, AlertDescription, Badge, ButtonLink, Section, SectionTitle, Skeleton } from "@/components/ui";
 import { calculateMaxBid, FORMULA_VERSION } from "@/domain/finance/calculator";
 import { listLotImages } from "@/features/lot-images/queries";
+import { getUserPreferences } from "@/features/preferences/queries";
 import { getLotMarketReference } from "@/features/research/queries";
 import type { LotMarketReference } from "@/features/research/types";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -36,13 +37,14 @@ export async function AnalysisView({
   if (!analysis) notFound();
 
   const compareId = analysisCompareSearchSchema.parse(resolvedSearch).comparar;
-  const [versions, market, lotImages, compared] = await Promise.all([
+  const [versions, market, lotImages, compared, preferences] = await Promise.all([
     listLotAnalyses(analysis.lot.id),
     getLotMarketReference(analysis.lot.id),
     listLotImages(analysis.lot.id),
     compareId && compareId !== analysis.id
       ? getAnalysisForComparison(analysis.lot.id, compareId)
       : Promise.resolve(null),
+    analysis.status === "draft" ? getUserPreferences() : Promise.resolve(null),
   ]);
 
   const isFixed = analysis.status === "fixed";
@@ -149,7 +151,7 @@ export async function AnalysisView({
       {isFixed ? (
         <AnalysisReadonly analysis={analysis} {...fixedMarket(analysis, market)} />
       ) : (
-        <AnalysisEditor analysis={analysis} market={market} />
+        <AnalysisEditor analysis={analysis} market={market} costOverrides={preferences?.costOverrides} />
       )}
 
       <Section aria-labelledby="analysis-history" className="grid gap-4 border-t border-border pt-7">

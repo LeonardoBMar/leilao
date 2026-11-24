@@ -4,11 +4,12 @@ import {
   type DefaultAssumptions,
   defaultAssumptions,
   type DefaultsInput,
+  type UserDefaultOverrides,
 } from "@/domain/finance/defaults";
 import type { ConditionFlag, DamageLevel } from "@/domain/listings/condition";
 import type { MarketValueOrigin } from "@/domain/listings/fipe-match";
 import { distanceKm } from "@/domain/listings/geo";
-import { DEFAULT_REGION } from "@/domain/listings/region";
+import { DEFAULT_REGION, type RegionConfig } from "@/domain/listings/region";
 import { type Bps, bps, type Cents, cents } from "@/domain/money";
 import { calendarDateToUtc, toCalendarDateInput } from "@/lib/dates";
 import { formatBps, formatBRL } from "@/lib/format";
@@ -72,7 +73,10 @@ export const UNKNOWN_VEHICLE: DefaultsInput = {
 
 const toCents = (value: number | null): Cents | null => (value === null ? null : cents(value));
 
-export function defaultsInputFromListing(listing: ListingForDefaults): DefaultsInput {
+export function defaultsInputFromListing(
+  listing: ListingForDefaults,
+  region: RegionConfig = DEFAULT_REGION,
+): DefaultsInput {
   // Depósito, vistoria e demais taxas do anúncio somam em "outras taxas"; nada informado fica `null`.
   const fees = [listing.storageFeeCents, listing.inspectionFeeCents, listing.otherFeesCents].filter(
     (fee) => fee !== null,
@@ -87,7 +91,7 @@ export function defaultsInputFromListing(listing: ListingForDefaults): DefaultsI
     removalFee: toCents(listing.removalFeeCents),
     otherFees: fees.length === 0 ? null : cents(fees.reduce((total, fee) => total + fee, 0)),
     commissionRate: listing.commissionBps === null ? null : bps(listing.commissionBps),
-    distanceKm: listing.municipality ? distanceKm(DEFAULT_REGION.center, listing.municipality) : null,
+    distanceKm: listing.municipality ? distanceKm(region.center, listing.municipality) : null,
   };
 }
 
@@ -147,8 +151,12 @@ export function listingFipeOf(listing: {
  * Premissas padrão (D-38) → colunas do rascunho, com a origem de cada número nas observações. O rascunho continua
  * editável; quem fixa é o usuário.
  */
-export function draftDefaults(input: DefaultsInput, source: DraftSource | null) {
-  const defaults = defaultAssumptions(input);
+export function draftDefaults(
+  input: DefaultsInput,
+  source: DraftSource | null,
+  overrides?: UserDefaultOverrides | null,
+) {
+  const defaults = defaultAssumptions(input, overrides);
   const referenceDate = source ? calendarDateToUtc(toCalendarDateInput(source.referenceDate)) : null;
   const saleDiscount = defaults.basis.saleDiscount;
   return {
@@ -170,14 +178,23 @@ export function draftDefaults(input: DefaultsInput, source: DraftSource | null) 
     commissionRateBps: defaults.commissionRateBps,
     riskReserveBps: defaults.riskReserveRateBps,
     desiredMarginBps: defaults.desiredMarginRateBps,
-    notes: defaultsNote(input, defaults, source?.name ?? null),
+    notes: defaultsNote(input, defaults, source?.name ?? null, overrides),
   };
 }
 
-function defaultsNote(input: DefaultsInput, defaults: DefaultAssumptions, sourceName: string | null): string {
+function defaultsNote(
+  input: DefaultsInput,
+  defaults: DefaultAssumptions,
+  sourceName: string | null,
+  overrides?: UserDefaultOverrides | null,
+): string {
   const { basis } = defaults;
   const vehicle = input.isMotorcycle ? "moto" : "carro";
   const fromListing = sourceName === null ? "do anúncio" : `do anúncio no ${sourceName}`;
+  const docDefault = overrides?.documentationCost ?? DEFAULT_COSTS.documentation;
+  const towBase = overrides?.towBase ?? DEFAULT_COSTS.towBase;
+  const towPerKm = overrides?.towPerKm ?? DEFAULT_COSTS.towPerKm;
+  const towUnknown = overrides?.towUnknownDistance ?? DEFAULT_COSTS.towUnknownDistance;
   const lines = [
     input.fipe === null
       ? "Valor de venda e reparos: sem FIPE. Informe a FIPE e use “Estimar a partir da FIPE”."
@@ -187,15 +204,15 @@ function defaultsNote(input: DefaultsInput, defaults: DefaultAssumptions, source
     basis.repairRate === null ? null : `Reparos: ${repairText(input, basis.repairRate)}.`,
     basis.documentation === "listing"
       ? `Documentação: despachante ${fromListing}.`
-      : `Documentação: padrão ${formatBRL(DEFAULT_COSTS.documentation)}.`,
+      : `Documentação: padrão ${formatBRL(docDefault)}.`,
     basis.transport === "listing"
       ? `Transporte: remoção ${fromListing}.`
       : basis.transport === "distance" && basis.roadKm === 0
-        ? `Transporte: pátio no mesmo município, só a saída do guincho (${formatBRL(DEFAULT_COSTS.towBase)}).`
+        ? `Transporte: pátio no mesmo município, só a saída do guincho (${formatBRL(towBase)}).`
         : basis.transport === "distance" && basis.roadKm !== null
-          ? `Transporte: guincho ${formatBRL(DEFAULT_COSTS.towBase)} + ${formatBRL(DEFAULT_COSTS.towPerKm)}/km × ` +
+          ? `Transporte: guincho ${formatBRL(towBase)} + ${formatBRL(towPerKm)}/km × ` +
             `${basis.roadKm} km de estrada estimados até o pátio.`
-          : `Transporte: local do pátio desconhecido, guincho padrão ${formatBRL(DEFAULT_COSTS.towUnknownDistance)}.`,
+          : `Transporte: local do pátio desconhecido, guincho padrão ${formatBRL(towUnknown)}.`,
     `Pneus e revisão: padrão para ${vehicle}.`,
     basis.otherFees === "listing"
       ? `Outras taxas: depósito, vistoria e outras ${fromListing}.`

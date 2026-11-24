@@ -5,7 +5,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 
 import { Alert, AlertDescription, Button, toast } from "@/components/ui";
 import type { CommissionMode } from "@/domain/finance/calculator";
-import { estimateFromFipe } from "@/domain/finance/defaults";
+import { estimateFromFipe, type UserDefaultOverrides } from "@/domain/finance/defaults";
 import { type Cents, parseBRL } from "@/domain/money";
 import type { LotMarketReference } from "@/features/research/types";
 import { fieldValue, idleState } from "@/lib/action-state";
@@ -28,7 +28,15 @@ const AUTOSAVE_DELAY_MS = 1500;
 const centsToInput = (value: Cents | null) => (value === null ? undefined : formatMoneyInput(value));
 
 /** Rascunho da análise (SPEC `/analise/[id]`, RF-04): formulário + resumo ao vivo. */
-export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail; market: LotMarketReference | null }) {
+export function AnalysisEditor({
+  analysis,
+  market,
+  costOverrides,
+}: {
+  analysis: AnalysisDetail;
+  market: LotMarketReference | null;
+  costOverrides?: UserDefaultOverrides;
+}) {
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, pending] = useActionState(saveAnalysisAction.bind(null, analysis.id), idleState);
   const [inputs, setInputs] = useState(analysis.inputs);
@@ -132,7 +140,7 @@ export function AnalysisEditor({ analysis, market }: { analysis: AnalysisDetail;
       toast.error("Informe a FIPE para estimar.");
       return;
     }
-    const estimate = estimateFromFipe({ fipe, ...analysis.vehicle });
+    const estimate = estimateFromFipe({ fipe, ...analysis.vehicle }, costOverrides);
     if (estimate.marketValue === null || estimate.repairCost === null || estimate.saleDiscount === null) {
       toast.error("Sucata não tem valor de venda padrão. Informe o valor de venda e os reparos.");
       return;
