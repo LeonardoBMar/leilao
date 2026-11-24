@@ -109,7 +109,7 @@ O projeto possui a fundação em Next.js 16, Tailwind CSS 4, Radix UI, `motion` 
 
 - Em 21/11/2026 o usuário escolheu a direção **v3.0 — "Cirúrgico & Monocromático"** (Precision Workbench claro estilo Linear Light), substituindo a antiga Direção A (papel quente `#F7F7F4`, Hanken Grotesk e sidebar fixa de `296px`).
 - Fontes obrigatórias: **Inter** (`cv02`, `cv03`, `cv04`, `cv11`) na interface e **JetBrains Mono** em códigos (número do lote, atalhos `⌘K`, identificadores).
-- Casca arquitetônica de borda a borda: **Sidebar colapsável** (`264px` expandida ↔ `56px` só ícones, atalho `Ctrl+B`) em `#FAFAFB` com **header próprio de `48px`** (marca + botão de recolher/expandir), e **Header fixo de `48px` à direita da sidebar** sobre o canvas branco puro (`#FFFFFF`) com o contexto da seção e salto rápido `⌘K`, separados por linhas hairline (`#EAECEF`).
+- Casca arquitetônica de borda a borda: **Sidebar colapsável** (`264px` expandida ↔ `56px` só ícones, atalho `Ctrl+B`) em `#FAFAFB` com **header próprio de `56px`** (marca e botão de recolher/expandir centralizado sobre a divisória entre sidebar e header), e **Header fixo de `56px` à direita da sidebar** sobre o canvas branco puro (`#FFFFFF`) com breadcrumb clicável à esquerda, salto rápido `⌘K` centralizado e central de notificações + menu da conta à direita, separados por linhas hairline (`#EAECEF`).
 - Paleta acromática cirúrgica: ação principal em **tinta** (`#111318`). Cor aparece apenas no **veredicto financeiro** (`#047857` esmeralda / `#BE123C` carmesim / `#92400E` âmbar), em foco/links (`#1D4ED8`) e na escala sequencial dos gráficos de Mercado.
 - Acabamento guiado pelo combo de skills do projeto (`impeccable`, `emil-design-eng`, skills de Jakub Krehel, `web-design-guidelines`, `frontend-design` e `modern-web-guidance`): curvas customizadas (`--ease-out`, `--ease-drawer`), `active:scale-[0.97]`, popovers orientados pelo gatilho, zero animação em ações de teclado (`⌘K`, `Ctrl+B`), `text-wrap: balance/pretty`, `line-height` sem unidade, `overscroll-behavior: contain` em overlays e inputs em `16px` no mobile (`text-base sm:text-body`).
 
@@ -390,9 +390,9 @@ O design é mobile first. Breakpoint indica mudança de composição, não uma c
 
 ### 4.1 Estrutura privada
 
-- Em `lg` ou maior, a sidebar colapsável (`264px` expandida ↔ `56px` recolhida, atalho `Ctrl+B`/`⌘B`) fica sobre `background` (`#FAFAFB`), separada por borda hairline `border`, com header próprio de `48px` (marca + botão recolher/expandir). Na rota `/dashboard`, o grupo `Acompanhando` da sidebar é ocultado para evitar duplicação com a seção principal.
-- A coluna principal à direita traz o header fixo de `48px` sobre `surface` (`#FFFFFF`) com contexto de seção (e breadcrumb em sub-rotas) e gatilho da paleta rápida `CommandPalette` (`⌘K`/`Ctrl K`), seguido pelo canvas em `surface` (`#FFFFFF`).
-- Abaixo de `lg`, o mesmo header fixo de `48px` traz o menu em gaveta (`MobileNav`), a marca e o gatilho da paleta rápida.
+- Em `lg` ou maior, a sidebar colapsável (`264px` expandida ↔ `56px` recolhida, atalho `Ctrl+B`/`⌘B`) fica sobre `background` (`#FAFAFB`), separada por borda hairline `border`, com header próprio de `56px` (marca e botão recolher/expandir centralizado sobre a linha divisória). Na rota `/dashboard`, o grupo `Acompanhando` da sidebar é ocultado para evitar duplicação com a seção principal.
+- A coluna principal à direita traz o header fixo de `56px` sobre `surface` (`#FFFFFF`) com breadcrumb clicável à esquerda, gatilho da paleta rápida `CommandPalette` (`⌘K`/`Ctrl K`) centralizado e notificações (falhas de coleta + novos alertas) + menu da conta (Preferências e Sair) à direita, seguido pelo canvas em `surface` (`#FFFFFF`).
+- Abaixo de `lg`, o mesmo header fixo de `56px` traz o menu em gaveta (`MobileNav`), a marca, o gatilho da paleta rápida, as notificações e o menu da conta.
 - A área de conteúdo usa largura máxima de `1440px` (`max-w-360`), centralizada na coluna principal.
 - Padding horizontal: `16px` no mobile (`px-4`), `24px` em `md` (`px-6`) e `32px` em `lg` (`px-8`).
 - Padding vertical da página: `24px` no mobile (`py-6`) e `28px` no desktop `lg` (`py-7`).
@@ -707,9 +707,9 @@ Ordem inicial:
 7. Grupo **Acompanhando**: até 5 lotes acompanhados sem resultado, com um ponto pela situação do lance (`success` abaixo, `warning` no limite, `error` acima, `muted-subtle` sem comparação; o texto da situação vai para leitores de tela) e o número do lote em mono. Some quando não há nenhum.
 8. Espaço flexível.
 9. Cartão **Próximo leilão** (véu de 3% de tinta, `radius-lg`): data e hora, nome e quantidade de lotes; leva ao leilão. Some sem leilão próximo.
-10. Conta: avatar neutro, e-mail e botão só com ícone "Sair".
 
-- A sidebar fica sobre o papel (`background`), sem borda; um divisor `border-strong` separa a conta.
+- A conta (avatar com dropdown de Preferências e Sair) e a central de notificações (falhas de coleta + novos alertas) ficam no canto direito do header fixo (`56px`).
+- A sidebar fica sobre o papel (`background`), separada por borda hairline `border`.
 - Item: altura mínima de 36 px, `radius-md`, 1 px entre itens, ícone 16 px em `muted-subtle`, texto `body` peso 500 em `foreground-secondary`.
 - Ativo: fundo `primary-subtle` (sem borda nem sombra), texto e ícone em tinta, peso 600; mantém a mesma cor no hover.
 - Hover: fundo `primary-subtle` a 60%, texto e ícone em tinta.
