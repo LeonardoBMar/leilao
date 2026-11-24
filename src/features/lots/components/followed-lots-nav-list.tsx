@@ -59,18 +59,18 @@ function LotSection({ items, totalCount, hasMore, pathname }: FollowedLotsNavLis
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
         aria-controls={listId}
-        className="group flex h-7 w-full items-center gap-1.5 rounded-md px-2.5 text-left text-overline font-medium text-muted-subtle transition-colors duration-150 ease-[var(--ease-out)] outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent"
+        className="group flex min-h-10 w-full items-center gap-1.5 rounded-md px-2.5 text-left text-overline font-medium text-muted transition-colors duration-150 ease-[var(--ease-out)] outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent motion-reduce:transition-none lg:min-h-7 pointer-coarse:min-h-11"
       >
         <ChevronRight
           aria-hidden="true"
           strokeWidth={1.75}
           className={cn(
-            "size-3 shrink-0 text-muted-subtle opacity-60 transition-[transform,opacity] duration-150 ease-[var(--ease-out)] group-hover:opacity-100",
+            "size-3 shrink-0 text-muted-subtle transition-transform duration-150 ease-[var(--ease-out)] group-hover:text-foreground motion-reduce:transition-none",
             open && "rotate-90",
           )}
         />
         <span>Acompanhando</span>
-        <span className="ml-auto font-mono text-caption font-normal text-muted-subtle tabular-nums">{totalCount}</span>
+        <span className="ml-auto font-mono text-caption font-normal text-muted tabular-nums">{totalCount}</span>
       </button>
 
       {open ? (
@@ -85,7 +85,7 @@ function LotSection({ items, totalCount, hasMore, pathname }: FollowedLotsNavLis
                     href={href}
                     aria-current={isActive ? "page" : undefined}
                     className={cn(
-                      "flex min-h-9 items-center gap-2.5 rounded-md px-2.5 text-label font-medium text-foreground-secondary transition-colors duration-120 outline-none hover:bg-primary-subtle/70 hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent",
+                      "flex min-h-10 items-center gap-2.5 rounded-md px-2.5 text-label font-medium text-foreground-secondary transition-colors duration-120 outline-none hover:bg-primary-subtle/70 hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent motion-reduce:transition-none lg:min-h-9 pointer-coarse:min-h-11",
                       isActive &&
                         "bg-surface font-semibold text-foreground shadow-xs ring-1 ring-border/80 ring-inset hover:bg-surface",
                     )}
@@ -115,7 +115,7 @@ function LotSection({ items, totalCount, hasMore, pathname }: FollowedLotsNavLis
           {hasMore ? (
             <Link
               href="/minhas-analises?acompanhados=1&resultado=sem"
-              className="inline-flex min-h-9 items-center rounded-md px-2.5 text-caption text-muted outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent sm:min-h-7"
+              className="inline-flex min-h-10 items-center rounded-md px-2.5 text-caption text-muted outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent lg:min-h-7 pointer-coarse:min-h-11"
             >
               Ver todos
             </Link>
