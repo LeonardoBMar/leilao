@@ -33,7 +33,9 @@ describe("tls extra intermediate CAs", () => {
       expect(afterSecond.length).toBe(afterFirst.length);
       for (const pem of EXTRA_INTERMEDIATE_CAS) {
         const fingerprint = new X509Certificate(pem).fingerprint256;
-        expect(afterFirst.some((installed) => new X509Certificate(installed).fingerprint256 === fingerprint)).toBe(true);
+        expect(afterFirst.some((installed) => new X509Certificate(installed).fingerprint256 === fingerprint)).toBe(
+          true,
+        );
       }
     } finally {
       setDefaultCACertificates(before);
