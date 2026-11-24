@@ -1,4 +1,5 @@
 import { Radar } from "lucide-react";
+import Link from "next/link";
 
 import { Badge, Skeleton } from "@/components/ui";
 import type { CollectorHealth } from "@/domain/listings/health";
@@ -48,11 +49,11 @@ export async function CollectorStatusLine({ compact = false }: { compact?: boole
       {lastFinishedAt ? (
         <>
           <span aria-hidden="true">·</span>
-          <span className="tabular-nums">
+          <Link href="/sistema" className="tabular-nums hover:text-foreground hover:underline">
             {compact
               ? `Coleta ${formatCompactDateTime(lastFinishedAt)}`
               : `Última coleta em ${formatDateTime(lastFinishedAt)}`}
-          </span>
+          </Link>
         </>
       ) : null}
       {badge ? (

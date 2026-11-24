@@ -1,6 +1,6 @@
 import "server-only";
 
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { cache } from "react";
 
 import { DEFAULT_CATEGORIES, type ListingCriteria } from "@/domain/listings/criteria";
@@ -198,6 +198,7 @@ export async function countOpenListings(criteria: ListingCriteria): Promise<numb
 async function loadCollectorStatusCached(): Promise<CollectorStatus> {
   "use cache";
   cacheLife("catalog");
+  cacheTag("collector-status");
   const now = new Date();
 
   const [sources, openInRegion] = await Promise.all([
