@@ -166,6 +166,10 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     function onKeyDown(event: KeyboardEvent) {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
+        if (open) {
+          setQuery("");
+          setSelectedIndex(0);
+        }
         onOpenChange(!open);
       }
     }

@@ -50,7 +50,7 @@ test.describe("navegação instantânea", () => {
       async () => {
         await page.getByRole("link", { name: "Calibração" }).click();
         await page.waitForURL((url) => url.pathname === "/mercado/calibracao");
-        await expect(page.getByRole("link", { name: "Calibração" })).toBeVisible();
+        await expect(page.getByRole("link", { name: "Calibração" })).toHaveAttribute("aria-current", "page");
       },
       { baseURL },
     );
