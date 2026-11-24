@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 
 import { ScatterPlot } from "@/components/charts/scatter-plot";
 import {
+  Alert,
+  AlertDescription,
   Badge,
   ButtonLink,
   Card,
@@ -78,10 +80,12 @@ export function CalibrationView({ items }: { items: readonly CalibrationEntry[] 
   return (
     <div className="grid gap-6">
       {items.length < MIN_CALIBRATION_RESULTS ? (
-        <p className="rounded-md border border-border bg-surface-subtle px-4 py-3 text-body text-muted">
-          Poucos resultados ({items.length} de {MIN_CALIBRATION_RESULTS}): os números abaixo ainda mudam muito a cada
-          lote.
-        </p>
+        <Alert variant="info">
+          <AlertDescription className="tabular-nums">
+            Poucos resultados ({items.length} de {MIN_CALIBRATION_RESULTS}): os números abaixo ainda mudam muito a cada
+            lote.
+          </AlertDescription>
+        </Alert>
       ) : null}
       <section aria-label="Resumo" className="grid gap-3 md:grid-cols-2">
         {hit === null ? (
@@ -127,7 +131,7 @@ export function CalibrationView({ items }: { items: readonly CalibrationEntry[] 
                   <TableCell className="text-right tabular-nums">
                     {group.band.rate === null ? "—" : `${group.band.inside} de ${group.band.n}`}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right tabular-nums">
                     {group.limit.medianDeviation === null ? "—" : deviationLabel(group.limit.medianDeviation)}
                   </TableCell>
                 </TableRow>
@@ -335,7 +339,7 @@ export function EngineQualityBlock({ data }: { data: EngineQualityData }) {
       description={`Teste com as vendas do catálogo desde ${formatDate(latest.from)}, atualizado em ${formatDate(latest.computedAt)}.`}
       actions={<Badge variant="default">{source === "auto" ? "Automático" : "Estático"}</Badge>}
     >
-      <p className="max-w-3xl text-body text-foreground">
+      <p className="max-w-3xl text-body text-foreground tabular-nums">
         Cada venda foi estimada só com as vendas de dias anteriores a ela. O preço provável saiu em{" "}
         {formatRatio(total.estimated / Math.max(1, total.total))} de {total.total.toLocaleString("pt-BR")} vendas; o
         arremate caiu dentro da faixa típica em {formatRatio(hitRate)} delas (o esperado é{" "}
@@ -366,8 +370,8 @@ export function EngineQualityBlock({ data }: { data: EngineQualityData }) {
       )}
       {history.length > 1 ? (
         <div className="grid gap-3">
-          <h3 className="text-body font-medium text-foreground">Evolução recente</h3>
-          <Table>
+          <h3 className="text-heading-3 text-foreground">Evolução recente</h3>
+          <Table className="min-w-130">
             <TableHeader>
               <TableRow>
                 <TableHead>Atualizado em</TableHead>
