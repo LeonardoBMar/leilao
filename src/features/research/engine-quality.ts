@@ -1,31 +1,49 @@
-import { z } from "zod";
+import {
+  type EngineQualityReport,
+  engineQualityReportSchema,
+  parseEngineQualityReport,
+} from "@/domain/listings/engine-quality";
 
 import data from "./engine-quality.json";
 
-const summarySchema = z.object({
-  total: z.number().int().nonnegative(),
-  estimated: z.number().int().nonnegative(),
-  hitRate: z.number().nullable(),
-  medianAbsError: z.number().nullable(),
-});
+/**
+ * Qualidade do motor do preço provável (D-76): fallback estático gravado pelo script
+ * (`npm run db:estimate-backtest -- --write`) quando `engine_quality_snapshots` ainda não tem registros.
+ */
+export const engineQualitySchema = engineQualityReportSchema;
+
+export type EngineQuality = EngineQualityReport;
+
+export type EngineQualitySource = "auto" | "static";
+
+export type EngineQualityData = {
+  source: EngineQualitySource;
+  latest: EngineQualityReport;
+  history: EngineQualityReport[];
+};
+
+/** O resumo gravado no arquivo estático; formato desconhecido vira `null` (a aba omite a seção). */
+export function readEngineQuality(value: unknown = data): EngineQuality | null {
+  return parseEngineQualityReport(value);
+}
 
 /**
- * Qualidade do motor do preço provável (D-76): o resumo do backtest (`npm run db:estimate-backtest -- --write`), que
- * estima cada venda só com as vendas de dias anteriores. Fica num arquivo versionado, atualizado pelo script e levado
- * no commit; a data diz de quando é.
+ * Monta os dados de qualidade a partir dos snapshots do banco, fazendo fallback automático para o
+ * arquivo estático quando não há nenhum snapshot válido gravado.
  */
-export const engineQualitySchema = z.object({
-  version: z.literal(1),
-  computedAt: z.coerce.date(),
-  from: z.coerce.date(),
-  total: summarySchema,
-  byConfidence: z.object({ high: summarySchema, medium: summarySchema, low: summarySchema }).partial(),
-});
-
-export type EngineQuality = z.infer<typeof engineQualitySchema>;
-
-/** O resumo gravado; formato desconhecido vira `null` (a aba omite a seção). */
-export function readEngineQuality(value: unknown = data): EngineQuality | null {
-  const parsed = engineQualitySchema.safeParse(value);
-  return parsed.success ? parsed.data : null;
+export function resolveEngineQualityData(
+  payloads: readonly unknown[],
+  fallbackValue: unknown = data,
+): EngineQualityData | null {
+  const history = payloads.flatMap((payload) => {
+    const parsed = parseEngineQualityReport(payload);
+    return parsed === null ? [] : [parsed];
+  });
+  const latest = history[0];
+  if (latest !== undefined) {
+    return { source: "auto", latest, history };
+  }
+  const fallback = readEngineQuality(fallbackValue);
+  if (fallback === null) return null;
+  return { source: "static", latest: fallback, history: [fallback] };
 }

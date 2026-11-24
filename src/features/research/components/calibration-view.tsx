@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { ScatterPlot } from "@/components/charts/scatter-plot";
 import {
+  Badge,
   ButtonLink,
   Card,
   EmptyState,
@@ -28,7 +29,7 @@ import {
 import { niceRange } from "@/lib/charts";
 import { formatBRL, formatCompactBRL, formatDate, formatRatio } from "@/lib/format";
 
-import { readEngineQuality } from "../engine-quality";
+import type { EngineQualityData } from "../engine-quality";
 import {
   BAND_PLACEMENT_LABELS,
   bandHitSentence,
@@ -37,7 +38,7 @@ import {
   limitSentence,
   listingCategoryLabel,
 } from "../labels";
-import { ResearchBlock } from "./research-block";
+import { ResearchBlock, ResearchBlockSkeleton } from "./research-block";
 
 /** Item de calibração recebido pela visão; desacoplado de `features/analyses`. */
 export type CalibrationEntry = CalibrationInput & {
@@ -313,13 +314,12 @@ function LimitChart({ items }: { items: readonly CalibrationEntry[] }) {
 }
 
 /**
- * Qualidade do motor (D-76): o backtest do preço provável em linguagem simples, com a data do arquivo gravado pelo
- * script. Independe dos resultados do usuário.
+ * Qualidade do motor (D-76): o backtest do preço provável em linguagem simples, lido dos snapshots gravados pelo
+ * coletor (com fallback para o arquivo estático). Independe dos resultados do usuário.
  */
-export function EngineQualityBlock() {
-  const quality = readEngineQuality();
-  if (quality === null) return null;
-  const { total, byConfidence } = quality;
+export function EngineQualityBlock({ data }: { data: EngineQualityData }) {
+  const { latest, history, source } = data;
+  const { total, byConfidence } = latest;
   const { hitRate, medianAbsError } = total;
   if (hitRate === null || medianAbsError === null) return null;
   const levels = (["high", "medium", "low"] as const).flatMap((level) => {
@@ -332,7 +332,12 @@ export function EngineQualityBlock() {
     <ResearchBlock
       id="calibracao-motor"
       title="Qualidade do preço provável"
-      description={`Teste com as vendas do catálogo desde ${formatDate(quality.from)}, atualizado em ${formatDate(quality.computedAt)}.`}
+      description={`Teste com as vendas do catálogo desde ${formatDate(latest.from)}, atualizado em ${formatDate(latest.computedAt)} (${source === "auto" ? "automático" : "estático"}).`}
+      actions={
+        <Badge variant={source === "auto" ? "primary" : "default"}>
+          {source === "auto" ? "Automático" : "Estático"}
+        </Badge>
+      }
     >
       <p className="max-w-3xl text-body text-foreground">
         Cada venda foi estimada só com as vendas de dias anteriores a ela. O preço provável saiu em{" "}
@@ -363,8 +368,47 @@ export function EngineQualityBlock() {
           </TableBody>
         </Table>
       )}
+      {history.length > 1 ? (
+        <div className="grid gap-3">
+          <h3 className="text-body font-medium text-foreground">Evolução recente</h3>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Atualizado em</TableHead>
+                <TableHead className="text-right">Vendas</TableHead>
+                <TableHead className="text-right">Cobertura</TableHead>
+                <TableHead className="text-right">Dentro da faixa</TableHead>
+                <TableHead className="text-right">Erro da mediana</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {history.map((snapshot) => (
+                <TableRow key={snapshot.computedAt.toISOString()}>
+                  <TableCell className="tabular-nums">{formatDate(snapshot.computedAt)}</TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {snapshot.total.total.toLocaleString("pt-BR")}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {formatRatio(snapshot.total.estimated / Math.max(1, snapshot.total.total))}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {snapshot.total.hitRate === null ? "—" : formatRatio(snapshot.total.hitRate)}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {snapshot.total.medianAbsError === null ? "—" : formatRatio(snapshot.total.medianAbsError)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      ) : null}
     </ResearchBlock>
   );
+}
+
+export function EngineQualityBlockSkeleton() {
+  return <ResearchBlockSkeleton title="Qualidade do preço provável" className="h-48" />;
 }
 
 export function CalibrationViewSkeleton() {
