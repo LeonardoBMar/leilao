@@ -185,10 +185,15 @@ export type FacetListing = Pick<
   "sourceId" | "title" | "brand" | "model" | "fipeName" | "category" | "origin" | "fuel"
 >;
 
+/** Texto normalizado de busca do anúncio (D-91): mesma regra gravada em `listings.search_text` e usada nos monitores. */
+export function listingSearchText(listing: Pick<FacetListing, "title" | "brand" | "model" | "fipeName">): string {
+  return toSearchText([listing.title, listing.brand, listing.model, listing.fipeName].join(" "));
+}
+
 export function matchesSearch(search: string | null, listing: FacetListing): boolean {
   const tokens = searchTokens(search);
   if (tokens.length === 0) return true;
-  const haystack = toSearchText([listing.title, listing.brand, listing.model, listing.fipeName].join(" "));
+  const haystack = listingSearchText(listing);
   return tokens.every((token) => haystack.includes(token));
 }
 

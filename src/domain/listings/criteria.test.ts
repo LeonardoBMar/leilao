@@ -8,6 +8,7 @@ import {
   fuelOf,
   isOpenAt,
   type ListingCriteria,
+  listingSearchText,
   marketRatioBps,
   type MatchableListing,
   matchesCriteria,
@@ -66,6 +67,19 @@ describe("searchTokens", () => {
     expect(searchTokens("HB20/Comfort")).toEqual(["HB20", "COMFORT"]);
     expect(searchTokens("")).toEqual([]);
     expect(searchTokens(null)).toEqual([]);
+  });
+});
+
+describe("listingSearchText", () => {
+  it("normaliza título, marca, modelo e FIPE sem acento para paridade com a busca", () => {
+    expect(
+      listingSearchText({
+        title: "Citroën C3 Tendânce 1.5",
+        brand: "Citroën",
+        model: "C3",
+        fipeName: "Caminhão Furgão Mégane",
+      }),
+    ).toBe("CITROEN C3 TENDANCE 1 5 CITROEN C3 CAMINHAO FURGAO MEGANE");
   });
 });
 
