@@ -1,13 +1,14 @@
 import "server-only";
 
 import { listingSearchText } from "@/domain/listings/criteria";
+import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/server/db";
 
 const READ_BATCH = 500;
 
 /**
  * Recalcula `listings.search_text` (D-91) em todo o catálogo via cursor de `id`.
- * Idempotente: só atualiza anúncios cujo texto normalizado mudou.
+ * Idempotente: só atualiza anúncios cujo texto normalizado mudou, em um único UPDATE em lote por página (`unnest`).
  */
 export async function backfillSearchText(): Promise<{ scanned: number; updated: number }> {
   let cursor: string | undefined;
@@ -30,9 +31,14 @@ export async function backfillSearchText(): Promise<{ scanned: number; updated: 
       return next === row.searchText ? [] : [{ id: row.id, searchText: next }];
     });
     if (changed.length > 0) {
-      await db.$transaction(
-        changed.map(({ id, searchText }) => db.listing.update({ where: { id }, data: { searchText } })),
-      );
+      const ids = changed.map((item) => item.id);
+      const texts = changed.map((item) => item.searchText);
+      await db.$executeRaw(Prisma.sql`
+        UPDATE listings l
+        SET search_text = v.search_text
+        FROM unnest(${ids}::uuid[], ${texts}::text[]) AS v(id, search_text)
+        WHERE l.id = v.id
+      `);
       updated += changed.length;
     }
   }
