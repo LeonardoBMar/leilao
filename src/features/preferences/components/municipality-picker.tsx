@@ -1,7 +1,7 @@
 "use client";
 
 import { MapPin, X } from "lucide-react";
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { Button, Field, FieldDescription, FieldError, FieldLabel, Spinner } from "@/components/ui";
 import { DEFAULT_REGION } from "@/domain/listings/region";
@@ -28,7 +28,15 @@ export function MunicipalityPicker({ initialIbgeCode, initialLabel, error }: Mun
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestSeqRef = useRef(0);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (blurTimerRef.current) clearTimeout(blurTimerRef.current);
+    };
+  }, []);
 
   function handleQueryChange(next: string) {
     setQuery(next);
@@ -103,8 +111,11 @@ export function MunicipalityPicker({ initialIbgeCode, initialLabel, error }: Mun
           onFocus={() => {
             if (results.length > 0) setOpen(true);
           }}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") setOpen(false);
+          }}
           onBlur={() => {
-            setTimeout(() => setOpen(false), 150);
+            blurTimerRef.current = setTimeout(() => setOpen(false), 150);
           }}
           placeholder={`Padrão: ${DEFAULT_REGION.label} (digite cidade ou cidade/UF)`}
           className={cn(

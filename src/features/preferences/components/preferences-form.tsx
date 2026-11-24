@@ -41,10 +41,21 @@ type PreferencesFormProps = {
 export function PreferencesForm({ preferences }: PreferencesFormProps) {
   const [saveState, saveAction, savePending] = useActionState(saveUserPreferencesAction, idleState);
   const [resetState, resetAction, resetPending] = useActionState(resetUserPreferencesAction, idleState);
+  const [lastAction, setLastAction] = useState<"save" | "reset" | null>(null);
   const [confirmResetOpen, setConfirmResetOpen] = useState(false);
 
   const { raw } = preferences;
-  const activeAlert = resetState.status !== "idle" ? resetState : saveState.status !== "idle" ? saveState : null;
+  const activeAlert =
+    lastAction === "reset"
+      ? resetState.status !== "idle"
+        ? resetState
+        : null
+      : lastAction === "save"
+        ? saveState.status !== "idle"
+          ? saveState
+          : null
+        : null;
+  const formResetKey = raw.updatedAt?.toISOString() ?? "default";
 
   return (
     <div className="grid gap-8">
@@ -60,7 +71,7 @@ export function PreferencesForm({ preferences }: PreferencesFormProps) {
         </Alert>
       ) : null}
 
-      <form action={saveAction} className="grid gap-8">
+      <form key={formResetKey} action={saveAction} onSubmit={() => setLastAction("save")} className="grid gap-8">
         <Section>
           <SectionHeader>
             <SectionTitle>Região base</SectionTitle>
@@ -251,7 +262,7 @@ export function PreferencesForm({ preferences }: PreferencesFormProps) {
             <Button type="button" variant="secondary" onClick={() => setConfirmResetOpen(false)}>
               Cancelar
             </Button>
-            <form action={resetAction}>
+            <form action={resetAction} onSubmit={() => setLastAction("reset")}>
               <Button
                 type="submit"
                 variant="destructive"
