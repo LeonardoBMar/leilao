@@ -213,11 +213,49 @@ export function AppShell({
           ) : null}
         </div>
 
+        {/* Gatilho da paleta de comandos integrado ao topo da sidebar (padrão Linear/Attio) */}
+        <div className="shrink-0 px-2.5 pt-2 pb-1">
+          {collapsed ? (
+            <Tooltip delayDuration={180}>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => setCommandOpen(true)}
+                  aria-label={isMac ? "Ir para tela ou buscar (⌘K)" : "Ir para tela ou buscar (Ctrl+K)"}
+                  aria-keyshortcuts="Control+K Meta+K"
+                  className="flex h-9 w-full items-center justify-center rounded-md border border-border bg-surface text-muted shadow-xs transition-[background-color,border-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:border-border-strong hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
+                >
+                  <Search aria-hidden="true" strokeWidth={1.75} className="size-4 shrink-0" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={10}>
+                Buscar ({isMac ? "⌘K" : "Ctrl+K"})
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setCommandOpen(true)}
+              aria-label={isMac ? "Ir para tela ou buscar (⌘K)" : "Ir para tela ou buscar (Ctrl+K)"}
+              aria-keyshortcuts="Control+K Meta+K"
+              className="flex h-8 w-full items-center justify-between gap-2 rounded-md border border-border bg-surface px-2.5 text-label text-muted shadow-xs transition-[background-color,border-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:border-border-strong hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100"
+            >
+              <span className="inline-flex min-w-0 items-center gap-2">
+                <Search aria-hidden="true" strokeWidth={1.75} className="size-3.5 shrink-0 text-muted-subtle" />
+                <span className="truncate">Buscar…</span>
+              </span>
+              <kbd className="shrink-0 rounded-sm border border-border bg-background px-1.5 py-0.5 font-mono text-caption leading-none text-muted">
+                {isMac ? "⌘K" : "Ctrl K"}
+              </kbd>
+            </button>
+          )}
+        </div>
+
         {/* Padding lateral fixo (px-2.5 = 10px) mantém os ícones ancorados no mesmo eixo X durante a animação */}
         <div
           id="sidebar-nav"
           className={cn(
-            "flex min-h-0 flex-1 flex-col gap-5 overflow-x-hidden overflow-y-auto overscroll-contain px-2.5 py-3",
+            "flex min-h-0 flex-1 flex-col gap-5 overflow-x-hidden overflow-y-auto overscroll-contain px-2.5 py-2.5",
             !collapsed && "[scrollbar-gutter:stable]",
           )}
         >
@@ -247,9 +285,9 @@ export function AppShell({
 
       {/* Coluna principal encaixada (Inset Canvas no desktop lg+) */}
       <div className="flex min-h-dvh min-w-0 flex-1 flex-col lg:h-dvh lg:min-h-0 lg:p-2 lg:pl-0">
-        <div className="flex min-h-dvh min-w-0 flex-1 flex-col bg-surface lg:min-h-0 lg:scroll-pt-14 lg:overflow-y-auto lg:rounded-xl lg:border lg:border-border lg:shadow-xs">
-          <header className="sticky top-0 z-30 h-14 shrink-0 border-b border-border bg-surface">
-            <div className="mx-auto grid h-full w-full max-w-360 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:px-6 lg:px-8">
+        <div className="flex min-h-dvh min-w-0 flex-1 flex-col bg-surface lg:min-h-0 lg:scroll-pt-12 lg:overflow-y-auto lg:rounded-xl lg:border lg:border-border lg:shadow-xs">
+          <header className="sticky top-0 z-30 h-12 shrink-0 border-b border-border bg-surface">
+            <div className="mx-auto flex h-full w-full max-w-360 items-center justify-between gap-3 px-4 md:px-6 lg:px-8">
               <div className="flex min-w-0 items-center gap-2.5">
                 <div className="flex min-w-0 items-center gap-2 lg:hidden">
                   <MobileNav badges={badges} followed={followed} nextAuction={nextAuction} />
@@ -280,25 +318,7 @@ export function AppShell({
                 </Suspense>
               </div>
 
-              <div className="hidden justify-center md:flex">
-                <button
-                  type="button"
-                  onClick={() => setCommandOpen(true)}
-                  aria-label={isMac ? "Ir para tela ou buscar (⌘K)" : "Ir para tela ou buscar (Ctrl+K)"}
-                  aria-keyshortcuts="Control+K Meta+K"
-                  className="inline-flex h-9 w-72 items-center justify-between gap-3 rounded-full border border-border bg-background/80 px-3.5 text-label text-muted transition-[background-color,border-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:border-border-strong hover:bg-surface hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100 xl:w-88 pointer-coarse:h-10"
-                >
-                  <span className="inline-flex min-w-0 items-center gap-2">
-                    <Search aria-hidden="true" strokeWidth={1.75} className="size-3.5 shrink-0" />
-                    <span className="truncate">Ir para tela ou buscar…</span>
-                  </span>
-                  <kbd className="shrink-0 rounded-full border border-border bg-surface px-2 py-0.5 font-mono text-caption leading-none text-muted">
-                    {isMac ? "⌘K" : "Ctrl K"}
-                  </kbd>
-                </button>
-              </div>
-
-              <div className="flex items-center justify-end gap-1.5 sm:gap-2">
+              <div className="flex shrink-0 items-center justify-end gap-1.5 sm:gap-2">
                 <Button
                   type="button"
                   variant="ghost"
@@ -306,7 +326,7 @@ export function AppShell({
                   onClick={() => setCommandOpen(true)}
                   aria-label={isMac ? "Ir para tela ou buscar (⌘K)" : "Ir para tela ou buscar (Ctrl+K)"}
                   aria-keyshortcuts="Control+K Meta+K"
-                  className="size-10 text-muted hover:text-foreground sm:size-8 md:hidden pointer-coarse:size-10"
+                  className="size-10 text-muted hover:text-foreground sm:size-8 lg:hidden pointer-coarse:size-10"
                 >
                   <Search aria-hidden="true" strokeWidth={1.75} className="size-4" />
                 </Button>
