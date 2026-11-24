@@ -15,6 +15,7 @@ export default function MarketError({ error, retry }: { error: Error & { digest?
         <AlertTitle>Não foi possível carregar o Mercado</AlertTitle>
         <AlertDescription>
           A consulta ao catálogo falhou. Tente novamente ou volte para o início do Mercado com os filtros limpos.
+          {error.digest ? ` Código: ${error.digest}` : null}
         </AlertDescription>
       </Alert>
       <div className="flex flex-wrap gap-2">
