@@ -249,7 +249,7 @@ export function FilterStatusSummary({
       >
         {isPending ? (
           <>
-            <LoaderCircle aria-hidden="true" className="size-4 animate-spin text-muted" />
+            <LoaderCircle aria-hidden="true" className="size-4 animate-spin text-muted motion-reduce:animate-none" />
             <span className="text-muted">Atualizando…</span>
           </>
         ) : (

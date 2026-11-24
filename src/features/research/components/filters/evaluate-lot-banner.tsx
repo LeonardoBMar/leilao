@@ -73,7 +73,13 @@ export function EvaluateLotBanner({
       >
         Ver ficha do lote
       </Link>
-      <Button variant="ghost" size="icon" aria-label="Deixar de comparar com o lote" onClick={onUnlinkLot}>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label="Deixar de comparar com o lote"
+        className="ml-auto"
+        onClick={onUnlinkLot}
+      >
         <X aria-hidden="true" />
       </Button>
     </div>

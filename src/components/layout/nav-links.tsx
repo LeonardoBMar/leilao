@@ -258,7 +258,10 @@ function NavList({
             {systemOpen ? (
               <ul id={systemListId} className="grid gap-0.5 pl-4">
                 {SYSTEM_NAV_ITEMS.map(({ href, label, icon: SubIcon }) => {
-                  const isSubActive = pathname === href;
+                  const isSubActive =
+                    href === "/sistema"
+                      ? pathname === href
+                      : pathname === href || (pathname?.startsWith(`${href}/`) ?? false);
                   return (
                     <li key={href}>
                       <Link
@@ -266,7 +269,7 @@ function NavList({
                         onClick={() => onNavigate?.()}
                         aria-current={isSubActive ? "page" : undefined}
                         className={cn(
-                          "group relative flex h-8 items-center gap-2 rounded-md px-2.5 text-caption font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent",
+                          "group relative flex h-10 items-center gap-2 rounded-md px-2.5 text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent lg:h-9",
                           isSubActive
                             ? "bg-primary-subtle font-semibold text-foreground shadow-[inset_0_0_0_1px_var(--border)]"
                             : "hover:bg-primary-subtle/70 hover:text-foreground",

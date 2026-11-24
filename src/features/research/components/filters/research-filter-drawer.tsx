@@ -27,6 +27,13 @@ export function ResearchFilterDrawer({
   const [draft, setDraft] = useState<ResearchFilters>(filters);
 
   const draftCount = activeResearchFilters(draft, sourceNames).length;
+  const draftChanged =
+    draft.maxKm !== filters.maxKm ||
+    draft.yearFrom !== filters.yearFrom ||
+    draft.yearTo !== filters.yearTo ||
+    draft.state !== filters.state ||
+    draft.source !== filters.source ||
+    draft.period !== filters.period;
 
   return (
     <MoreFiltersDrawer
@@ -43,6 +50,11 @@ export function ResearchFilterDrawer({
         onApply(draft);
       }}
     >
+      {draftChanged ? (
+        <p role="status" className="rounded-md bg-surface-subtle px-3 py-2 text-caption text-muted">
+          As contagens refletem o recorte atual e serão atualizadas ao clicar em Aplicar.
+        </p>
+      ) : null}
       <fieldset className="grid gap-4">
         <legend className="mb-1 text-caption font-semibold text-muted">Veículo</legend>
         <MileageSelect
