@@ -65,7 +65,8 @@ let installed = false;
 export function installExtraCaCertificates(): void {
   if (installed) return;
   const current = getCACertificates("default");
-  const missing = EXTRA_INTERMEDIATE_CAS.filter((pem) => !current.includes(pem));
+  const existing = new Set(current.map((cert) => cert.trim()));
+  const missing = EXTRA_INTERMEDIATE_CAS.filter((pem) => !existing.has(pem.trim()));
   if (missing.length > 0) {
     setDefaultCACertificates([...current, ...missing]);
   }
