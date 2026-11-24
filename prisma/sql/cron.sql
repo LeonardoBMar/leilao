@@ -1,4 +1,4 @@
--- Disparo da coleta pelo Supabase (D-33): o pg_cron chama a API do GitHub de 12 em 12 horas e dispara o workflow
+-- Disparo da coleta pelo Supabase (D-33): o pg_cron chama a API do GitHub de 4 em 4 horas e dispara o workflow
 -- "Coleta" (.github/workflows/collect.yml). O agendamento do próprio GitHub foi removido para não duplicar execuções
 -- nem consumir a cota mensal do Actions em repositório privado.
 --
@@ -18,10 +18,10 @@ begin
 end
 $$;
 
--- Horário em UTC (00:17 e 12:17 UTC = 21:17 e 09:17 BRT). Mesmo nome = o job existente é atualizado.
+-- Horário em UTC (00:17, 04:17, 08:17, 12:17, 16:17 e 20:17 UTC = 21:17, 01:17, 05:17, 09:17, 13:17 e 17:17 BRT). Mesmo nome = o job existente é atualizado.
 select cron.schedule(
   'leilao-coleta',
-  '17 */12 * * *',
+  '17 */4 * * *',
   $job$
   select net.http_post(
     url := 'https://api.github.com/repos/LeonardoBMar/leilao/actions/workflows/collect.yml/dispatches',

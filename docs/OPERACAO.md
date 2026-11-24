@@ -121,11 +121,11 @@ npm run restore -- backups/<data>
 
 ## 7. Monitoramento e manutenção
 
-- **Coleta automática** (`docs/archive/PLANO-COLETA.md`): workflow **Coleta** no GitHub Actions, de 12 em 12 horas.
+- **Coleta automática** (`docs/archive/PLANO-COLETA.md`): workflow **Coleta** no GitHub Actions, de 4 em 4 horas.
   - **Segredo necessário** em GitHub → Settings → Secrets and variables → Actions: `DATABASE_URL` (pooler, porta 6543, o mesmo valor da Vercel). `DIRECT_URL` não é usado ali: `prisma generate` não conecta ao banco.
   - **Fontes** (D-37): todas as de `src/sources/index.ts`, em paralelo, cada uma com o seu registro em `collector_runs`. O log tem uma linha por fonte e, no fim, a linha dos lotes ligados e alertas. Fonte nova se cadastra em `sources` na primeira execução.
   - **Saúde:** a linha "Última coleta" no dashboard e em Leilões mostra a pior fonte; se uma falhar, o aviso traz o nome dela. Falha aparece ali e em Actions → Coleta.
-  - **Disparo (D-33):** o `pg_cron` do Supabase dispara o workflow de 12 em 12 horas (`prisma/sql/cron.sql`, às 00:17 e 12:17 UTC); o workflow não tem `schedule` próprio para não duplicar execuções na cota mensal do Actions.
+  - **Disparo (D-33):** o `pg_cron` do Supabase dispara o workflow de 4 em 4 horas (`prisma/sql/cron.sql`, às 00:17, 04:17, 08:17, 12:17, 16:17 e 20:17 UTC); o workflow não tem `schedule` próprio para não duplicar execuções na cota mensal do Actions.
     - **Token:** GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → _Generate new token_. Repositório: só `LeonardoBMar/leilao`. Permissão: **Actions: Read and write**, e nada mais. Guarde no Supabase → SQL Editor: `select vault.create_secret('SEU_TOKEN', 'github_workflow_token');`. Para trocar: `select vault.update_secret(id, 'NOVO_TOKEN') from vault.secrets where name = 'github_workflow_token';`. Nunca no repositório nem no chat.
     - **Ativar ou atualizar o agendamento:** `npm run db:cron` (idempotente; falha com aviso se o token não estiver no Vault).
     - **Diagnóstico:** `select jobname, schedule, active from cron.job;`, as execuções em `cron.job_run_details` e as respostas do GitHub em `net._http_response` (204 = disparou; 401 = token inválido ou vencido). O token expira: renove antes da data escolhida, senão a linha "Última coleta" passa a mostrar atraso.

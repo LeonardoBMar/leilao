@@ -3,7 +3,7 @@
 name: Coleta
 
 on:
-  # Disparo pelo pg_cron do Supabase, de 12 em 12 horas (prisma/sql/cron.sql, D-33). Sem `schedule` próprio
+  # Disparo pelo pg_cron do Supabase, de 4 em 4 horas (prisma/sql/cron.sql, D-33). Sem `schedule` próprio
   # para não duplicar execuções na cota mensal do GitHub Actions em repositório privado.
   workflow_dispatch:
     inputs:
