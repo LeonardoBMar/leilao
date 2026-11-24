@@ -161,16 +161,17 @@ function NavList({
                   {label}
                 </span>
                 {badges?.[href] ? (
-                  collapsed ? (
-                    <span
-                      aria-hidden="true"
-                      className="pointer-events-none absolute top-1.5 right-1.5 z-10 size-1.5 rounded-full bg-accent empty:hidden"
-                    />
-                  ) : (
-                    <span className="relative z-10 ml-auto transition-opacity duration-150 empty:hidden">
-                      {badges[href]}
-                    </span>
-                  )
+                  <span
+                    data-collapsed={collapsed ? "true" : "false"}
+                    className={cn(
+                      "z-10 empty:hidden",
+                      collapsed
+                        ? "pointer-events-none absolute top-1.5 right-1.5"
+                        : "relative ml-auto transition-opacity duration-150 motion-reduce:transition-none",
+                    )}
+                  >
+                    {badges[href]}
+                  </span>
                 ) : null}
               </Link>
             );
