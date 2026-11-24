@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, PanelLeftClose, PanelLeftOpen, Search } from "lucide-react";
+import { type LucideIcon, PanelLeftClose, PanelLeftOpen, Search, Settings, SlidersHorizontal } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -12,6 +12,12 @@ import { cn } from "@/lib/utils";
 import { getAdminRoleServerSnapshot, getAdminRoleSnapshot, subscribeAdminRole } from "./admin-role-store";
 import { Brand } from "./brand";
 import { CommandPalette } from "./command-palette";
+import {
+  getCommandItemsServerSnapshot,
+  getCommandItemsSnapshot,
+  type QuickJumpItem,
+  subscribeCommandItems,
+} from "./command-palette-store";
 import { MobileNav } from "./mobile-nav";
 import { NAV_ITEMS, type NavBadges, NavLinks } from "./nav-links";
 import { getSidebarServerSnapshot, getSidebarSnapshot, setSidebarCollapsed, subscribeSidebar } from "./sidebar-store";
@@ -19,13 +25,31 @@ import { getSidebarServerSnapshot, getSidebarSnapshot, setSidebarCollapsed, subs
 type RouteContext = {
   section: string;
   sectionHref: Route;
+  icon: LucideIcon;
   detail: string | null;
+  detailMono?: boolean;
 };
 
-function resolveRouteContext(pathname: string | null, isAdmin: boolean): RouteContext | null {
+function resolveLotBreadcrumb(pathname: string, commandItems: readonly QuickJumpItem[]): string | null {
+  const match = commandItems.find((entry) => pathname === entry.href || pathname.startsWith(`${entry.href}/`));
+  if (!match?.meta) return null;
+  const lotSegment = match.meta.split("·")[0]?.trim();
+  return lotSegment ? lotSegment.toUpperCase() : null;
+}
+
+function resolveRouteContext(
+  pathname: string | null,
+  isAdmin: boolean,
+  commandItems: readonly QuickJumpItem[],
+): RouteContext | null {
   if (!pathname) return null;
   if (pathname === "/sistema/preferencias" && !isAdmin) {
-    return { section: "Preferências", sectionHref: "/sistema/preferencias", detail: null };
+    return {
+      section: "Preferências",
+      sectionHref: "/sistema/preferencias",
+      icon: SlidersHorizontal,
+      detail: null,
+    };
   }
   if (pathname === "/sistema" || pathname.startsWith("/sistema/")) {
     const detail =
@@ -37,6 +61,7 @@ function resolveRouteContext(pathname: string | null, isAdmin: boolean): RouteCo
     return {
       section: "Sistema",
       sectionHref: "/sistema",
+      icon: Settings,
       detail,
     };
   }
@@ -48,6 +73,7 @@ function resolveRouteContext(pathname: string | null, isAdmin: boolean): RouteCo
   if (!item) return null;
 
   let detail: string | null = null;
+  let detailMono = false;
   if (pathname === "/dashboard") detail = null;
   else if (pathname === "/leiloes") detail = "Catálogo";
   else if (pathname === "/leiloes/veiculos") detail = "Todos os veículos";
@@ -57,8 +83,11 @@ function resolveRouteContext(pathname: string | null, isAdmin: boolean): RouteCo
   else if (pathname.includes("/lotes/novo")) detail = "Novo lote";
   else if (pathname.endsWith("/editar")) detail = "Editar";
   else if (pathname.startsWith("/minhas-analises/leiloes/")) detail = "Leilão";
-  else if (pathname.startsWith("/lotes/")) detail = "Ficha do lote";
-  else if (pathname.startsWith("/analise/")) detail = "Análise financeira";
+  else if (pathname.startsWith("/lotes/")) {
+    const lotCode = resolveLotBreadcrumb(pathname, commandItems);
+    detail = lotCode ?? "Ficha do lote";
+    detailMono = lotCode !== null;
+  } else if (pathname.startsWith("/analise/")) detail = "Análise financeira";
   else if (pathname === "/alertas") detail = "Novos lotes";
   else if (pathname === "/monitores") detail = "Monitores";
   else if (pathname === "/monitores/novo") detail = "Novo monitor";
@@ -67,37 +96,59 @@ function resolveRouteContext(pathname: string | null, isAdmin: boolean): RouteCo
   else if (pathname === "/mercado/panorama") detail = "Panorama";
   else if (pathname === "/mercado/calibracao") detail = "Calibração";
 
-  return { section: item.label, sectionHref: item.href, detail };
+  return { section: item.label, sectionHref: item.href, icon: item.icon, detail, detailMono };
 }
 
 function HeaderRouteContext() {
   const pathname = usePathname();
   const isAdmin = useSyncExternalStore(subscribeAdminRole, getAdminRoleSnapshot, getAdminRoleServerSnapshot);
-  const context = resolveRouteContext(pathname, isAdmin);
+  const commandItems = useSyncExternalStore(
+    subscribeCommandItems,
+    getCommandItemsSnapshot,
+    getCommandItemsServerSnapshot,
+  );
+  const context = resolveRouteContext(pathname, isAdmin, commandItems);
   if (!context) return null;
+
+  const SectionIcon = context.icon;
 
   return (
     <nav aria-label="Localização atual" className="hidden min-w-0 items-center lg:flex">
-      <ol className="flex min-w-0 items-center gap-1 text-label">
+      <ol className="flex min-w-0 items-center gap-2 text-label">
         <li className="flex min-w-0 items-center">
           {context.detail ? (
             <Link
               href={context.sectionHref}
               title={context.section}
-              className="truncate rounded-sm text-muted transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent"
+              className="inline-flex min-w-0 items-center gap-1.5 rounded-sm text-muted transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent"
             >
-              {context.section}
+              <SectionIcon aria-hidden="true" strokeWidth={1.75} className="size-3.5 shrink-0 text-muted-subtle" />
+              <span className="truncate">{context.section}</span>
             </Link>
           ) : (
-            <span aria-current="page" title={context.section} className="truncate font-medium text-foreground">
-              {context.section}
+            <span
+              aria-current="page"
+              title={context.section}
+              className="inline-flex min-w-0 items-center gap-1.5 font-medium text-foreground"
+            >
+              <SectionIcon aria-hidden="true" strokeWidth={1.75} className="size-3.5 shrink-0 text-muted" />
+              <span className="truncate">{context.section}</span>
             </span>
           )}
         </li>
         {context.detail ? (
-          <li className="flex min-w-0 items-center gap-1">
-            <ChevronRight aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
-            <span aria-current="page" title={context.detail} className="truncate font-medium text-foreground">
+          <li className="flex min-w-0 items-center gap-2">
+            <span aria-hidden="true" className="shrink-0 font-mono text-caption text-border-strong select-none">
+              /
+            </span>
+            <span
+              aria-current="page"
+              title={context.detail}
+              className={cn(
+                "truncate font-medium text-foreground",
+                context.detailMono && "font-mono text-caption tracking-[0.02em]",
+              )}
+            >
               {context.detail}
             </span>
           </li>
