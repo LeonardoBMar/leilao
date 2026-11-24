@@ -14,10 +14,8 @@ export default function SystemPreferencesPage() {
         title="Preferências"
         description="Região-base para distâncias e alertas, além das premissas padrão usadas nas análises financeiras."
       />
-      <Suspense fallback={null}>
-        <AdminSystemTabs active="preferences" />
-      </Suspense>
       <Suspense fallback={<PreferencesSkeleton />}>
+        <AdminSystemTabs active="preferences" />
         <PreferencesView />
       </Suspense>
     </div>
