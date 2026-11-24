@@ -449,12 +449,12 @@ export function AppShell({
       <div className="flex min-h-dvh min-w-0 flex-1 flex-col lg:h-dvh lg:min-h-0 lg:p-2 lg:pl-0">
         <div
           ref={canvasRef}
-          className="flex min-h-dvh min-w-0 flex-1 flex-col bg-surface lg:min-h-0 lg:scroll-pt-12 lg:overflow-y-auto lg:rounded-xl lg:border lg:border-border lg:shadow-xs"
+          className="flex min-h-dvh min-w-0 flex-1 flex-col bg-surface lg:min-h-0 lg:scroll-pt-12 lg:overflow-y-auto lg:rounded-xl lg:border lg:border-border/55 lg:shadow-sm"
         >
           <header
             className={cn(
               "sticky top-0 z-30 h-12 shrink-0 border-b bg-surface transition-colors duration-150 ease-[var(--ease-out)] motion-reduce:transition-none",
-              scrolled ? "border-border" : "border-border/60",
+              scrolled ? "border-border/80" : "border-border/45",
             )}
           >
             <div className="mx-auto flex h-full w-full max-w-360 items-center justify-between gap-3 px-4 md:px-6 lg:px-8">
