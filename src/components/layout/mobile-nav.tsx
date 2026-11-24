@@ -48,8 +48,8 @@ export function MobileNav({ badges, followed, nextAuction }: MobileNavProps) {
           <Menu aria-hidden="true" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="top-0 left-0 flex h-svh max-h-svh w-74 max-w-[85dvw] translate-x-0 translate-y-0 scale-100 flex-col gap-6 overflow-y-auto rounded-none border-y-0 border-l-0 bg-background px-4 pt-5 pb-4 data-[state=open]:scale-100 starting:scale-100">
-        <div className="pr-10">
+      <DialogContent className="top-0 left-0 flex h-svh max-h-svh w-74 max-w-[85dvw] translate-x-0 translate-y-0 scale-100 flex-col gap-5 overflow-y-auto rounded-none border-y-0 border-l-0 bg-background px-2.5 pt-5 pb-4 data-[state=open]:scale-100 starting:scale-100">
+        <div className="pr-10 pl-1.5">
           <DialogTitle asChild>
             <div>
               <Brand />

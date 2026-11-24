@@ -16,7 +16,7 @@ export function Brand({ href, compact = false, hideLabelOnNarrow = false, classN
   const content = (
     <>
       <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-primary text-white shadow-xs">
-        <Gavel aria-hidden="true" className="size-3.5" />
+        <Gavel aria-hidden="true" strokeWidth={1.75} className="size-3.5" />
       </span>
       <span
         className={cn(
