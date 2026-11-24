@@ -28,6 +28,8 @@ type Options = {
   sleep?: (ms: number) => Promise<void>;
   now?: () => number;
   random?: () => number;
+  /** Limite máximo do corpo da resposta em bytes (padrão 10 MB). */
+  maxBytes?: number;
   /**
    * Fim do tempo da execução (ms desde a época, no relógio de `now`). Depois dele nenhuma requisição sai, nem nova
    * tentativa: a resposta é uma falha na hora. Uma fonte fora do ar não segura a coleta inteira até o job ser morto.
@@ -36,6 +38,7 @@ type Options = {
 };
 
 export const DEADLINE_ERROR = "tempo da execução esgotado";
+const DEFAULT_MAX_BYTES = 10 * 1024 * 1024;
 
 /** Falha que indica site fora do ar ou bloqueando o coletor; 404 e 410 dizem respeito só ao anúncio pedido. */
 export function isSiteFailure(outcome: FetchOutcome): boolean {
@@ -54,6 +57,7 @@ export function createPoliteFetcher({
   minIntervalMs = 1_000,
   timeoutMs = 20_000,
   maxAttempts = 3,
+  maxBytes = DEFAULT_MAX_BYTES,
   userAgent = COLLECTOR_USER_AGENT,
   fetchImpl = fetch,
   sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
@@ -67,6 +71,9 @@ export function createPoliteFetcher({
   let deadlineReached = false;
 
   async function attempt({ url, form }: Request): Promise<FetchOutcome & { retryAfterMs?: number; retry: boolean }> {
+    if (!isAllowedPublicUrl(url)) {
+      return { ok: false, status: null, error: "URL bloqueada pela política do coletor", retry: false };
+    }
     if (deadlineReached || now() >= deadline) {
       deadlineReached = true;
       return { ok: false, status: null, error: DEADLINE_ERROR, retry: false };
@@ -94,7 +101,17 @@ export function createPoliteFetcher({
         // O tempo da requisição também para no fim da execução.
         signal: AbortSignal.timeout(Math.max(1, Math.min(timeoutMs, deadline - now()))),
       });
-      if (response.ok) return { ok: true, text: await response.text(), retry: false };
+      if (response.url && !isAllowedPublicUrl(response.url)) {
+        await response.body?.cancel().catch(() => {});
+        return { ok: false, status: null, error: "redirecionamento bloqueado pela política do coletor", retry: false };
+      }
+      if (response.ok) {
+        const text = await readTextWithLimit(response, maxBytes);
+        if (text === null) {
+          return { ok: false, status: response.status, error: "resposta excede o limite de tamanho", retry: false };
+        }
+        return { ok: true, text, retry: false };
+      }
       return {
         ok: false,
         status: response.status,
@@ -149,4 +166,67 @@ function parseRetryAfter(value: string | null, nowMs: number): number | undefine
   if (Number.isFinite(seconds) && seconds >= 0) return seconds * 1_000;
   const dateMs = Date.parse(value);
   return Number.isFinite(dateMs) ? Math.max(0, dateMs - nowMs) : undefined;
+}
+
+/** Rejeita esquemas não-HTTP(S) e destinos locais/privados (loopback, link-local, RFC 1918 e ULA). */
+function isAllowedPublicUrl(rawUrl: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
+  const host = parsed.hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  if (host === "" || host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local")) return false;
+  if (
+    host === "::1" ||
+    host === "0.0.0.0" ||
+    host.startsWith("fe80:") ||
+    host.startsWith("fc") ||
+    host.startsWith("fd")
+  ) {
+    return false;
+  }
+  const ipv4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host);
+  if (ipv4) {
+    const [a, b] = [Number(ipv4[1]), Number(ipv4[2])];
+    if (a === 0 || a === 10 || a === 127) return false;
+    if (a === 169 && b === 254) return false;
+    if (a === 192 && b === 168) return false;
+    if (a === 172 && b >= 16 && b <= 31) return false;
+  }
+  return true;
+}
+
+/** Lê a resposta como UTF-8 respeitando `maxBytes`; devolve `null` e cancela o stream se ultrapassar. */
+async function readTextWithLimit(response: Response, maxBytes: number): Promise<string | null> {
+  const declared = Number(response.headers.get("content-length"));
+  if (Number.isFinite(declared) && declared > maxBytes) {
+    await response.body?.cancel().catch(() => {});
+    return null;
+  }
+  const reader = response.body?.getReader();
+  if (!reader) {
+    const text = await response.text();
+    return Buffer.byteLength(text, "utf8") <= maxBytes ? text : null;
+  }
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > maxBytes) {
+        await reader.cancel().catch(() => {});
+        return null;
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const decoder = new TextDecoder();
+  return chunks.map((chunk, index) => decoder.decode(chunk, { stream: index < chunks.length - 1 })).join("");
 }

@@ -183,4 +183,57 @@ describe("createPoliteFetcher", () => {
     expect(clock.waits).toEqual([1_000, 2_000]);
     expect(fetcher.requests).toBe(3);
   });
+
+  it("rejeita resposta que excede maxBytes sem consumir memória ilimitada", async () => {
+    const clock = fakeClock();
+    const { impl } = fakeFetch([
+      new Response("x".repeat(20), { headers: { "content-length": "20" } }),
+      new Response("y".repeat(25)),
+    ]);
+    const fetcher = createPoliteFetcher({
+      fetchImpl: impl,
+      sleep: clock.sleep,
+      now: clock.now,
+      minIntervalMs: 0,
+      maxBytes: 10,
+    });
+
+    expect(await fetcher.get("https://fonte/grande-header")).toEqual({
+      ok: false,
+      status: 200,
+      error: "resposta excede o limite de tamanho",
+    });
+    expect(await fetcher.get("https://fonte/grande-stream")).toEqual({
+      ok: false,
+      status: 200,
+      error: "resposta excede o limite de tamanho",
+    });
+  });
+
+  it("bloqueia URLs privadas/locais e redirecionamentos para endereços internos", async () => {
+    const clock = fakeClock();
+    const redirected = new Response("segredo");
+    Object.defineProperty(redirected, "url", { value: "http://169.254.169.254/latest/meta-data" });
+    const { impl, calls } = fakeFetch([redirected]);
+    const fetcher = createPoliteFetcher({ fetchImpl: impl, sleep: clock.sleep, now: clock.now, minIntervalMs: 0 });
+
+    expect(await fetcher.get("http://127.0.0.1:8080/admin")).toEqual({
+      ok: false,
+      status: null,
+      error: "URL bloqueada pela política do coletor",
+    });
+    expect(await fetcher.get("file:///etc/passwd")).toEqual({
+      ok: false,
+      status: null,
+      error: "URL bloqueada pela política do coletor",
+    });
+    expect(calls).toHaveLength(0);
+
+    expect(await fetcher.get("https://fonte/redirect")).toEqual({
+      ok: false,
+      status: null,
+      error: "redirecionamento bloqueado pela política do coletor",
+    });
+    expect(calls).toHaveLength(1);
+  });
 });
