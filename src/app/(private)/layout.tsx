@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui";
 import { NotificationsMenu } from "@/features/alerts/components/notifications-menu";
 import { UnreadAlertsBadge } from "@/features/alerts/components/unread-alerts-badge";
 import { NextAuctionCard } from "@/features/auctions/components/next-auction-card";
+import { AdminRoleBridge } from "@/features/auth/components/admin-role-bridge";
 import { UserMenu } from "@/features/auth/components/user-menu";
 import { FollowedLotsCommandItems } from "@/features/lots/components/followed-lots-command-items";
 import { FollowedLotsNav } from "@/features/lots/components/followed-lots-nav";
@@ -44,9 +45,14 @@ export default function PrivateLayout({ children }: LayoutProps<"/">) {
     </Suspense>
   );
   const commandItems = (
-    <Suspense fallback={null}>
-      <FollowedLotsCommandItems />
-    </Suspense>
+    <>
+      <Suspense fallback={null}>
+        <AdminRoleBridge />
+      </Suspense>
+      <Suspense fallback={null}>
+        <FollowedLotsCommandItems />
+      </Suspense>
+    </>
   );
 
   return (

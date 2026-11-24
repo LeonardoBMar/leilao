@@ -19,10 +19,16 @@ type NotificationsPopoverProps = {
   collectorWarning: CollectorNotification | null;
   alerts: readonly RecentUnreadAlert[];
   unreadTotal: number;
+  isAdmin?: boolean;
 };
 
 /** Central de notificações no header: exibe falhas/atrasos de coleta e novos alertas não lidos. */
-export function NotificationsPopover({ collectorWarning, alerts, unreadTotal }: NotificationsPopoverProps) {
+export function NotificationsPopover({
+  collectorWarning,
+  alerts,
+  unreadTotal,
+  isAdmin = false,
+}: NotificationsPopoverProps) {
   const [open, setOpen] = useState(false);
   const totalCount = unreadTotal + (collectorWarning ? 1 : 0);
   const hasNotifications = totalCount > 0;
@@ -94,29 +100,47 @@ export function NotificationsPopover({ collectorWarning, alerts, unreadTotal }: 
             {collectorWarning ? (
               <div className="grid gap-2 px-4 py-3">
                 <p className="font-mono text-overline text-muted uppercase">Coleta</p>
-                <Link
-                  href="/sistema"
-                  onClick={() => setOpen(false)}
-                  className={cn(
-                    "group flex items-start gap-2.5 rounded-md border p-2.5 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent",
-                    isDestructive
-                      ? "border-error-border bg-error-subtle hover:bg-error-subtle/80"
-                      : "border-warning-border bg-warning-subtle hover:bg-warning-subtle/80",
-                  )}
-                >
-                  <AlertTriangle
-                    aria-hidden="true"
-                    className={cn("mt-0.5 size-4 shrink-0", isDestructive ? "text-error" : "text-warning")}
-                  />
-                  <div className="grid min-w-0 flex-1 gap-0.5">
-                    <span className="text-label font-semibold text-foreground">{collectorWarning.label}</span>
-                    <span className="text-caption text-foreground-secondary">{collectorWarning.impact}</span>
+                {isAdmin ? (
+                  <Link
+                    href="/sistema"
+                    onClick={() => setOpen(false)}
+                    className={cn(
+                      "group flex items-start gap-2.5 rounded-md border p-2.5 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent",
+                      isDestructive
+                        ? "border-error-border bg-error-subtle hover:bg-error-subtle/80"
+                        : "border-warning-border bg-warning-subtle hover:bg-warning-subtle/80",
+                    )}
+                  >
+                    <AlertTriangle
+                      aria-hidden="true"
+                      className={cn("mt-0.5 size-4 shrink-0", isDestructive ? "text-error" : "text-warning")}
+                    />
+                    <div className="grid min-w-0 flex-1 gap-0.5">
+                      <span className="text-label font-semibold text-foreground">{collectorWarning.label}</span>
+                      <span className="text-caption text-foreground-secondary">{collectorWarning.impact}</span>
+                    </div>
+                    <ChevronRight
+                      aria-hidden="true"
+                      className="mt-0.5 size-4 shrink-0 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+                    />
+                  </Link>
+                ) : (
+                  <div
+                    className={cn(
+                      "flex items-start gap-2.5 rounded-md border p-2.5",
+                      isDestructive ? "border-error-border bg-error-subtle" : "border-warning-border bg-warning-subtle",
+                    )}
+                  >
+                    <AlertTriangle
+                      aria-hidden="true"
+                      className={cn("mt-0.5 size-4 shrink-0", isDestructive ? "text-error" : "text-warning")}
+                    />
+                    <div className="grid min-w-0 flex-1 gap-0.5">
+                      <span className="text-label font-semibold text-foreground">{collectorWarning.label}</span>
+                      <span className="text-caption text-foreground-secondary">{collectorWarning.impact}</span>
+                    </div>
                   </div>
-                  <ChevronRight
-                    aria-hidden="true"
-                    className="mt-0.5 size-4 shrink-0 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
-                  />
-                </Link>
+                )}
               </div>
             ) : null}
 

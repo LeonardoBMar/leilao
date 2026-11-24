@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Badge, Skeleton } from "@/components/ui";
 import { formatCompactDateTime, formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { isCurrentUserAdmin } from "@/server/auth";
 
 import { getCollectorStatus } from "../queries";
 
@@ -13,7 +14,10 @@ import { getCollectorStatus } from "../queries";
  * Lê a sessão: renderizar dentro de <Suspense>.
  */
 export async function CollectorStatusLine({ compact = false }: { compact?: boolean }) {
-  const { health, lastFinishedAt, openInRegion, regionLabel, radiusKm } = await getCollectorStatus();
+  const [{ health, lastFinishedAt, openInRegion, regionLabel, radiusKm }, isAdmin] = await Promise.all([
+    getCollectorStatus(),
+    isCurrentUserAdmin(),
+  ]);
   const neutralBadge = compact
     ? null
     : health === "running"
@@ -42,14 +46,22 @@ export async function CollectorStatusLine({ compact = false }: { compact?: boole
       {lastFinishedAt ? (
         <>
           <span aria-hidden="true">·</span>
-          <Link
-            href="/sistema"
-            className="rounded-sm tabular-nums outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent"
-          >
-            {compact
-              ? `Coleta ${formatCompactDateTime(lastFinishedAt)}`
-              : `Última coleta em ${formatDateTime(lastFinishedAt)}`}
-          </Link>
+          {isAdmin ? (
+            <Link
+              href="/sistema"
+              className="rounded-sm tabular-nums outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent"
+            >
+              {compact
+                ? `Coleta ${formatCompactDateTime(lastFinishedAt)}`
+                : `Última coleta em ${formatDateTime(lastFinishedAt)}`}
+            </Link>
+          ) : (
+            <span className="tabular-nums">
+              {compact
+                ? `Coleta ${formatCompactDateTime(lastFinishedAt)}`
+                : `Última coleta em ${formatDateTime(lastFinishedAt)}`}
+            </span>
+          )}
         </>
       ) : null}
       {neutralBadge ? <Badge variant={neutralBadge.variant}>{neutralBadge.label}</Badge> : null}

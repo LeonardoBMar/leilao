@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { SectionErrorBoundary } from "@/components/layout/section-error-boundary";
-import { ButtonLink, Section, SectionTitle } from "@/components/ui";
+import { Alert, AlertDescription, AlertTitle, ButtonLink, Section, SectionTitle } from "@/components/ui";
 import { RecentAlerts } from "@/features/alerts/components/recent-alerts";
 import {
   DashboardKpis,
@@ -22,12 +22,29 @@ export const metadata: Metadata = { title: "Visão geral · Leilão Tracker" };
 
 const ALL_FOLLOWED_HREF = "/minhas-analises?acompanhados=1&resultado=sem" as Route;
 
+async function DashboardNotice({ searchParams }: { searchParams: PageProps<"/dashboard">["searchParams"] }) {
+  const { aviso } = await searchParams;
+  if (aviso !== "sem-permissao") return null;
+
+  return (
+    <Alert variant="warning">
+      <AlertTitle>Acesso restrito</AlertTitle>
+      <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
+        <span>As páginas operacionais de coleta e correções FIPE são exclusivas para administradores.</span>
+        <ButtonLink href="/dashboard" variant="ghost" size="sm">
+          Dispensar
+        </ButtonLink>
+      </AlertDescription>
+    </Alert>
+  );
+}
+
 /**
  * Visão geral orientada à próxima decisão (SPEC §5, DESIGN.md §15.1, D-44): o que analisar agora, os acompanhados
  * frente ao limite, os próximos leilões da região, pendências e o indicador. Cada seção carrega e falha de forma
  * independente; as que leem o catálogo compartilham a mesma consulta por requisição.
  */
-export default function DashboardPage() {
+export default function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
   return (
     <div className="grid gap-8">
       <div className="grid gap-5">
@@ -51,6 +68,12 @@ export default function DashboardPage() {
             </>
           }
         />
+
+        <div className="empty:hidden">
+          <Suspense fallback={null}>
+            <DashboardNotice searchParams={searchParams} />
+          </Suspense>
+        </div>
 
         <SectionErrorBoundary title="Resumo operacional indisponível">
           <Suspense fallback={<DashboardKpisSkeleton />}>

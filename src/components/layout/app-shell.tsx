@@ -9,6 +9,7 @@ import { type ReactNode, Suspense, useEffect, useState, useSyncExternalStore } f
 import { Button, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
+import { getAdminRoleServerSnapshot, getAdminRoleSnapshot, subscribeAdminRole } from "./admin-role-store";
 import { Brand } from "./brand";
 import { CommandPalette } from "./command-palette";
 import { MobileNav } from "./mobile-nav";
@@ -54,8 +55,11 @@ type RouteContext = {
   detail: string | null;
 };
 
-function resolveRouteContext(pathname: string | null): RouteContext | null {
+function resolveRouteContext(pathname: string | null, isAdmin: boolean): RouteContext | null {
   if (!pathname) return null;
+  if (pathname === "/sistema/preferencias" && !isAdmin) {
+    return { section: "Preferências", sectionHref: "/sistema/preferencias", detail: null };
+  }
   if (pathname === "/sistema" || pathname.startsWith("/sistema/")) {
     const detail =
       pathname === "/sistema/fipe"
@@ -101,7 +105,8 @@ function resolveRouteContext(pathname: string | null): RouteContext | null {
 
 function HeaderRouteContext() {
   const pathname = usePathname();
-  const context = resolveRouteContext(pathname);
+  const isAdmin = useSyncExternalStore(subscribeAdminRole, getAdminRoleSnapshot, getAdminRoleServerSnapshot);
+  const context = resolveRouteContext(pathname, isAdmin);
   if (!context) return null;
 
   return (

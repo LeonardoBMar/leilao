@@ -1,4 +1,5 @@
 import { getCollectorStatus } from "@/features/listings/queries";
+import { isCurrentUserAdmin } from "@/server/auth";
 
 import { listRecentUnreadAlerts } from "../queries";
 import { type CollectorNotification, NotificationsPopover } from "./notifications-popover";
@@ -41,8 +42,14 @@ function collectorNotificationOf(
  * Lê a sessão: renderizar dentro de <Suspense>.
  */
 export async function NotificationsMenu() {
-  const [{ items, total }, collector] = await Promise.all([listRecentUnreadAlerts(LIMIT), getCollectorStatus()]);
+  const [{ items, total }, collector, isAdmin] = await Promise.all([
+    listRecentUnreadAlerts(LIMIT),
+    getCollectorStatus(),
+    isCurrentUserAdmin(),
+  ]);
   const collectorWarning = collectorNotificationOf(collector);
 
-  return <NotificationsPopover collectorWarning={collectorWarning} alerts={items} unreadTotal={total} />;
+  return (
+    <NotificationsPopover collectorWarning={collectorWarning} alerts={items} unreadTotal={total} isAdmin={isAdmin} />
+  );
 }

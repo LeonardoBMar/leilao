@@ -23,6 +23,7 @@ import { toast, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui"
 import { MOTION_SPRING } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
+import { getAdminRoleServerSnapshot, getAdminRoleSnapshot, subscribeAdminRole } from "./admin-role-store";
 import {
   clearRememberedFilter,
   lastFiltersServerSnapshot,
@@ -93,7 +94,9 @@ function NavList({
   const router = useRouter();
   const groupId = useId();
   const systemListId = useId();
+  const isAdmin = useSyncExternalStore(subscribeAdminRole, getAdminRoleSnapshot, getAdminRoleServerSnapshot);
   const isSystemActive = pathname !== null && (pathname === "/sistema" || pathname.startsWith("/sistema/"));
+  const isPreferencesActive = pathname === "/sistema/preferencias";
   const [systemOpenOverride, setSystemOpenOverride] = useState<boolean | null>(null);
   const systemOpen = systemOpenOverride ?? isSystemActive;
 
@@ -187,9 +190,78 @@ function NavList({
         })}
       </ul>
 
-      {/* Grupo separado para funções operacionais do sistema (default colapsado, D-88) */}
+      {/* Grupo separado: admins veem Sistema (Coleta, FIPE, Preferências); usuários comuns veem só Preferências (D-90) */}
       <div className="mt-2.5 border-t border-border pt-2.5">
-        {collapsed ? (
+        {!isAdmin ? (
+          collapsed ? (
+            <Tooltip delayDuration={180}>
+              <TooltipTrigger asChild>
+                <Link
+                  href="/sistema/preferencias"
+                  onClick={() => onNavigate?.()}
+                  aria-current={isPreferencesActive ? "page" : undefined}
+                  aria-label="Preferências"
+                  className={cn(
+                    "group relative flex h-9 items-center gap-2.5 overflow-clip rounded-md px-2.5 text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97]",
+                    isPreferencesActive
+                      ? "font-semibold text-foreground"
+                      : "hover:bg-primary-subtle/70 hover:text-foreground",
+                  )}
+                >
+                  {isPreferencesActive ? (
+                    <m.span
+                      aria-hidden="true"
+                      layoutId="nav-active-pill"
+                      transition={MOTION_SPRING}
+                      className="pointer-events-none absolute inset-0 rounded-md bg-primary-subtle shadow-[inset_0_0_0_1px_var(--border)]"
+                    />
+                  ) : null}
+                  <SlidersHorizontal
+                    aria-hidden="true"
+                    strokeWidth={1.75}
+                    className={cn(
+                      "relative z-10 size-4 shrink-0 text-muted-subtle transition-colors duration-120 group-hover:text-foreground",
+                      isPreferencesActive && "text-foreground",
+                    )}
+                  />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={10}>
+                Preferências
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Link
+              href="/sistema/preferencias"
+              onClick={() => onNavigate?.()}
+              aria-current={isPreferencesActive ? "page" : undefined}
+              className={cn(
+                "group relative flex h-9 items-center gap-2.5 overflow-clip rounded-md px-2.5 text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97]",
+                isPreferencesActive
+                  ? "font-semibold text-foreground"
+                  : "hover:bg-primary-subtle/70 hover:text-foreground",
+              )}
+            >
+              {isPreferencesActive ? (
+                <m.span
+                  aria-hidden="true"
+                  layoutId="nav-active-pill"
+                  transition={MOTION_SPRING}
+                  className="pointer-events-none absolute inset-0 rounded-md bg-primary-subtle shadow-[inset_0_0_0_1px_var(--border)]"
+                />
+              ) : null}
+              <SlidersHorizontal
+                aria-hidden="true"
+                strokeWidth={1.75}
+                className={cn(
+                  "relative z-10 size-4 shrink-0 text-muted-subtle transition-colors duration-120 group-hover:text-foreground",
+                  isPreferencesActive && "text-foreground",
+                )}
+              />
+              <span className="relative z-10 truncate">Preferências</span>
+            </Link>
+          )
+        ) : collapsed ? (
           <Tooltip delayDuration={180}>
             <TooltipTrigger asChild>
               <Link

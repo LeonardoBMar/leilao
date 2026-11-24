@@ -1,4 +1,5 @@
 import { LinkTabs } from "@/components/ui";
+import { isCurrentUserAdmin } from "@/server/auth";
 
 export function SystemTabs({ active }: { active: "collector" | "fipe" | "preferences" }) {
   return (
@@ -12,4 +13,10 @@ export function SystemTabs({ active }: { active: "collector" | "fipe" | "prefere
       ]}
     />
   );
+}
+
+/** Exibe as abas de Sistema apenas para administradores (evita links bloqueados em Preferências). Renderizar em `<Suspense>`. */
+export async function AdminSystemTabs({ active }: { active: "collector" | "fipe" | "preferences" }) {
+  if (!(await isCurrentUserAdmin())) return null;
+  return <SystemTabs active={active} />;
 }

@@ -25,6 +25,7 @@ import { useEffect, useId, useState, useSyncExternalStore } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
+import { getAdminRoleServerSnapshot, getAdminRoleSnapshot, subscribeAdminRole } from "./admin-role-store";
 import { matchesCommandQuery, normalizeCommandText } from "./command-palette-search";
 import { getCommandItemsServerSnapshot, getCommandItemsSnapshot, subscribeCommandItems } from "./command-palette-store";
 
@@ -135,17 +136,28 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const listboxId = useId();
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const isAdmin = useSyncExternalStore(subscribeAdminRole, getAdminRoleSnapshot, getAdminRoleServerSnapshot);
   const quickItems = useSyncExternalStore(
     subscribeCommandItems,
     getCommandItemsSnapshot,
     getCommandItemsServerSnapshot,
   );
 
+  const visibleDestinations = isAdmin
+    ? DESTINATIONS
+    : DESTINATIONS.flatMap((item) => {
+        if (item.href === "/sistema" || item.href === "/sistema/fipe") return [];
+        if (item.href === "/sistema/preferencias") {
+          return [{ ...item, label: "Preferências", group: "Navegação" as const }];
+        }
+        return [item];
+      });
+
   const trimmedQuery = query.trim();
   const normalized = normalizeCommandText(trimmedQuery);
   const filteredDestinations = normalized
-    ? DESTINATIONS.filter((item) => matchesCommandQuery([item.label, item.keywords, item.group], normalized))
-    : DESTINATIONS;
+    ? visibleDestinations.filter((item) => matchesCommandQuery([item.label, item.keywords, item.group], normalized))
+    : visibleDestinations;
 
   const followedDestinations: readonly CommandDestination[] = quickItems.map((item) => ({
     href: item.href,
