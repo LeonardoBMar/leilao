@@ -37,8 +37,8 @@ function Alert({ className, variant = "info", children, ...props }: AlertProps) 
   );
 }
 
-function AlertTitle({ className, ...props }: React.ComponentProps<"h4">) {
-  return <h4 className={cn("text-body font-semibold", className)} {...props} />;
+function AlertTitle({ className, ...props }: React.ComponentProps<"p">) {
+  return <p className={cn("text-body font-semibold", className)} {...props} />;
 }
 
 function AlertDescription({ className, ...props }: React.ComponentProps<"div">) {

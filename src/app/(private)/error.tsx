@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-import { Alert, AlertDescription, AlertTitle, Button } from "@/components/ui";
+import { Alert, AlertDescription, AlertTitle, Button, ButtonLink } from "@/components/ui";
 
 export default function PrivateError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
   useEffect(() => {
@@ -23,10 +23,13 @@ export default function PrivateError({ error, retry }: { error: Error & { digest
           ) : null}
         </AlertDescription>
       </Alert>
-      <div>
+      <div className="flex flex-wrap gap-2">
         <Button variant="secondary" onClick={() => retry()}>
           Tentar novamente
         </Button>
+        <ButtonLink href="/dashboard" variant="ghost">
+          Voltar ao Início
+        </ButtonLink>
       </div>
     </div>
   );

@@ -19,9 +19,13 @@ export default function GlobalError({ error, retry }: { error: Error & { digest?
         <title>Erro · Leilão Tracker</title>
         <main className="grid max-w-md gap-4 text-center">
           <h1 className="text-heading-2 text-foreground">Algo deu errado</h1>
-          <p className="text-body text-foreground-secondary">
-            Não foi possível carregar o aplicativo.{error.digest ? ` Código: ${error.digest}` : null}
-          </p>
+          <p className="text-body text-foreground-secondary">Não foi possível carregar o aplicativo.</p>
+          {error.digest ? (
+            <p className="text-caption text-muted">
+              Código de suporte: <span className="font-mono tabular-nums select-all">{error.digest}</span>. Se
+              persistir, informe este código ao administrador.
+            </p>
+          ) : null}
           <div>
             <button
               type="button"
