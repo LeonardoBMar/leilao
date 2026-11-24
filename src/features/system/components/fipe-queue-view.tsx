@@ -71,13 +71,7 @@ export async function FipeQueueView({
 
       <FipeFilterBar key={filters.busca ?? ""} filters={filters} />
 
-      {editor ? (
-        <FipeMatchEditor
-          key={`${editor.match.id}-${editor.match.kind}-${editor.match.models.map((model) => model.code).join(",")}-${editor.selectedType ?? ""}-${editor.selectedBrand ?? ""}`}
-          editor={editor}
-          filters={filters}
-        />
-      ) : null}
+      {editor ? <FipeMatchEditor key={editor.match.id} editor={editor} filters={filters} /> : null}
 
       {items.length === 0 ? (
         <EmptyState

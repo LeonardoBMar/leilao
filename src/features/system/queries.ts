@@ -166,8 +166,14 @@ export async function getSystemFipeMatchEditor(
 
   const candidates: { code: string; fuel: number; label: string }[] = [];
   if (table && selectedBrand) {
-    for (const fuel of fipeFuelCodes(selectedType, match.fuel)) {
-      const models = await catalog.modelsByYear(table, selectedType, selectedBrand, match.modelYear, fuel);
+    const fuels = fipeFuelCodes(selectedType, match.fuel);
+    const byFuel = await Promise.all(
+      fuels.map(async (fuel) => ({
+        fuel,
+        models: await catalog.modelsByYear(table, selectedType, selectedBrand, match.modelYear, fuel),
+      })),
+    );
+    for (const { fuel, models } of byFuel) {
       for (const model of models) {
         if (!candidates.some((item) => item.code === model.code)) {
           candidates.push({ code: model.code, fuel, label: model.label });

@@ -58,9 +58,15 @@ export async function saveManualFipeMatch(
     const table = pickFipeTable(new Date(), await catalog.tables());
     if (!table) return err("catalog_empty");
 
+    const fuels = fipeFuelCodes(vehicleType, match.fuel);
+    const byFuel = await Promise.all(
+      fuels.map(async (fuel) => ({
+        fuel,
+        models: await catalog.modelsByYear(table, vehicleType, brandCode, match.modelYear, fuel),
+      })),
+    );
     const found: FipeMatchModel[] = [];
-    for (const fuel of fipeFuelCodes(vehicleType, match.fuel)) {
-      const models = await catalog.modelsByYear(table, vehicleType, brandCode, match.modelYear, fuel);
+    for (const { fuel, models } of byFuel) {
       for (const model of models) {
         if (!found.some((item) => item.code === model.code)) {
           found.push({ code: model.code, fuel, label: model.label });

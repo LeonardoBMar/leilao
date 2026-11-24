@@ -37,7 +37,7 @@ export const saveManualFipeMatchSchema = z
     mode: z.enum(["models", "none"]),
     vehicleType: vehicleTypeSchema.optional(),
     brandCode: optionalText().pipe(z.string().max(120, "Marca inválida.").optional()),
-    modelCodes: z.array(z.string().trim().min(1).max(40)).default([]),
+    modelCodes: z.array(z.string().trim().min(1).max(40)).max(50, "Selecione no máximo 50 versões.").default([]),
   })
   .refine((value) => value.mode === "none" || value.modelCodes.length > 0, {
     message: "Selecione ao menos uma versão FIPE ou marque sem casamento.",

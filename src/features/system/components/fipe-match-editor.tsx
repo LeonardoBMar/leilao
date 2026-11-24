@@ -18,7 +18,7 @@ import {
   toast,
 } from "@/components/ui";
 import type { FipeVehicleType } from "@/domain/listings/fipe-match";
-import { idleState } from "@/lib/action-state";
+import { type ActionState, idleState } from "@/lib/action-state";
 import { formatShortMonth } from "@/lib/format";
 
 import { revertFipeMatchToAutoAction, saveManualFipeMatchAction } from "../actions";
@@ -51,10 +51,16 @@ const VEHICLE_TYPE_BY_KEY: Record<string, FipeVehicleType> = { "1": 1, "2": 2, "
 export function FipeMatchEditor({ editor, filters }: FipeMatchEditorProps) {
   const router = useRouter();
   const { match, tableMonth, selectedType, selectedBrand, brands, candidates } = editor;
-  const [selectedCodes, setSelectedCodes] = useState<string[]>(() => match.models.map((model) => model.code));
+  const [selectedCodes, setSelectedCodes] = useState<string[]>(() =>
+    match.models.map((model) => model.code).filter((code) => candidates.some((candidate) => candidate.code === code)),
+  );
   const [candidateFilter, setCandidateFilter] = useState("");
   const [saveState, saveModelsAction, savingModels] = useActionState(saveManualFipeMatchAction, idleState);
-  const [noneState, markNoneAction, markingNone] = useActionState(saveManualFipeMatchAction, idleState);
+  const [noneState, markNoneAction, markingNone] = useActionState(async (prev: ActionState, formData: FormData) => {
+    const next = await saveManualFipeMatchAction(prev, formData);
+    if (next.status === "success") setSelectedCodes([]);
+    return next;
+  }, idleState);
   const [resetState, resetAction, resetting] = useActionState(revertFipeMatchToAutoAction, idleState);
 
   useEffect(() => {
@@ -78,6 +84,11 @@ export function FipeMatchEditor({ editor, filters }: FipeMatchEditorProps) {
         (candidate) => candidate.label.toLowerCase().includes(query) || candidate.code.toLowerCase().includes(query),
       )
     : candidates;
+  const activeError =
+    (saveState.status === "error" && saveState.message) ||
+    (noneState.status === "error" && noneState.message) ||
+    (resetState.status === "error" && resetState.message) ||
+    null;
 
   function toggleCode(code: string) {
     setSelectedCodes((current) =>
@@ -201,9 +212,9 @@ export function FipeMatchEditor({ editor, filters }: FipeMatchEditorProps) {
             </p>
           )}
 
-          {saveState.status === "error" && saveState.message ? (
+          {activeError ? (
             <Alert variant="error">
-              <AlertDescription>{saveState.message}</AlertDescription>
+              <AlertDescription>{activeError}</AlertDescription>
             </Alert>
           ) : null}
 
