@@ -165,34 +165,72 @@ export function createPoliteFetcher({
 
 const MAX_ERROR_LENGTH = 500;
 const MAX_CAUSE_DEPTH = 3;
+const FALLBACK_ERROR = "erro desconhecido";
 
 function formatFetchError(error: unknown): string {
-  if (!(error instanceof Error)) return normalizeErrorText(String(error));
-  const detail = extractCauseDetail(error.cause, MAX_CAUSE_DEPTH);
-  const base = normalizeErrorText(error.message);
-  return truncateError(detail ? `${base} (${detail})` : base);
-}
-
-function extractCauseDetail(cause: unknown, remainingDepth: number): string {
-  if (remainingDepth <= 0 || !(cause instanceof Error)) return "";
-  if (cause instanceof AggregateError && cause.errors.length > 0) {
-    const parts = new Set<string>();
-    for (const item of cause.errors) {
-      const text = formatSingleCause(item, remainingDepth - 1);
-      if (text) parts.add(text);
-    }
-    if (parts.size > 0) return [...parts].join("; ");
+  if (!(error instanceof Error)) {
+    return truncateError(stringifyUnknownError(error) || FALLBACK_ERROR);
   }
-  return formatSingleCause(cause, remainingDepth - 1);
+  const seen = new Set<unknown>([error]);
+  const base = joinCodeAndMessage(readErrorCode(error), normalizeErrorText(error.message));
+  const detail =
+    error instanceof AggregateError && error.errors.length > 0
+      ? joinAggregateDetails(error.errors, MAX_CAUSE_DEPTH, seen)
+      : extractCauseDetail(error.cause, MAX_CAUSE_DEPTH, seen);
+
+  if (base && detail && detail !== base) return truncateError(`${base} (${detail})`);
+  return truncateError(base || detail || normalizeErrorText(error.name) || FALLBACK_ERROR);
 }
 
-function formatSingleCause(error: unknown, remainingDepth: number): string {
-  if (!(error instanceof Error)) return "";
-  const code = "code" in error && typeof error.code === "string" ? error.code.trim() : "";
-  const message = normalizeErrorText(error.message);
-  const direct = [code, message].filter(Boolean).join(": ");
+function extractCauseDetail(cause: unknown, remainingDepth: number, seen: Set<unknown>): string {
+  if (remainingDepth <= 0 || cause == null) return "";
+  if (typeof cause === "string") return normalizeErrorText(cause);
+  if (typeof cause !== "object" || seen.has(cause)) return "";
+  seen.add(cause);
+
+  if (cause instanceof AggregateError && cause.errors.length > 0) {
+    const joined = joinAggregateDetails(cause.errors, remainingDepth, seen);
+    if (joined) return joined;
+  }
+
+  const code = readErrorCode(cause);
+  const message =
+    cause instanceof Error
+      ? normalizeErrorText(cause.message)
+      : "message" in cause && typeof cause.message === "string"
+        ? normalizeErrorText(cause.message)
+        : "";
+  const direct = joinCodeAndMessage(code, message);
   if (direct) return direct;
-  return extractCauseDetail(error.cause, remainingDepth);
+
+  if ("cause" in cause) return extractCauseDetail(cause.cause, remainingDepth - 1, seen);
+  return "";
+}
+
+function joinAggregateDetails(items: readonly unknown[], remainingDepth: number, seen: Set<unknown>): string {
+  const parts = new Set<string>();
+  for (const item of items) {
+    const text = extractCauseDetail(item, remainingDepth - 1, seen);
+    if (text) parts.add(text);
+  }
+  return [...parts].join("; ");
+}
+
+function readErrorCode(value: object): string {
+  return "code" in value && typeof value.code === "string" ? normalizeErrorText(value.code) : "";
+}
+
+function joinCodeAndMessage(code: string, message: string): string {
+  if (code && message) return message.includes(code) ? message : `${code}: ${message}`;
+  return code || message;
+}
+
+function stringifyUnknownError(error: unknown): string {
+  try {
+    return normalizeErrorText(String(error));
+  } catch {
+    return "";
+  }
 }
 
 function normalizeErrorText(text: string): string {

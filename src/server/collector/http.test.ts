@@ -294,8 +294,7 @@ describe("createPoliteFetcher", () => {
     });
     expect(await fetcher.get("https://fonte/2")).toMatchObject({
       ok: false,
-      error:
-        "fetch failed (ECONNREFUSED: connect ECONNREFUSED ::1:443; ECONNREFUSED: connect ECONNREFUSED 127.0.0.1:443)",
+      error: "fetch failed (connect ECONNREFUSED ::1:443; connect ECONNREFUSED 127.0.0.1:443)",
     });
     expect(await fetcher.get("https://fonte/3")).toMatchObject({
       ok: false,
@@ -307,5 +306,52 @@ describe("createPoliteFetcher", () => {
       expect(truncated.error.length).toBe(500);
       expect(truncated.error.endsWith("…")).toBe(true);
     }
+  });
+
+  it("cobre erro com mensagem vazia, AggregateError aninhado, cause string/cíclico e rejeição não-Error", async () => {
+    const clock = fakeClock();
+    const emptyBaseWithCause = new Error("", { cause: new Error("ECONNRESET") });
+    const completelyEmpty = new Error("");
+    const nestedAggregate = new TypeError("fetch failed", {
+      cause: new AggregateError([new AggregateError([new Error("connect ETIMEDOUT")], "")], ""),
+    });
+    const stringCause = new TypeError("fetch failed", { cause: "certificate\nexpired" });
+    const cyclic = new TypeError("fetch failed");
+    cyclic.cause = cyclic;
+    const rejectedValues: unknown[] = [
+      emptyBaseWithCause,
+      completelyEmpty,
+      nestedAggregate,
+      stringCause,
+      cyclic,
+      "z".repeat(600),
+      Object.create(null),
+    ];
+    const fetcher = createPoliteFetcher({
+      fetchImpl: () => Promise.reject(rejectedValues.shift()),
+      sleep: clock.sleep,
+      now: clock.now,
+      minIntervalMs: 0,
+      maxAttempts: 1,
+    });
+
+    expect(await fetcher.get("https://fonte/empty-base")).toMatchObject({ ok: false, error: "ECONNRESET" });
+    expect(await fetcher.get("https://fonte/empty")).toMatchObject({ ok: false, error: "Error" });
+    expect(await fetcher.get("https://fonte/nested-agg")).toMatchObject({
+      ok: false,
+      error: "fetch failed (connect ETIMEDOUT)",
+    });
+    expect(await fetcher.get("https://fonte/string-cause")).toMatchObject({
+      ok: false,
+      error: "fetch failed (certificate expired)",
+    });
+    expect(await fetcher.get("https://fonte/cyclic")).toMatchObject({ ok: false, error: "fetch failed" });
+    const longNonError = await fetcher.get("https://fonte/long-string");
+    expect(longNonError.ok).toBe(false);
+    if (!longNonError.ok) {
+      expect(longNonError.error.length).toBe(500);
+      expect(longNonError.error.endsWith("…")).toBe(true);
+    }
+    expect(await fetcher.get("https://fonte/null-proto")).toMatchObject({ ok: false, error: "erro desconhecido" });
   });
 });
