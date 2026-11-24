@@ -102,96 +102,104 @@ function NavList({
 
   const list = (
     <LayoutGroup id={groupId}>
-      <ul className="grid gap-0.5">
-        {NAV_ITEMS.map(({ href, label, icon: Icon, sections = [] }) => {
-          const isActive =
-            pathname !== null &&
-            [href, ...sections].some((section) => pathname === section || pathname.startsWith(`${section}/`));
-          const target = savedHref(saved?.[href], href);
-          const hasRestoredQuery = !isActive && target !== href && target.includes("?");
+      <div className="grid gap-1">
+        {!collapsed ? <p className="px-2.5 pb-0.5 text-overline font-medium text-muted-subtle">Navegação</p> : null}
+        <ul className="grid gap-0.5">
+          {NAV_ITEMS.map(({ href, label, icon: Icon, sections = [] }) => {
+            const isActive =
+              pathname !== null &&
+              [href, ...sections].some((section) => pathname === section || pathname.startsWith(`${section}/`));
+            const target = savedHref(saved?.[href], href);
+            const hasRestoredQuery = !isActive && target !== href && target.includes("?");
 
-          const link = (
-            <Link
-              href={target}
-              onClick={() => {
-                onNavigate?.();
-                if (hasRestoredQuery) {
-                  toast.info(`Filtros anteriores restaurados em ${label}.`, {
-                    action: {
-                      label: "Limpar",
-                      onClick: () => {
-                        clearRememberedFilter(href);
-                        router.push(href);
+            const link = (
+              <Link
+                href={target}
+                onClick={() => {
+                  onNavigate?.();
+                  if (hasRestoredQuery) {
+                    toast.info(`Filtros anteriores restaurados em ${label}.`, {
+                      action: {
+                        label: "Limpar",
+                        onClick: () => {
+                          clearRememberedFilter(href);
+                          router.push(href);
+                        },
                       },
-                    },
-                  });
-                }
-              }}
-              aria-current={isActive ? "page" : undefined}
-              aria-label={collapsed ? label : undefined}
-              className={cn(
-                "group relative flex h-10 items-center gap-2.5 overflow-clip rounded-md px-2.5 text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] lg:h-9 pointer-coarse:h-11",
-                isActive ? "font-semibold text-foreground" : "hover:bg-primary-subtle/70 hover:text-foreground",
-              )}
-            >
-              {isActive ? (
-                <m.span
-                  aria-hidden="true"
-                  layoutId="nav-active-pill"
-                  transition={MOTION_SPRING}
-                  className="pointer-events-none absolute inset-0 rounded-md bg-primary-subtle shadow-[inset_0_0_0_1px_var(--border)]"
-                />
-              ) : null}
-              <Icon
-                aria-hidden="true"
-                strokeWidth={1.75}
+                    });
+                  }
+                }}
+                aria-current={isActive ? "page" : undefined}
+                aria-label={collapsed ? label : undefined}
                 className={cn(
-                  "relative z-10 size-4 shrink-0 text-muted-subtle transition-colors duration-120 group-hover:text-foreground",
-                  isActive && "text-foreground",
-                )}
-              />
-              <span
-                className={cn(
-                  "relative z-10 truncate transition-opacity duration-150 ease-[var(--ease-out)]",
-                  collapsed ? "pointer-events-none opacity-0" : "opacity-100",
+                  "group relative flex h-10 items-center gap-2.5 overflow-clip rounded-md px-2.5 text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] lg:h-9 pointer-coarse:h-11",
+                  isActive ? "font-semibold text-foreground" : "hover:bg-primary-subtle/70 hover:text-foreground",
                 )}
               >
-                {label}
-              </span>
-              {badges?.[href] ? (
-                collapsed ? (
-                  <span
+                {isActive ? (
+                  <m.span
                     aria-hidden="true"
-                    className="pointer-events-none absolute top-1.5 right-1.5 z-10 size-1.5 rounded-full bg-accent empty:hidden"
+                    layoutId="nav-active-pill"
+                    transition={MOTION_SPRING}
+                    className="pointer-events-none absolute inset-0 rounded-md bg-surface shadow-xs ring-1 ring-border/80 ring-inset"
                   />
-                ) : (
-                  <span className="relative z-10 ml-auto transition-opacity duration-150 empty:hidden">
-                    {badges[href]}
-                  </span>
-                )
-              ) : null}
-            </Link>
-          );
+                ) : null}
+                <Icon
+                  aria-hidden="true"
+                  strokeWidth={1.75}
+                  className={cn(
+                    "relative z-10 size-4 shrink-0 text-muted-subtle transition-colors duration-120 group-hover:text-foreground",
+                    isActive && "text-foreground",
+                  )}
+                />
+                <span
+                  className={cn(
+                    "relative z-10 truncate transition-opacity duration-150 ease-[var(--ease-out)]",
+                    collapsed ? "pointer-events-none opacity-0" : "opacity-100",
+                  )}
+                >
+                  {label}
+                </span>
+                {badges?.[href] ? (
+                  collapsed ? (
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute top-1.5 right-1.5 z-10 size-1.5 rounded-full bg-accent empty:hidden"
+                    />
+                  ) : (
+                    <span className="relative z-10 ml-auto transition-opacity duration-150 empty:hidden">
+                      {badges[href]}
+                    </span>
+                  )
+                ) : null}
+              </Link>
+            );
 
-          return (
-            <li key={href}>
-              {collapsed ? (
-                <Tooltip delayDuration={180}>
-                  <TooltipTrigger asChild>{link}</TooltipTrigger>
-                  <TooltipContent side="right" sideOffset={10}>
-                    {label}
-                  </TooltipContent>
-                </Tooltip>
-              ) : (
-                link
-              )}
-            </li>
-          );
-        })}
-      </ul>
+            return (
+              <li key={href}>
+                {collapsed ? (
+                  <Tooltip delayDuration={180}>
+                    <TooltipTrigger asChild>{link}</TooltipTrigger>
+                    <TooltipContent side="right" sideOffset={10}>
+                      {label}
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  link
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
 
       {/* Grupo separado: admins veem Sistema (Coleta, FIPE, Preferências); usuários comuns veem só Preferências (D-90) */}
-      <div className="mt-2.5 border-t border-border pt-2.5">
+      <div className={cn("grid gap-1", collapsed ? "mt-3 border-t border-border/70 pt-3" : "mt-5")}>
+        {!collapsed ? (
+          <p className="px-2.5 pb-0.5 text-overline font-medium text-muted-subtle">
+            {isAdmin ? "Administração" : "Configurações"}
+          </p>
+        ) : null}
         {!isAdmin ? (
           collapsed ? (
             <Tooltip delayDuration={180}>
@@ -213,7 +221,7 @@ function NavList({
                       aria-hidden="true"
                       layoutId="nav-active-pill"
                       transition={MOTION_SPRING}
-                      className="pointer-events-none absolute inset-0 rounded-md bg-primary-subtle shadow-[inset_0_0_0_1px_var(--border)]"
+                      className="pointer-events-none absolute inset-0 rounded-md bg-surface shadow-xs ring-1 ring-border/80 ring-inset"
                     />
                   ) : null}
                   <SlidersHorizontal
@@ -247,7 +255,7 @@ function NavList({
                   aria-hidden="true"
                   layoutId="nav-active-pill"
                   transition={MOTION_SPRING}
-                  className="pointer-events-none absolute inset-0 rounded-md bg-primary-subtle shadow-[inset_0_0_0_1px_var(--border)]"
+                  className="pointer-events-none absolute inset-0 rounded-md bg-surface shadow-xs ring-1 ring-border/80 ring-inset"
                 />
               ) : null}
               <SlidersHorizontal
@@ -279,7 +287,7 @@ function NavList({
                     aria-hidden="true"
                     layoutId="nav-active-pill"
                     transition={MOTION_SPRING}
-                    className="pointer-events-none absolute inset-0 rounded-md bg-primary-subtle shadow-[inset_0_0_0_1px_var(--border)]"
+                    className="pointer-events-none absolute inset-0 rounded-md bg-surface shadow-xs ring-1 ring-border/80 ring-inset"
                   />
                 ) : null}
                 <Settings
@@ -297,7 +305,7 @@ function NavList({
             </TooltipContent>
           </Tooltip>
         ) : (
-          <div className="grid gap-0.5">
+          <div className="grid gap-1">
             <button
               type="button"
               onClick={() => setSystemOpenOverride(!systemOpen)}
@@ -328,22 +336,28 @@ function NavList({
             </button>
 
             {systemOpen ? (
-              <ul id={systemListId} className="grid gap-0.5 pl-4">
+              <ul id={systemListId} className="ml-4.5 grid gap-0.5 border-l border-border pl-3">
                 {SYSTEM_NAV_ITEMS.map(({ href, label, icon: SubIcon }) => {
                   const isSubActive =
                     href === "/sistema"
                       ? pathname === href
                       : pathname === href || (pathname?.startsWith(`${href}/`) ?? false);
                   return (
-                    <li key={href}>
+                    <li key={href} className="relative">
+                      {isSubActive ? (
+                        <span
+                          aria-hidden="true"
+                          className="pointer-events-none absolute top-1.5 bottom-1.5 -left-3.25 w-0.5 rounded-full bg-primary"
+                        />
+                      ) : null}
                       <Link
                         href={href}
                         onClick={() => onNavigate?.()}
                         aria-current={isSubActive ? "page" : undefined}
                         className={cn(
-                          "group relative flex h-10 items-center gap-2 rounded-md px-2.5 text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent lg:h-9 pointer-coarse:h-11",
+                          "group relative flex h-10 items-center gap-2 rounded-md px-2.5 text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent lg:h-8 pointer-coarse:h-11",
                           isSubActive
-                            ? "bg-primary-subtle font-semibold text-foreground shadow-[inset_0_0_0_1px_var(--border)]"
+                            ? "bg-surface font-semibold text-foreground shadow-xs ring-1 ring-border/80 ring-inset"
                             : "hover:bg-primary-subtle/70 hover:text-foreground",
                         )}
                       >
