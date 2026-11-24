@@ -49,11 +49,18 @@ export const getUserRole = cache(async (userId: string): Promise<UserRole> => {
   return profile?.role ?? "USER";
 });
 
+/** Indica se o usuário da sessão atual tem papel `ADMIN` (lê cookies + banco em `React.cache`; usar em `<Suspense>`). */
+export async function isCurrentUserAdmin(): Promise<boolean> {
+  const user = await getCurrentUser();
+  if (!user) return false;
+  return (await getUserRole(user.id)) === "ADMIN";
+}
+
 /** Barreira administrativa da DAL: exige sessão autenticada e papel `ADMIN` em `user_profiles` (D-90). */
 export async function requireAdmin(): Promise<SessionUser> {
   const user = await requireUser();
   const role = await getUserRole(user.id);
-  if (role !== "ADMIN") redirect("/dashboard");
+  if (role !== "ADMIN") redirect("/dashboard?aviso=sem-permissao");
   return user;
 }
 

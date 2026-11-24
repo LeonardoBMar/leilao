@@ -19,7 +19,7 @@ vi.mock("./db", () => ({
   db: { userProfile: { findUnique: findUniqueMock } },
 }));
 
-import { requireAdmin } from "./auth";
+import { isCurrentUserAdmin, requireAdmin } from "./auth";
 
 const USER_ID = "01950000-0000-7000-8000-000000000001";
 
@@ -40,20 +40,20 @@ describe("requireAdmin", () => {
     expect(redirectMock).not.toHaveBeenCalled();
   });
 
-  it("redireciona para /dashboard quando o usuário tem papel USER", async () => {
+  it("redireciona para /dashboard?aviso=sem-permissao quando o usuário tem papel USER", async () => {
     getClaimsMock.mockResolvedValue({ data: { claims: { sub: USER_ID, email: "user@example.com" } }, error: null });
     findUniqueMock.mockResolvedValue({ role: "USER" });
 
-    await expect(requireAdmin()).rejects.toThrow("REDIRECT:/dashboard");
-    expect(redirectMock).toHaveBeenCalledWith("/dashboard");
+    await expect(requireAdmin()).rejects.toThrow("REDIRECT:/dashboard?aviso=sem-permissao");
+    expect(redirectMock).toHaveBeenCalledWith("/dashboard?aviso=sem-permissao");
   });
 
-  it("trata usuário sem linha em user_profiles como USER e redireciona para /dashboard", async () => {
+  it("trata usuário sem linha em user_profiles como USER e redireciona com aviso", async () => {
     getClaimsMock.mockResolvedValue({ data: { claims: { sub: USER_ID, email: "new@example.com" } }, error: null });
     findUniqueMock.mockResolvedValue(null);
 
-    await expect(requireAdmin()).rejects.toThrow("REDIRECT:/dashboard");
-    expect(redirectMock).toHaveBeenCalledWith("/dashboard");
+    await expect(requireAdmin()).rejects.toThrow("REDIRECT:/dashboard?aviso=sem-permissao");
+    expect(redirectMock).toHaveBeenCalledWith("/dashboard?aviso=sem-permissao");
   });
 
   it("redireciona para /login quando não há sessão autenticada", async () => {
@@ -61,5 +61,24 @@ describe("requireAdmin", () => {
 
     await expect(requireAdmin()).rejects.toThrow("REDIRECT:/login");
     expect(findUniqueMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("isCurrentUserAdmin", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    headersMock.mockResolvedValue(new Headers());
+  });
+
+  it("devolve true para ADMIN e false para USER ou sem sessão", async () => {
+    getClaimsMock.mockResolvedValue({ data: { claims: { sub: USER_ID, email: "admin@example.com" } }, error: null });
+    findUniqueMock.mockResolvedValue({ role: "ADMIN" });
+    expect(await isCurrentUserAdmin()).toBe(true);
+
+    findUniqueMock.mockResolvedValue({ role: "USER" });
+    expect(await isCurrentUserAdmin()).toBe(false);
+
+    getClaimsMock.mockResolvedValue({ data: null, error: null });
+    expect(await isCurrentUserAdmin()).toBe(false);
   });
 });
