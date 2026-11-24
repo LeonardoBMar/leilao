@@ -4,9 +4,11 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 
+import { type UserRole } from "@/generated/prisma/client";
 import { devAuthUserId } from "@/lib/dev-auth";
 import { err, ok, type Result } from "@/lib/result";
 
+import { db } from "./db";
 import { createSupabaseServerClient } from "./supabase";
 
 /** `devBypass`: sessão assumida sem login no desenvolvimento local (D-31). */
@@ -32,6 +34,26 @@ export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
 export async function requireUser(): Promise<SessionUser> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  return user;
+}
+
+/**
+ * Papel do usuário no banco, consultado uma vez por requisição (`React.cache`).
+ * Usuários sem linha em `user_profiles` são tratados como `USER` (D-90).
+ */
+export const getUserRole = cache(async (userId: string): Promise<UserRole> => {
+  const profile = await db.userProfile.findUnique({
+    where: { userId },
+    select: { role: true },
+  });
+  return profile?.role ?? "USER";
+});
+
+/** Barreira administrativa da DAL: exige sessão autenticada e papel `ADMIN` em `user_profiles` (D-90). */
+export async function requireAdmin(): Promise<SessionUser> {
+  const user = await requireUser();
+  const role = await getUserRole(user.id);
+  if (role !== "ADMIN") redirect("/dashboard");
   return user;
 }
 
