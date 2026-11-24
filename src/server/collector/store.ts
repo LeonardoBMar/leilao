@@ -1,6 +1,7 @@
 import "server-only";
 
 import { finalBidOf, goneStatus, observationChanged } from "@/domain/listings/collect";
+import { listingSearchText } from "@/domain/listings/criteria";
 import { marketValueOnSave } from "@/domain/listings/fipe-match";
 import { type Coordinates, distanceKm } from "@/domain/listings/geo";
 import { inferOrigin } from "@/domain/listings/origin";
@@ -130,6 +131,7 @@ const storedListingSelect = {
   sellerName: true,
   vehicleOrigin: true,
   vehicleKey: true,
+  searchText: true,
   description: true,
   damageLevel: true,
   conditionFlags: true,
@@ -202,6 +204,12 @@ export async function saveListing(
       sourceId,
     }),
     vehicleKey: vehicleKey(input.vehicle.brand, input.vehicle.model),
+    searchText: listingSearchText({
+      title: input.title,
+      brand: input.vehicle.brand,
+      model: input.vehicle.model,
+      fipeName: input.vehicle.fipeName,
+    }),
     description: input.description,
     damageLevel: input.condition.damageLevel,
     conditionFlags: input.condition.flags,
