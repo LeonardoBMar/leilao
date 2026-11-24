@@ -11,6 +11,12 @@ import type { CollectionSummary } from "@/server/collector/run";
 
 import { readFlag, readNumberFlag, runCli } from "./lib/cli";
 
+const SOURCE_STATUS_LABELS = {
+  succeeded: "ok",
+  failed: "falha",
+  skipped: "pausada",
+} as const;
+
 function formatStepSummary(summary: CollectionSummary): string {
   const lines: string[] = [
     `## Coleta do catálogo (${summary.status === "succeeded" ? "ok" : "com falhas"})`,
@@ -19,7 +25,7 @@ function formatStepSummary(summary: CollectionSummary): string {
     "| --- | --- | ---: | ---: | ---: | ---: | ---: |",
     ...summary.sources.map(
       (run) =>
-        `| \`${run.sourceId}\` | ${run.status} | ${run.requests} | ${run.discovered} | ${run.created} | ${run.updated} | ${run.failed} |`,
+        `| \`${run.sourceId}\` | ${SOURCE_STATUS_LABELS[run.status]} | ${run.requests} | ${run.discovered} | ${run.created} | ${run.updated} | ${run.failed} |`,
     ),
     "",
     `- **Lotes ligados:** ${summary.lotsUpdated} com lance novo · ${summary.resultsRecorded} resultados`,
