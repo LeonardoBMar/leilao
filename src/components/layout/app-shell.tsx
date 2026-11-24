@@ -347,8 +347,8 @@ export function AppShell({
       >
         <div
           className={cn(
-            "flex h-12 shrink-0 items-center justify-between pt-2",
-            collapsed ? "justify-center px-2.5" : "px-4",
+            "mt-2 flex h-12 shrink-0 items-center justify-between",
+            collapsed ? "justify-center px-2.5" : "pr-2.5 pl-4",
           )}
         >
           <Brand href="/dashboard" compact={collapsed} />
@@ -430,13 +430,13 @@ export function AppShell({
                 collapsed ? "hidden" : "flex min-h-0 flex-1 flex-col gap-5 opacity-100",
               )}
             >
-              <div className="w-61 shrink-0">
+              <div className="w-full min-w-0">
                 <Suspense fallback={followed}>
                   <HideOnDashboard>{followed}</HideOnDashboard>
                 </Suspense>
               </div>
               {nextAuction ? (
-                <div className="mt-auto grid w-61 shrink-0 grid-cols-1 gap-2.5 pt-2">{nextAuction}</div>
+                <div className="mt-auto grid w-full min-w-0 grid-cols-1 gap-2.5 pt-2">{nextAuction}</div>
               ) : null}
             </div>
           </div>
@@ -454,7 +454,7 @@ export function AppShell({
           <header
             className={cn(
               "sticky top-0 z-30 h-12 shrink-0 border-b bg-surface transition-colors duration-150 ease-[var(--ease-out)] motion-reduce:transition-none",
-              scrolled ? "border-border" : "border-transparent",
+              scrolled ? "border-border" : "border-border/60",
             )}
           >
             <div className="mx-auto flex h-full w-full max-w-360 items-center justify-between gap-3 px-4 md:px-6 lg:px-8">
@@ -474,7 +474,7 @@ export function AppShell({
                         aria-expanded={false}
                         aria-controls="sidebar-nav"
                         aria-keyshortcuts="Control+B Meta+B"
-                        className="hidden size-8 shrink-0 items-center justify-center rounded-md text-muted transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-primary-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.95] motion-reduce:transition-none motion-reduce:active:scale-100 lg:inline-flex pointer-coarse:size-10"
+                        className="-ml-1.5 hidden size-8 shrink-0 items-center justify-center rounded-md text-muted transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-primary-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.95] motion-reduce:transition-none motion-reduce:active:scale-100 lg:inline-flex pointer-coarse:size-10"
                       >
                         <PanelLeftOpen aria-hidden="true" strokeWidth={1.75} className="size-4" />
                       </button>
