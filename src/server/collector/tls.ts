@@ -56,19 +56,15 @@ const VALID_RSA_DV_SSL_CA_2_PEM = [
 /** Intermediários de fontes com cadeia TLS incompleta; todos encadeiam em raízes já confiáveis do Node.js. */
 export const EXTRA_INTERMEDIATE_CAS: readonly string[] = [VALID_RSA_DV_SSL_CA_2_PEM];
 
-let installed = false;
-
 /**
  * Acrescenta os certificados intermediários conhecidos à lista padrão do processo Node.js (idempotente).
  * Preserva todos os certificados raiz padrão e mantém a validação TLS completa.
  */
 export function installExtraCaCertificates(): void {
-  if (installed) return;
   const current = getCACertificates("default");
   const existing = new Set(current.map((cert) => cert.trim()));
   const missing = EXTRA_INTERMEDIATE_CAS.filter((pem) => !existing.has(pem.trim()));
   if (missing.length > 0) {
     setDefaultCACertificates([...current, ...missing]);
   }
-  installed = true;
 }

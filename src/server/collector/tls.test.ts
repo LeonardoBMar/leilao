@@ -8,34 +8,35 @@ import { EXTRA_INTERMEDIATE_CAS, installExtraCaCertificates } from "./tls";
 describe("tls extra intermediate CAs", () => {
   it("todo intermediário embutido é CA válida, vigente e assinada por uma raiz confiável do Node.js", () => {
     const roots = rootCertificates.map((pem) => new X509Certificate(pem));
+    const now = Date.now();
     expect(EXTRA_INTERMEDIATE_CAS.length).toBeGreaterThan(0);
 
     for (const pem of EXTRA_INTERMEDIATE_CAS) {
       const cert = new X509Certificate(pem);
       expect(cert.ca).toBe(true);
-      expect(Date.parse(cert.validTo)).toBeGreaterThan(Date.now());
-      const issuer = roots.find((root) => root.subject === cert.issuer);
-      expect(issuer, `emissor ausente do bundle raiz: ${cert.issuer}`).toBeDefined();
-      expect(issuer ? cert.checkIssued(issuer) : false).toBe(true);
-      expect(issuer ? cert.verify(issuer.publicKey) : false).toBe(true);
+      expect(Date.parse(cert.validFrom)).toBeLessThanOrEqual(now);
+      expect(Date.parse(cert.validTo)).toBeGreaterThan(now);
+      const issuer = roots.find((root) => cert.checkIssued(root) && cert.verify(root.publicKey));
+      expect(issuer, `emissor confiável ausente no bundle raiz: ${cert.issuer}`).toBeDefined();
     }
   });
 
-  it("installExtraCaCertificates acrescenta os intermediários mantendo as raízes padrão (idempotente)", () => {
+  it("installExtraCaCertificates acrescenta os intermediários mantendo todas as raízes padrão (idempotente)", () => {
     const before = getCACertificates("default");
+    const beforeFingerprints = new Set(before.map((pem) => new X509Certificate(pem).fingerprint256));
     try {
       installExtraCaCertificates();
       const afterFirst = getCACertificates("default");
       installExtraCaCertificates();
       const afterSecond = getCACertificates("default");
 
-      expect(afterFirst.length).toBeGreaterThanOrEqual(before.length);
+      const afterFingerprints = new Set(afterFirst.map((pem) => new X509Certificate(pem).fingerprint256));
+      for (const fingerprint of beforeFingerprints) {
+        expect(afterFingerprints.has(fingerprint)).toBe(true);
+      }
       expect(afterSecond.length).toBe(afterFirst.length);
       for (const pem of EXTRA_INTERMEDIATE_CAS) {
-        const fingerprint = new X509Certificate(pem).fingerprint256;
-        expect(afterFirst.some((installed) => new X509Certificate(installed).fingerprint256 === fingerprint)).toBe(
-          true,
-        );
+        expect(afterFingerprints.has(new X509Certificate(pem).fingerprint256)).toBe(true);
       }
     } finally {
       setDefaultCACertificates(before);
