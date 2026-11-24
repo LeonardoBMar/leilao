@@ -166,6 +166,14 @@ export function calculateMaxBid(inputs: AnalysisInputs): MaxBidOutcome {
   };
 }
 
+/**
+ * Ponto de equilíbrio (margem estimada ≥ R$ 0): maior lance em centavos que cobre custos fixos, comissão e reserva.
+ * Exploratório para a simulação; não altera o limite fixado nem `FORMULA_VERSION` (D-88).
+ */
+export function calculateBreakEvenBid(inputs: CompleteInputs): Cents | null {
+  return findMaxBid({ ...inputs, desiredMargin: cents(0) });
+}
+
 export type PreparedFixedAnalysis = {
   riskReserve: Cents;
   desiredMargin: Cents;

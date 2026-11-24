@@ -4,6 +4,7 @@ import { bps, cents } from "@/domain/money";
 
 import {
   type AnalysisInputs,
+  calculateBreakEvenBid,
   calculateMaxBid,
   compareToFixedLimit,
   compareToLimit,
@@ -323,5 +324,39 @@ describe("prepareFixedAnalysis", () => {
       ok: false,
       error: "market_value_not_positive",
     });
+  });
+});
+
+describe("calculateBreakEvenBid", () => {
+  it("calcula o ponto de equilíbrio com comissão fixa (SPEC §7.3 sem margem)", () => {
+    const complete = completeInputs(fixedExample);
+    expect(complete.ok).toBe(true);
+    if (!complete.ok) return;
+    // 50.000 − 6.800 (fixos) − 2.000 (comissão fixa) − 2.000 (reserva) = 39.200
+    const breakEven = calculateBreakEvenBid(complete.value);
+    expect(breakEven).toBe(reais(39_200));
+    if (breakEven !== null) {
+      expect(simulateBid(complete.value, breakEven).estimatedMargin).toBe(0);
+      expect(simulateBid(complete.value, cents(breakEven + 1)).estimatedMargin).toBeLessThan(0);
+    }
+  });
+
+  it("calcula o ponto de equilíbrio exato ao centavo com comissão percentual (SPEC §7.4)", () => {
+    const complete = completeInputs(percentageExample);
+    expect(complete.ok).toBe(true);
+    if (!complete.ok) return;
+    const breakEven = calculateBreakEvenBid(complete.value);
+    expect(breakEven).not.toBeNull();
+    if (breakEven !== null) {
+      expect(simulateBid(complete.value, breakEven).estimatedMargin).toBeGreaterThanOrEqual(0);
+      expect(simulateBid(complete.value, cents(breakEven + 1)).estimatedMargin).toBeLessThan(0);
+    }
+  });
+
+  it("retorna null quando os custos já superam o valor de venda", () => {
+    const complete = completeInputs({ ...fixedExample, repairCost: reais(50_000) });
+    expect(complete.ok).toBe(true);
+    if (!complete.ok) return;
+    expect(calculateBreakEvenBid(complete.value)).toBeNull();
   });
 });
