@@ -45,6 +45,11 @@ async function main() {
         `${summary.maintenance.runsDeleted} execuções antigas removidas\n`,
     );
   }
+  if (summary.engineQuality?.status === "saved") {
+    process.stdout.write(
+      `Backtest do motor: snapshot gravado (${summary.engineQuality.estimated} de ${summary.engineQuality.total} vendas estimadas)\n`,
+    );
+  }
   for (const warning of summary.warnings) process.stdout.write(`  aviso: ${warning}\n`);
   if (summary.status === "failed") process.exitCode = 1;
 }

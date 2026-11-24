@@ -7,6 +7,7 @@
 //   --variant <nome>     só uma variante (v1, v2, v2-origem); sem ela, todas
 //   --write              grava o resumo do motor das telas (v1) em src/features/research/engine-quality.json, que a
 //                        aba Calibração mostra (D-76); o arquivo vai no commit
+//   --save-db            grava o snapshot do motor das telas (v1) na tabela engine_quality_snapshots
 
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -15,7 +16,9 @@ import { hasFlag, readFlag, runCli } from "./lib/cli";
 
 async function main() {
   const { loadSoldSales } = await import("@/server/market/sold-sales");
+  const { saveEngineQualitySnapshot } = await import("@/server/market/engine-quality");
   const { runBacktest, summarizeBacktest, summarizeBacktestBy } = await import("@/domain/listings/backtest");
+  const { buildEngineQualityReport, serializeEngineQualityReport } = await import("@/domain/listings/engine-quality");
   const { buildEstimateIndex, COMPARABLE_LEVELS, estimatePrice, SALES_WINDOW_MS } =
     await import("@/domain/listings/estimates");
 
@@ -26,6 +29,7 @@ async function main() {
   } as const;
   const only = readFlag("--variant");
   const write = hasFlag("--write");
+  const saveDb = hasFlag("--save-db");
   const from = new Date(`${readFlag("--from") ?? "2026-09-15"}T00:00:00-03:00`);
   const sales = await loadSoldSales();
 
@@ -50,25 +54,17 @@ async function main() {
       },
       { from, windowMs: SALES_WINDOW_MS },
     );
-    if (write && name === "v1") {
-      const byConfidence = summarizeBacktestBy(outcomes, ({ estimate }) =>
-        estimate.kind === "insufficient" ? "none" : estimate.confidence,
-      );
-      const quality = {
-        version: 1,
-        computedAt: new Date().toISOString(),
-        from: from.toISOString(),
-        total: summarizeBacktest(outcomes),
-        byConfidence: Object.fromEntries(
-          (["high", "medium", "low"] as const).flatMap((level) => {
-            const summary = byConfidence.get(level);
-            return summary === undefined ? [] : [[level, summary]];
-          }),
-        ),
-      };
-      const path = join(process.cwd(), "src/features/research/engine-quality.json");
-      writeFileSync(path, `${JSON.stringify(quality, null, 2)}\n`);
-      process.stdout.write(`resumo gravado em ${path}\n`);
+    if ((write || saveDb) && name === "v1") {
+      const report = buildEngineQualityReport(outcomes, { computedAt: new Date(), from });
+      if (write) {
+        const path = join(process.cwd(), "src/features/research/engine-quality.json");
+        writeFileSync(path, `${JSON.stringify(serializeEngineQualityReport(report), null, 2)}\n`);
+        process.stdout.write(`resumo gravado em ${path}\n`);
+      }
+      if (saveDb) {
+        const saved = await saveEngineQualitySnapshot(report);
+        process.stdout.write(`snapshot gravado no banco (${saved.id})\n`);
+      }
     }
     process.stdout.write(`\n== ${name}\n${header}`);
     process.stdout.write(line("total", summarizeBacktest(outcomes)));

@@ -10,6 +10,7 @@ import { env } from "../env";
 import { createFipeCatalog, type FipeCatalog } from "../fipe/catalog";
 import { ensureFipeCatalog, type FipeImportResult } from "../fipe/dataset";
 import { enrichMarketValues } from "../fipe/enrich";
+import { type EngineQualityRefreshSummary, refreshEngineQualitySnapshot } from "../market/engine-quality";
 import { createAlerts } from "./alerts";
 import { createPoliteFetcher, DEADLINE_ERROR, type PoliteFetcher } from "./http";
 import { recordTrackedResults, syncTrackedLots } from "./lots";
@@ -77,6 +78,8 @@ export type CollectionSummary = {
   fipeImports: FipeImportResult[];
   /** Manutenção de armazenamento executada ao fim da coleta (D-87). */
   maintenance: RetentionSummary;
+  /** Atualização semanal do backtest de qualidade do motor (`engine_quality_snapshots`); nula em caso de erro. */
+  engineQuality: EngineQualityRefreshSummary | null;
   /**
    * Problemas do valor de mercado (importação da tabela, casamento). Só aviso no log: não marcam a coleta como falha,
    * porque o anúncio fica pendente e a próxima execução tenta de novo.
@@ -208,6 +211,14 @@ export async function runCollection({
     warn(`manutenção do catálogo: ${describeError(error)}`);
   }
 
+  // Backtest semanal da qualidade do motor (`engine_quality_snapshots`): não-fatal, nunca marca a coleta como falha.
+  let engineQuality: EngineQualityRefreshSummary | null = null;
+  try {
+    engineQuality = await refreshEngineQualitySnapshot(now());
+  } catch (error) {
+    warn(`backtest do motor: ${describeError(error)}`);
+  }
+
   const failed = errors.length > 0 || summaries.some((summary) => summary.status === "failed");
   return {
     status: failed ? "failed" : "succeeded",
@@ -218,6 +229,7 @@ export async function runCollection({
     marketValuesMatched,
     fipeImports,
     maintenance,
+    engineQuality,
     warnings,
     errors: errors.slice(0, MAX_ERROR_SAMPLES),
   };
