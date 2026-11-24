@@ -2,7 +2,7 @@ import "server-only";
 
 import { fipeFuelCodes, type FipeVehicleType, pickFipeTable } from "@/domain/listings/fipe-match";
 import { collectorHealth } from "@/domain/listings/health";
-import { requireUser } from "@/server/auth";
+import { requireAdmin } from "@/server/auth";
 import { db } from "@/server/db";
 import { createFipeCatalog } from "@/server/fipe/catalog";
 import { getFipeMatch, listFipeMatches } from "@/server/fipe/matches";
@@ -25,7 +25,7 @@ const FIPE_QUEUE_LIMIT = 50;
  * Lê tabelas globais (`sources`, `collector_runs`, `listings`), exigindo sessão autenticada.
  */
 export async function getSystemCollectorOverview(): Promise<SystemCollectorOverview> {
-  await requireUser();
+  await requireAdmin();
   const now = new Date();
 
   const [sourceRows, openGroups] = await Promise.all([
@@ -111,7 +111,7 @@ export async function getSystemCollectorOverview(): Promise<SystemCollectorOverv
 export async function listSystemFipeQueue(
   filters: FipeQueueFilters,
 ): Promise<{ summary: SystemFipeSummary; items: SystemFipeMatchItem[] }> {
-  await requireUser();
+  await requireAdmin();
   const catalog = createFipeCatalog();
 
   const [kindCounts, manualCount, pendingListings, tables, items] = await Promise.all([
@@ -150,7 +150,7 @@ export async function getSystemFipeMatchEditor(
   id: string,
   override?: { vehicleType?: FipeVehicleType; brandCode?: string },
 ): Promise<SystemFipeMatchEditor | null> {
-  await requireUser();
+  await requireAdmin();
   const match = await getFipeMatch(id);
   if (!match) return null;
 

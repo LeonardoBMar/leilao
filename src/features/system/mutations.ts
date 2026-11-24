@@ -2,7 +2,7 @@ import "server-only";
 
 import { fipeFuelCodes, type FipeMatchModel, pickFipeTable } from "@/domain/listings/fipe-match";
 import { err, ok, type Result } from "@/lib/result";
-import { requireUser } from "@/server/auth";
+import { requireAdmin } from "@/server/auth";
 import { db } from "@/server/db";
 import { createFipeCatalog } from "@/server/fipe/catalog";
 import { type FipeMatchChoice, getFipeMatch, resetMatchToAuto, setManualMatch } from "@/server/fipe/matches";
@@ -19,7 +19,7 @@ export async function setSourceActive(
   sourceId: string,
   active: boolean,
 ): Promise<Result<{ sourceId: string; active: boolean }, ToggleSourceError>> {
-  await requireUser();
+  await requireAdmin();
   const { count } = await db.source.updateMany({
     where: { id: sourceId },
     data: { active },
@@ -36,7 +36,7 @@ export type SaveManualFipeError = "not_found" | "catalog_empty" | "brand_require
 export async function saveManualFipeMatch(
   input: SaveManualFipeMatchInput,
 ): Promise<Result<{ requeued: number }, SaveManualFipeError>> {
-  await requireUser();
+  await requireAdmin();
   const match = await getFipeMatch(input.matchId);
   if (!match) return err("not_found");
 
@@ -101,7 +101,7 @@ export type ResetFipeMatchError = "not_found";
 export async function revertFipeMatchToAuto(
   matchId: string,
 ): Promise<Result<{ requeued: number }, ResetFipeMatchError>> {
-  await requireUser();
+  await requireAdmin();
   const match = await getFipeMatch(matchId);
   if (!match) return err("not_found");
   const requeued = await resetMatchToAuto(match.id);
