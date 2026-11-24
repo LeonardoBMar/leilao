@@ -11,6 +11,7 @@ export type InputProps = React.ComponentProps<"input"> & {
   label?: string;
   helperText?: string;
   error?: string;
+  suffix?: string;
   loading?: boolean;
   containerClassName?: string;
 };
@@ -20,6 +21,7 @@ function Input({
   label,
   helperText,
   error,
+  suffix,
   loading = false,
   required,
   disabled,
@@ -52,7 +54,7 @@ function Input({
           className={cn(
             "h-10 w-full rounded-md border border-control-border bg-surface px-3 text-base text-foreground shadow-xs transition-[border-color,box-shadow] duration-150 ease-[var(--ease-out)] outline-none placeholder:text-placeholder read-only:bg-surface-subtle read-only:text-foreground focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:bg-surface-subtle disabled:text-muted-subtle sm:h-9 sm:text-body",
             error && "border-error focus:border-error focus:ring-error/20",
-            loading && "pr-10",
+            (loading || Boolean(suffix)) && "pr-10",
             className,
           )}
           {...props}
@@ -62,6 +64,13 @@ function Input({
             aria-hidden="true"
             className="absolute top-1/2 right-3 size-4 -translate-y-1/2 animate-spin text-muted"
           />
+        ) : suffix ? (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-caption text-muted"
+          >
+            {suffix}
+          </span>
         ) : null}
       </div>
       {error ? (
