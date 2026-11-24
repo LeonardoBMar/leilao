@@ -123,7 +123,7 @@ export function createPoliteFetcher({
         retryAfterMs: parseRetryAfter(response.headers.get("retry-after"), now()),
       };
     } catch (error) {
-      return { ok: false, status: null, error: error instanceof Error ? error.message : String(error), retry: true };
+      return { ok: false, status: null, error: formatFetchError(error), retry: true };
     }
   }
 
@@ -161,6 +161,15 @@ export function createPoliteFetcher({
     // Consulta de leitura (ex.: situação de vários lotes de uma vez): mesmas regras de ritmo e de novas tentativas.
     post: (url, form) => send({ url, form }),
   };
+}
+
+function formatFetchError(error: unknown): string {
+  if (!(error instanceof Error)) return String(error);
+  const cause = error.cause;
+  if (!(cause instanceof Error)) return error.message;
+  const code = "code" in cause && typeof cause.code === "string" ? cause.code : null;
+  const detail = code ? `${code}: ${cause.message}` : cause.message;
+  return detail ? `${error.message} (${detail})` : error.message;
 }
 
 function parseRetryAfter(value: string | null, nowMs: number): number | undefined {

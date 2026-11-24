@@ -236,4 +236,26 @@ describe("createPoliteFetcher", () => {
     });
     expect(calls).toHaveLength(1);
   });
+
+  it("inclui o código e a mensagem de `error.cause` quando o fetch falha na camada de rede/TLS", async () => {
+    const clock = fakeClock();
+    const cause = Object.assign(new Error("unable to verify the first certificate"), {
+      code: "UNABLE_TO_VERIFY_LEAF_SIGNATURE",
+    });
+    const networkError = new TypeError("fetch failed", { cause });
+    const { impl } = fakeFetch([networkError]);
+    const fetcher = createPoliteFetcher({
+      fetchImpl: impl,
+      sleep: clock.sleep,
+      now: clock.now,
+      minIntervalMs: 0,
+      maxAttempts: 1,
+    });
+
+    expect(await fetcher.get("https://fonte/tls")).toEqual({
+      ok: false,
+      status: null,
+      error: "fetch failed (UNABLE_TO_VERIFY_LEAF_SIGNATURE: unable to verify the first certificate)",
+    });
+  });
 });
