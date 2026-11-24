@@ -8,7 +8,6 @@ import { DistributionChart } from "@/components/charts/distribution-chart";
 import { MapLegend } from "@/components/charts/map-legend";
 import { RangeBars } from "@/components/charts/range-bars";
 import { LinkTabs, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui";
-import { DEFAULT_REGION } from "@/domain/listings/region";
 import { effectiveMetric, type ResearchFilters } from "@/domain/research/filters";
 import { STATE_NAMES } from "@/domain/research/states";
 import { MIN_SAMPLE } from "@/domain/research/summary";
@@ -71,14 +70,14 @@ export async function StateBlock({ filters, noSales }: { filters: ResearchFilter
           <div className="grid gap-8 lg:grid-cols-2">
             <section aria-labelledby="pesquisa-onde-distancia" className="grid min-w-0 content-start gap-3">
               <h3 id="pesquisa-onde-distancia" className="text-heading-3 text-foreground">
-                Distância de {DEFAULT_REGION.label}{" "}
+                Distância de {where.regionLabel}{" "}
                 <span className="text-caption font-normal text-muted">(região-base)</span>
               </h3>
               {bands.distance.length === 0 ? (
                 <p className="text-body text-muted">Poucas vendas em cada faixa para uma mediana.</p>
               ) : (
                 <RangeBars
-                  ariaLabel={`Mediana por distância de ${DEFAULT_REGION.label}: ${bands.distance.map((row) => row.ariaLabel).join("; ")}`}
+                  ariaLabel={`Mediana por distância de ${where.regionLabel}: ${bands.distance.map((row) => row.ariaLabel).join("; ")}`}
                   domain={bands.domain}
                   rows={bands.distance}
                 />

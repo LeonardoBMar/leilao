@@ -5,7 +5,7 @@ import { z } from "zod";
 import { DAMAGE_LEVELS } from "@/domain/listings/condition";
 import { CATEGORY_OF_KEY } from "@/domain/listings/criteria";
 import { SALES_WINDOW_MS } from "@/domain/listings/estimates";
-import { EARTH_RADIUS_KM } from "@/domain/listings/geo";
+import { type Coordinates, EARTH_RADIUS_KM } from "@/domain/listings/geo";
 import { DEFAULT_REGION } from "@/domain/listings/region";
 import { DAMAGE_OF_CONDITION, periodStart, type ResearchFilters } from "@/domain/research/filters";
 import { type GroupStats, RATIO_BOUNDS } from "@/domain/research/summary";
@@ -26,13 +26,13 @@ export const RATIO = sql`(l.final_bid_cents::float8 / l.market_value_cents)`;
 /** Chave do veículo gravada pela coleta (D-77): filtrar e agrupar por ela usa o índice e evita a regra por linha. */
 export const VEHICLE_KEY = sql`l.vehicle_key`;
 
-/** Distância em linha reta (haversine, km) da região padrão até a cidade do pátio; sem cidade, `NULL`. */
-export const DISTANCE_KM = (() => {
-  const { latitude, longitude } = DEFAULT_REGION.center;
+/** Distância em linha reta (haversine, km) da região configurada até a cidade do pátio; sem cidade, `NULL`. */
+export function distanceKmSql(center: Coordinates = DEFAULT_REGION.center) {
+  const { latitude, longitude } = center;
   return sql`2 * ${EARTH_RADIUS_KM}::float8 * asin(least(1, sqrt(
     power(sin(radians(m.latitude - ${latitude}::float8) / 2), 2)
     + cos(radians(${latitude}::float8)) * cos(radians(m.latitude)) * power(sin(radians(m.longitude - ${longitude}::float8) / 2), 2))))`;
-})();
+}
 
 export type SalesScope = {
   /** Filtra a categoria do filtro (a barra conta as vendas de cada categoria). */

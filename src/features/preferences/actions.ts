@@ -21,6 +21,7 @@ function revalidateAffectedRoutes() {
   revalidatePath("/minhas-analises");
   revalidatePath("/monitores");
   revalidatePath("/mercado");
+  revalidatePath("/mercado/panorama");
   refresh();
 }
 

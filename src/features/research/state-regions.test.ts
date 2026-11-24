@@ -107,6 +107,7 @@ describe("whereRangeRows", () => {
   });
   const where = {
     metric: "ratio" as const,
+    regionLabel: "São Carlos/SP",
     distance: [
       { band: "ate100" as const, summary: summary(40, 0.42) },
       { band: "ate300" as const, summary: { kind: "few" as const, n: 3 } },

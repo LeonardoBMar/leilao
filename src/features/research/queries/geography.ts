@@ -14,11 +14,12 @@ import {
   ratioAxisMax,
   summarize,
 } from "@/domain/research/summary";
+import { getUserPreferences } from "@/features/preferences/queries";
 import { requireUser } from "@/server/auth";
 
 import type { StateDetail, StateMapView, WhereView } from "../types";
 import { listSales, ratioDistribution } from "./shared";
-import { DISTANCE_KM, RATIO, rows, salesWhere, sql, statsColumns, statsShape, toStats } from "./sql";
+import { distanceKmSql, RATIO, rows, salesWhere, sql, statsColumns, statsShape, toStats } from "./sql";
 
 /** Mapa: um resumo por estado, em % do valor de mercado ou, com modelo, em lance final (centavos). */
 export async function getStateMap(filters: ResearchFilters): Promise<StateMapView> {
@@ -41,7 +42,7 @@ export async function getStateMap(filters: ResearchFilters): Promise<StateMapVie
  * os filtros e na medida do mapa (% da FIPE ou, com modelo, lance final).
  */
 export const getWhereView = cache(async (filters: ResearchFilters): Promise<WhereView> => {
-  await requireUser();
+  const { region } = await getUserPreferences();
   const metric = effectiveMetric(filters);
   const value = metric === "ratio" ? RATIO : sql`l.final_bid_cents::float8`;
   const where = salesWhere(filters, { ratio: metric === "ratio" });
@@ -55,7 +56,7 @@ export const getWhereView = cache(async (filters: ResearchFilters): Promise<Wher
           ELSE 'mais300'
         END AS band, ${statsColumns(value)}
         FROM listings l LEFT JOIN municipalities m ON m.ibge_code = l.municipality_id
-        CROSS JOIN LATERAL (SELECT ${DISTANCE_KM} AS km) d
+        CROSS JOIN LATERAL (SELECT ${distanceKmSql(region.center)} AS km) d
         WHERE ${where} GROUP BY 1`,
     ),
     rows(
@@ -67,6 +68,7 @@ export const getWhereView = cache(async (filters: ResearchFilters): Promise<Wher
   ]);
   return {
     metric,
+    regionLabel: region.label,
     distance: [...DISTANCE_BANDS, null].map((band) => {
       const stats = byDistance.find((row) => row.band === band);
       return { band, summary: summarize(stats && toStats(stats)) };

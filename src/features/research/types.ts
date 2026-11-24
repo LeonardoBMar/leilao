@@ -79,6 +79,7 @@ export type ConditionDistribution = {
  */
 export type WhereView = {
   metric: ResearchMetric;
+  regionLabel: string;
   distance: { band: DistanceBand | null; summary: GroupSummary }[];
   places: { state: StateCode; source: { id: string; name: string }; summary: GroupSummary }[];
 };
