@@ -37,6 +37,7 @@ export async function toggleSourceActiveAction(_prev: ActionState, formData: For
   if (!result.ok) return failure(TOGGLE_SOURCE_ERRORS[result.error], formData);
 
   updateTag("collector-status");
+  updateTag("catalog-sources");
   refresh();
   return {
     status: "success",

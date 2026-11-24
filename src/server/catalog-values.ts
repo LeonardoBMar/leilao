@@ -1,6 +1,6 @@
 import "server-only";
 
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 
 import { type Coordinates, distanceKm } from "@/domain/listings/geo";
 import { DEFAULT_REGION } from "@/domain/listings/region";
@@ -35,6 +35,7 @@ export type CatalogSource = { id: string; name: string; active: boolean };
 export async function catalogSources(): Promise<CatalogSource[]> {
   "use cache";
   cacheLife("catalog");
+  cacheTag("catalog-sources");
   return db.source.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, active: true } });
 }
 
