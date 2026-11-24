@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 
-import { Badge, Card, CurrencyInput, Money } from "@/components/ui";
-import { compareToLimit, differenceToLimit, simulateBid } from "@/domain/finance/calculator";
-import { type Cents, cents, parseBRL } from "@/domain/money";
+import { Badge, Button, Card, CurrencyInput, Money } from "@/components/ui";
+import { calculateBreakEvenBid, compareToLimit, differenceToLimit, simulateBid } from "@/domain/finance/calculator";
+import { type Cents, cents, MAX_CENTS, parseBRL } from "@/domain/money";
 import type { LotMarketReference } from "@/features/research/types";
 import { formatBRL, formatMoneyInput } from "@/lib/format";
 import { LIMIT_COMPARISON_LABELS, LIMIT_COMPARISON_VARIANTS } from "@/lib/limit-comparison";
@@ -36,6 +36,27 @@ export function AnalysisSummary({ model, currentBid, market, marketNote }: Analy
   const bid = parsedBid !== null && parsedBid >= 0 ? parsedBid : null;
   const simulation = complete && bid !== null ? simulateBid(complete, bid) : null;
   const comparison = compareToLimit(outcome, bid);
+  const breakEvenBid = complete ? calculateBreakEvenBid(complete) : null;
+
+  const STEP_CENTS = 50_000;
+  function setBidValue(next: Cents) {
+    setBidText(formatMoneyInput(next));
+  }
+  function stepBid(delta: number) {
+    const base = bid ?? 0;
+    const next = Math.min(MAX_CENTS, Math.max(0, base + delta));
+    setBidValue(cents(next));
+  }
+
+  const quickScenarios: { label: string; value: Cents }[] = [];
+  if (currentBid !== null && currentBid > 0) quickScenarios.push({ label: "Lance atual", value: currentBid });
+  if (market?.band) {
+    quickScenarios.push({ label: "Mediana", value: market.band.median });
+    quickScenarios.push({ label: "P75", value: market.band.high });
+  }
+  if (breakEvenBid !== null && breakEvenBid > 0) {
+    quickScenarios.push({ label: "Margem zero", value: breakEvenBid });
+  }
 
   return (
     <Card variant="summary" className="grid gap-5.5 p-5 md:p-7 lg:sticky lg:top-6">
@@ -91,6 +112,45 @@ export function AnalysisSummary({ model, currentBid, market, marketNote }: Analy
           value={bidText}
           onChange={(event) => setBidText(event.target.value)}
         />
+        <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Atalhos de simulação">
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            disabled={(bid ?? 0) === 0}
+            onClick={() => stepBid(-STEP_CENTS)}
+            aria-label="Diminuir R$ 500 no lance simulado"
+          >
+            − R$ 500
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => stepBid(STEP_CENTS)}
+            aria-label="Aumentar R$ 500 no lance simulado"
+          >
+            + R$ 500
+          </Button>
+          {quickScenarios.map((scenario) => (
+            <Button
+              key={scenario.label}
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setBidValue(scenario.value)}
+              className="border border-border text-caption"
+            >
+              {scenario.label}
+            </Button>
+          ))}
+        </div>
+        {breakEvenBid !== null ? (
+          <p className="text-caption text-muted tabular-nums">
+            Ponto de equilíbrio (margem R$ 0):{" "}
+            <strong className="font-medium text-foreground">{formatBRL(breakEvenBid)}</strong>
+          </p>
+        ) : null}
         {simulation ? (
           <dl className="grid gap-0.5 text-label font-normal" aria-live="polite">
             <Row label="Comissão">

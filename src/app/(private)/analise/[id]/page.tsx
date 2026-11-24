@@ -5,10 +5,10 @@ import { AnalysisView, AnalysisViewSkeleton } from "@/features/analyses/componen
 
 export const metadata: Metadata = { title: "Análise financeira · Leilão Tracker" };
 
-export default function AnalysisPage({ params }: PageProps<"/analise/[id]">) {
+export default function AnalysisPage({ params, searchParams }: PageProps<"/analise/[id]">) {
   return (
     <Suspense fallback={<AnalysisViewSkeleton />}>
-      <AnalysisView params={params} />
+      <AnalysisView params={params} searchParams={searchParams} />
     </Suspense>
   );
 }

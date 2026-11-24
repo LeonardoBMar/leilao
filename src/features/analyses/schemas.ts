@@ -7,6 +7,9 @@ import { checkbox, entityId, optionalBrlAmount, optionalText } from "@/lib/schem
 
 export const analysisIdSchema = entityId();
 export const lotIdSchema = entityId();
+export const analysisCompareSearchSchema = z.object({
+  comparar: entityId().optional().catch(undefined),
+});
 export const fixDraftIdsSchema = z.array(entityId()).min(1, "Selecione ao menos um rascunho para fixar.").max(50);
 
 const emptyToUndefined = (value: unknown) => (typeof value === "string" && value.trim() === "" ? undefined : value);

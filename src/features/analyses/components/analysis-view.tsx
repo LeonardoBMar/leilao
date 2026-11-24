@@ -1,18 +1,20 @@
-import { ArrowLeft, FilePen, GitBranchPlus } from "lucide-react";
+import { ArrowLeft, FilePen, GitBranchPlus, GitCompareArrows } from "lucide-react";
+import type { Route } from "next";
 import { notFound } from "next/navigation";
 
 import { BreadcrumbLink, BreadcrumbPage, Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert, AlertDescription, Badge, ButtonLink, Section, SectionTitle, Skeleton } from "@/components/ui";
-import { FORMULA_VERSION } from "@/domain/finance/calculator";
+import { calculateMaxBid, FORMULA_VERSION } from "@/domain/finance/calculator";
 import { listLotImages } from "@/features/lot-images/queries";
 import { getLotMarketReference } from "@/features/research/queries";
 import type { LotMarketReference } from "@/features/research/types";
 import { formatDate, formatDateTime } from "@/lib/format";
 
-import { getAnalysis, listLotAnalyses } from "../queries";
-import { analysisIdSchema } from "../schemas";
+import { getAnalysis, getAnalysisForComparison, listLotAnalyses } from "../queries";
+import { analysisCompareSearchSchema, analysisIdSchema } from "../schemas";
 import type { AnalysisDetail } from "../types";
+import { AnalysisDiffPanel } from "./analysis-diff-panel";
 import { AnalysisEditor } from "./analysis-editor";
 import { AnalysisHistory } from "./analysis-history";
 import { AnalysisReadonly } from "./analysis-readonly";
@@ -20,15 +22,27 @@ import { AnalysisVehicleStrip } from "./analysis-vehicle-strip";
 import { CreateAnalysisButton } from "./create-analysis-button";
 
 /** Tela da análise (SPEC `/analise/[id]`): rascunho editável ou versão fixada em leitura, mais o histórico. */
-export async function AnalysisView({ params }: { params: Promise<{ id: string }> }) {
-  const parsed = analysisIdSchema.safeParse((await params).id);
+export async function AnalysisView({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const [resolvedParams, resolvedSearch] = await Promise.all([params, searchParams ?? Promise.resolve({})]);
+  const parsed = analysisIdSchema.safeParse(resolvedParams.id);
   if (!parsed.success) notFound();
   const analysis = await getAnalysis(parsed.data);
   if (!analysis) notFound();
-  const [versions, market, lotImages] = await Promise.all([
+
+  const compareId = analysisCompareSearchSchema.parse(resolvedSearch).comparar;
+  const [versions, market, lotImages, compared] = await Promise.all([
     listLotAnalyses(analysis.lot.id),
     getLotMarketReference(analysis.lot.id),
     listLotImages(analysis.lot.id),
+    compareId && compareId !== analysis.id
+      ? getAnalysisForComparison(analysis.lot.id, compareId)
+      : Promise.resolve(null),
   ]);
 
   const isFixed = analysis.status === "fixed";
@@ -39,6 +53,29 @@ export async function AnalysisView({ params }: { params: Promise<{ id: string }>
       ...lot.context.listingPhotoUrls,
     ]),
   );
+
+  const previousVersion = versions.find((item) => item.version < analysis.version) ?? null;
+  const draftOutcome = analysis.status === "draft" ? calculateMaxBid(analysis.inputs) : null;
+  const currentSnapshot = {
+    id: analysis.id,
+    version: analysis.version,
+    status: analysis.status,
+    inputs: analysis.inputs,
+    fipeValue: analysis.references.fipeValue,
+    maxBid:
+      analysis.status === "fixed"
+        ? (analysis.outputs?.maxBid ?? null)
+        : draftOutcome?.kind === "viable"
+          ? draftOutcome.maxBid
+          : null,
+    isViable:
+      analysis.status === "fixed"
+        ? (analysis.outputs?.isViable ?? null)
+        : draftOutcome === null || draftOutcome.kind === "incomplete"
+          ? null
+          : draftOutcome.kind === "viable",
+    notes: analysis.references.notes,
+  };
 
   return (
     <div className="grid gap-7">
@@ -115,9 +152,22 @@ export async function AnalysisView({ params }: { params: Promise<{ id: string }>
         <AnalysisEditor analysis={analysis} market={market} />
       )}
 
-      <Section aria-labelledby="analysis-history" className="border-t border-border pt-7">
-        <SectionTitle id="analysis-history">Histórico de versões</SectionTitle>
-        <AnalysisHistory versions={versions} currentId={analysis.id} />
+      <Section aria-labelledby="analysis-history" className="grid gap-4 border-t border-border pt-7">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <SectionTitle id="analysis-history">Histórico de versões</SectionTitle>
+          {previousVersion && !compared ? (
+            <ButtonLink
+              href={`/analise/${analysis.id}?comparar=${previousVersion.id}` as Route}
+              variant="secondary"
+              size="sm"
+            >
+              <GitCompareArrows aria-hidden="true" className="size-4" />
+              Comparar com v{previousVersion.version}
+            </ButtonLink>
+          ) : null}
+        </div>
+        {compared ? <AnalysisDiffPanel base={compared} current={currentSnapshot} /> : null}
+        <AnalysisHistory versions={versions} currentId={analysis.id} compareId={compared?.id} />
       </Section>
     </div>
   );

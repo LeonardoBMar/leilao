@@ -2,7 +2,8 @@ import "server-only";
 
 import { cache } from "react";
 
-import type { AnalysisInputs } from "@/domain/finance/calculator";
+import { type AnalysisInputs, calculateMaxBid } from "@/domain/finance/calculator";
+import type { AnalysisDiffSnapshot } from "@/domain/finance/diff";
 import { bps, cents } from "@/domain/money";
 import { getLotMarketBands } from "@/features/research/queries";
 import type { Prisma } from "@/generated/prisma/client";
@@ -209,6 +210,52 @@ export const listLotAnalyses = cache(async (lotId: string): Promise<AnalysisVers
   });
   return rows.map(({ maxBidCents, ...row }) => ({ ...row, maxBid: money(maxBidCents) }));
 });
+
+/**
+ * Carrega outra versão do mesmo lote para comparação (diff, D-88).
+ * Filtra por `ownerId` e `lotId` para nunca comparar análises de lotes ou donos diferentes.
+ */
+export async function getAnalysisForComparison(
+  lotId: string,
+  analysisId: string,
+): Promise<AnalysisDiffSnapshot | null> {
+  const user = await requireUser();
+  const row = await db.analysis.findFirst({
+    where: { id: analysisId, lotId, ownerId: user.id },
+    select: {
+      id: true,
+      version: true,
+      status: true,
+      ...analysisColumns,
+      fipeValueCents: true,
+      maxBidCents: true,
+      isViable: true,
+      notes: true,
+    },
+  });
+  if (!row) return null;
+  const inputs = toInputs(row);
+  // Para rascunhos, deriva limite e viabilidade em memória para o diff mostrar o impacto antes de fixar.
+  const draftOutcome = row.status === "draft" ? calculateMaxBid(inputs) : null;
+  const maxBid =
+    row.status === "fixed" ? money(row.maxBidCents) : draftOutcome?.kind === "viable" ? draftOutcome.maxBid : null;
+  const isViable =
+    row.status === "fixed"
+      ? row.isViable
+      : draftOutcome === null || draftOutcome.kind === "incomplete"
+        ? null
+        : draftOutcome.kind === "viable";
+  return {
+    id: row.id,
+    version: row.version,
+    status: row.status,
+    inputs,
+    fipeValue: money(row.fipeValueCents),
+    maxBid,
+    isViable,
+    notes: row.notes,
+  };
+}
 
 /**
  * Calibração (docs/PLANO-MERCADO.md §7): a revisão vigente de cada lote do usuário, quando o lote foi arrematado com
