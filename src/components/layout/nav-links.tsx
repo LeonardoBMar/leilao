@@ -1,11 +1,22 @@
 "use client";
 
-import { BellRing, Calculator, ChartColumn, Gavel, House, type LucideIcon } from "lucide-react";
+import {
+  BellRing,
+  Calculator,
+  ChartColumn,
+  ChevronRight,
+  Database,
+  Gavel,
+  House,
+  type LucideIcon,
+  Radar,
+  Settings,
+} from "lucide-react";
 import { LayoutGroup, m } from "motion/react";
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { type ReactNode, Suspense, useEffect, useId, useSyncExternalStore } from "react";
+import { type ReactNode, Suspense, useEffect, useId, useState, useSyncExternalStore } from "react";
 
 import { toast, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui";
 import { MOTION_SPRING } from "@/lib/motion";
@@ -29,6 +40,11 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/minhas-analises", label: "Minhas análises", icon: Calculator, sections: ["/lotes", "/analise"] },
   { href: "/alertas", label: "Alertas", icon: BellRing, sections: ["/monitores"] },
   { href: "/mercado", label: "Mercado", icon: ChartColumn },
+];
+
+export const SYSTEM_NAV_ITEMS: readonly NavItem[] = [
+  { href: "/sistema", label: "Coleta", icon: Radar },
+  { href: "/sistema/fipe", label: "Correções FIPE", icon: Database },
 ];
 
 /** Conteúdo ao lado do item, renderizado no servidor (ex.: contador de alertas não lidos, DESIGN.md §9). */
@@ -74,6 +90,10 @@ function NavList({
 }: NavLinksProps & { pathname: string | null; saved?: Readonly<Record<string, string>> }) {
   const router = useRouter();
   const groupId = useId();
+  const systemListId = useId();
+  const isSystemActive = pathname !== null && (pathname === "/sistema" || pathname.startsWith("/sistema/"));
+  const [systemOpenOverride, setSystemOpenOverride] = useState<boolean | null>(null);
+  const systemOpen = systemOpenOverride ?? isSystemActive;
 
   const list = (
     <LayoutGroup id={groupId}>
@@ -164,6 +184,110 @@ function NavList({
           );
         })}
       </ul>
+
+      {/* Grupo separado para funções operacionais do sistema (default colapsado, D-88) */}
+      <div className="mt-2.5 border-t border-border pt-2.5">
+        {collapsed ? (
+          <Tooltip delayDuration={180}>
+            <TooltipTrigger asChild>
+              <Link
+                href="/sistema"
+                onClick={() => onNavigate?.()}
+                aria-current={isSystemActive ? "page" : undefined}
+                aria-label="Sistema"
+                className={cn(
+                  "group relative flex h-9 items-center gap-2.5 overflow-clip rounded-md px-2.5 text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97]",
+                  isSystemActive ? "font-semibold text-foreground" : "hover:bg-primary-subtle/70 hover:text-foreground",
+                )}
+              >
+                {isSystemActive ? (
+                  <m.span
+                    aria-hidden="true"
+                    layoutId="nav-active-pill"
+                    transition={MOTION_SPRING}
+                    className="pointer-events-none absolute inset-0 rounded-md bg-primary-subtle shadow-[inset_0_0_0_1px_var(--border)]"
+                  />
+                ) : null}
+                <Settings
+                  aria-hidden="true"
+                  strokeWidth={1.75}
+                  className={cn(
+                    "relative z-10 size-4 shrink-0 text-muted-subtle transition-colors duration-120 group-hover:text-foreground",
+                    isSystemActive && "text-foreground",
+                  )}
+                />
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={10}>
+              Sistema
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <div className="grid gap-0.5">
+            <button
+              type="button"
+              onClick={() => setSystemOpenOverride(!systemOpen)}
+              aria-expanded={systemOpen}
+              aria-controls={systemListId}
+              className={cn(
+                "group relative flex h-9 w-full items-center gap-2.5 overflow-clip rounded-md px-2.5 text-left text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color] duration-150 ease-[var(--ease-out)] outline-none hover:bg-primary-subtle/70 hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent",
+                isSystemActive && "font-semibold text-foreground",
+              )}
+            >
+              <Settings
+                aria-hidden="true"
+                strokeWidth={1.75}
+                className={cn(
+                  "size-4 shrink-0 text-muted-subtle transition-colors duration-120 group-hover:text-foreground",
+                  isSystemActive && "text-foreground",
+                )}
+              />
+              <span className="min-w-0 flex-1 truncate">Sistema</span>
+              <ChevronRight
+                aria-hidden="true"
+                strokeWidth={1.75}
+                className={cn(
+                  "size-3.5 shrink-0 text-muted-subtle transition-transform duration-150 ease-[var(--ease-out)]",
+                  systemOpen && "rotate-90",
+                )}
+              />
+            </button>
+
+            {systemOpen ? (
+              <ul id={systemListId} className="grid gap-0.5 pl-4">
+                {SYSTEM_NAV_ITEMS.map(({ href, label, icon: SubIcon }) => {
+                  const isSubActive = pathname === href;
+                  return (
+                    <li key={href}>
+                      <Link
+                        href={href}
+                        onClick={() => onNavigate?.()}
+                        aria-current={isSubActive ? "page" : undefined}
+                        className={cn(
+                          "group relative flex h-8 items-center gap-2 rounded-md px-2.5 text-caption font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent",
+                          isSubActive
+                            ? "bg-primary-subtle font-semibold text-foreground shadow-[inset_0_0_0_1px_var(--border)]"
+                            : "hover:bg-primary-subtle/70 hover:text-foreground",
+                        )}
+                      >
+                        <SubIcon
+                          aria-hidden="true"
+                          strokeWidth={1.75}
+                          className={cn(
+                            "size-3.5 shrink-0 text-muted-subtle group-hover:text-foreground",
+                            isSubActive && "text-foreground",
+                          )}
+                        />
+                        <span className="truncate">{label}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : null}
+          </div>
+        )}
+      </div>
     </LayoutGroup>
   );
 

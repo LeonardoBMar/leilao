@@ -6,6 +6,7 @@ import {
   Car,
   ChartColumn,
   Compass,
+  Database,
   Eye,
   FilePen,
   Gavel,
@@ -30,7 +31,7 @@ type CommandDestination = {
   href: Route;
   label: string;
   meta?: string;
-  group: "Navegação" | "Mercado" | "Ações" | "Acompanhando" | "Buscar";
+  group: "Navegação" | "Mercado" | "Ações" | "Sistema" | "Acompanhando" | "Buscar";
   keywords: string;
   icon: LucideIcon;
 };
@@ -95,6 +96,20 @@ const DESTINATIONS: readonly CommandDestination[] = [
     group: "Ações",
     keywords: "novo criar adicionar",
     icon: Plus,
+  },
+  {
+    href: "/sistema",
+    label: "Sistema — Saúde da coleta",
+    group: "Sistema",
+    keywords: "coletor fontes erros pausar status",
+    icon: Radar,
+  },
+  {
+    href: "/sistema/fipe",
+    label: "Sistema — Correções FIPE",
+    group: "Sistema",
+    keywords: "fipe casamento tabela manual",
+    icon: Database,
   },
 ];
 

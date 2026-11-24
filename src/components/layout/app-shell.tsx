@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, PanelLeftClose, PanelLeftOpen, Search } from "lucide-react";
+import { ChevronRight, PanelLeftClose, PanelLeftOpen, Search, Settings } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { type ReactNode, Suspense, useEffect, useState, useSyncExternalStore } from "react";
 
@@ -48,6 +48,13 @@ function setSidebarCollapsed(next: boolean) {
 
 function resolveRouteContext(pathname: string | null) {
   if (!pathname) return null;
+  if (pathname === "/sistema" || pathname.startsWith("/sistema/")) {
+    return {
+      icon: Settings,
+      section: "Sistema",
+      detail: pathname === "/sistema/fipe" ? "Correções FIPE" : "Coleta",
+    };
+  }
   const item = NAV_ITEMS.find((entry) =>
     [entry.href, ...(entry.sections ?? [])].some(
       (section) => pathname === section || pathname.startsWith(`${section}/`),
