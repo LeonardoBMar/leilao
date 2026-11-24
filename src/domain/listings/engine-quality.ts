@@ -11,6 +11,14 @@ export const ENGINE_QUALITY_REFRESH_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 /** Data inicial padrão dos alvos do backtest (quando a base passou de mil vendas, D-76). */
 export const DEFAULT_ENGINE_QUALITY_FROM = new Date("2026-09-15T00:00:00-03:00");
 
+/** Janela máxima de alvos avaliados no backtest semanal automático (180 dias), para manter custo estável. */
+export const ENGINE_QUALITY_TARGET_WINDOW_MS = 180 * 24 * 60 * 60 * 1000;
+
+/** Início da janela móvel de avaliação: nunca anterior a `DEFAULT_ENGINE_QUALITY_FROM`. */
+export function engineQualityWindowStart(now: Date): Date {
+  return new Date(Math.max(DEFAULT_ENGINE_QUALITY_FROM.getTime(), now.getTime() - ENGINE_QUALITY_TARGET_WINDOW_MS));
+}
+
 const CONFIDENCE_LEVELS = ["high", "medium", "low"] as const;
 
 export const engineQualityBucketSchema = z.object({

@@ -37,11 +37,18 @@ export function runBacktest<S extends BacktestSale>(
   }
 
   const outcomes: BacktestOutcome<S>[] = [];
+  let left = 0;
+  let right = 0;
   for (const [day, targets] of byDay) {
     const start = day * DAY_MS;
-    const prior = sorted.filter(
-      (sale) => sale.endsAt.getTime() < start && sale.endsAt.getTime() >= start - options.windowMs,
-    );
+    const minTime = start - options.windowMs;
+    while (right < sorted.length && (sorted[right]?.endsAt.getTime() ?? Number.POSITIVE_INFINITY) < start) {
+      right += 1;
+    }
+    while (left < right && (sorted[left]?.endsAt.getTime() ?? Number.POSITIVE_INFINITY) < minTime) {
+      left += 1;
+    }
+    const prior = sorted.slice(left, right);
     const estimate = makeEstimator(prior);
     for (const sale of targets) outcomes.push({ sale, estimate: estimate(sale) });
   }

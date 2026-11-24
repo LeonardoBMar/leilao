@@ -4,8 +4,11 @@ import { cents } from "../money";
 import type { BacktestOutcome, BacktestSale } from "./backtest";
 import {
   buildEngineQualityReport,
+  DEFAULT_ENGINE_QUALITY_FROM,
   ENGINE_QUALITY_REFRESH_INTERVAL_MS,
+  ENGINE_QUALITY_TARGET_WINDOW_MS,
   ENGINE_QUALITY_VERSION,
+  engineQualityWindowStart,
   isEngineQualityStale,
   parseEngineQualityReport,
   serializeEngineQualityReport,
@@ -162,5 +165,17 @@ describe("isEngineQualityStale", () => {
     const eightDaysAgo = new Date(now.getTime() - ENGINE_QUALITY_REFRESH_INTERVAL_MS - 24 * 60 * 60 * 1000);
     expect(isEngineQualityStale(exactlySevenDays, now)).toBe(true);
     expect(isEngineQualityStale(eightDaysAgo, now)).toBe(true);
+  });
+});
+
+describe("engineQualityWindowStart", () => {
+  it("mantém DEFAULT_ENGINE_QUALITY_FROM quando ainda não passaram 180 dias", () => {
+    const now = new Date("2026-11-24T12:00:00.000Z");
+    expect(engineQualityWindowStart(now)).toEqual(DEFAULT_ENGINE_QUALITY_FROM);
+  });
+
+  it("avança a janela móvel para 180 dias antes de now quando o histórico ultrapassa a janela", () => {
+    const now = new Date("2027-06-01T12:00:00.000Z");
+    expect(engineQualityWindowStart(now)).toEqual(new Date(now.getTime() - ENGINE_QUALITY_TARGET_WINDOW_MS));
   });
 });
