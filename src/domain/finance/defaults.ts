@@ -95,15 +95,43 @@ export type DefaultAssumptions = {
   basis: DefaultsBasis;
 };
 
+/** Sobrescritas opcionais das premissas padrão definidas nas preferências do usuário. */
+export type UserDefaultOverrides = {
+  desiredMarginRateBps?: Bps | null;
+  riskReserveRateBps?: Bps | null;
+  documentationCost?: Cents | null;
+  towBase?: Cents | null;
+  towPerKm?: Cents | null;
+  towUnknownDistance?: Cents | null;
+  saleDiscountNoneBps?: Bps | null;
+  saleDiscountSmallBps?: Bps | null;
+  saleDiscountMediumBps?: Bps | null;
+  saleDiscountLargeBps?: Bps | null;
+};
+
+function resolveSaleDiscount(level: keyof typeof SALE_DISCOUNT_BPS, overrides?: UserDefaultOverrides | null): Bps {
+  switch (level) {
+    case "none":
+      return overrides?.saleDiscountNoneBps ?? SALE_DISCOUNT_BPS.none;
+    case "small":
+      return overrides?.saleDiscountSmallBps ?? SALE_DISCOUNT_BPS.small;
+    case "medium":
+      return overrides?.saleDiscountMediumBps ?? SALE_DISCOUNT_BPS.medium;
+    case "large":
+      return overrides?.saleDiscountLargeBps ?? SALE_DISCOUNT_BPS.large;
+  }
+}
+
 /** Valor de venda e reparos a partir da FIPE; sem FIPE (ou sucata), ficam vazios para o usuário. */
 export function estimateFromFipe(
   input: Pick<DefaultsInput, "fipe" | "isMotorcycle" | "damageLevel" | "airbagDeployed" | "missingParts">,
+  overrides?: UserDefaultOverrides | null,
 ): { marketValue: Cents | null; repairCost: Cents | null; saleDiscount: Bps | null; repairRate: Bps | null } {
   const level = input.damageLevel ?? "none";
   if (input.fipe === null || input.fipe <= 0 || level === "salvage") {
     return { marketValue: null, repairCost: null, saleDiscount: null, repairRate: null };
   }
-  const saleDiscount = SALE_DISCOUNT_BPS[level];
+  const saleDiscount = resolveSaleDiscount(level, overrides);
   const repairRate = REPAIR_RATE_BPS[level];
   const sale = input.fipe - applyRate(input.fipe, saleDiscount);
   const floor = (input.isMotorcycle ? DEFAULT_COSTS.motorcycle : DEFAULT_COSTS.car).repairFloor;
@@ -119,28 +147,31 @@ export function estimateFromFipe(
 }
 
 /** Guincho até o pátio pela distância de estrada estimada. */
-export function towCost(distanceKm: number): { cost: Cents; roadKm: number } {
+export function towCost(distanceKm: number, overrides?: UserDefaultOverrides | null): { cost: Cents; roadKm: number } {
   const roadKm = Math.round(distanceKm * ROAD_FACTOR);
-  return { cost: roundUp(DEFAULT_COSTS.towBase + DEFAULT_COSTS.towPerKm * roadKm, TOW_STEP), roadKm };
+  const towBase = overrides?.towBase ?? DEFAULT_COSTS.towBase;
+  const towPerKm = overrides?.towPerKm ?? DEFAULT_COSTS.towPerKm;
+  return { cost: roundUp(towBase + towPerKm * roadKm, TOW_STEP), roadKm };
 }
 
-export function defaultAssumptions(input: DefaultsInput): DefaultAssumptions {
+export function defaultAssumptions(input: DefaultsInput, overrides?: UserDefaultOverrides | null): DefaultAssumptions {
   const vehicle = input.isMotorcycle ? DEFAULT_COSTS.motorcycle : DEFAULT_COSTS.car;
-  const fromFipe = estimateFromFipe(input);
-  const tow = input.distanceKm === null ? null : towCost(input.distanceKm);
-  const transportCost = input.removalFee ?? tow?.cost ?? DEFAULT_COSTS.towUnknownDistance;
+  const fromFipe = estimateFromFipe(input, overrides);
+  const tow = input.distanceKm === null ? null : towCost(input.distanceKm, overrides);
+  const transportCost =
+    input.removalFee ?? tow?.cost ?? overrides?.towUnknownDistance ?? DEFAULT_COSTS.towUnknownDistance;
 
   return {
     marketValue: fromFipe.marketValue,
     repairCost: fromFipe.repairCost,
-    documentationCost: input.dispatcherFee ?? DEFAULT_COSTS.documentation,
+    documentationCost: input.dispatcherFee ?? overrides?.documentationCost ?? DEFAULT_COSTS.documentation,
     transportCost,
     tiresCost: vehicle.tires,
     serviceCost: vehicle.service,
     otherFees: input.otherFees ?? DEFAULT_COSTS.otherFees,
     commissionRateBps: input.commissionRate ?? DEFAULT_COSTS.commissionRate,
-    riskReserveRateBps: DEFAULT_COSTS.riskReserveRate,
-    desiredMarginRateBps: DEFAULT_COSTS.desiredMarginRate,
+    riskReserveRateBps: overrides?.riskReserveRateBps ?? DEFAULT_COSTS.riskReserveRate,
+    desiredMarginRateBps: overrides?.desiredMarginRateBps ?? DEFAULT_COSTS.desiredMarginRate,
     basis: {
       condition: input.damageLevel ?? "none",
       saleDiscount: fromFipe.saleDiscount,
@@ -155,8 +186,8 @@ export function defaultAssumptions(input: DefaultsInput): DefaultAssumptions {
 }
 
 /** Premissas padrão → entradas da calculadora: comissão em %, reserva e margem em % do valor de venda. */
-export function defaultInputs(input: DefaultsInput): AnalysisInputs {
-  const defaults = defaultAssumptions(input);
+export function defaultInputs(input: DefaultsInput, overrides?: UserDefaultOverrides | null): AnalysisInputs {
+  const defaults = defaultAssumptions(input, overrides);
   return {
     marketValue: defaults.marketValue,
     repairCost: defaults.repairCost,
@@ -179,8 +210,8 @@ export function defaultInputs(input: DefaultsInput): AnalysisInputs {
  * Limite pelas premissas padrão (D-44): a mesma conta do rascunho que nasce com elas. Sem FIPE ou sucata, o valor de
  * venda e os reparos ficam vazios e o resultado é "incompleto".
  */
-export function defaultMaxBid(input: DefaultsInput): MaxBidOutcome {
-  return calculateMaxBid(defaultInputs(input));
+export function defaultMaxBid(input: DefaultsInput, overrides?: UserDefaultOverrides | null): MaxBidOutcome {
+  return calculateMaxBid(defaultInputs(input, overrides));
 }
 
 /** Prefixo das observações geradas automaticamente para rascunhos criados com premissas padrão (D-38). */

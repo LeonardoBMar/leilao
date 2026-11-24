@@ -5,7 +5,7 @@ import {
   completeInputs,
   missingFields,
 } from "../finance/calculator";
-import { defaultMaxBid, type DefaultsInput, estimateFromFipe } from "../finance/defaults";
+import { defaultMaxBid, type DefaultsInput, estimateFromFipe, type UserDefaultOverrides } from "../finance/defaults";
 import { bps, type Cents, cents } from "../money";
 import type { DamageLevel } from "./condition";
 import type { VehicleOrigin } from "./origin";
@@ -331,6 +331,7 @@ export function estimateLimit(
   target: EstimateTarget,
   analyses: readonly AnalysisSample[],
   defaults: DefaultsInput | null,
+  overrides?: UserDefaultOverrides | null,
 ): LimitEstimate {
   const key = vehicleKey(target.brand, target.model);
   const similar = analyses.filter(
@@ -343,7 +344,7 @@ export function estimateLimit(
       Math.abs(target.modelYear - analysis.modelYear) <= YEAR_TOLERANCE,
   );
   if (similar.length < MIN_COMPARABLE_ANALYSES) {
-    const fallback = defaults === null ? null : defaultMaxBid(defaults);
+    const fallback = defaults === null ? null : defaultMaxBid(defaults, overrides);
     if (fallback === null || fallback.kind === "incomplete") {
       return { kind: "insufficient", analyses: similar.length, needed: MIN_COMPARABLE_ANALYSES };
     }
@@ -361,13 +362,16 @@ export function estimateLimit(
   const commissionMode: CommissionMode = percentageCount * 2 >= inputs.length ? "percentage" : "fixed";
   const rate = median((input) => (input.commissionMode === "percentage" ? input.commissionRateBps : null));
   const fixed = median((input) => (input.commissionMode === "fixed" ? input.commissionFixed : null));
-  const listingValue = estimateFromFipe({
-    fipe: target.marketValue,
-    isMotorcycle: target.category === "Motos",
-    damageLevel: target.damageLevel,
-    airbagDeployed: false,
-    missingParts: false,
-  }).marketValue;
+  const listingValue = estimateFromFipe(
+    {
+      fipe: target.marketValue,
+      isMotorcycle: target.category === "Motos",
+      damageLevel: target.damageLevel,
+      airbagDeployed: false,
+      missingParts: false,
+    },
+    overrides,
+  ).marketValue;
   const shareOfSale = (pick: (complete: { marketValue: Cents; riskReserve: Cents; desiredMargin: Cents }) => Cents) =>
     medianOf(
       inputs.map((input) => {

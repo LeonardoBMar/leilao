@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { distanceKm } from "./geo";
 import { municipalityKey, normalizePlaceName, splitBrandModel, stateCode } from "./place";
-import { DEFAULT_REGION } from "./region";
+import { DEFAULT_REGION, resolveRegion } from "./region";
 import {
   AFTER_END_DELAY_MS,
   GIVE_UP_AFTER_END_MS,
@@ -86,6 +86,47 @@ describe("distanceKm", () => {
   it("São Carlos → Araraquara ≈ 39 km e → São Paulo ≈ 200 km, em linha reta", () => {
     expect(distanceKm(saoCarlos, { latitude: -21.7845, longitude: -48.178 })).toBeCloseTo(39.4, 0);
     expect(distanceKm(saoCarlos, { latitude: -23.5329, longitude: -46.6395 })).toBeCloseTo(207, -1);
+  });
+});
+
+describe("resolveRegion", () => {
+  const campinas = {
+    ibgeCode: 3509502,
+    name: "Campinas",
+    state: "SP",
+    latitude: -22.9056,
+    longitude: -47.0608,
+  };
+
+  it("sem override ou com campos nulos volta exatamente para DEFAULT_REGION", () => {
+    expect(resolveRegion()).toEqual(DEFAULT_REGION);
+    expect(resolveRegion(null)).toEqual(DEFAULT_REGION);
+    expect(resolveRegion({ municipality: null, radiusKm: null })).toEqual(DEFAULT_REGION);
+  });
+
+  it("sobrescreve apenas o raio mantendo o município padrão", () => {
+    expect(resolveRegion({ radiusKm: 250 })).toEqual({
+      ...DEFAULT_REGION,
+      radiusKm: 250,
+    });
+  });
+
+  it("sobrescreve o município e usa o raio padrão quando raio não informado", () => {
+    expect(resolveRegion({ municipality: campinas })).toEqual({
+      label: "Campinas/SP",
+      ibgeCode: 3509502,
+      center: { latitude: -22.9056, longitude: -47.0608 },
+      radiusKm: DEFAULT_REGION.radiusKm,
+    });
+  });
+
+  it("sobrescreve município e raio juntos", () => {
+    expect(resolveRegion({ municipality: campinas, radiusKm: 80 })).toEqual({
+      label: "Campinas/SP",
+      ibgeCode: 3509502,
+      center: { latitude: -22.9056, longitude: -47.0608 },
+      radiusKm: 80,
+    });
   });
 });
 

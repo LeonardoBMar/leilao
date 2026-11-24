@@ -5,11 +5,13 @@ import {
   DEFAULT_COSTS,
   DEFAULT_DRAFT_NOTES_PREFIX,
   defaultAssumptions,
+  defaultInputs,
   defaultMaxBid,
   type DefaultsInput,
   estimateFromFipe,
   isUnreviewedDefaultDraft,
   towCost,
+  type UserDefaultOverrides,
 } from "./defaults";
 
 const reais = (value: number) => cents(Math.round(value * 100));
@@ -118,6 +120,78 @@ describe("defaultMaxBid", () => {
   it("sem FIPE ou sucata: incompleto (sem valor de venda nem reparos)", () => {
     expect(defaultMaxBid(car({ fipe: null })).kind).toBe("incomplete");
     expect(defaultMaxBid(car({ damageLevel: "salvage" })).kind).toBe("incomplete");
+  });
+});
+
+describe("UserDefaultOverrides", () => {
+  const overrides: UserDefaultOverrides = {
+    desiredMarginRateBps: bps(2_000),
+    riskReserveRateBps: bps(800),
+    documentationCost: reais(2_000),
+    towBase: reais(400),
+    towPerKm: reais(8),
+    towUnknownDistance: reais(2_200),
+    saleDiscountNoneBps: bps(1_000),
+    saleDiscountSmallBps: bps(1_800),
+    saleDiscountMediumBps: bps(2_800),
+    saleDiscountLargeBps: bps(4_500),
+  };
+
+  it("estimateFromFipe aplica descontos por monta sobrescritos e mantém fallback nos nulos", () => {
+    expect(estimateFromFipe(car({ damageLevel: null }), overrides)).toMatchObject({
+      marketValue: reais(72_000),
+      saleDiscount: bps(1_000),
+    });
+    expect(estimateFromFipe(car({ damageLevel: "small" }), overrides)).toMatchObject({
+      marketValue: reais(65_600),
+      saleDiscount: bps(1_800),
+    });
+    expect(estimateFromFipe(car({ damageLevel: "medium" }), overrides)).toMatchObject({
+      marketValue: reais(57_600),
+      saleDiscount: bps(2_800),
+    });
+    expect(estimateFromFipe(car({ damageLevel: "large" }), overrides)).toMatchObject({
+      marketValue: reais(44_000),
+      saleDiscount: bps(4_500),
+    });
+    expect(estimateFromFipe(car({ damageLevel: "small" }), { saleDiscountSmallBps: null })).toEqual(
+      estimateFromFipe(car({ damageLevel: "small" })),
+    );
+  });
+
+  it("towCost aplica saída e valor por km sobrescritos", () => {
+    // 100 km linha reta -> 130 km estrada; 400 + 8 * 130 = 1.440
+    expect(towCost(100, overrides)).toEqual({ cost: reais(1_440), roadKm: 130 });
+    expect(towCost(100, { towBase: null, towPerKm: null })).toEqual(towCost(100));
+  });
+
+  it("defaultAssumptions, defaultInputs e defaultMaxBid respeitam overrides sem sobrescrever o anúncio", () => {
+    const custom = defaultAssumptions(car(), overrides);
+    expect(custom).toMatchObject({
+      marketValue: reais(72_000),
+      documentationCost: reais(2_000),
+      transportCost: reais(2_200),
+      riskReserveRateBps: bps(800),
+      desiredMarginRateBps: bps(2_000),
+    });
+
+    // Valores vindos do anúncio ainda têm precedência sobre as preferências
+    const withListingFees = defaultAssumptions(car({ dispatcherFee: reais(900), removalFee: reais(600) }), overrides);
+    expect(withListingFees).toMatchObject({
+      documentationCost: reais(900),
+      transportCost: reais(600),
+    });
+
+    expect(defaultInputs(car(), overrides)).toMatchObject({
+      marketValue: reais(72_000),
+      documentationCost: reais(2_000),
+      transportCost: reais(2_200),
+      riskReserveRateBps: bps(800),
+      desiredMarginRateBps: bps(2_000),
+    });
+
+    expect(defaultMaxBid(car(), overrides)).not.toEqual(defaultMaxBid(car()));
+    expect(defaultMaxBid(car(), {})).toEqual(defaultMaxBid(car()));
   });
 });
 
