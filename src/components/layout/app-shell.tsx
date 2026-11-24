@@ -386,7 +386,7 @@ export function AppShell({
                 aria-label={isMac ? "Ir para tela ou buscar (⌘K)" : "Ir para tela ou buscar (Ctrl+K)"}
                 aria-keyshortcuts="Control+K Meta+K"
                 className={cn(
-                  "flex h-9 w-full items-center rounded-md border border-border bg-surface text-label text-muted shadow-xs transition-[background-color,border-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:border-border-strong hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100 pointer-coarse:h-11",
+                  "flex h-9 w-full items-center rounded-md border border-border/80 bg-surface-subtle/70 text-label text-muted transition-[background-color,border-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:border-border-strong hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100 pointer-coarse:h-11",
                   collapsed ? "justify-center px-0" : "justify-between gap-2 px-2.5",
                 )}
               >
@@ -395,7 +395,7 @@ export function AppShell({
                   {!collapsed ? <span className="truncate">Buscar…</span> : null}
                 </span>
                 {!collapsed ? (
-                  <kbd className="shrink-0 rounded-sm border border-border bg-background px-1.5 py-0.5 font-mono text-caption leading-none text-muted">
+                  <kbd className="shrink-0 rounded-sm border border-border/70 bg-surface px-1.5 py-0.5 font-mono text-caption leading-none text-muted">
                     {isMac ? "⌘K" : "Ctrl K"}
                   </kbd>
                 ) : null}

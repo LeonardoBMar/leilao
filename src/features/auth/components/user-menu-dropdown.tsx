@@ -45,7 +45,7 @@ export function UserMenuDropdown({ email, devBypass, variant = "header" }: UserM
   const collapsedAccountLabel = devBypass ? `${accountLabel} (Modo dev)` : accountLabel;
 
   const avatar = (
-    <span className="relative inline-flex size-7 shrink-0 items-center justify-center rounded-full border border-border-strong bg-surface text-caption font-semibold text-foreground-secondary shadow-xs">
+    <span className="relative inline-flex size-7 shrink-0 items-center justify-center rounded-full border border-border bg-primary-subtle text-caption font-semibold text-foreground-secondary">
       {initial ?? <UserRound aria-hidden="true" className="size-3.5" />}
       {devBypass ? (
         <span

@@ -13,13 +13,14 @@ export async function NextAuctionCard() {
   return (
     <Link
       href={`/minhas-analises/leiloes/${next.id}`}
-      className="group grid grid-cols-1 gap-1 rounded-lg border border-border-strong/70 bg-foreground/3 px-3 py-2.5 transition-colors duration-150 ease-[var(--ease-out)] outline-none hover:border-border-strong hover:bg-foreground/5 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent"
+      className="group grid grid-cols-1 gap-1 rounded-md border border-border bg-surface-subtle/60 px-2.5 py-2.5 transition-colors duration-150 ease-[var(--ease-out)] outline-none hover:border-border-strong hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent motion-reduce:transition-none"
     >
       <span className="flex items-center justify-between gap-2">
-        <span className="font-mono text-overline text-muted uppercase">Meu próximo leilão</span>
+        <span className="text-overline font-medium text-muted">Meu próximo leilão</span>
         <ChevronRight
           aria-hidden="true"
-          className="size-3.5 shrink-0 text-muted-subtle transition-colors duration-150 ease-[var(--ease-out)] group-hover:text-foreground"
+          strokeWidth={1.75}
+          className="size-3.5 shrink-0 text-muted-subtle transition-colors duration-150 ease-[var(--ease-out)] group-hover:text-foreground motion-reduce:transition-none"
         />
       </span>
       <time dateTime={next.startsAt.toISOString()} className="text-body font-semibold text-foreground tabular-nums">
