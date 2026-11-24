@@ -26,13 +26,17 @@ import pg from "pg";
 nextEnv.loadEnvConfig(process.cwd(), false, { info() {}, error: console.error });
 
 const TABLE_ORDER = ["auctions", "lots", "analyses", "results", "lot_images"];
-/** Backups antigos não têm `catalog`: vira vazio. `fipe_matches` entra antes de `listings` por causa da FK. */
-const CATALOG_ORDER = ["fipe_matches", "listings", "listing_observations"];
+/** Backups antigos não têm `catalog` nem `sources`: vira vazio. `sources` e `fipe_matches` entram antes de `listings`. */
+const CATALOG_ORDER = ["sources", "fipe_matches", "listings", "listing_observations"];
 /**
- * Backups antigos não têm `watches` (nem `listing_dismissals`, D-56, nem `user_preferences`): vira vazio. Alertas e
- * dispensas dependem de anúncios (e alertas, de monitores): entram por último.
+ * Backups antigos não têm `watches` (nem `listing_dismissals`, `user_preferences`, `user_profiles`): vira vazio.
+ * Alertas e dispensas dependem de anúncios (e alertas, de monitores): entram por último.
  */
-const WATCH_ORDER = ["watches", "alerts", "listing_dismissals", "user_preferences"];
+const WATCH_ORDER = ["watches", "alerts", "listing_dismissals", "user_preferences", "user_profiles"];
+/** Tabelas pré-populadas por migrations (ex.: fonte `leilo`, perfis iniciais): restauradas com ON CONFLICT DO NOTHING. */
+const MERGE_ON_RESTORE = new Set(["sources", "user_profiles"]);
+const MAX_INSERT_BATCH = 250;
+const MAX_QUERY_PARAMS = 60_000;
 
 /** Confere, dentro do backup, as mesmas garantias que o banco impõe (FKs por dono e por lote). */
 function validate({ tables, catalog, watches }) {
@@ -95,15 +99,30 @@ async function insertableColumns(client, table) {
 }
 
 async function insertRows(client, table, rows) {
+  if (rows.length === 0) return;
   const allowed = await insertableColumns(client, table);
-  for (const row of rows) {
-    const columns = Object.keys(row).filter((column) => allowed.has(column));
-    if (columns.length === 0) continue;
-    const placeholders = columns.map((_, index) => `$${index + 1}`).join(", ");
-    await client.query(
-      `insert into "${table}" (${columns.map((column) => `"${column}"`).join(", ")}) values (${placeholders})`,
-      columns.map((column) => row[column]),
-    );
+  const columns = Object.keys(rows[0]).filter((column) => allowed.has(column));
+  if (columns.length === 0) return;
+
+  const columnList = columns.map((column) => `"${column}"`).join(", ");
+  const conflictClause = MERGE_ON_RESTORE.has(table) ? " on conflict do nothing" : "";
+  const batchSize = Math.max(1, Math.min(MAX_INSERT_BATCH, Math.floor(MAX_QUERY_PARAMS / columns.length)));
+
+  for (let start = 0; start < rows.length; start += batchSize) {
+    const chunk = rows.slice(start, start + batchSize);
+    const values = [];
+    const tuples = [];
+    let paramIndex = 1;
+    for (const row of chunk) {
+      const placeholders = [];
+      for (const column of columns) {
+        placeholders.push(`$${paramIndex}`);
+        values.push(row[column]);
+        paramIndex += 1;
+      }
+      tuples.push(`(${placeholders.join(", ")})`);
+    }
+    await client.query(`insert into "${table}" (${columnList}) values ${tuples.join(", ")}${conflictClause}`, values);
   }
 }
 
@@ -129,6 +148,7 @@ async function apply(backup) {
       throw new Error(`Destino sem as migrations do backup: ${missing.join(", ")}. Rode prisma migrate deploy.`);
 
     for (const table of [...TABLE_ORDER, ...CATALOG_ORDER, ...WATCH_ORDER]) {
+      if (MERGE_ON_RESTORE.has(table)) continue;
       // Tabela de migration posterior ao backup (ex.: listing_dismissals) pode não existir num destino mais antigo.
       const { rows: found } = await client.query("select to_regclass($1) is not null as ok", [`public.${table}`]);
       if (!found[0].ok) continue;
@@ -139,6 +159,7 @@ async function apply(backup) {
 
     await checkCatalogReferences(
       client,
+      backup.catalog.sources,
       backup.catalog.listings,
       backup.tables.auctions,
       backup.watches.user_preferences,
@@ -159,11 +180,14 @@ async function apply(backup) {
   console.log("Banco restaurado.");
 }
 
-/** Fontes e municípios não estão no backup: precisam existir no destino antes de inserir anúncios, leilões e preferências. */
-async function checkCatalogReferences(client, listings, auctions, userPreferences = []) {
+/** Fontes (do destino ou do backup) e municípios precisam existir antes de inserir anúncios, leilões e preferências. */
+async function checkCatalogReferences(client, backupSources, listings, auctions, userPreferences = []) {
   const used = [...listings, ...auctions].map((row) => row.source_id).filter(Boolean);
   if (used.length > 0) {
-    const sources = new Set((await client.query("select id from sources")).rows.map((row) => row.id));
+    const sources = new Set([
+      ...(await client.query("select id from sources")).rows.map((row) => row.id),
+      ...backupSources.map((row) => row.id),
+    ]);
     const missingSources = [...new Set(used)].filter((id) => !sources.has(id));
     if (missingSources.length > 0)
       throw new Error(`Destino sem as fontes: ${missingSources.join(", ")}. Nada foi alterado.`);
@@ -216,7 +240,9 @@ function reassignOwner(backup, newOwner) {
   if (!UUID_RE.test(newOwner)) throw new Error("--owner precisa ser o UUID do usuário no projeto de destino.");
   const owners = new Set([
     ...TABLE_ORDER.flatMap((table) => backup.tables[table].map((row) => row.owner_id)),
-    ...WATCH_ORDER.flatMap((table) => backup.watches[table].map((row) => row.owner_id)),
+    ...WATCH_ORDER.flatMap((table) =>
+      backup.watches[table].map((row) => (table === "user_profiles" ? row.user_id : row.owner_id)),
+    ),
   ]);
   if (owners.size > 1)
     throw new Error("O backup tem mais de um dono; --owner só vale para backups de um único usuário.");
@@ -233,7 +259,12 @@ function reassignOwner(backup, newOwner) {
       }
     }
   }
-  for (const table of WATCH_ORDER) for (const row of backup.watches[table]) row.owner_id = newOwner;
+  for (const table of WATCH_ORDER) {
+    for (const row of backup.watches[table]) {
+      if (table === "user_profiles") row.user_id = newOwner;
+      else row.owner_id = newOwner;
+    }
+  }
   console.log(`Dono reatribuído: ${oldOwner} → ${newOwner}`);
 }
 

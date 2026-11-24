@@ -7,8 +7,10 @@
 //
 // Saída: backups/<data>/database.json (+ photos/). A pasta backups/ não é versionada.
 
+import { createWriteStream } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { finished } from "node:stream/promises";
 
 import nextEnv from "@next/env";
 import { createClient } from "@supabase/supabase-js";
@@ -49,6 +51,52 @@ const DISMISSAL_TABLE = { name: "listing_dismissals", orderBy: "created_at, id" 
 /** Preferências persistidas por dono (município base + premissas padrão). */
 const PREFERENCES_TABLE = { name: "user_preferences", orderBy: "owner_id" };
 
+/** Papéis administrativos por usuário (D-90). */
+const PROFILES_TABLE = { name: "user_profiles", orderBy: "user_id" };
+
+/**
+ * Grava o JSON do backup em stream, linha a linha por tabela, evitando estourar o limite de string da V8
+ * quando `listings` e `listing_observations` crescem. Mantém o formato `format: 1` compatível com `restore.mjs`.
+ */
+async function writeJsonBackup(filePath, backup) {
+  const stream = createWriteStream(filePath, { encoding: "utf8" });
+  const write = async (chunk) => {
+    if (!stream.write(chunk)) {
+      await new Promise((resolve, reject) => {
+        stream.once("drain", resolve);
+        stream.once("error", reject);
+      });
+    }
+  };
+  const writeSection = async (entries) => {
+    await write("{");
+    let firstTable = true;
+    for (const [tableName, rows] of entries) {
+      if (!firstTable) await write(",");
+      firstTable = false;
+      await write(`${JSON.stringify(tableName)}:[`);
+      for (let i = 0; i < rows.length; i += 1) {
+        if (i > 0) await write(",");
+        await write(JSON.stringify(rows[i]));
+      }
+      await write("]");
+    }
+    await write("}");
+  };
+
+  await write(
+    `{"format":${JSON.stringify(backup.format)},"createdAt":${JSON.stringify(backup.createdAt)},"migrations":${JSON.stringify(backup.migrations)},"tables":`,
+  );
+  await writeSection(Object.entries(backup.tables));
+  await write(',"catalog":');
+  await writeSection(Object.entries(backup.catalog));
+  await write(',"watches":');
+  await writeSection(Object.entries(backup.watches));
+  await write("}\n");
+  stream.end();
+  await finished(stream);
+}
+
 async function main() {
   const databaseUrl = process.env.DIRECT_URL;
   if (!databaseUrl) throw new Error("DIRECT_URL não definida (.env.local).");
@@ -75,6 +123,7 @@ async function main() {
       tables[table.name] = (await client.query(`select * from "${table.name}" order by ${table.orderBy}`)).rows;
     }
     if (migrations.some((name) => name.endsWith("_add_listings_catalog"))) {
+      catalog.sources = (await client.query('select * from "sources" order by id')).rows;
       if (migrations.some((name) => name.endsWith("_fipe_catalog_and_matches"))) {
         catalog.fipe_matches = (await client.query('select * from "fipe_matches" order by vehicle_key, id')).rows;
       }
@@ -97,13 +146,18 @@ async function main() {
         await client.query(`select * from "${PREFERENCES_TABLE.name}" order by ${PREFERENCES_TABLE.orderBy}`)
       ).rows;
     }
+    if (migrations.some((name) => name.endsWith("_add_user_profiles"))) {
+      watches[PROFILES_TABLE.name] = (
+        await client.query(`select * from "${PROFILES_TABLE.name}" order by ${PROFILES_TABLE.orderBy}`)
+      ).rows;
+    }
     await client.query("COMMIT");
   } finally {
     await client.end();
   }
 
   const backup = { format: 1, createdAt: new Date().toISOString(), migrations, tables, catalog, watches };
-  await writeFile(path.join(outDir, "database.json"), JSON.stringify(backup, null, 2));
+  await writeJsonBackup(path.join(outDir, "database.json"), backup);
 
   const counts = Object.fromEntries(
     Object.entries({ ...tables, ...catalog, ...watches }).map(([name, rows]) => [name, rows.length]),
