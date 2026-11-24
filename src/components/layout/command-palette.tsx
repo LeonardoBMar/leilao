@@ -16,6 +16,7 @@ import {
   Radar,
   Scale,
   Search,
+  SlidersHorizontal,
 } from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
@@ -110,6 +111,13 @@ const DESTINATIONS: readonly CommandDestination[] = [
     group: "Sistema",
     keywords: "fipe casamento tabela manual",
     icon: Database,
+  },
+  {
+    href: "/sistema/preferencias",
+    label: "Sistema — Preferências",
+    group: "Sistema",
+    keywords: "preferencias regiao cidade raio margem guincho premissas padrao",
+    icon: SlidersHorizontal,
   },
 ];
 
