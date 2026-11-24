@@ -55,13 +55,21 @@ export function FipeMatchEditor({ editor, filters }: FipeMatchEditorProps) {
     match.models.map((model) => model.code).filter((code) => candidates.some((candidate) => candidate.code === code)),
   );
   const [candidateFilter, setCandidateFilter] = useState("");
-  const [saveState, saveModelsAction, savingModels] = useActionState(saveManualFipeMatchAction, idleState);
+  const [lastAction, setLastAction] = useState<"save" | "none" | "reset" | null>(null);
+  const [saveState, saveModelsAction, savingModels] = useActionState(async (prev: ActionState, formData: FormData) => {
+    setLastAction("save");
+    return saveManualFipeMatchAction(prev, formData);
+  }, idleState);
   const [noneState, markNoneAction, markingNone] = useActionState(async (prev: ActionState, formData: FormData) => {
+    setLastAction("none");
     const next = await saveManualFipeMatchAction(prev, formData);
     if (next.status === "success") setSelectedCodes([]);
     return next;
   }, idleState);
-  const [resetState, resetAction, resetting] = useActionState(revertFipeMatchToAutoAction, idleState);
+  const [resetState, resetAction, resetting] = useActionState(async (prev: ActionState, formData: FormData) => {
+    setLastAction("reset");
+    return revertFipeMatchToAutoAction(prev, formData);
+  }, idleState);
 
   useEffect(() => {
     if (saveState.status === "success" && saveState.message) toast.success(saveState.message);
@@ -84,11 +92,10 @@ export function FipeMatchEditor({ editor, filters }: FipeMatchEditorProps) {
         (candidate) => candidate.label.toLowerCase().includes(query) || candidate.code.toLowerCase().includes(query),
       )
     : candidates;
-  const activeError =
-    (saveState.status === "error" && saveState.message) ||
-    (noneState.status === "error" && noneState.message) ||
-    (resetState.status === "error" && resetState.message) ||
-    null;
+  const validSelectedCodes = selectedCodes.filter((code) => candidates.some((candidate) => candidate.code === code));
+  const latestState =
+    lastAction === "save" ? saveState : lastAction === "none" ? noneState : lastAction === "reset" ? resetState : null;
+  const activeError = latestState?.status === "error" && latestState.message ? latestState.message : null;
 
   function toggleCode(code: string) {
     setSelectedCodes((current) =>
@@ -170,11 +177,11 @@ export function FipeMatchEditor({ editor, filters }: FipeMatchEditorProps) {
                   />
                 </div>
                 <p className="text-caption text-muted tabular-nums">
-                  {selectedCodes.length === 0
+                  {validSelectedCodes.length === 0
                     ? "Nenhuma selecionada"
-                    : selectedCodes.length === 1
+                    : validSelectedCodes.length === 1
                       ? "1 selecionada (versão)"
-                      : `${selectedCodes.length} selecionadas (família)`}
+                      : `${validSelectedCodes.length} selecionadas (família)`}
                 </p>
               </div>
 
@@ -225,12 +232,12 @@ export function FipeMatchEditor({ editor, filters }: FipeMatchEditorProps) {
                 <input type="hidden" name="mode" value="models" />
                 {selectedType ? <input type="hidden" name="vehicleType" value={String(selectedType)} /> : null}
                 {selectedBrand ? <input type="hidden" name="brandCode" value={selectedBrand} /> : null}
-                {selectedCodes.map((code) => (
+                {validSelectedCodes.map((code) => (
                   <input key={code} type="hidden" name="modelCodes" value={code} />
                 ))}
                 <Button
                   type="submit"
-                  disabled={selectedCodes.length === 0 || !selectedBrand || markingNone || resetting}
+                  disabled={validSelectedCodes.length === 0 || !selectedBrand || markingNone || resetting}
                   loading={savingModels}
                   loadingLabel="Salvando…"
                 >

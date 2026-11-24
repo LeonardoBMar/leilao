@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   collectorRunErrorsSchema,
   fipeQueueFiltersSchema,
+  resetFipeMatchSchema,
   saveManualFipeMatchSchema,
   toggleSourceSchema,
 } from "./schemas";
@@ -72,5 +73,18 @@ describe("system schemas", () => {
         modelCodes: [],
       }).success,
     ).toBe(true);
+
+    expect(
+      saveManualFipeMatchSchema.safeParse({
+        matchId: VALID_ID,
+        mode: "models",
+        modelCodes: Array.from({ length: 51 }, (_, index) => `005205-${index}`),
+      }).success,
+    ).toBe(false);
+  });
+
+  it("valida resetFipeMatchSchema com UUID", () => {
+    expect(resetFipeMatchSchema.safeParse({ matchId: VALID_ID }).success).toBe(true);
+    expect(resetFipeMatchSchema.safeParse({ matchId: "invalido" }).success).toBe(false);
   });
 });
