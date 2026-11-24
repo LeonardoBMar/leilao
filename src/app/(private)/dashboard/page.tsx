@@ -76,7 +76,7 @@ export default function DashboardPage() {
                 Para analisar agora
               </SectionTitle>
               <p className="text-caption text-muted">
-                Lotes abertos até 150 km ou nos seus monitores cujo preço provável cabe no limite estimado.
+                Lotes abertos na sua região-base ou nos seus monitores cujo preço provável cabe no limite estimado.
               </p>
             </div>
             <SectionErrorBoundary
