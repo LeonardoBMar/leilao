@@ -10,8 +10,6 @@ import { Brand } from "./brand";
 import { type NavBadges, NavLinks } from "./nav-links";
 
 type MobileNavProps = {
-  /** Conta/sair, renderizado no servidor. */
-  account: ReactNode;
   badges?: NavBadges;
   /** Extras do menu (acompanhados, próximo leilão), renderizados no servidor. */
   followed?: ReactNode;
@@ -37,7 +35,7 @@ function CloseOnPathnameChange({ onClose }: { onClose: () => void }) {
 }
 
 /** Gaveta lateral abaixo de `lg`, com os mesmos destinos e ordem da sidebar (DESIGN.md §9). */
-export function MobileNav({ account, badges, followed, nextAuction }: MobileNavProps) {
+export function MobileNav({ badges, followed, nextAuction }: MobileNavProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -64,10 +62,7 @@ export function MobileNav({ account, badges, followed, nextAuction }: MobileNavP
           <NavLinks onNavigate={() => setIsOpen(false)} badges={badges} />
         </nav>
         {followed}
-        <div className="mt-auto grid grid-cols-1 gap-2.5">
-          {nextAuction}
-          <div className="border-t border-border-strong pt-2.5">{account}</div>
-        </div>
+        {nextAuction ? <div className="mt-auto grid grid-cols-1 gap-2.5">{nextAuction}</div> : null}
       </DialogContent>
     </Dialog>
   );
