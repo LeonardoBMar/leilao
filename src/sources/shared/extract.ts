@@ -31,7 +31,10 @@ export function extractAssignedJson(html: string, marker: string): unknown {
     else if (char === "{") depth++;
     else if (char === "}") {
       depth--;
-      if (depth === 0) return parseJson(html.slice(start, i + 1));
+      if (depth === 0) {
+        const raw = html.slice(start, i + 1);
+        return parseJson(raw) ?? parseJson(normalizeJsObjectLiteral(raw));
+      }
     }
   }
   return null;
@@ -55,6 +58,64 @@ function parseJson(text: string): unknown {
   } catch {
     return null;
   }
+}
+
+/**
+ * Converte literais JS comuns em estados SSR (`undefined`, `new Date("...")`, `NaN`, `Infinity`) para JSON válido,
+ * percorrendo fora de strings (sem `eval` nem `new Function`).
+ */
+function normalizeJsObjectLiteral(src: string): string {
+  let out = "";
+  let i = 0;
+  const isIdentChar = (ch: string | undefined) => ch !== undefined && /[A-Za-z0-9_$]/.test(ch);
+
+  while (i < src.length) {
+    const ch = src[i];
+    if (ch === '"') {
+      let j = i + 1;
+      while (j < src.length) {
+        if (src[j] === "\\") {
+          j += 2;
+          continue;
+        }
+        if (src[j] === '"') {
+          j += 1;
+          break;
+        }
+        j += 1;
+      }
+      out += src.slice(i, j);
+      i = j;
+      continue;
+    }
+    if (src.startsWith("undefined", i) && !isIdentChar(src[i - 1]) && !isIdentChar(src[i + 9])) {
+      out += "null";
+      i += 9;
+      continue;
+    }
+    if (src.startsWith("NaN", i) && !isIdentChar(src[i - 1]) && !isIdentChar(src[i + 3])) {
+      out += "null";
+      i += 3;
+      continue;
+    }
+    if (src.startsWith("Infinity", i) && !isIdentChar(src[i - 1]) && !isIdentChar(src[i + 8])) {
+      out += "null";
+      i += 8;
+      continue;
+    }
+    if (src.startsWith("new Date(", i) && !isIdentChar(src[i - 1])) {
+      const close = src.indexOf(")", i + 9);
+      if (close > i + 9) {
+        const inner = src.slice(i + 9, close).trim();
+        out += inner.startsWith('"') && inner.endsWith('"') ? inner : "null";
+        i = close + 1;
+        continue;
+      }
+    }
+    out += ch;
+    i += 1;
+  }
+  return out;
 }
 
 const NAMED_ENTITIES: Record<string, string> = {
