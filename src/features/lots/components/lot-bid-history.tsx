@@ -51,8 +51,8 @@ export function LotBidHistory({ steps, lastCheckedAt, maxBid }: LotBidHistoryPro
         <p className="text-label font-medium text-foreground">Evolução dos lances</p>
         <p className="text-caption text-muted tabular-nums">
           {rise !== null
-            ? `${rise > 0 ? "Subiu" : "Variou"} ${formatRatio(Math.abs(rise))} desde ${formatBRL(first.bid)}`
-            : `${steps.length} variações vistas pelo coletor`}
+            ? `${rise > 0 ? "Subiu" : "Caiu"} ${formatRatio(Math.abs(rise))} desde ${formatBRL(first.bid)}`
+            : `${steps.length} lances vistos pelo coletor`}
         </p>
       </div>
 

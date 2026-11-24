@@ -50,8 +50,9 @@ export function lotBidTimeAxis(
   const firstMs = steps[0]?.observedAt.getTime() ?? lastCheckedAt.getTime();
   const lastStepMs = steps.at(-1)?.observedAt.getTime() ?? firstMs;
   const rawEndMs = Math.max(lastStepMs, lastCheckedAt.getTime());
-  const endMs = rawEndMs > firstMs ? rawEndMs : firstMs + HOUR_MS;
   const count = Math.max(2, tickCount);
+  // Garante largura mínima suficiente para que todos os ticks arredondados tenham timestamps distintos.
+  const endMs = rawEndMs - firstMs >= count - 1 ? rawEndMs : firstMs + HOUR_MS;
   const span = endMs - firstMs;
   const tickTimes = Array.from({ length: count }, (_, index) => Math.round(firstMs + (span * index) / (count - 1)));
   return { xDomain: [firstMs, endMs], tickTimes };

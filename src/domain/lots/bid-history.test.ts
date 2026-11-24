@@ -69,15 +69,18 @@ describe("lotBidTimeAxis", () => {
     expect(axis.tickTimes.at(-1)).toBe(axis.xDomain[1]);
   });
 
-  it("evita domínio de largura zero quando todas as datas coincidem", () => {
-    const t = at("2026-11-20T10:00:00Z");
+  it("evita domínio de largura zero ou ticks duplicados quando observações são quase simultâneas", () => {
+    const t = at("2026-11-20T10:00:00.000Z");
+    const tPlus1Ms = at("2026-11-20T10:00:00.001Z");
     const axis = lotBidTimeAxis(
       [
         { observedAt: t, bid: cents(20_000_00) },
-        { observedAt: t, bid: cents(21_000_00) },
+        { observedAt: tPlus1Ms, bid: cents(21_000_00) },
       ],
-      t,
+      tPlus1Ms,
+      4,
     );
     expect(axis.xDomain[1]).toBeGreaterThan(axis.xDomain[0]);
+    expect(new Set(axis.tickTimes).size).toBe(4);
   });
 });
