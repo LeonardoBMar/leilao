@@ -382,8 +382,8 @@ export function EngineQualityBlock({ data }: { data: EngineQualityData }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {history.map((snapshot) => (
-                <TableRow key={snapshot.computedAt.toISOString()}>
+              {history.map((snapshot, index) => (
+                <TableRow key={`${snapshot.computedAt.toISOString()}-${index}`}>
                   <TableCell className="tabular-nums">{formatDate(snapshot.computedAt)}</TableCell>
                   <TableCell className="text-right tabular-nums">
                     {snapshot.total.total.toLocaleString("pt-BR")}

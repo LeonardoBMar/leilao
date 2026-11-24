@@ -34,7 +34,7 @@ export async function PreferencesView() {
         </Stat>
       </dl>
 
-      <PreferencesForm key={preferences.raw.updatedAt?.toISOString() ?? "defaults"} preferences={preferences} />
+      <PreferencesForm preferences={preferences} />
     </div>
   );
 }

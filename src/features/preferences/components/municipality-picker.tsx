@@ -115,7 +115,10 @@ export function MunicipalityPicker({ initialIbgeCode, initialLabel, error }: Mun
             if (event.key === "Escape") setOpen(false);
           }}
           onBlur={() => {
-            blurTimerRef.current = setTimeout(() => setOpen(false), 150);
+            blurTimerRef.current = setTimeout(() => {
+              setOpen(false);
+              setQuery(selected?.label ?? "");
+            }, 150);
           }}
           placeholder={`Padrão: ${DEFAULT_REGION.label} (digite cidade ou cidade/UF)`}
           className={cn(

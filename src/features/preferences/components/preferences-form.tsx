@@ -40,9 +40,13 @@ type PreferencesFormProps = {
 
 export function PreferencesForm({ preferences }: PreferencesFormProps) {
   const [saveState, saveAction, savePending] = useActionState(saveUserPreferencesAction, idleState);
-  const [resetState, resetAction, resetPending] = useActionState(resetUserPreferencesAction, idleState);
-  const [lastAction, setLastAction] = useState<"save" | "reset" | null>(null);
   const [confirmResetOpen, setConfirmResetOpen] = useState(false);
+  const [resetState, resetAction, resetPending] = useActionState(async (prev: typeof idleState) => {
+    const result = await resetUserPreferencesAction(prev);
+    setConfirmResetOpen(false);
+    return result;
+  }, idleState);
+  const [lastAction, setLastAction] = useState<"save" | "reset" | null>(null);
 
   const { raw } = preferences;
   const activeAlert =
@@ -263,13 +267,7 @@ export function PreferencesForm({ preferences }: PreferencesFormProps) {
               Cancelar
             </Button>
             <form action={resetAction} onSubmit={() => setLastAction("reset")}>
-              <Button
-                type="submit"
-                variant="destructive"
-                loading={resetPending}
-                loadingLabel="Restaurando…"
-                onClick={() => setConfirmResetOpen(false)}
-              >
+              <Button type="submit" variant="destructive" loading={resetPending} loadingLabel="Restaurando…">
                 Restaurar padrões
               </Button>
             </form>
