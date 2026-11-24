@@ -384,7 +384,8 @@ model Municipality {
   latitude  Float
   longitude Float
 
-  listings Listing[]
+  listings        Listing[]
+  userPreferences UserPreference[]
 
   @@unique([nameKey, state])
   @@index([latitude, longitude])
@@ -685,4 +686,27 @@ model ListingDismissal {
   @@unique([ownerId, listingId])
   @@index([listingId])
   @@map("listing_dismissals")
+}
+
+/// Preferências persistidas por usuário: região base (município IBGE + raio) e sobrescritas das premissas padrão.
+model UserPreference {
+  ownerId               String   @id @map("owner_id") @db.Uuid
+  municipalityIbgeCode  Int?     @map("municipality_ibge_code")
+  radiusKm              Int?     @map("radius_km")
+  desiredMarginRateBps  Int?     @map("desired_margin_rate_bps")
+  riskReserveRateBps    Int?     @map("risk_reserve_rate_bps")
+  documentationCost     Int?     @map("documentation_cost")
+  towBase               Int?     @map("tow_base")
+  towPerKm              Int?     @map("tow_per_km")
+  towUnknownDistance    Int?     @map("tow_unknown_distance")
+  saleDiscountNoneBps   Int?     @map("sale_discount_none_bps")
+  saleDiscountSmallBps  Int?     @map("sale_discount_small_bps")
+  saleDiscountMediumBps Int?     @map("sale_discount_medium_bps")
+  saleDiscountLargeBps  Int?     @map("sale_discount_large_bps")
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  municipality Municipality? @relation(fields: [municipalityIbgeCode], references: [ibgeCode], onDelete: SetNull)
+
+  @@map("user_preferences")
 }

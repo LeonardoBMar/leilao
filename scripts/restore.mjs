@@ -29,10 +29,10 @@ const TABLE_ORDER = ["auctions", "lots", "analyses", "results", "lot_images"];
 /** Backups antigos não têm `catalog`: vira vazio. `fipe_matches` entra antes de `listings` por causa da FK. */
 const CATALOG_ORDER = ["fipe_matches", "listings", "listing_observations"];
 /**
- * Backups antigos não têm `watches` (nem `listing_dismissals`, D-56): vira vazio. Alertas e dispensas dependem de
- * anúncios (e alertas, de monitores): entram por último.
+ * Backups antigos não têm `watches` (nem `listing_dismissals`, D-56, nem `user_preferences`): vira vazio. Alertas e
+ * dispensas dependem de anúncios (e alertas, de monitores): entram por último.
  */
-const WATCH_ORDER = ["watches", "alerts", "listing_dismissals"];
+const WATCH_ORDER = ["watches", "alerts", "listing_dismissals", "user_preferences"];
 
 /** Confere, dentro do backup, as mesmas garantias que o banco impõe (FKs por dono e por lote). */
 function validate({ tables, catalog, watches }) {
@@ -137,7 +137,12 @@ async function apply(backup) {
         throw new Error(`Destino não está vazio (${table} tem ${rows[0].n} linhas). Nada foi alterado.`);
     }
 
-    await checkCatalogReferences(client, backup.catalog.listings, backup.tables.auctions);
+    await checkCatalogReferences(
+      client,
+      backup.catalog.listings,
+      backup.tables.auctions,
+      backup.watches.user_preferences,
+    );
 
     await client.query("BEGIN");
     // Catálogo primeiro: lotes podem apontar para anúncios (lots.listing_id).
@@ -154,17 +159,23 @@ async function apply(backup) {
   console.log("Banco restaurado.");
 }
 
-/** Fontes e municípios não estão no backup: precisam existir no destino antes de inserir anúncios e leilões. */
-async function checkCatalogReferences(client, listings, auctions) {
+/** Fontes e municípios não estão no backup: precisam existir no destino antes de inserir anúncios, leilões e preferências. */
+async function checkCatalogReferences(client, listings, auctions, userPreferences = []) {
   const used = [...listings, ...auctions].map((row) => row.source_id).filter(Boolean);
-  if (used.length === 0) return;
-  const sources = new Set((await client.query("select id from sources")).rows.map((row) => row.id));
-  const missingSources = [...new Set(used)].filter((id) => !sources.has(id));
-  if (missingSources.length > 0)
-    throw new Error(`Destino sem as fontes: ${missingSources.join(", ")}. Nada foi alterado.`);
-  const { rows } = await client.query("select count(*)::int as n from municipalities");
-  if (listings.some((listing) => listing.municipality_id !== null) && rows[0].n === 0) {
-    throw new Error("Destino sem municípios. Rode npm run db:seed apontando para o destino. Nada foi alterado.");
+  if (used.length > 0) {
+    const sources = new Set((await client.query("select id from sources")).rows.map((row) => row.id));
+    const missingSources = [...new Set(used)].filter((id) => !sources.has(id));
+    if (missingSources.length > 0)
+      throw new Error(`Destino sem as fontes: ${missingSources.join(", ")}. Nada foi alterado.`);
+  }
+  const needsMunicipalities =
+    listings.some((listing) => listing.municipality_id !== null) ||
+    userPreferences.some((pref) => pref.municipality_ibge_code !== null);
+  if (needsMunicipalities) {
+    const { rows } = await client.query("select count(*)::int as n from municipalities");
+    if (rows[0].n === 0) {
+      throw new Error("Destino sem municípios. Rode npm run db:seed apontando para o destino. Nada foi alterado.");
+    }
   }
 }
 

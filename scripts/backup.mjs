@@ -46,6 +46,9 @@ const WATCH_TABLES = [
 /** Sugestões dispensadas (D-56): por dono, apontam para anúncios. Só existem a partir da migration própria. */
 const DISMISSAL_TABLE = { name: "listing_dismissals", orderBy: "created_at, id" };
 
+/** Preferências persistidas por dono (município base + premissas padrão). */
+const PREFERENCES_TABLE = { name: "user_preferences", orderBy: "owner_id" };
+
 async function main() {
   const databaseUrl = process.env.DIRECT_URL;
   if (!databaseUrl) throw new Error("DIRECT_URL não definida (.env.local).");
@@ -87,6 +90,11 @@ async function main() {
     if (migrations.some((name) => name.endsWith("_listing_dismissals"))) {
       watches[DISMISSAL_TABLE.name] = (
         await client.query(`select * from "${DISMISSAL_TABLE.name}" order by ${DISMISSAL_TABLE.orderBy}`)
+      ).rows;
+    }
+    if (migrations.some((name) => name.endsWith("_add_user_preferences"))) {
+      watches[PREFERENCES_TABLE.name] = (
+        await client.query(`select * from "${PREFERENCES_TABLE.name}" order by ${PREFERENCES_TABLE.orderBy}`)
       ).rows;
     }
     await client.query("COMMIT");
