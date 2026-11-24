@@ -22,7 +22,11 @@ export async function ToAnalyze() {
         title="Nenhum lote da região cabe no limite agora"
         description={
           <>
-            Aparecem aqui os lotes abertos da sua região-base (até {region.radiusKm} km de {region.label}) ou dos{" "}
+            Aparecem aqui os lotes abertos da{" "}
+            <Link href="/sistema/preferencias" className="font-medium text-accent hover:underline">
+              sua região-base
+            </Link>{" "}
+            (até {region.radiusKm} km de {region.label}) ou dos{" "}
             <Link href="/monitores" className="font-medium text-accent hover:underline">
               seus monitores
             </Link>{" "}
@@ -30,7 +34,7 @@ export async function ToAnalyze() {
           </>
         }
         action={
-          <ButtonLink href={CATALOG_LISTINGS_PATH} variant="secondary">
+          <ButtonLink href={CATALOG_LISTINGS_PATH} variant="secondary" size="sm">
             Ver todos os veículos
           </ButtonLink>
         }

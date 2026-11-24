@@ -27,8 +27,11 @@ export async function RegionAuctions() {
         title="Nenhum leilão na região nos próximos 7 dias"
         description={
           <>
-            Leilões dos sites com lotes nos próximos 7 dias na sua região-base (até {region.radiusKm} km de{" "}
-            {region.label}) ou nos{" "}
+            Leilões dos sites com lotes nos próximos 7 dias na{" "}
+            <Link href="/sistema/preferencias" className="font-medium text-accent hover:underline">
+              sua região-base
+            </Link>{" "}
+            (até {region.radiusKm} km de {region.label}) ou nos{" "}
             <Link href="/monitores" className="font-medium text-accent hover:underline">
               seus monitores
             </Link>{" "}
