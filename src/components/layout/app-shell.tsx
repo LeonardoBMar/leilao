@@ -120,7 +120,7 @@ function HeaderRouteContext() {
             <Link
               href={context.sectionHref}
               title={context.section}
-              className="inline-flex min-w-0 items-center gap-1.5 rounded-sm text-muted transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent"
+              className="-my-1.5 inline-flex min-w-0 items-center gap-1.5 rounded-sm py-1.5 text-muted transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent motion-reduce:transition-none"
             >
               <SectionIcon aria-hidden="true" strokeWidth={1.75} className="size-3.5 shrink-0 text-muted-subtle" />
               <span className="truncate">{context.section}</span>
@@ -203,6 +203,13 @@ function getIsMacServerSnapshot(): boolean {
   return false;
 }
 
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable) return true;
+  const tag = target.tagName;
+  return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+}
+
 /**
  * Casca privada v3.1 ("Cirúrgico & Monocromático", DESIGN.md §4):
  * Sidebar colapsável à esquerda (264px ↔ 56px) sobre `bg-background` com busca integrada e dock da conta no rodapé +
@@ -223,16 +230,46 @@ export function AppShell({
   const [commandOpen, setCommandOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [sidebarFade, setSidebarFade] = useState({ top: false, bottom: false });
+  const [sidebarTransitionReady, setSidebarTransitionReady] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
   const sidebarNavRef = useRef<HTMLDivElement>(null);
   const sidebarContentRef = useRef<HTMLDivElement>(null);
+  const collapseButtonRef = useRef<HTMLButtonElement>(null);
+  const expandButtonRef = useRef<HTMLButtonElement>(null);
+  const pendingToggleFocusRef = useRef<"collapse" | "expand" | null>(null);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setSidebarTransitionReady(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    const target = pendingToggleFocusRef.current;
+    if (!target) return;
+    pendingToggleFocusRef.current = null;
+    const frame = window.requestAnimationFrame(() => {
+      if (target === "expand") {
+        expandButtonRef.current?.focus();
+      } else {
+        collapseButtonRef.current?.focus();
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [collapsed]);
+
+  function handleToggleSidebar(nextCollapsed: boolean) {
+    pendingToggleFocusRef.current = nextCollapsed ? "expand" : "collapse";
+    setSidebarCollapsed(nextCollapsed);
+  }
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "b") {
-        event.preventDefault();
-        setSidebarCollapsed(!getSidebarSnapshot());
-      }
+      if (event.altKey || event.shiftKey) return;
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "b") return;
+      if (isEditableTarget(event.target)) return;
+      if (!window.matchMedia("(min-width: 64rem)").matches) return;
+      event.preventDefault();
+      setSidebarCollapsed(!getSidebarSnapshot());
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -302,7 +339,9 @@ export function AppShell({
         aria-label="Navegação lateral"
         data-collapsed={collapsed ? "true" : "false"}
         className={cn(
-          "sticky top-0 z-40 hidden h-dvh shrink-0 flex-col bg-background transition-[width] duration-220 ease-[var(--ease-out)] motion-reduce:transition-none lg:flex",
+          "sticky top-0 z-40 hidden h-dvh shrink-0 flex-col bg-background lg:flex",
+          sidebarTransitionReady &&
+            "transition-[width] duration-220 ease-[var(--ease-out)] motion-reduce:transition-none",
           collapsed ? "w-14" : "w-66",
         )}
       >
@@ -318,13 +357,14 @@ export function AppShell({
             <Tooltip delayDuration={200}>
               <TooltipTrigger asChild>
                 <button
+                  ref={collapseButtonRef}
                   type="button"
-                  onClick={() => setSidebarCollapsed(true)}
+                  onClick={() => handleToggleSidebar(true)}
                   aria-label="Recolher barra lateral"
                   aria-expanded={true}
                   aria-controls="sidebar-nav"
                   aria-keyshortcuts="Control+B Meta+B"
-                  className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-subtle transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-primary-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.95] motion-reduce:transition-none motion-reduce:active:scale-100"
+                  className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-subtle transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-primary-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.95] motion-reduce:transition-none motion-reduce:active:scale-100 pointer-coarse:size-10"
                 >
                   <PanelLeftClose aria-hidden="true" strokeWidth={1.75} className="size-4" />
                 </button>
@@ -338,40 +378,33 @@ export function AppShell({
 
         {/* Gatilho da paleta de comandos integrado ao topo da sidebar (padrão Linear/Attio) */}
         <div className="shrink-0 px-2.5 pt-2 pb-1">
-          {collapsed ? (
-            <Tooltip delayDuration={180}>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={() => setCommandOpen(true)}
-                  aria-label={isMac ? "Ir para tela ou buscar (⌘K)" : "Ir para tela ou buscar (Ctrl+K)"}
-                  aria-keyshortcuts="Control+K Meta+K"
-                  className="flex h-9 w-full items-center justify-center rounded-md border border-border bg-surface text-muted shadow-xs transition-[background-color,border-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:border-border-strong hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
-                >
-                  <Search aria-hidden="true" strokeWidth={1.75} className="size-4 shrink-0" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={10}>
-                Buscar ({isMac ? "⌘K" : "Ctrl+K"})
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setCommandOpen(true)}
-              aria-label={isMac ? "Ir para tela ou buscar (⌘K)" : "Ir para tela ou buscar (Ctrl+K)"}
-              aria-keyshortcuts="Control+K Meta+K"
-              className="flex h-8 w-full items-center justify-between gap-2 rounded-md border border-border bg-surface px-2.5 text-label text-muted shadow-xs transition-[background-color,border-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:border-border-strong hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100"
-            >
-              <span className="inline-flex min-w-0 items-center gap-2">
-                <Search aria-hidden="true" strokeWidth={1.75} className="size-3.5 shrink-0 text-muted-subtle" />
-                <span className="truncate">Buscar…</span>
-              </span>
-              <kbd className="shrink-0 rounded-sm border border-border bg-background px-1.5 py-0.5 font-mono text-caption leading-none text-muted">
-                {isMac ? "⌘K" : "Ctrl K"}
-              </kbd>
-            </button>
-          )}
+          <Tooltip delayDuration={180} open={collapsed ? undefined : false}>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => setCommandOpen(true)}
+                aria-label={isMac ? "Ir para tela ou buscar (⌘K)" : "Ir para tela ou buscar (Ctrl+K)"}
+                aria-keyshortcuts="Control+K Meta+K"
+                className={cn(
+                  "flex h-9 w-full items-center rounded-md border border-border bg-surface text-label text-muted shadow-xs transition-[background-color,border-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:border-border-strong hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100 pointer-coarse:h-11",
+                  collapsed ? "justify-center px-0" : "justify-between gap-2 px-2.5",
+                )}
+              >
+                <span className="inline-flex min-w-0 items-center gap-2">
+                  <Search aria-hidden="true" strokeWidth={1.75} className="size-4 shrink-0 text-muted-subtle" />
+                  {!collapsed ? <span className="truncate">Buscar…</span> : null}
+                </span>
+                {!collapsed ? (
+                  <kbd className="shrink-0 rounded-sm border border-border bg-background px-1.5 py-0.5 font-mono text-caption leading-none text-muted">
+                    {isMac ? "⌘K" : "Ctrl K"}
+                  </kbd>
+                ) : null}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={10}>
+              Buscar ({isMac ? "⌘K" : "Ctrl+K"})
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         {/* Padding lateral fixo (px-2.5 = 10px) mantém os ícones ancorados no mesmo eixo X durante a animação */}
@@ -434,13 +467,14 @@ export function AppShell({
                   <Tooltip delayDuration={200}>
                     <TooltipTrigger asChild>
                       <button
+                        ref={expandButtonRef}
                         type="button"
-                        onClick={() => setSidebarCollapsed(false)}
+                        onClick={() => handleToggleSidebar(false)}
                         aria-label="Expandir barra lateral"
                         aria-expanded={false}
                         aria-controls="sidebar-nav"
                         aria-keyshortcuts="Control+B Meta+B"
-                        className="hidden size-7 shrink-0 items-center justify-center rounded-md text-muted transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-primary-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.95] motion-reduce:transition-none motion-reduce:active:scale-100 lg:inline-flex"
+                        className="hidden size-8 shrink-0 items-center justify-center rounded-md text-muted transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-primary-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.95] motion-reduce:transition-none motion-reduce:active:scale-100 lg:inline-flex pointer-coarse:size-10"
                       >
                         <PanelLeftOpen aria-hidden="true" strokeWidth={1.75} className="size-4" />
                       </button>
