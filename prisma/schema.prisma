@@ -710,3 +710,21 @@ model UserPreference {
 
   @@map("user_preferences")
 }
+
+/// Papel de acesso do usuário no servidor (D-90): novos usuários nascem como USER; promoção a ADMIN só via SQL.
+enum UserRole {
+  USER
+  ADMIN
+
+  @@map("user_role")
+}
+
+/// Perfil mínimo do usuário indexado pelo `id` do Supabase Auth (`user_id`), separado de `user_preferences`.
+model UserProfile {
+  userId    String   @id @map("user_id") @db.Uuid
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("user_profiles")
+}
