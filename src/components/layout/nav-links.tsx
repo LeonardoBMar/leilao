@@ -113,91 +113,88 @@ function NavList({
 
   const list = (
     <LayoutGroup id={groupId}>
-      <div className="grid gap-1">
-        {!collapsed ? <p className="px-2.5 pb-0.5 text-overline font-medium text-muted">Navegação</p> : null}
-        <ul className="grid gap-0.5">
-          {NAV_ITEMS.map(({ href, label, icon: Icon, sections = [] }) => {
-            const isActive =
-              pathname !== null &&
-              [href, ...sections].some((section) => pathname === section || pathname.startsWith(`${section}/`));
-            const target = savedHref(saved?.[href], href);
-            const hasRestoredQuery = !isActive && target !== href && target.includes("?");
+      <ul className="grid gap-0.5">
+        {NAV_ITEMS.map(({ href, label, icon: Icon, sections = [] }) => {
+          const isActive =
+            pathname !== null &&
+            [href, ...sections].some((section) => pathname === section || pathname.startsWith(`${section}/`));
+          const target = savedHref(saved?.[href], href);
+          const hasRestoredQuery = !isActive && target !== href && target.includes("?");
 
-            return (
-              <li key={href}>
-                <Tooltip delayDuration={180} open={collapsed ? undefined : false}>
-                  <TooltipTrigger asChild>
-                    <Link
-                      href={target}
-                      onClick={() => {
-                        onNavigate?.();
-                        if (hasRestoredQuery) {
-                          toast.info(`Filtros anteriores restaurados em ${label}.`, {
-                            action: {
-                              label: "Limpar",
-                              onClick: () => {
-                                clearRememberedFilter(href);
-                                router.push(href);
-                              },
+          return (
+            <li key={href}>
+              <Tooltip delayDuration={180} open={collapsed ? undefined : false}>
+                <TooltipTrigger asChild>
+                  <Link
+                    href={target}
+                    onClick={() => {
+                      onNavigate?.();
+                      if (hasRestoredQuery) {
+                        toast.info(`Filtros anteriores restaurados em ${label}.`, {
+                          action: {
+                            label: "Limpar",
+                            onClick: () => {
+                              clearRememberedFilter(href);
+                              router.push(href);
                             },
-                          });
-                        }
-                      }}
-                      aria-current={isActive ? "page" : undefined}
-                      aria-label={collapsed ? label : undefined}
+                          },
+                        });
+                      }
+                    }}
+                    aria-current={isActive ? "page" : undefined}
+                    aria-label={collapsed ? label : undefined}
+                    className={cn(
+                      "group relative flex h-10 items-center gap-2.5 overflow-clip rounded-md px-2.5 text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 lg:h-9 pointer-coarse:h-11",
+                      isActive ? "font-semibold text-foreground" : "hover:bg-primary-subtle/70 hover:text-foreground",
+                    )}
+                  >
+                    {isActive ? (
+                      <m.span
+                        aria-hidden="true"
+                        layoutId="nav-active-pill"
+                        transition={MOTION_SPRING}
+                        className="pointer-events-none absolute inset-0 rounded-md bg-surface shadow-xs ring-1 ring-border/80 ring-inset"
+                      />
+                    ) : null}
+                    <Icon
+                      aria-hidden="true"
+                      strokeWidth={1.75}
                       className={cn(
-                        "group relative flex h-10 items-center gap-2.5 overflow-clip rounded-md px-2.5 text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 lg:h-9 pointer-coarse:h-11",
-                        isActive ? "font-semibold text-foreground" : "hover:bg-primary-subtle/70 hover:text-foreground",
+                        "relative z-10 size-4 shrink-0 text-muted-subtle transition-colors duration-120 group-hover:text-foreground motion-reduce:transition-none",
+                        isActive && "text-foreground",
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "relative z-10 truncate transition-opacity duration-150 ease-[var(--ease-out)] motion-reduce:transition-none",
+                        collapsed ? "pointer-events-none opacity-0" : "opacity-100",
                       )}
                     >
-                      {isActive ? (
-                        <m.span
-                          aria-hidden="true"
-                          layoutId="nav-active-pill"
-                          transition={MOTION_SPRING}
-                          className="pointer-events-none absolute inset-0 rounded-md bg-surface shadow-xs ring-1 ring-border/80 ring-inset"
-                        />
-                      ) : null}
-                      <Icon
-                        aria-hidden="true"
-                        strokeWidth={1.75}
-                        className={cn(
-                          "relative z-10 size-4 shrink-0 text-muted-subtle transition-colors duration-120 group-hover:text-foreground motion-reduce:transition-none",
-                          isActive && "text-foreground",
-                        )}
-                      />
+                      {label}
+                    </span>
+                    {badges?.[href] ? (
                       <span
+                        data-collapsed={collapsed ? "true" : "false"}
                         className={cn(
-                          "relative z-10 truncate transition-opacity duration-150 ease-[var(--ease-out)] motion-reduce:transition-none",
-                          collapsed ? "pointer-events-none opacity-0" : "opacity-100",
+                          "z-10 empty:hidden",
+                          collapsed
+                            ? "pointer-events-none absolute top-1.5 right-1.5"
+                            : "relative ml-auto transition-opacity duration-150 motion-reduce:transition-none",
                         )}
                       >
-                        {label}
+                        {badges[href]}
                       </span>
-                      {badges?.[href] ? (
-                        <span
-                          data-collapsed={collapsed ? "true" : "false"}
-                          className={cn(
-                            "z-10 empty:hidden",
-                            collapsed
-                              ? "pointer-events-none absolute top-1.5 right-1.5"
-                              : "relative ml-auto transition-opacity duration-150 motion-reduce:transition-none",
-                          )}
-                        >
-                          {badges[href]}
-                        </span>
-                      ) : null}
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent side="right" sideOffset={10}>
-                    {label}
-                  </TooltipContent>
-                </Tooltip>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+                    ) : null}
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="right" sideOffset={10}>
+                  {label}
+                </TooltipContent>
+              </Tooltip>
+            </li>
+          );
+        })}
+      </ul>
 
       {/* Grupo separado: admins veem Sistema (Coleta, FIPE, Preferências); usuários comuns veem só Preferências (D-90) */}
       <div className={cn("grid gap-1", collapsed ? "mt-3 border-t border-border/70 pt-3" : "mt-5")}>
@@ -352,13 +349,7 @@ function NavList({
                       ? pathname === href
                       : pathname === href || (pathname?.startsWith(`${href}/`) ?? false);
                   return (
-                    <li key={href} className="relative">
-                      {isSubActive ? (
-                        <span
-                          aria-hidden="true"
-                          className="pointer-events-none absolute top-1.5 bottom-1.5 -left-3.25 w-0.5 rounded-full bg-primary"
-                        />
-                      ) : null}
+                    <li key={href}>
                       <Link
                         href={href}
                         onClick={() => onNavigate?.()}
