@@ -130,7 +130,7 @@ function NavList({
               aria-current={isActive ? "page" : undefined}
               aria-label={collapsed ? label : undefined}
               className={cn(
-                "group relative flex h-9 items-center gap-2.5 overflow-clip rounded-md px-2.5 text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97]",
+                "group relative flex h-10 items-center gap-2.5 overflow-clip rounded-md px-2.5 text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] lg:h-9 pointer-coarse:h-11",
                 isActive ? "font-semibold text-foreground" : "hover:bg-primary-subtle/70 hover:text-foreground",
               )}
             >
@@ -236,7 +236,7 @@ function NavList({
               onClick={() => onNavigate?.()}
               aria-current={isPreferencesActive ? "page" : undefined}
               className={cn(
-                "group relative flex h-9 items-center gap-2.5 overflow-clip rounded-md px-2.5 text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97]",
+                "group relative flex h-10 items-center gap-2.5 overflow-clip rounded-md px-2.5 text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] lg:h-9 pointer-coarse:h-11",
                 isPreferencesActive
                   ? "font-semibold text-foreground"
                   : "hover:bg-primary-subtle/70 hover:text-foreground",
@@ -304,7 +304,7 @@ function NavList({
               aria-expanded={systemOpen}
               aria-controls={systemListId}
               className={cn(
-                "group relative flex h-9 w-full items-center gap-2.5 overflow-clip rounded-md px-2.5 text-left text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color] duration-150 ease-[var(--ease-out)] outline-none hover:bg-primary-subtle/70 hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent",
+                "group relative flex h-10 w-full items-center gap-2.5 overflow-clip rounded-md px-2.5 text-left text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color] duration-150 ease-[var(--ease-out)] outline-none hover:bg-primary-subtle/70 hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent lg:h-9 pointer-coarse:h-11",
                 isSystemActive && "font-semibold text-foreground",
               )}
             >
@@ -341,7 +341,7 @@ function NavList({
                         onClick={() => onNavigate?.()}
                         aria-current={isSubActive ? "page" : undefined}
                         className={cn(
-                          "group relative flex h-10 items-center gap-2 rounded-md px-2.5 text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent lg:h-9",
+                          "group relative flex h-10 items-center gap-2 rounded-md px-2.5 text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent lg:h-9 pointer-coarse:h-11",
                           isSubActive
                             ? "bg-primary-subtle font-semibold text-foreground shadow-[inset_0_0_0_1px_var(--border)]"
                             : "hover:bg-primary-subtle/70 hover:text-foreground",
