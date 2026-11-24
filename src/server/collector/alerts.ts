@@ -2,7 +2,7 @@ import "server-only";
 
 import { type AlertWatch, alertWindowStart, planAlerts } from "@/domain/listings/alerts";
 import { criteriaFromStored } from "@/domain/listings/criteria";
-import { distanceKm } from "@/domain/listings/geo";
+import { type Coordinates, distanceKm } from "@/domain/listings/geo";
 import { DEFAULT_REGION } from "@/domain/listings/region";
 import { cents } from "@/domain/money";
 
@@ -48,54 +48,79 @@ export async function createAlerts(now: Date): Promise<number> {
   const since = alertWindowStart(watches, now);
   if (since === null) return 0;
 
-  const listings = await db.listing.findMany({
-    where: { firstSeenAt: { gte: since }, status: "open" },
-    select: {
-      id: true,
-      sourceId: true,
-      firstSeenAt: true,
-      title: true,
-      brand: true,
-      model: true,
-      fipeName: true,
-      modelYear: true,
-      mileageKm: true,
-      category: true,
-      fuel: true,
-      vehicleOrigin: true,
-      hasKey: true,
-      damageLevel: true,
-      conditionFlags: true,
-      inspectionResult: true,
-      status: true,
-      endsAt: true,
-      currentBidCents: true,
-      minimumBidCents: true,
-      marketValueCents: true,
-      municipality: { select: { latitude: true, longitude: true } },
-    },
-  });
-  const candidates = listings.map(
-    ({
-      currentBidCents,
-      minimumBidCents,
-      marketValueCents,
-      inspectionResult,
-      municipality,
-      vehicleOrigin,
-      ...listing
-    }) => ({
-      ...listing,
-      inspection: inspectionResult,
-      origin: vehicleOrigin,
-      currentBid: toCents(currentBidCents),
-      minimumBid: toCents(minimumBidCents),
-      marketValue: toCents(marketValueCents),
-      distanceKm: municipality ? distanceKm(DEFAULT_REGION.center, municipality) : null,
+  const ownerIds = [...new Set(watches.map((watch) => watch.ownerId))];
+  const [listings, preferences] = await Promise.all([
+    db.listing.findMany({
+      where: { firstSeenAt: { gte: since }, status: "open" },
+      select: {
+        id: true,
+        sourceId: true,
+        firstSeenAt: true,
+        title: true,
+        brand: true,
+        model: true,
+        fipeName: true,
+        modelYear: true,
+        mileageKm: true,
+        category: true,
+        fuel: true,
+        vehicleOrigin: true,
+        hasKey: true,
+        damageLevel: true,
+        conditionFlags: true,
+        inspectionResult: true,
+        status: true,
+        endsAt: true,
+        currentBidCents: true,
+        minimumBidCents: true,
+        marketValueCents: true,
+        municipality: { select: { latitude: true, longitude: true } },
+      },
     }),
-  );
+    db.userPreference.findMany({
+      where: { ownerId: { in: ownerIds } },
+      select: { ownerId: true, municipality: { select: { latitude: true, longitude: true } } },
+    }),
+  ]);
 
-  const planned = planAlerts(watches, candidates, now);
+  const centerByOwner = new Map<string, Coordinates>();
+  for (const pref of preferences) {
+    if (pref.municipality) centerByOwner.set(pref.ownerId, pref.municipality);
+  }
+
+  // Agrupa monitores por centro de região distinto para evitar recalcular distâncias por dono repetido.
+  const watchesByCenter = new Map<string, { center: Coordinates; watches: AlertWatch[] }>();
+  for (const watch of watches) {
+    const center = centerByOwner.get(watch.ownerId) ?? DEFAULT_REGION.center;
+    const key = `${center.latitude},${center.longitude}`;
+    const bucket = watchesByCenter.get(key);
+    if (bucket) bucket.watches.push(watch);
+    else watchesByCenter.set(key, { center, watches: [watch] });
+  }
+
+  const planned = [...watchesByCenter.values()].flatMap(({ center, watches: groupWatches }) => {
+    const candidates = listings.map(
+      ({
+        currentBidCents,
+        minimumBidCents,
+        marketValueCents,
+        inspectionResult,
+        municipality,
+        vehicleOrigin,
+        ...listing
+      }) => ({
+        ...listing,
+        inspection: inspectionResult,
+        origin: vehicleOrigin,
+        currentBid: toCents(currentBidCents),
+        minimumBid: toCents(minimumBidCents),
+        marketValue: toCents(marketValueCents),
+        distanceKm: municipality ? distanceKm(center, municipality) : null,
+      }),
+    );
+    return planAlerts(groupWatches, candidates, now);
+  });
+
   if (planned.length === 0) return 0;
   // Par já alertado é ignorado pelo índice único: mudança no anúncio não gera outro alerta.
   const { count } = await db.alert.createMany({ data: planned, skipDuplicates: true });
