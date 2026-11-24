@@ -2,6 +2,8 @@ import "server-only";
 
 import type { FetchOutcome, SourceHttp } from "@/sources/types";
 
+import { installExtraCaCertificates } from "./tls";
+
 export const COLLECTOR_USER_AGENT = "LeilaoTracker/1.0 (+https://github.com/LeonardoBMar/leilao)";
 
 export type PoliteFetcher = SourceHttp & {
@@ -65,6 +67,7 @@ export function createPoliteFetcher({
   random = Math.random,
   deadline = Number.POSITIVE_INFINITY,
 }: Options = {}): PoliteFetcher {
+  if (fetchImpl === fetch) installExtraCaCertificates();
   let lastRequestAt = Number.NEGATIVE_INFINITY;
   let requests = 0;
   let siteFailing = false;
