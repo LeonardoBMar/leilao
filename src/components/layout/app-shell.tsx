@@ -213,7 +213,7 @@ function isEditableTarget(target: EventTarget | null): boolean {
 /**
  * Casca privada v3.1 ("Cirúrgico & Monocromático", DESIGN.md §4):
  * Sidebar colapsável à esquerda (264px ↔ 56px) sobre `bg-background` com busca integrada e dock da conta no rodapé +
- * Painel encaixado (Inset Canvas) à direita com header compacto de 48px reativo ao scroll.
+ * Canvas branco à direita colado ao topo, direita e base (estilo Mercury/Stripe) com header compacto de 48px reativo ao scroll.
  */
 export function AppShell({
   account,
@@ -347,7 +347,7 @@ export function AppShell({
       >
         <div
           className={cn(
-            "mt-2 flex h-12 shrink-0 items-center justify-between",
+            "flex h-12 shrink-0 items-center justify-between",
             collapsed ? "justify-center px-2.5" : "pr-2.5 pl-4",
           )}
         >
@@ -445,76 +445,74 @@ export function AppShell({
         {sidebarAccount ? <div className="shrink-0 border-t border-border/70 px-2.5 py-2">{sidebarAccount}</div> : null}
       </aside>
 
-      {/* Coluna principal encaixada (Inset Canvas no desktop lg+) */}
-      <div className="flex min-h-dvh min-w-0 flex-1 flex-col lg:h-dvh lg:min-h-0 lg:p-2 lg:pl-0">
-        <div
-          ref={canvasRef}
-          className="flex min-h-dvh min-w-0 flex-1 flex-col bg-surface lg:min-h-0 lg:scroll-pt-12 lg:overflow-y-auto lg:rounded-xl lg:border lg:border-border/55 lg:shadow-sm"
+      {/* Coluna principal colada ao topo, direita e base (estilo Mercury/Stripe) */}
+      <div
+        ref={canvasRef}
+        className="relative z-10 flex min-h-dvh min-w-0 flex-1 flex-col bg-surface lg:h-dvh lg:min-h-0 lg:scroll-pt-12 lg:overflow-y-auto lg:border-l lg:border-border/60 lg:shadow-sm"
+      >
+        <header
+          className={cn(
+            "sticky top-0 z-30 h-12 shrink-0 border-b bg-surface transition-colors duration-150 ease-[var(--ease-out)] motion-reduce:transition-none",
+            scrolled ? "border-border/80" : "border-border/45",
+          )}
         >
-          <header
-            className={cn(
-              "sticky top-0 z-30 h-12 shrink-0 border-b bg-surface transition-colors duration-150 ease-[var(--ease-out)] motion-reduce:transition-none",
-              scrolled ? "border-border/80" : "border-border/45",
-            )}
-          >
-            <div className="mx-auto flex h-full w-full max-w-360 items-center justify-between gap-3 px-4 md:px-6 lg:px-8">
-              <div className="flex min-w-0 items-center gap-2.5">
-                <div className="flex min-w-0 items-center gap-2 lg:hidden">
-                  <MobileNav badges={badges} followed={followed} nextAuction={nextAuction} />
-                  <Brand href="/dashboard" hideLabelOnNarrow />
-                </div>
-                {collapsed ? (
-                  <Tooltip delayDuration={200}>
-                    <TooltipTrigger asChild>
-                      <button
-                        ref={expandButtonRef}
-                        type="button"
-                        onClick={() => handleToggleSidebar(false)}
-                        aria-label="Expandir barra lateral"
-                        aria-expanded={false}
-                        aria-controls="sidebar-nav"
-                        aria-keyshortcuts="Control+B Meta+B"
-                        className="-ml-1.5 hidden size-8 shrink-0 items-center justify-center rounded-md text-muted transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-primary-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.95] motion-reduce:transition-none motion-reduce:active:scale-100 lg:inline-flex pointer-coarse:size-10"
-                      >
-                        <PanelLeftOpen aria-hidden="true" strokeWidth={1.75} className="size-4" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" sideOffset={8}>
-                      Expandir barra lateral ({isMac ? "⌘B" : "Ctrl+B"})
-                    </TooltipContent>
-                  </Tooltip>
-                ) : null}
-                <Suspense fallback={null}>
-                  <HeaderRouteContext />
-                </Suspense>
+          <div className="mx-auto flex h-full w-full max-w-360 items-center justify-between gap-3 px-4 md:px-6 lg:px-8">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <div className="flex min-w-0 items-center gap-2 lg:hidden">
+                <MobileNav badges={badges} followed={followed} nextAuction={nextAuction} />
+                <Brand href="/dashboard" hideLabelOnNarrow />
               </div>
-
-              <div className="flex shrink-0 items-center justify-end gap-1.5 sm:gap-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setCommandOpen(true)}
-                  aria-label={isMac ? "Ir para tela ou buscar (⌘K)" : "Ir para tela ou buscar (Ctrl+K)"}
-                  aria-keyshortcuts="Control+K Meta+K"
-                  className="size-10 text-muted hover:text-foreground sm:size-8 lg:hidden pointer-coarse:size-10"
-                >
-                  <Search aria-hidden="true" strokeWidth={1.75} className="size-4" />
-                </Button>
-                {notifications}
-                {sidebarAccount ? <div className="lg:hidden">{account}</div> : account}
-              </div>
+              {collapsed ? (
+                <Tooltip delayDuration={200}>
+                  <TooltipTrigger asChild>
+                    <button
+                      ref={expandButtonRef}
+                      type="button"
+                      onClick={() => handleToggleSidebar(false)}
+                      aria-label="Expandir barra lateral"
+                      aria-expanded={false}
+                      aria-controls="sidebar-nav"
+                      aria-keyshortcuts="Control+B Meta+B"
+                      className="-ml-1.5 hidden size-8 shrink-0 items-center justify-center rounded-md text-muted transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-primary-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.95] motion-reduce:transition-none motion-reduce:active:scale-100 lg:inline-flex pointer-coarse:size-10"
+                    >
+                      <PanelLeftOpen aria-hidden="true" strokeWidth={1.75} className="size-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" sideOffset={8}>
+                    Expandir barra lateral ({isMac ? "⌘B" : "Ctrl+B"})
+                  </TooltipContent>
+                </Tooltip>
+              ) : null}
+              <Suspense fallback={null}>
+                <HeaderRouteContext />
+              </Suspense>
             </div>
-          </header>
 
-          <main
-            id="main-content"
-            tabIndex={-1}
-            className="mx-auto w-full max-w-360 px-4 py-6 outline-none md:px-6 lg:px-8 lg:py-7"
-          >
-            {children}
-          </main>
-        </div>
+            <div className="flex shrink-0 items-center justify-end gap-1.5 sm:gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setCommandOpen(true)}
+                aria-label={isMac ? "Ir para tela ou buscar (⌘K)" : "Ir para tela ou buscar (Ctrl+K)"}
+                aria-keyshortcuts="Control+K Meta+K"
+                className="size-10 text-muted hover:text-foreground sm:size-8 lg:hidden pointer-coarse:size-10"
+              >
+                <Search aria-hidden="true" strokeWidth={1.75} className="size-4" />
+              </Button>
+              {notifications}
+              {sidebarAccount ? <div className="lg:hidden">{account}</div> : account}
+            </div>
+          </div>
+        </header>
+
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="mx-auto w-full max-w-360 px-4 py-6 outline-none md:px-6 lg:px-8 lg:py-7"
+        >
+          {children}
+        </main>
       </div>
 
       <Suspense fallback={null}>
