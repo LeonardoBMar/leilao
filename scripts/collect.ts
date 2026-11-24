@@ -5,7 +5,53 @@
 // Opções: --max-visits <n> (padrão 400) limita os anúncios lidos por fonte nesta execução;
 // --source <id> coleta só uma fonte (ex.: para testar um adaptador novo).
 
+import { appendFile } from "node:fs/promises";
+
+import type { CollectionSummary } from "@/server/collector/run";
+
 import { readFlag, readNumberFlag, runCli } from "./lib/cli";
+
+function formatStepSummary(summary: CollectionSummary): string {
+  const lines: string[] = [
+    `## Coleta do catálogo (${summary.status === "succeeded" ? "ok" : "com falhas"})`,
+    "",
+    "| Fonte | Status | Requisições | Na lista | Novos | Atualizados | Falhas |",
+    "| --- | --- | ---: | ---: | ---: | ---: | ---: |",
+    ...summary.sources.map(
+      (run) =>
+        `| \`${run.sourceId}\` | ${run.status} | ${run.requests} | ${run.discovered} | ${run.created} | ${run.updated} | ${run.failed} |`,
+    ),
+    "",
+    `- **Lotes ligados:** ${summary.lotsUpdated} com lance novo · ${summary.resultsRecorded} resultados`,
+    `- **Alertas criados:** ${summary.alertsCreated} · **FIPE casados:** ${summary.marketValuesMatched}`,
+  ];
+  if (summary.maintenance.rawPruned > 0 || summary.maintenance.runsDeleted > 0) {
+    lines.push(
+      `- **Manutenção:** ${summary.maintenance.rawPruned} payloads \`raw\` compactados · ${summary.maintenance.runsDeleted} execuções removidas`,
+    );
+  }
+  if (summary.engineQuality?.status === "saved") {
+    lines.push(
+      `- **Backtest do motor:** snapshot gravado (${summary.engineQuality.estimated} de ${summary.engineQuality.total} vendas estimadas)`,
+    );
+  }
+  if (summary.warnings.length > 0) {
+    lines.push("", "### Avisos", ...summary.warnings.map((warning) => `- ${warning}`));
+  }
+  const sourceErrors = summary.sources.flatMap((run) =>
+    run.errors.map((item) => `- \`${run.sourceId}\` ${item.url}: ${item.error}`),
+  );
+  if (sourceErrors.length > 0 || summary.errors.length > 0) {
+    lines.push(
+      "",
+      "### Falhas (amostra)",
+      ...summary.errors.map((item) => `- ${item.url}: ${item.error}`),
+      ...sourceErrors.slice(0, 20),
+    );
+  }
+  lines.push("");
+  return lines.join("\n");
+}
 
 async function main() {
   const { runCollection } = await import("@/server/collector/run");
@@ -51,6 +97,10 @@ async function main() {
     );
   }
   for (const warning of summary.warnings) process.stdout.write(`  aviso: ${warning}\n`);
+  const summaryPath = process.env.GITHUB_STEP_SUMMARY;
+  if (summaryPath) {
+    await appendFile(summaryPath, formatStepSummary(summary), "utf8");
+  }
   if (summary.status === "failed") process.exitCode = 1;
 }
 
