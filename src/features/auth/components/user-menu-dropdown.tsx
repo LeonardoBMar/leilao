@@ -27,12 +27,22 @@ type UserMenuDropdownProps = {
   variant?: "header" | "sidebar";
 };
 
+function subscribeNoop() {
+  return () => {};
+}
+
 /** Avatar e menu da conta (compacto no header mobile ou dock ancorado no rodapé da sidebar desktop). */
 export function UserMenuDropdown({ email, devBypass, variant = "header" }: UserMenuDropdownProps) {
   const [isPending, startTransition] = useTransition();
-  const collapsed = useSyncExternalStore(subscribeSidebar, getSidebarSnapshot, getSidebarServerSnapshot);
-  const initial = email?.trim().charAt(0).toUpperCase() || null;
   const isSidebar = variant === "sidebar";
+  const collapsed = useSyncExternalStore(
+    isSidebar ? subscribeSidebar : subscribeNoop,
+    isSidebar ? getSidebarSnapshot : getSidebarServerSnapshot,
+    getSidebarServerSnapshot,
+  );
+  const initial = email?.trim().charAt(0).toUpperCase() || null;
+  const accountLabel = email ?? "Sua conta";
+  const collapsedAccountLabel = devBypass ? `${accountLabel} (Modo dev)` : accountLabel;
 
   const avatar = (
     <span className="relative inline-flex size-7 shrink-0 items-center justify-center rounded-full border border-border-strong bg-surface text-caption font-semibold text-foreground-secondary shadow-xs">
@@ -49,10 +59,10 @@ export function UserMenuDropdown({ email, devBypass, variant = "header" }: UserM
   const sidebarTrigger = (
     <button
       type="button"
-      aria-label="Menu da conta"
+      aria-label={collapsed ? `${collapsedAccountLabel} — abrir menu da conta` : undefined}
       className={cn(
-        "group flex h-10 w-full items-center rounded-md text-left transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-primary-subtle/70 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100",
-        collapsed ? "justify-center px-0" : "gap-2.5 px-2",
+        "group flex h-10 w-full items-center rounded-md text-left transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-primary-subtle/70 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100 pointer-coarse:h-11",
+        collapsed ? "justify-center px-0" : "gap-2.5 px-1 pr-2",
       )}
     >
       {avatar}
@@ -60,14 +70,15 @@ export function UserMenuDropdown({ email, devBypass, variant = "header" }: UserM
         <>
           <span className="grid min-w-0 flex-1">
             <span className="truncate text-label font-medium text-foreground" title={email ?? undefined}>
-              {email ?? "Sua conta"}
+              {accountLabel}
             </span>
             {devBypass ? <span className="truncate text-caption text-warning">Modo dev</span> : null}
+            <span className="sr-only"> — abrir menu da conta</span>
           </span>
           <ChevronsUpDown
             aria-hidden="true"
             strokeWidth={1.75}
-            className="size-3.5 shrink-0 text-muted-subtle transition-colors group-hover:text-foreground"
+            className="size-3.5 shrink-0 text-muted-subtle transition-colors group-hover:text-foreground motion-reduce:transition-none"
           />
         </>
       ) : null}
@@ -77,18 +88,14 @@ export function UserMenuDropdown({ email, devBypass, variant = "header" }: UserM
   return (
     <DropdownMenu>
       {isSidebar ? (
-        collapsed ? (
-          <Tooltip delayDuration={180}>
-            <TooltipTrigger asChild>
-              <DropdownMenuTrigger asChild>{sidebarTrigger}</DropdownMenuTrigger>
-            </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={10}>
-              {email ?? "Sua conta"}
-            </TooltipContent>
-          </Tooltip>
-        ) : (
-          <DropdownMenuTrigger asChild>{sidebarTrigger}</DropdownMenuTrigger>
-        )
+        <Tooltip delayDuration={180} open={collapsed ? undefined : false}>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>{sidebarTrigger}</DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="right" sideOffset={10}>
+            {collapsedAccountLabel}
+          </TooltipContent>
+        </Tooltip>
       ) : (
         <DropdownMenuTrigger asChild>
           <button
