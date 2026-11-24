@@ -13,9 +13,14 @@ export default function MarketError({ error, retry }: { error: Error & { digest?
     <div className="grid max-w-2xl gap-4">
       <Alert variant="error">
         <AlertTitle>Não foi possível carregar o Mercado</AlertTitle>
-        <AlertDescription>
-          A consulta ao catálogo falhou. Tente novamente ou volte para o início do Mercado com os filtros limpos.
-          {error.digest ? ` Código: ${error.digest}` : null}
+        <AlertDescription className="grid gap-1.5">
+          <p>A consulta ao catálogo falhou. Tente novamente ou volte para o início do Mercado com os filtros limpos.</p>
+          {error.digest ? (
+            <p className="text-caption text-muted">
+              Código de suporte: <span className="font-mono tabular-nums select-all">{error.digest}</span>. Se
+              persistir, informe este código ao administrador.
+            </p>
+          ) : null}
         </AlertDescription>
       </Alert>
       <div className="flex flex-wrap gap-2">
