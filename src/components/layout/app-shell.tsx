@@ -164,6 +164,21 @@ function HideOnDashboard({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+/** Reseta o scroll do painel encaixado ao trocar de rota no desktop (o App Router só reseta `window`). */
+function ResetCanvasScrollOnNavigate({ canvasRef }: { canvasRef: React.RefObject<HTMLDivElement | null> }) {
+  const pathname = usePathname();
+  const prevPathname = useRef(pathname);
+
+  useEffect(() => {
+    if (prevPathname.current === pathname) return;
+    prevPathname.current = pathname;
+    if (window.location.hash) return;
+    canvasRef.current?.scrollTo({ top: 0, behavior: "instant" });
+  }, [pathname, canvasRef]);
+
+  return null;
+}
+
 type AppShellProps = {
   account: ReactNode;
   sidebarAccount?: ReactNode;
@@ -210,6 +225,7 @@ export function AppShell({
   const [sidebarFade, setSidebarFade] = useState({ top: false, bottom: false });
   const canvasRef = useRef<HTMLDivElement>(null);
   const sidebarNavRef = useRef<HTMLDivElement>(null);
+  const sidebarContentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -254,6 +270,9 @@ export function AppShell({
     nav.addEventListener("scroll", updateFade, { passive: true });
     const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateFade) : null;
     observer?.observe(nav);
+    if (sidebarContentRef.current) {
+      observer?.observe(sidebarContentRef.current);
+    }
     return () => {
       nav.removeEventListener("scroll", updateFade);
       observer?.disconnect();
@@ -360,31 +379,33 @@ export function AppShell({
           ref={sidebarNavRef}
           id="sidebar-nav"
           className={cn(
-            "flex min-h-0 flex-1 flex-col gap-5 overflow-x-hidden overflow-y-auto overscroll-contain px-2.5 py-2.5",
+            "flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain px-2.5 py-2.5",
             !collapsed && "[scrollbar-gutter:stable]",
             sidebarMaskClass,
           )}
         >
-          <nav aria-label="Principal" className="w-full">
-            <NavLinks badges={badges} collapsed={collapsed} />
-          </nav>
+          <div ref={sidebarContentRef} className="flex min-h-full flex-col gap-5">
+            <nav aria-label="Principal" className="w-full">
+              <NavLinks badges={badges} collapsed={collapsed} />
+            </nav>
 
-          {/* Extras em largura fixa interna (w-61 = 244px) evitam quebra de texto durante o fechamento */}
-          <div
-            inert={collapsed || undefined}
-            className={cn(
-              "flex min-h-0 flex-1 flex-col gap-5 transition-opacity duration-160 ease-[var(--ease-out)] motion-reduce:transition-none",
-              collapsed ? "pointer-events-none opacity-0" : "opacity-100",
-            )}
-          >
-            <div className="w-61 shrink-0">
-              <Suspense fallback={followed}>
-                <HideOnDashboard>{followed}</HideOnDashboard>
-              </Suspense>
+            {/* Extras removidos do fluxo no modo colapsado para evitar scroll fantasma na rail */}
+            <div
+              inert={collapsed || undefined}
+              className={cn(
+                "transition-opacity duration-160 ease-[var(--ease-out)] motion-reduce:transition-none",
+                collapsed ? "hidden" : "flex min-h-0 flex-1 flex-col gap-5 opacity-100",
+              )}
+            >
+              <div className="w-61 shrink-0">
+                <Suspense fallback={followed}>
+                  <HideOnDashboard>{followed}</HideOnDashboard>
+                </Suspense>
+              </div>
+              {nextAuction ? (
+                <div className="mt-auto grid w-61 shrink-0 grid-cols-1 gap-2.5 pt-2">{nextAuction}</div>
+              ) : null}
             </div>
-            {nextAuction ? (
-              <div className="mt-auto grid w-61 shrink-0 grid-cols-1 gap-2.5 pt-2">{nextAuction}</div>
-            ) : null}
           </div>
         </div>
 
@@ -462,6 +483,9 @@ export function AppShell({
         </div>
       </div>
 
+      <Suspense fallback={null}>
+        <ResetCanvasScrollOnNavigate canvasRef={canvasRef} />
+      </Suspense>
       {commandItems}
       <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
     </div>
