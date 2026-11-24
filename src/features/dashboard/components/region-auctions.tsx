@@ -5,6 +5,7 @@ import { ButtonLink, EmptyState, Skeleton } from "@/components/ui";
 import { getRegionOverview } from "@/features/listings/queries";
 import { CATALOG_AUCTIONS_PATH, catalogAuctionPath } from "@/features/listings/search";
 import type { RegionAuction } from "@/features/listings/types";
+import { getUserPreferences } from "@/features/preferences/queries";
 import { formatDayParts, formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +18,7 @@ const plural = (count: number, one: string, many: string) =>
  * padrão ou nos monitores, agrupados por dia, com quantos lotes estão no filtro e quantos cabem no limite.
  */
 export async function RegionAuctions() {
-  const { auctions } = await getRegionOverview();
+  const [{ auctions }, { region }] = await Promise.all([getRegionOverview(), getUserPreferences()]);
 
   if (auctions.length === 0) {
     return (
@@ -26,7 +27,8 @@ export async function RegionAuctions() {
         title="Nenhum leilão na região nos próximos 7 dias"
         description={
           <>
-            Leilões dos sites com lotes nos próximos 7 dias no filtro padrão (até 150 km) ou nos{" "}
+            Leilões dos sites com lotes nos próximos 7 dias na sua região-base (até {region.radiusKm} km de{" "}
+            {region.label}) ou nos{" "}
             <Link href="/monitores" className="font-medium text-accent hover:underline">
               seus monitores
             </Link>{" "}
