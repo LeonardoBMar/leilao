@@ -212,8 +212,8 @@ function isEditableTarget(target: EventTarget | null): boolean {
 
 /**
  * Casca privada v3.1 ("Cirúrgico & Monocromático", DESIGN.md §4):
- * Sidebar colapsável à esquerda (264px ↔ 56px) sobre `bg-background` com busca integrada e dock da conta no rodapé +
- * Canvas branco à direita colado ao topo, direita e base (estilo Mercury/Stripe) com header compacto de 48px reativo ao scroll.
+ * Sidebar colapsável branca à esquerda (264px ↔ 56px) com busca integrada e dock da conta no rodapé +
+ * Canvas off-white (`bg-background`) à direita colado ao topo, direita e base com header branco compacto de 48px.
  */
 export function AppShell({
   account,
@@ -312,12 +312,12 @@ export function AppShell({
         Pular para o conteúdo
       </a>
 
-      {/* Sidebar colapsável (desktop lg+) sem borda divisória rígida; toggle integrado no topo */}
+      {/* Sidebar colapsável branca (desktop lg+) com toggle integrado no topo */}
       <aside
         aria-label="Navegação lateral"
         data-collapsed={collapsed ? "true" : "false"}
         className={cn(
-          "sticky top-0 z-40 hidden h-dvh shrink-0 flex-col bg-background lg:flex",
+          "sticky top-0 z-40 hidden h-dvh shrink-0 flex-col border-r border-border/80 bg-surface lg:flex",
           sidebarTransitionReady &&
             "transition-[width] duration-220 ease-[var(--ease-out)] motion-reduce:transition-none",
           collapsed ? "w-14" : "w-66",
@@ -368,7 +368,7 @@ export function AppShell({
                 aria-label={isMac ? "Ir para tela ou buscar (⌘K)" : "Ir para tela ou buscar (Ctrl+K)"}
                 aria-keyshortcuts="Control+K Meta+K"
                 className={cn(
-                  "flex h-9 w-full items-center rounded-md border border-border/80 bg-surface-subtle/70 text-label text-muted transition-[background-color,border-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:border-border-strong hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100 pointer-coarse:h-11",
+                  "flex h-9 w-full items-center rounded-md border border-border/80 bg-background text-label text-muted transition-[background-color,border-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:border-border-strong hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100 pointer-coarse:h-11",
                   collapsed ? "justify-center px-0" : "justify-between gap-2 px-2.5",
                 )}
               >
@@ -427,15 +427,15 @@ export function AppShell({
         {sidebarAccount ? <div className="shrink-0 border-t border-border/70 px-2.5 py-2">{sidebarAccount}</div> : null}
       </aside>
 
-      {/* Coluna principal colada ao topo, direita e base (estilo Mercury/Stripe) */}
+      {/* Coluna principal em off-white colada ao topo, direita e base (estilo Stripe/Shopify) */}
       <div
         ref={canvasRef}
-        className="relative z-10 flex min-h-dvh min-w-0 flex-1 flex-col bg-surface lg:h-dvh lg:min-h-0 lg:scroll-pt-12 lg:overflow-y-auto lg:border-l lg:border-border/60 lg:shadow-sm"
+        className="relative z-10 flex min-h-dvh min-w-0 flex-1 flex-col bg-background lg:h-dvh lg:min-h-0 lg:scroll-pt-12 lg:overflow-y-auto"
       >
         <header
           className={cn(
             "sticky top-0 z-30 h-12 shrink-0 border-b bg-surface transition-colors duration-150 ease-[var(--ease-out)] motion-reduce:transition-none",
-            scrolled ? "border-border/80" : "border-border/45",
+            scrolled ? "border-border shadow-xs" : "border-border/80",
           )}
         >
           <div className="mx-auto flex h-full w-full max-w-360 items-center justify-between gap-3 px-4 md:px-6 lg:px-8">

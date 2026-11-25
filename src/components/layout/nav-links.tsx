@@ -153,7 +153,7 @@ function NavList({
                         aria-hidden="true"
                         layoutId="nav-active-pill"
                         transition={MOTION_SPRING}
-                        className="pointer-events-none absolute inset-0 rounded-md bg-surface shadow-xs ring-1 ring-border/80 ring-inset"
+                        className="pointer-events-none absolute inset-0 rounded-md bg-surface-subtle ring-1 ring-border/70 ring-inset"
                       />
                     ) : null}
                     <Icon
@@ -223,7 +223,7 @@ function NavList({
                     aria-hidden="true"
                     layoutId="nav-active-pill"
                     transition={MOTION_SPRING}
-                    className="pointer-events-none absolute inset-0 rounded-md bg-surface shadow-xs ring-1 ring-border/80 ring-inset"
+                    className="pointer-events-none absolute inset-0 rounded-md bg-surface-subtle ring-1 ring-border/70 ring-inset"
                   />
                 ) : null}
                 <SlidersHorizontal
@@ -268,7 +268,7 @@ function NavList({
                         aria-hidden="true"
                         layoutId="nav-active-pill"
                         transition={MOTION_SPRING}
-                        className="pointer-events-none absolute inset-0 rounded-md bg-surface shadow-xs ring-1 ring-border/80 ring-inset"
+                        className="pointer-events-none absolute inset-0 rounded-md bg-surface-subtle ring-1 ring-border/70 ring-inset"
                       />
                     ) : null}
                     <Settings
@@ -357,7 +357,7 @@ function NavList({
                         className={cn(
                           "group relative flex h-10 items-center gap-2 rounded-md px-2.5 text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent motion-reduce:transition-none lg:h-8 pointer-coarse:h-11",
                           isSubActive
-                            ? "bg-surface font-semibold text-foreground shadow-xs ring-1 ring-border/80 ring-inset"
+                            ? "bg-surface-subtle font-semibold text-foreground ring-1 ring-border/70 ring-inset"
                             : "hover:bg-primary-subtle/70 hover:text-foreground",
                         )}
                       >

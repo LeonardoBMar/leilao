@@ -50,7 +50,7 @@ export function UserMenuDropdown({ email, devBypass, variant = "header" }: UserM
       {devBypass ? (
         <span
           aria-hidden="true"
-          className="absolute -right-0.5 -bottom-0.5 size-2 rounded-full bg-warning ring-2 ring-background"
+          className="absolute -right-0.5 -bottom-0.5 size-2 rounded-full bg-warning ring-2 ring-surface"
         />
       ) : null}
     </span>
