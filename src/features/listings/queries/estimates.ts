@@ -23,7 +23,7 @@ export type EstimateContext = {
   costOverrides: UserDefaultOverrides;
 };
 
-export async function loadEstimateContext(now: Date): Promise<EstimateContext> {
+async function loadEstimateContext(now: Date): Promise<EstimateContext> {
   const user = await requireUser();
   const [index, lots, preferences] = await Promise.all([
     getRecentEstimateIndex(now),

@@ -2,7 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 
-import { type EstimateContext, listingCardSelect, loadEstimateContext, toListItem } from "@/features/listings/queries";
+import { type EstimateContext, getEstimateContext, listingCardSelect, toListItem } from "@/features/listings/queries";
 import { toWatchItem, watchSelect } from "@/features/watches/queries";
 import { watchTitle } from "@/features/watches/summary";
 import type { Prisma } from "@/generated/prisma/client";
@@ -56,7 +56,7 @@ export async function listAlerts(filters: AlertFilters): Promise<AlertPage> {
       : null,
   ]);
   // A base das estimativas só é lida quando há cartões para mostrar.
-  const estimates = rows.length > 0 ? await loadEstimateContext(new Date()) : null;
+  const estimates = rows.length > 0 ? await getEstimateContext() : null;
 
   const watchItem = watch ? toWatchItem(watch) : null;
   return {

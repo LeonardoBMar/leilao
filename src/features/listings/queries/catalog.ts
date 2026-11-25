@@ -16,7 +16,7 @@ import { db } from "@/server/db";
 
 import { type ListingFilters, LISTINGS_PAGE_SIZE } from "../schemas";
 import type { CatalogAuctionKey, CollectorStatus, ListingFacetsView, ListingPage } from "../types";
-import { loadEstimateContext } from "./estimates";
+import { getEstimateContext } from "./estimates";
 import {
   categoriesWhere,
   criteriaWhere,
@@ -54,7 +54,7 @@ export async function listListings(
       db.listing.findMany({ where, orderBy, skip: start, take: LISTINGS_PAGE_SIZE, select }),
       db.listing.count({ where }),
       // Encerrados já têm lance final: sem estimativa, sem carregar a base.
-      filters.ended ? Promise.resolve(null) : loadEstimateContext(now),
+      filters.ended ? Promise.resolve(null) : getEstimateContext(),
     ]);
     return {
       items: rows.map((row) => toListItem(row, context, region)),
@@ -94,7 +94,7 @@ export async function listListings(
 
   const [rows, context] = await Promise.all([
     db.listing.findMany({ where: { id: { in: pageIds } }, select }),
-    filters.ended ? Promise.resolve(null) : loadEstimateContext(now),
+    filters.ended ? Promise.resolve(null) : getEstimateContext(),
   ]);
   const byId = new Map(rows.map((row) => [row.id, row]));
   const items = pageIds.flatMap((id) => {
@@ -188,6 +188,7 @@ export async function countOpenListings(
   criteria: ListingCriteria,
   context?: { region: RegionConfig; now: Date },
 ): Promise<number> {
+  await requireUser();
   const region = context?.region ?? (await getUserPreferences()).region;
   const now = context?.now ?? new Date();
   const where: Prisma.ListingWhereInput = {
@@ -241,6 +242,7 @@ async function loadCollectorStatusCached(region: RegionConfig): Promise<Collecto
 
 /** Saúde do coletor para o dashboard e para "Leilões": última execução de cada fonte e abertos na região. */
 export const getCollectorStatus = cache(async (): Promise<CollectorStatus> => {
+  await requireUser();
   const { region } = await getUserPreferences();
   return loadCollectorStatusCached(region);
 });
