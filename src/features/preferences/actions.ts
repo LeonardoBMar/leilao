@@ -5,9 +5,7 @@ import { refresh, revalidatePath } from "next/cache";
 import { type ActionState, formValues, validationError } from "@/lib/action-state";
 
 import { resetUserPreferences, upsertUserPreferences, type UpsertUserPreferencesError } from "./mutations";
-import { searchMunicipalities } from "./queries";
-import { municipalitySearchSchema, userPreferencesInputSchema } from "./schemas";
-import type { MunicipalityOption } from "./types";
+import { userPreferencesInputSchema } from "./schemas";
 
 const UPSERT_ERRORS = {
   invalid_municipality: "Município não encontrado na base do IBGE.",
@@ -47,10 +45,4 @@ export async function resetUserPreferencesAction(_prev: ActionState): Promise<Ac
   await resetUserPreferences();
   revalidateAffectedRoutes();
   return { status: "success", message: "Preferências restauradas para os padrões do sistema." };
-}
-
-export async function searchMunicipalitiesAction(query: string): Promise<MunicipalityOption[]> {
-  const parsed = municipalitySearchSchema.safeParse(query);
-  if (!parsed.success) return [];
-  return searchMunicipalities(parsed.data);
 }

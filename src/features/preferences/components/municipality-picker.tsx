@@ -2,13 +2,22 @@
 
 import { MapPin, X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
+import { z } from "zod";
 
 import { Button, Field, FieldDescription, FieldError, FieldLabel, Spinner } from "@/components/ui";
 import { DEFAULT_REGION } from "@/domain/listings/region";
 import { cn } from "@/lib/utils";
 
-import { searchMunicipalitiesAction } from "../actions";
 import type { MunicipalityOption } from "../types";
+
+const municipalityListSchema = z.array(
+  z.object({
+    ibgeCode: z.number(),
+    name: z.string(),
+    state: z.string(),
+    label: z.string(),
+  }),
+);
 
 type MunicipalityPickerProps = {
   initialIbgeCode: number | null;
@@ -32,12 +41,14 @@ export function MunicipalityPicker({ initialIbgeCode, initialLabel, error }: Mun
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const optionRefs = useRef<(HTMLLIElement | null)[]>([]);
+  const abortRef = useRef<AbortController | null>(null);
   const requestSeqRef = useRef(0);
 
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
       if (blurTimerRef.current) clearTimeout(blurTimerRef.current);
+      abortRef.current?.abort();
     };
   }, []);
 
@@ -64,8 +75,15 @@ export function MunicipalityPicker({ initialIbgeCode, initialLabel, error }: Mun
     setOpen(true);
     setActiveIndex(-1);
     const seq = ++requestSeqRef.current;
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     timerRef.current = setTimeout(() => {
-      void searchMunicipalitiesAction(trimmed)
+      void fetch(`/api/municipios?q=${encodeURIComponent(trimmed)}`, { signal: controller.signal })
+        .then(async (response) => {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return municipalityListSchema.parse(await response.json());
+        })
         .then((items) => {
           if (requestSeqRef.current !== seq) return;
           setResults(items);
@@ -73,7 +91,7 @@ export function MunicipalityPicker({ initialIbgeCode, initialLabel, error }: Mun
           setLoading(false);
         })
         .catch(() => {
-          if (requestSeqRef.current !== seq) return;
+          if (controller.signal.aborted || requestSeqRef.current !== seq) return;
           setResults([]);
           setActiveIndex(-1);
           setSearchError("Não foi possível buscar municípios. Tente novamente.");

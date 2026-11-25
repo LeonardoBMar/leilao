@@ -112,7 +112,13 @@ export function AnalysisEditor({
         (result) => {
           if (seq !== autosaveSeqRef.current) return;
           hasPendingAutosaveRef.current = false;
-          setAutosave(result === "saved" ? { kind: "saved", at: new Date() } : { kind: result });
+          if (result.status === "success") {
+            setAutosave({ kind: "saved", at: new Date() });
+          } else if (result.status === "error" && result.fieldErrors) {
+            setAutosave({ kind: "invalid" });
+          } else {
+            setAutosave({ kind: "failed" });
+          }
         },
         () => {
           if (seq !== autosaveSeqRef.current) return;
