@@ -237,6 +237,47 @@ describe("createPoliteFetcher", () => {
     expect(calls).toHaveLength(1);
   });
 
+  it("permite domínios públicos começando com fc/fd, bloqueia IPv6 privados/mapeados e valida redirects antes do salto", async () => {
+    const clock = fakeClock();
+    const { impl, calls } = fakeFetch([
+      new Response("ok-fc"),
+      new Response("", { status: 302, headers: { location: "https://fonte/destino" } }),
+      new Response("ok-redirect"),
+      new Response("", { status: 302, headers: { location: "http://169.254.169.254/latest/meta-data" } }),
+    ]);
+    const fetcher = createPoliteFetcher({ fetchImpl: impl, sleep: clock.sleep, now: clock.now, minIntervalMs: 0 });
+
+    expect(await fetcher.get("https://fcleiloes.com.br/lotes")).toEqual({ ok: true, text: "ok-fc" });
+    expect(await fetcher.get("http://[::]/")).toEqual({
+      ok: false,
+      status: null,
+      error: "URL bloqueada pela política do coletor",
+    });
+    expect(await fetcher.get("http://[::ffff:127.0.0.1]/admin")).toEqual({
+      ok: false,
+      status: null,
+      error: "URL bloqueada pela política do coletor",
+    });
+    expect(await fetcher.get("http://[fc00::1]/")).toEqual({
+      ok: false,
+      status: null,
+      error: "URL bloqueada pela política do coletor",
+    });
+
+    expect(await fetcher.get("https://fonte/origem")).toEqual({ ok: true, text: "ok-redirect" });
+    expect(await fetcher.get("https://fonte/ssrf")).toEqual({
+      ok: false,
+      status: null,
+      error: "redirecionamento bloqueado pela política do coletor",
+    });
+    expect(calls.map((c) => c.url)).toEqual([
+      "https://fcleiloes.com.br/lotes",
+      "https://fonte/origem",
+      "https://fonte/destino",
+      "https://fonte/ssrf",
+    ]);
+  });
+
   it("inclui o código e a mensagem de `error.cause` quando o fetch falha na camada de rede/TLS", async () => {
     const clock = fakeClock();
     const cause = Object.assign(new Error("unable to verify the first certificate"), {

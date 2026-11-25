@@ -1,5 +1,7 @@
 import "server-only";
 
+import { isIP } from "node:net";
+
 import type { FetchOutcome, SourceHttp } from "@/sources/types";
 
 import { installExtraCaCertificates } from "./tls";
@@ -48,6 +50,8 @@ export function isSiteFailure(outcome: FetchOutcome): boolean {
 }
 
 const RETRY_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+const MAX_REDIRECTS = 5;
 const MAX_RETRY_AFTER_MS = 60_000;
 
 /**
@@ -96,17 +100,66 @@ export function createPoliteFetcher({
     lastRequestAt = now();
     requests++;
     try {
-      const response = await fetchImpl(url, {
-        method: form ? "POST" : "GET",
-        headers: { "user-agent": userAgent, accept: "text/html,application/xml,application/json;q=0.9,*/*;q=0.8" },
-        ...(form ? { body: new URLSearchParams(form) } : {}),
-        redirect: "follow",
-        // O tempo da requisição também para no fim da execução.
-        signal: AbortSignal.timeout(Math.max(1, Math.min(timeoutMs, deadline - now()))),
-      });
-      if (response.url && !isAllowedPublicUrl(response.url)) {
+      let currentUrl = url;
+      let currentMethod: "GET" | "POST" = form ? "POST" : "GET";
+      let currentBody = form ? new URLSearchParams(form) : undefined;
+      let response: Response;
+
+      for (let redirects = 0; ; redirects++) {
+        if (now() >= deadline) {
+          deadlineReached = true;
+          return { ok: false, status: null, error: DEADLINE_ERROR, retry: false };
+        }
+        response = await fetchImpl(currentUrl, {
+          method: currentMethod,
+          headers: { "user-agent": userAgent, accept: "text/html,application/xml,application/json;q=0.9,*/*;q=0.8" },
+          ...(currentBody ? { body: currentBody } : {}),
+          redirect: "manual",
+          // O tempo da requisição também para no fim da execução.
+          signal: AbortSignal.timeout(Math.max(1, Math.min(timeoutMs, deadline - now()))),
+        });
+        if (response.url && !isAllowedPublicUrl(response.url)) {
+          await response.body?.cancel().catch(() => {});
+          return {
+            ok: false,
+            status: null,
+            error: "redirecionamento bloqueado pela política do coletor",
+            retry: false,
+          };
+        }
+        if (!REDIRECT_STATUSES.has(response.status)) break;
+
+        const location = response.headers.get("location");
+        if (!location) break;
         await response.body?.cancel().catch(() => {});
-        return { ok: false, status: null, error: "redirecionamento bloqueado pela política do coletor", retry: false };
+
+        if (redirects >= MAX_REDIRECTS) {
+          return { ok: false, status: response.status, error: "redirecionamentos em excesso", retry: false };
+        }
+        let nextUrl: string;
+        try {
+          nextUrl = new URL(location, currentUrl).toString();
+        } catch {
+          return {
+            ok: false,
+            status: null,
+            error: "redirecionamento bloqueado pela política do coletor",
+            retry: false,
+          };
+        }
+        if (!isAllowedPublicUrl(nextUrl)) {
+          return {
+            ok: false,
+            status: null,
+            error: "redirecionamento bloqueado pela política do coletor",
+            retry: false,
+          };
+        }
+        currentUrl = nextUrl;
+        if (response.status !== 307 && response.status !== 308 && currentMethod === "POST") {
+          currentMethod = "GET";
+          currentBody = undefined;
+        }
       }
       if (response.ok) {
         const text = await readTextWithLimit(response, maxBytes);
@@ -249,6 +302,33 @@ function parseRetryAfter(value: string | null, nowMs: number): number | undefine
   return Number.isFinite(dateMs) ? Math.max(0, dateMs - nowMs) : undefined;
 }
 
+function isPrivateIpv4(a: number, b: number): boolean {
+  if (a === 0 || a === 10 || a === 127) return true;
+  if (a === 100 && b >= 64 && b <= 127) return true;
+  if (a === 169 && b === 254) return true;
+  if (a === 192 && b === 168) return true;
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  return false;
+}
+
+function isPrivateIpv6(host: string): boolean {
+  if (host === "::" || host === "::1") return true;
+  if (/^fe[89ab][0-9a-f]:/.test(host)) return true;
+  if (/^f[cd][0-9a-f]{2}:/.test(host)) return true;
+  if (host.startsWith("::ffff:")) {
+    const mapped = host.slice("::ffff:".length);
+    const dotted = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(mapped);
+    if (dotted) return isPrivateIpv4(Number(dotted[1]), Number(dotted[2]));
+    const hex = /^([0-9a-f]{1,4}):([0-9a-f]{1,4})$/.exec(mapped);
+    if (hex) {
+      const hi = Number.parseInt(hex[1] ?? "0", 16);
+      return isPrivateIpv4(hi >> 8, hi & 0xff);
+    }
+    return true;
+  }
+  return false;
+}
+
 /** Rejeita esquemas não-HTTP(S) e destinos locais/privados (loopback, link-local, RFC 1918 e ULA). */
 function isAllowedPublicUrl(rawUrl: string): boolean {
   let parsed: URL;
@@ -260,22 +340,13 @@ function isAllowedPublicUrl(rawUrl: string): boolean {
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
   const host = parsed.hostname.toLowerCase().replace(/^\[|\]$/g, "");
   if (host === "" || host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local")) return false;
-  if (
-    host === "::1" ||
-    host === "0.0.0.0" ||
-    host.startsWith("fe80:") ||
-    host.startsWith("fc") ||
-    host.startsWith("fd")
-  ) {
-    return false;
+  const ipVersion = isIP(host);
+  if (ipVersion === 4) {
+    const [a, b] = host.split(".").map(Number);
+    return !isPrivateIpv4(a ?? 0, b ?? 0);
   }
-  const ipv4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host);
-  if (ipv4) {
-    const [a, b] = [Number(ipv4[1]), Number(ipv4[2])];
-    if (a === 0 || a === 10 || a === 127) return false;
-    if (a === 169 && b === 254) return false;
-    if (a === 192 && b === 168) return false;
-    if (a === 172 && b >= 16 && b <= 31) return false;
+  if (ipVersion === 6) {
+    return !isPrivateIpv6(host);
   }
   return true;
 }
