@@ -3,7 +3,7 @@ import { DistributionChart } from "@/components/charts/distribution-chart";
 import type { ResearchFilters } from "@/domain/research/filters";
 import { ORIGIN_LABELS } from "@/features/listings/filter-labels";
 import { niceTicks } from "@/lib/charts";
-import { formatRatio } from "@/lib/format";
+import { formatInteger, formatRatio } from "@/lib/format";
 
 import { CONDITION_LABELS, salesLabel, summaryDetail } from "../labels";
 import { getOriginDistribution } from "../queries";
@@ -84,7 +84,7 @@ export async function OriginBlock({ filters }: { filters: ResearchFilters }) {
             rows={rows.map(({ origin, summary }) => ({
               key: origin,
               origin: ORIGIN_LABELS[origin],
-              sales: summary.kind === "none" ? "0" : summary.n.toLocaleString("pt-BR"),
+              sales: summary.kind === "none" ? "0" : formatInteger(summary.n),
               ...(summary.kind === "summary"
                 ? {
                     low: formatRatio(summary.low),

@@ -31,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui";
 import { withQuery } from "@/features/listings/search";
+import { formatInteger } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 import {
@@ -161,7 +162,7 @@ export function LotFilters({
       </div>
     </>
   );
-  const countText = `${total.toLocaleString("pt-BR")} ${total === 1 ? unit.one : unit.many}`;
+  const countText = `${formatInteger(total)} ${total === 1 ? unit.one : unit.many}`;
   const drawerFooter = (
     <DrawerFooter>
       <Button variant="secondary" onClick={() => apply(clearedLotFilters(filters))} disabled={chips.length === 0}>

@@ -12,7 +12,7 @@ import { effectiveMetric, type ResearchFilters } from "@/domain/research/filters
 import { STATE_NAMES } from "@/domain/research/states";
 import { MIN_SAMPLE } from "@/domain/research/summary";
 import { niceTicks } from "@/lib/charts";
-import { formatBRL, formatDate, formatRatio } from "@/lib/format";
+import { formatBRL, formatDate, formatInteger, formatRatio } from "@/lib/format";
 
 import { formatMetric, METRIC_LABELS, salesLabel, summaryDetail } from "../labels";
 import { getStateDetail, getStateMap, getWhereView } from "../queries";
@@ -165,7 +165,7 @@ export async function StateBlock({ filters, noSales }: { filters: ResearchFilter
                   .map(({ state, summary }) => ({
                     key: state,
                     state: STATE_NAMES[state],
-                    sales: summary.kind === "none" ? "0" : summary.n.toLocaleString("pt-BR"),
+                    sales: summary.kind === "none" ? "0" : formatInteger(summary.n),
                     ...(summary.kind === "summary"
                       ? {
                           low: formatMetric(map.metric, summary.low),

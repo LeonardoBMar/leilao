@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui";
 import type { ListingCriteria } from "@/domain/listings/criteria";
+import { formatInteger } from "@/lib/format";
 
 import { activeFilters, clearedFilters, sortLabel } from "../../filter-labels";
 import { type ListingFilters, listingParams, parseListingParams, SORT_KEYS } from "../../schemas";
@@ -80,7 +81,7 @@ export function ListingFilterBar({
     apply({ ...filters, criteria: { ...filters.criteria, ...patch } });
 
   const unit = scope === "auctions" ? { one: "leilão", many: "leilões" } : { one: "lote", many: "lotes" };
-  const countText = `${total.toLocaleString("pt-BR")} ${total === 1 ? unit.one : unit.many}`;
+  const countText = `${formatInteger(total)} ${total === 1 ? unit.one : unit.many}`;
   const situation = filters.ended ? (total === 1 ? "encerrado" : "encerrados") : total === 1 ? "aberto" : "abertos";
 
   const shortcuts = [

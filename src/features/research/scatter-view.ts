@@ -3,6 +3,7 @@ import type { Route } from "next";
 import type { ContinuousAxis } from "@/components/charts/scatter-plot";
 import { isStateCode, STATE_NAMES } from "@/domain/research/states";
 import { niceTicks } from "@/lib/charts";
+import { formatDecimal } from "@/lib/format";
 
 /** Venda como a dispersão a usa: tudo já serializável, para atravessar a fronteira servidor→cliente. */
 export type ScatterSale = {
@@ -30,7 +31,7 @@ export const NO_HIGHLIGHT = "none";
 
 /** "85 mil": o eixo do km em milhares (o rótulo completo vai na venda). */
 export function kmAxisLabel(km: number): string {
-  return km === 0 ? "0" : `${(km / 1000).toLocaleString("pt-BR")} mil`;
+  return km === 0 ? "0" : `${formatDecimal(km / 1000, 3)} mil`;
 }
 
 /** Eixo do km: do zero até a marca "redonda" que cobre o maior. */

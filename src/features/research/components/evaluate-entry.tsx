@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { ButtonLink, Card } from "@/components/ui";
 import { DEFAULT_EVALUATE_FILTERS } from "@/domain/research/evaluate";
+import { formatInteger } from "@/lib/format";
 
 import { getEvaluateLotShortcuts } from "../queries";
 import { evaluateHref } from "../search";
@@ -83,7 +84,7 @@ export async function EvaluateEntry({ models }: { models: readonly ResearchModel
                 size="sm"
               >
                 {model.label}
-                <span className="text-muted tabular-nums">{model.sales.toLocaleString("pt-BR")}</span>
+                <span className="text-muted tabular-nums">{formatInteger(model.sales)}</span>
               </ButtonLink>
             ))}
           </div>

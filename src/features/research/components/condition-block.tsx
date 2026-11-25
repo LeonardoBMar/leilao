@@ -4,7 +4,7 @@ import { ChartDataTable } from "@/components/charts/chart-data-table";
 import { DistributionChart } from "@/components/charts/distribution-chart";
 import type { ResearchFilters } from "@/domain/research/filters";
 import { niceTicks } from "@/lib/charts";
-import { formatRatio } from "@/lib/format";
+import { formatInteger, formatRatio } from "@/lib/format";
 
 import { CONDITION_LABELS, salesLabel, summaryDetail } from "../labels";
 import { getConditionDistribution } from "../queries";
@@ -74,7 +74,7 @@ export async function ConditionBlock({ filters, noSales }: { filters: ResearchFi
             rows={rows.map(({ condition, summary }) => ({
               key: condition,
               condition: CONDITION_LABELS[condition],
-              sales: summary.kind === "none" ? "0" : summary.n.toLocaleString("pt-BR"),
+              sales: summary.kind === "none" ? "0" : formatInteger(summary.n),
               ...(summary.kind === "summary"
                 ? {
                     low: formatRatio(summary.low),

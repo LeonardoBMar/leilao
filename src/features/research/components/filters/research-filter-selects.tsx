@@ -13,6 +13,7 @@ import {
 } from "@/components/ui";
 import { RESEARCH_MILEAGE_OPTIONS, type ResearchFilters, type ResearchPeriod } from "@/domain/research/filters";
 import { isStateCode, STATE_CODES, STATE_NAMES, type StateCode } from "@/domain/research/states";
+import { formatInteger } from "@/lib/format";
 
 import { mileageLabel, periodLabel, salesLabel } from "../../labels";
 import type { ResearchFacets } from "../../types";
@@ -44,7 +45,7 @@ export function OptionWithCount({ label, count }: { label: string; count: number
   return (
     <span className="flex w-full items-center justify-between gap-4">
       {label}
-      <span className="text-caption text-muted tabular-nums">{count.toLocaleString("pt-BR")}</span>
+      <span className="text-caption text-muted tabular-nums">{formatInteger(count)}</span>
     </span>
   );
 }
@@ -188,7 +189,7 @@ export function MileageSelect({
           ))}
           <SelectGroup>
             <SelectLabel className="font-normal tabular-nums">
-              {mileage.known.toLocaleString("pt-BR")} de {salesLabel(mileage.total)} têm km informado
+              {formatInteger(mileage.known)} de {salesLabel(mileage.total)} têm km informado
             </SelectLabel>
           </SelectGroup>
         </SelectContent>

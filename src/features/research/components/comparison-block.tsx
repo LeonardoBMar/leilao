@@ -4,7 +4,7 @@ import { ChartDataTable } from "@/components/charts/chart-data-table";
 import { DistributionChart } from "@/components/charts/distribution-chart";
 import type { ResearchFilters } from "@/domain/research/filters";
 import { niceTicks } from "@/lib/charts";
-import { formatRatio } from "@/lib/format";
+import { formatInteger, formatRatio } from "@/lib/format";
 
 import { smallSampleLabel, summaryDetail } from "../labels";
 import { getComparison } from "../queries";
@@ -77,7 +77,7 @@ export async function ComparisonBlock({ filters, noSales }: { filters: ResearchF
             rows={groups.map(({ label, distribution: { summary } }, index) => ({
               key: String(index),
               group: label,
-              sales: summary.kind === "none" ? "0" : summary.n.toLocaleString("pt-BR"),
+              sales: summary.kind === "none" ? "0" : formatInteger(summary.n),
               ...(summary.kind === "summary"
                 ? {
                     low: formatRatio(summary.low),

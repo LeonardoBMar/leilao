@@ -8,6 +8,8 @@ import {
   formatCompactBRL,
   formatCompactDateTime,
   formatDayParts,
+  formatDecimal,
+  formatInteger,
   formatMoneyInput,
   formatShortDateTime,
   formatTime,
@@ -43,6 +45,15 @@ describe("formatCompactBRL", () => {
 describe("formatCalendarDayMonth", () => {
   it("dia e mês em UTC, sem voltar um dia", () => {
     expect(formatCalendarDayMonth(new Date("2026-10-05T00:00:00Z"))).toBe("05/10");
+  });
+});
+
+describe("formatInteger e formatDecimal", () => {
+  it("formata inteiros e decimais em pt-BR", () => {
+    expect(formatInteger(12345)).toBe("12.345");
+    expect(formatDecimal(7.5)).toBe("7,5");
+    expect(formatDecimal(7)).toBe("7");
+    expect(formatDecimal(1.25, 3)).toBe("1,25");
   });
 });
 

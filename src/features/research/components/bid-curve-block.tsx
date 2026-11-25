@@ -3,7 +3,7 @@ import { LineBand } from "@/components/charts/line-band";
 import type { ResearchFilters } from "@/domain/research/filters";
 import { MIN_SAMPLE } from "@/domain/research/summary";
 import { niceRange } from "@/lib/charts";
-import { formatRatio } from "@/lib/format";
+import { formatInteger, formatRatio } from "@/lib/format";
 
 import { riseLabel, salesLabel } from "../labels";
 import { getBidCurve } from "../queries";
@@ -42,7 +42,7 @@ export async function BidCurveSection({ filters }: { filters: ResearchFilters })
             rows={points.map(({ hours, summary }) => ({
               key: String(hours),
               hours: `${hours} h`,
-              sales: summary.n.toLocaleString("pt-BR"),
+              sales: formatInteger(summary.n),
               low: formatRatio(summary.low),
               median: formatRatio(summary.median),
               high: formatRatio(summary.high),

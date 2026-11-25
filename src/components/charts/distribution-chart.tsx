@@ -5,7 +5,7 @@ import Link from "next/link";
 import { type KeyboardEvent, type MouseEvent, type ReactNode, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui";
-import { formatRatio } from "@/lib/format";
+import { formatInteger, formatRatio } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 import { CHART_FORMATS, type ChartFormat } from "./chart-formats";
@@ -106,7 +106,7 @@ export function DistributionChart({ rows, axisMax, ticks, format, unit, ariaLabe
           const total = activeRow.bins.reduce((sum, count) => sum + count, 0);
           const count = activeRow.bins[active.bin] ?? 0;
           const share = total === 0 ? "0%" : formatRatio(count / total);
-          return `${rangeLabel(active.bin)}: ${count.toLocaleString("pt-BR")} ${count === 1 ? "venda" : "vendas"}, ${share} do grupo.`;
+          return `${rangeLabel(active.bin)}: ${formatInteger(count)} ${count === 1 ? "venda" : "vendas"}, ${share} do grupo.`;
         })();
 
   return (
@@ -278,7 +278,7 @@ function BinTooltip({
       at={at}
       title={title}
       lines={[
-        `${count.toLocaleString("pt-BR")} ${count === 1 ? "venda" : "vendas"} · ${share(count)} do grupo`,
+        `${formatInteger(count)} ${count === 1 ? "venda" : "vendas"} · ${share(count)} do grupo`,
         `${share(below)} saíram abaixo desta faixa`,
         pinned ? "Fixada. Clique de novo ou Esc para soltar." : "Clique para fixar e comparar.",
       ]}
@@ -311,7 +311,7 @@ function PinnedComparison({
         const count = row.bins[pinned.bin] ?? 0;
         return (
           <span key={row.key}>
-            {row.label} <span className="text-foreground">{count.toLocaleString("pt-BR")}</span>
+            {row.label} <span className="text-foreground">{formatInteger(count)}</span>
             {total > 0 ? ` (${formatRatio(count / total)})` : ""}
           </span>
         );

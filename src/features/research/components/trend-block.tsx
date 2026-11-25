@@ -3,7 +3,7 @@ import { LineBand } from "@/components/charts/line-band";
 import type { ResearchFilters } from "@/domain/research/filters";
 import { TREND_MIN_WEEKLY_SALES } from "@/domain/research/summary";
 import { niceRange } from "@/lib/charts";
-import { formatCalendarDayMonth, formatRatio } from "@/lib/format";
+import { formatCalendarDayMonth, formatInteger, formatRatio } from "@/lib/format";
 
 import { salesLabel } from "../labels";
 import { getWeeklyTrend } from "../queries";
@@ -66,7 +66,7 @@ export async function TrendBlock({ filters }: { filters: ResearchFilters }) {
         rows={weeks.map(({ start, summary }) => ({
           key: start.toISOString(),
           week: formatCalendarDayMonth(start),
-          sales: summary.n.toLocaleString("pt-BR"),
+          sales: formatInteger(summary.n),
           low: formatRatio(summary.low),
           median: formatRatio(summary.median),
           high: formatRatio(summary.high),

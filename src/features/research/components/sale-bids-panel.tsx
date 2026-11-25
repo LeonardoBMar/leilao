@@ -9,7 +9,7 @@ import { SegmentedControl } from "@/components/ui";
 import { cents } from "@/domain/money";
 import { MIN_SALE_BID_STEPS, saleBidsAxisHours } from "@/domain/research/sale-bids";
 import { niceRange } from "@/lib/charts";
-import { formatBRL, formatCompactBRL, formatDateTime, formatRatio } from "@/lib/format";
+import { formatBRL, formatCompactBRL, formatDateTime, formatDecimal, formatRatio } from "@/lib/format";
 
 import type { SaleBids } from "../types";
 import { ResearchNavButton } from "./research-nav-button";
@@ -20,9 +20,7 @@ type Measure = "price" | "ratio";
 function hoursLabel(hoursBefore: number): string {
   if (hoursBefore === 0) return "no fim";
   const hours = -hoursBefore;
-  return hours < 1
-    ? `${Math.round(hours * 60)} min antes do fim`
-    : `${hours.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} h antes do fim`;
+  return hours < 1 ? `${Math.round(hours * 60)} min antes do fim` : `${formatDecimal(hours)} h antes do fim`;
 }
 
 /**
@@ -118,7 +116,7 @@ export function SaleBidsPanel({ bids, closeHref }: { bids: SaleBids; closeHref: 
             xDomain={[-axisHours, 0]}
             xTicks={[1, 0.75, 0.5, 0.25, 0].map((share) => ({
               value: -axisHours * share,
-              label: share === 0 ? "Fim" : `−${(axisHours * share).toLocaleString("pt-BR")} h`,
+              label: share === 0 ? "Fim" : `−${formatDecimal(axisHours * share, 3)} h`,
             }))}
             yDomain={domain}
             yTicks={ticks.map((value) => ({ value, label: format(value) }))}

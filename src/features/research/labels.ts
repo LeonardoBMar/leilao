@@ -18,7 +18,7 @@ import {
   RATIO_BOUNDS,
 } from "@/domain/research/summary";
 import { CATEGORY_LABELS as LISTING_CATEGORY_LABELS, ORIGIN_LABELS } from "@/features/listings/filter-labels";
-import { formatCompactBRL, formatRatio } from "@/lib/format";
+import { formatCompactBRL, formatDecimal, formatInteger, formatRatio } from "@/lib/format";
 
 export const CONDITION_LABELS = {
   "sem-monta": "Sem monta declarada",
@@ -47,14 +47,12 @@ export function periodLabel(period: ResearchPeriod): string {
 
 /** "1 venda", "1.506 vendas". */
 export function salesLabel(count: number): string {
-  return `${count.toLocaleString("pt-BR")} ${count === 1 ? "venda" : "vendas"}`;
+  return `${formatInteger(count)} ${count === 1 ? "venda" : "vendas"}`;
 }
-
-const perWeek = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
 
 /** Liquidez: "3,5 por semana"; abaixo de uma, "menos de 1 por semana". */
 export function perWeekLabel(value: number): string {
-  return value < 1 ? "menos de 1 por semana" : `${perWeek.format(value)} por semana`;
+  return value < 1 ? "menos de 1 por semana" : `${formatDecimal(value)} por semana`;
 }
 
 /** "2018 a 2020", "a partir de 2018", "até 2020"; `null` sem faixa de ano. */
@@ -77,9 +75,9 @@ export function yearRangeLabel({
  */
 export function excludedLabel({ noMarketValue, outOfBounds }: ExcludedSales): string | null {
   const parts = [
-    noMarketValue > 0 ? `${noMarketValue.toLocaleString("pt-BR")} sem FIPE` : null,
+    noMarketValue > 0 ? `${formatInteger(noMarketValue)} sem FIPE` : null,
     outOfBounds > 0
-      ? `${outOfBounds.toLocaleString("pt-BR")} com % fora de ${formatRatio(RATIO_BOUNDS.min)} a ${formatRatio(RATIO_BOUNDS.max)}`
+      ? `${formatInteger(outOfBounds)} com % fora de ${formatRatio(RATIO_BOUNDS.min)} a ${formatRatio(RATIO_BOUNDS.max)}`
       : null,
   ].filter((part) => part !== null);
   return parts.length === 0 ? null : parts.join(" · ");
@@ -87,7 +85,7 @@ export function excludedLabel({ noMarketValue, outOfBounds }: ExcludedSales): st
 
 /** "100 mil km". */
 export function mileageLabel(km: number): string {
-  return `${(km / 1000).toLocaleString("pt-BR")} mil km`;
+  return `${formatDecimal(km / 1000, 3)} mil km`;
 }
 
 /** O `n` do grupo e, se a amostra é pequena, o aviso: "8 vendas · amostra pequena". */

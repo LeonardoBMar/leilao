@@ -19,6 +19,18 @@ const dateTime = new Intl.DateTimeFormat("pt-BR", {
 const date = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeZone: APP_TIME_ZONE });
 const shortMonth = new Intl.DateTimeFormat("pt-BR", { month: "short", year: "numeric", timeZone: "UTC" });
 const integer = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
+const decimal1 = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
+const decimal3 = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 3 });
+
+/** Inteiro com separador de milhar em pt-BR: 1234 → "1.234". */
+export function formatInteger(value: number): string {
+  return integer.format(value);
+}
+
+/** Número decimal em pt-BR, sem zeros à direita: 7.5 → "7,5", 7 → "7". */
+export function formatDecimal(value: number, maxFractionDigits: 1 | 3 = 1): string {
+  return (maxFractionDigits === 1 ? decimal1 : decimal3).format(value);
+}
 
 export function formatBRL(value: Cents): string {
   return brl.format(value / 100);

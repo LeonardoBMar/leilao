@@ -13,7 +13,7 @@ import {
   SMALL_SAMPLE,
 } from "@/domain/research/summary";
 import { sequentialScale } from "@/lib/charts";
-import { formatRatio } from "@/lib/format";
+import { formatDecimal, formatRatio } from "@/lib/format";
 
 import { formatMetric, salesLabel, smallSampleLabel } from "./labels";
 import { researchHref } from "./search";
@@ -22,14 +22,12 @@ import type { StateMapView, WhereView } from "./types";
 /** Passos da escala do mapa (`data-1` a `data-5`). */
 const MAP_STEPS = 5;
 
-const thousands = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
-
 /**
  * Valor escrito no mapa e na legenda: "47%" ou, em lance final, os milhares de reais ("38,9"), porque "R$ 38,9 mil"
  * não cabe nos estados pequenos. O título da legenda diz a unidade; a dica e os leitores de tela levam o valor completo.
  */
 function mapValue(metric: StateMapView["metric"], value: number): string {
-  return metric === "ratio" ? formatRatio(value) : thousands.format(value / 100_000);
+  return metric === "ratio" ? formatRatio(value) : formatDecimal(value / 100_000);
 }
 
 /**

@@ -10,6 +10,7 @@ import {
   type ListingCriteria,
   type OriginKey,
 } from "@/domain/listings/criteria";
+import { formatDecimal } from "@/lib/format";
 
 import type { EndsWithin, ListingFilters, SortKey } from "./schemas";
 
@@ -84,10 +85,10 @@ export function compactBRL(cents: number): string {
   const reais = Math.round(cents / 100);
   if (reais < 1_000) return `R$ ${reais}`;
   const thousands = reais / 1_000;
-  return `R$ ${thousands.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} mil`;
+  return `R$ ${formatDecimal(thousands)} mil`;
 }
 
-export const formatKm = (km: number) => `${(km / 1_000).toLocaleString("pt-BR")} mil km`;
+export const formatKm = (km: number) => `${formatDecimal(km / 1_000, 3)} mil km`;
 
 /** Resumo da faixa de preço para o botão e o chip; `null` sem faixa. */
 export function priceRangeLabel(criteria: Pick<ListingCriteria, "minPrice" | "maxPrice">): string | null {

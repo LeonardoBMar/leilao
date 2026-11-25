@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui";
-import { formatCompactDateTime, formatDateTime } from "@/lib/format";
+import { formatCompactDateTime, formatDateTime, formatInteger } from "@/lib/format";
 
 import { formatDurationSec, SOURCE_HEALTH_LABELS, SOURCE_HEALTH_VARIANTS } from "../labels";
 import { getSystemCollectorOverview } from "../queries";
@@ -61,7 +61,7 @@ export async function CollectorSourcesView() {
             <span className={overview.lateCount > 0 ? "text-warning" : undefined}>{overview.lateCount}</span>
           </Stat>
           <Stat label="Anúncios abertos" note="Em todas as fontes">
-            {overview.totalOpenListings.toLocaleString("pt-BR")}
+            {formatInteger(overview.totalOpenListings)}
           </Stat>
         </dl>
       </Card>
@@ -86,7 +86,7 @@ export async function CollectorSourcesView() {
                     <span className="font-mono text-caption text-muted">{source.id}</span>
                   </div>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-muted tabular-nums">
-                    <span>{source.openListings.toLocaleString("pt-BR")} abertos</span>
+                    <span>{formatInteger(source.openListings)} abertos</span>
                     {latest ? (
                       <>
                         <span aria-hidden="true">·</span>

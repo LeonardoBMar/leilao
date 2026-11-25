@@ -4,7 +4,7 @@ import { Card, Skeleton } from "@/components/ui";
 import { cents } from "@/domain/money";
 import { type ResearchFilters, vehicleLabel } from "@/domain/research/filters";
 import { isSmallSample } from "@/domain/research/summary";
-import { formatCompactBRL, formatRatio } from "@/lib/format";
+import { formatCompactBRL, formatInteger, formatRatio } from "@/lib/format";
 
 import {
   belowMarketLabel,
@@ -79,7 +79,7 @@ export async function ResearchSummary({ filters }: { filters: ResearchFilters })
               .filter((part) => part !== null)
               .join(" ")}
           >
-            {ratio.n.toLocaleString("pt-BR")}
+            {formatInteger(ratio.n)}
           </Tile>
         )}
         {priceSummary === null ? null : (

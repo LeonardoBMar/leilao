@@ -29,7 +29,7 @@ import {
   summarizeCalibration,
 } from "@/domain/research/calibration";
 import { niceRange } from "@/lib/charts";
-import { formatBRL, formatCompactBRL, formatDate, formatRatio } from "@/lib/format";
+import { formatBRL, formatCompactBRL, formatDate, formatInteger, formatRatio } from "@/lib/format";
 
 import type { EngineQualityData } from "../engine-quality";
 import {
@@ -341,10 +341,9 @@ export function EngineQualityBlock({ data }: { data: EngineQualityData }) {
     >
       <p className="max-w-3xl text-body text-foreground tabular-nums">
         Cada venda foi estimada só com as vendas de dias anteriores a ela. O preço provável saiu em{" "}
-        {formatRatio(total.estimated / Math.max(1, total.total))} de {total.total.toLocaleString("pt-BR")} vendas; o
-        arremate caiu dentro da faixa típica em {formatRatio(hitRate)} delas (o esperado é{" "}
-        {formatRatio(EXPECTED_BAND_HIT_RATE)}), e o valor do meio da faixa errou, na mediana,{" "}
-        {formatRatio(medianAbsError)} do lance.
+        {formatRatio(total.estimated / Math.max(1, total.total))} de {formatInteger(total.total)} vendas; o arremate
+        caiu dentro da faixa típica em {formatRatio(hitRate)} delas (o esperado é {formatRatio(EXPECTED_BAND_HIT_RATE)}
+        ), e o valor do meio da faixa errou, na mediana, {formatRatio(medianAbsError)} do lance.
       </p>
       {levels.length === 0 ? null : (
         <Table>
@@ -360,7 +359,7 @@ export function EngineQualityBlock({ data }: { data: EngineQualityData }) {
             {levels.map(({ level, estimated, hitRate: rate, error }) => (
               <TableRow key={level}>
                 <TableCell className="capitalize">{CONFIDENCE_SHORT_LABELS[level]}</TableCell>
-                <TableCell className="text-right tabular-nums">{estimated.toLocaleString("pt-BR")}</TableCell>
+                <TableCell className="text-right tabular-nums">{formatInteger(estimated)}</TableCell>
                 <TableCell className="text-right tabular-nums">{formatRatio(rate)}</TableCell>
                 <TableCell className="text-right tabular-nums">{formatRatio(error)}</TableCell>
               </TableRow>
@@ -385,9 +384,7 @@ export function EngineQualityBlock({ data }: { data: EngineQualityData }) {
               {history.map((snapshot, index) => (
                 <TableRow key={`${snapshot.computedAt.toISOString()}-${index}`}>
                   <TableCell className="tabular-nums">{formatDate(snapshot.computedAt)}</TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {snapshot.total.total.toLocaleString("pt-BR")}
-                  </TableCell>
+                  <TableCell className="text-right tabular-nums">{formatInteger(snapshot.total.total)}</TableCell>
                   <TableCell className="text-right tabular-nums">
                     {formatRatio(snapshot.total.estimated / Math.max(1, snapshot.total.total))}
                   </TableCell>

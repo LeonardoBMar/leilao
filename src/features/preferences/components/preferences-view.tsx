@@ -1,6 +1,6 @@
 import { Badge, Skeleton, Stat } from "@/components/ui";
 import { DEFAULT_COSTS } from "@/domain/finance/defaults";
-import { formatBps, formatDateTime } from "@/lib/format";
+import { formatBps, formatDateTime, formatInteger } from "@/lib/format";
 
 import { getUserPreferences } from "../queries";
 import { PreferencesForm } from "./preferences-form";
@@ -16,7 +16,7 @@ export async function PreferencesView() {
         <Stat
           label="Região ativa"
           size="lg"
-          note={<span className="tabular-nums">Raio de {preferences.region.radiusKm.toLocaleString("pt-BR")} km</span>}
+          note={<span className="tabular-nums">Raio de {formatInteger(preferences.region.radiusKm)} km</span>}
         >
           {preferences.region.label}
         </Stat>

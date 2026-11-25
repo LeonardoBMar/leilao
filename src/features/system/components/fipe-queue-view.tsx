@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui";
-import { formatShortMonth } from "@/lib/format";
+import { formatInteger, formatShortMonth } from "@/lib/format";
 
 import { FIPE_KIND_LABELS, fipeReasonLabel } from "../labels";
 import { getSystemFipeMatchEditor, listSystemFipeQueue } from "../queries";
@@ -51,20 +51,20 @@ export async function FipeQueueView({
         <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat label="Sem casamento" note="Chaves na fila de revisão">
             <span className={summary.unmatched > 0 ? "text-warning" : undefined}>
-              {summary.unmatched.toLocaleString("pt-BR")}
+              {formatInteger(summary.unmatched)}
             </span>
           </Stat>
           <Stat label="Casadas" note="Versão ou família FIPE">
-            {summary.matched.toLocaleString("pt-BR")}
+            {formatInteger(summary.matched)}
           </Stat>
           <Stat label="Manuais" note="Nunca sobrescritas pela regra">
-            {summary.manual.toLocaleString("pt-BR")}
+            {formatInteger(summary.manual)}
           </Stat>
           <Stat
             label="Anúncios na fila"
             note={summary.latestTableMonth ? `Tabela ${formatShortMonth(summary.latestTableMonth)}` : "Sem tabela FIPE"}
           >
-            {summary.pendingListings.toLocaleString("pt-BR")}
+            {formatInteger(summary.pendingListings)}
           </Stat>
         </dl>
       </Card>
