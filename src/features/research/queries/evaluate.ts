@@ -1,6 +1,6 @@
 import "server-only";
 
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { cache } from "react";
 import { z } from "zod";
 
@@ -16,7 +16,15 @@ import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
 
 import type { EvaluateOpenListing, EvaluateSaleView, EvaluationView, LotTarget, ResearchModelOption } from "../types";
-import { loadFipeVersionLabels, MODEL_SUGGESTIONS_LIMIT, rows, salesSince, sql, VEHICLE_KEY } from "./sql";
+import {
+  loadFipeVersionLabels,
+  MODEL_SUGGESTIONS_LIMIT,
+  RESEARCH_CACHE_TAG,
+  rows,
+  salesSince,
+  sql,
+  VEHICLE_KEY,
+} from "./sql";
 
 /** Teto de vendas de um modelo no Avaliar: o maior modelo do catálogo tem perto de 2 mil no ano. */
 const EVALUATE_SALES_LIMIT = 5000;
@@ -285,6 +293,7 @@ export async function getEvaluateModels(): Promise<ResearchModelOption[]> {
 async function loadEvaluateModels(): Promise<ResearchModelOption[]> {
   "use cache";
   cacheLife("catalog");
+  cacheTag(RESEARCH_CACHE_TAG);
   const models = await rows(
     z.object({ key: z.string(), n: z.number().int() }),
     sql`SELECT t.key, count(*)::int AS n

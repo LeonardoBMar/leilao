@@ -21,6 +21,7 @@ export async function municipalitiesWithin(
 ): Promise<number[]> {
   "use cache";
   cacheLife("max");
+  cacheTag("catalog-municipalities");
   const municipalities = await db.municipality.findMany({
     select: { ibgeCode: true, latitude: true, longitude: true },
   });
@@ -49,6 +50,7 @@ export async function activeCatalogSources(): Promise<{ id: string; name: string
 export async function fuelSpellings(): Promise<string[]> {
   "use cache";
   cacheLife("catalog");
+  cacheTag("catalog-fuels");
   const groups = await db.listing.groupBy({ by: ["fuel"], where: { fuel: { not: null } } });
   return groups.flatMap(({ fuel }) => (fuel === null ? [] : [fuel]));
 }

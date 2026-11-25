@@ -1,12 +1,13 @@
 import "server-only";
 
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 
 import { ENGINE_QUALITY_VERSION } from "@/domain/listings/engine-quality";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
 
 import { type EngineQualityData, resolveEngineQualityData } from "../engine-quality";
+import { RESEARCH_CACHE_TAG } from "./sql";
 
 const ENGINE_QUALITY_HISTORY_LIMIT = 8;
 
@@ -23,6 +24,7 @@ export async function getEngineQuality(): Promise<EngineQualityData | null> {
 async function loadEngineQuality(): Promise<EngineQualityData | null> {
   "use cache";
   cacheLife("catalog");
+  cacheTag(RESEARCH_CACHE_TAG);
 
   const rows = await db.engineQualitySnapshot.findMany({
     where: { version: ENGINE_QUALITY_VERSION },
