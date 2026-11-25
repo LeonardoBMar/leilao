@@ -1,22 +1,24 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
-import { brlAmount, optionalBrlAmount, optionalText, requiredText } from "./schemas";
+import { brlAmount, optionalBrlAmount, optionalText, optionalUrl, requiredText } from "./schemas";
 
 const schema = z.object({
   name: requiredText(),
   notes: optionalText(),
   price: brlAmount(),
   fee: optionalBrlAmount(),
+  url: optionalUrl(),
 });
 
 describe("form field schemas", () => {
   it("converte a entrada do formulário para tipos de domínio", () => {
-    expect(schema.parse({ name: "  Detran SP ", notes: "", price: "1.234,56", fee: "" })).toEqual({
+    expect(schema.parse({ name: "  Detran SP ", notes: "", price: "1.234,56", fee: "   ", url: "   " })).toEqual({
       name: "Detran SP",
       notes: undefined,
       price: 123456,
       fee: undefined,
+      url: undefined,
     });
   });
 

@@ -2,16 +2,15 @@ import "server-only";
 
 import { z } from "zod";
 
+const emptyToUndefined = (value: unknown) => (typeof value === "string" && value.trim() === "" ? undefined : value);
+
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   DATABASE_URL: z.url(),
   /** Limite máximo de conexões no pool do pg por instância (padrão 5). */
-  DB_POOL_MAX: z.preprocess(
-    (value) => (value === "" ? undefined : value),
-    z.coerce.number().int().min(1).max(30).optional(),
-  ),
+  DB_POOL_MAX: z.preprocess(emptyToUndefined, z.coerce.number().int().min(1).max(30).optional()),
   /** Importação da tabela FIPE e casamento do valor de mercado (D-47, D-51). "off" desliga sem deploy de código. */
-  FIPE_LOOKUP: z.preprocess((value) => (value === "" ? undefined : value), z.enum(["on", "off"]).default("on")),
+  FIPE_LOOKUP: z.preprocess(emptyToUndefined, z.enum(["on", "off"]).default("on")),
 });
 
 function parseEnv() {

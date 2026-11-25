@@ -27,9 +27,10 @@ export const brlAmount = (message = "Informe um valor em reais válido.") =>
     return parsed;
   });
 
+const emptyToUndefined = (value: unknown) => (typeof value === "string" && value.trim() === "" ? undefined : value);
+
 /** Valor em reais opcional: vazio vira `undefined`. */
-export const optionalBrlAmount = (message?: string) =>
-  z.preprocess((value) => (value === "" ? undefined : value), brlAmount(message).optional());
+export const optionalBrlAmount = (message?: string) => z.preprocess(emptyToUndefined, brlAmount(message).optional());
 
 /** Identificador vindo de `params`, `bind` ou campo oculto. */
 export const entityId = () => z.uuid("Identificador inválido.");
@@ -37,7 +38,7 @@ export const entityId = () => z.uuid("Identificador inválido.");
 /** URL opcional, somente http/https (SPEC §11: links de leilão abrem com segurança). */
 export const optionalUrl = (message = "Informe um link começando com http:// ou https://.") =>
   z.preprocess(
-    (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+    emptyToUndefined,
     z
       .url({ protocol: /^https?$/, hostname: z.regexes.domain, error: message })
       .trim()
@@ -54,8 +55,6 @@ export const zonedDateTime = (message = "Informe data e hora válidas.") =>
     }
     return date;
   });
-
-const emptyToUndefined = (value: unknown) => (typeof value === "string" && value.trim() === "" ? undefined : value);
 
 /** Inteiro digitado ("12.345" aceita separador de milhar). Vazio vira `undefined`. */
 export const optionalInt = (min: number, max: number, message: string) =>
