@@ -36,6 +36,9 @@ export function fipeVehicleTypes(category: ListingCategory | null): FipeVehicleT
   if (type === null) return [];
   if (category === "Carros" || category === "Utilitarios") return [1, 3];
   if (category === "Pesados") return [3, 1];
+  // Carros esporadicamente categorizados como "Motos" pela fonte (ex.: Jimny, Grand Vitara, Blazer) tentam tipo 1
+  // só se o tipo 2 (primário) não casar nenhum modelo.
+  if (category === "Motos") return [2, 1];
   return [type];
 }
 
@@ -76,6 +79,7 @@ export function fipeFuelCodes(type: FipeVehicleType, fuel: string | null): numbe
 /** Grafias de marca das fontes que a FIPE escreve por extenso (além de `BRAND_ALIASES`). Chaves normalizadas. */
 const FIPE_BRAND_NAMES: Readonly<Record<string, string>> = {
   CHEV: "CHEVROLET",
+  CHECROLET: "CHEVROLET",
   "M.BENZ": "MERCEDES BENZ",
   "M. BENZ": "MERCEDES BENZ",
   MBENZ: "MERCEDES BENZ",
@@ -87,12 +91,41 @@ const FIPE_BRAND_NAMES: Readonly<Record<string, string>> = {
   JTZ: "HAOJUE",
   HAOJIAN: "AVELLOZ",
   JINCHENG: "AVELLOZ",
+  JIALING: "TRAXX",
   JTA: "SUZUKI",
   MPOLO: "MARCOPOLO",
   "H.DAVIDSON": "HARLEY DAVIDSON",
   HD: "HARLEY DAVIDSON",
   RENALT: "RENAULT",
   RE: "ROYAL ENFIELD",
+};
+
+/** Importadoras que comercializam mais de uma marca da FIPE (ex.: JTZ importa Haojue e Kymco). */
+const MULTI_FIPE_BRAND_NAMES: Readonly<Record<string, readonly string[]>> = {
+  JTZ: ["HAOJUE", "KYMCO"],
+};
+
+/** Modelos inequívocos (fabricante único) quando a fonte grava o modelo no campo `brand`. */
+const BRAND_BY_MODEL: Readonly<Record<string, string>> = {
+  HB20: "HYUNDAI",
+  HILUX: "TOYOTA",
+  CORSA: "CHEVROLET",
+  MONTANA: "CHEVROLET",
+  SPIN: "CHEVROLET",
+  ASTRA: "CHEVROLET",
+  PALIO: "FIAT",
+  TIPO: "FIAT",
+  DUCATO: "FIAT",
+  PICANTO: "KIA",
+  JETTA: "VOLKSWAGEN",
+  GOLF: "VOLKSWAGEN",
+  SANTANA: "VOLKSWAGEN",
+  AMAROK: "VOLKSWAGEN",
+  MEGANE: "RENAULT",
+  FIESTA: "FORD",
+  "F 350": "FORD",
+  SPRINTER: "MERCEDES BENZ",
+  KYRON: "SSANGYONG",
 };
 
 /** Palavras genéricas que nunca devem casar com marca FIPE na busca por palavra ("MOTO" ≠ "MOTO GUZZI"). */
@@ -110,10 +143,28 @@ const GENERIC_BRAND_WORDS = new Set([
 
 /** Prefixos que algumas fontes colocam no campo marca antes do nome real da montadora. */
 const BRAND_PREFIX_PATTERN =
-  /^(?:(?:I|IMP)[./]\s*|MOTO\s+|QUADRICICLO\s+|DE\s+BOMBEIRO\s+|AMBULANCIA\s+|BAIXADO\s+|CAVALINHO\s+|MELOSA\s+)/;
+  /^(?:(?:I|IMP)[./\\]\s*|MOTO\s+|QUADRICICLO\s+|DE\s+BOMBEIRO\s+|AMBULANCIA\s+|BAIXADO\s+|CAVALINHO\s+|MELOSA\s+|ODONTOLOGICO\s+)/;
 
-/** Marcas-envelope de leiloeiros quando a marca real veio no início do campo `model`. */
-const WRAPPER_BRANDS = new Set(["I", "IMP", "IMP.", "MARCA", "MOTO", "AMBULANCIA", "BAIXADO", "CARRO"]);
+/** Marcas-envelope de leiloeiros quando a marca real veio no início ou fim do campo `model`. */
+const WRAPPER_BRANDS = new Set([
+  "I",
+  "I\\",
+  "IMP",
+  "IMP.",
+  "MARCA",
+  "MODELO:",
+  "MOTO",
+  "MOTOCICLO",
+  "AMBULANCIA",
+  "BAIXADO",
+  "CARRO",
+  "01",
+  "H",
+  "C",
+  "VTE",
+  "VTP",
+  "VTNE",
+]);
 
 /** Palavras/marcas que identificam bens fora da tabela FIPE (reboques, implementos, agrícolas, linha amarela). */
 const OUT_OF_FIPE_BRANDS = new Set([
@@ -128,6 +179,9 @@ const OUT_OF_FIPE_BRANDS = new Set([
   "ESTRADA",
   "RODOFORT",
   "RODOKINHO",
+  "BONDAN",
+  "TRIELHT",
+  "REBOCAR",
   "SR",
   "R",
   "REB",
@@ -143,32 +197,53 @@ const OUT_OF_FIPE_BRANDS = new Set([
   "CASEIH",
   "KUNH",
   "NOGUEIRA",
+  "PUMA 205",
   "ARTESANAL",
   "CICLOMOTOR",
   "QUADRICICLO",
   "ATV",
   "CAN AM",
+  "BICICLETA",
+  "SCOOTER",
   "CHARMING",
   "BASHAN",
   "LUOJIA",
   "LONCIN",
   "XINLING",
   "MOTTU",
+  "AMAZON",
+  "SOUSA",
+  "LX",
+  "JBC",
+  "WANHU",
+  "RATO/BRAVAX",
+  "SULMACRO",
+  "FASPIDER",
+  "HYOSUNG",
+  "WILLYS OVERLAND",
   "S",
 ]);
 
 const OUT_OF_FIPE_KEYWORDS =
-  /\b(?:TRATOR|COLHEITADEIRA|COLHEITADERIA|PLATAFORMA DE CORTE|PULVERIZADOR|PLANTADEIRA|MOTONIVELADORA|ESCAVADEIRA|RETROESCAVADEIRA|MINI CARREGADEIRA|PA CARREGADEIRA|EMPILHADEIRA|PLAINA AGRICOLA|GRADE NIVELADORA|GRADE ARADORA|ENSILADEIRA|APLICADOR|SEMI REBOQUE|REBOQUE|CARRETA|DOLLY|DOLLIE|QUADRICICLO|CICLOMOTOR|ARTESANAL)\b/;
+  /\b(?:TRATOR|COLHEITADEIRA|COLHEITADERIA|PLATAFORMA DE CORTE|PULVERIZADOR|PLANTADEIRA|MOTONIVELADORA|ESCAVADEIRA|RETROESCAVADEIRA|MINI CARREGADEIRA|PA CARREGADEIRA|EMPILHADEIRA|PLAINA AGRICOLA|GRADE NIVELADORA|GRADE ARADORA|ENSILADEIRA|APLICADOR|SEMI REBOQUE|REBOQUE|CARRETA|DOLLY|DOLLIE|QUADRICICLO|CICLOMOTOR|ARTESANAL|BICICLETA MOTORIZADA|RANGER 3000)\b/;
+
+/** Ônibus urbanos/rodoviários encarroçados não tabelados na FIPE (que só cobre micro-ônibus Volare). */
+const OUT_OF_FIPE_BUS_PATTERN =
+  /\b(?:MPOLO (?:SENIOR|TORINO|PARADISO|FRATELLO)|MASCA (?:GRAN|ROMA)|INDUSCAR (?:FOZ|APACHE|MIL)|BUSSCAR|COMIL VERSATILE|NEOBUS|O 400|O 371|OF 1318|OF 1519|B10M)\b/;
 
 /**
  * Indica se o bem é reconhecidamente fora da tabela FIPE (reboque, implemento, máquina agrícola, linha amarela,
- * ciclomotor/marca sem FIPE). Só chamada quando a marca não casou na tabela FIPE.
+ * ônibus encarroçado não tabelado, ciclomotor/marca sem FIPE).
  */
 export function isOutOfFipeVehicle(brand: string, model: string | null): boolean {
   const normalizedBrand = normalizePlaceName(brand);
   if (OUT_OF_FIPE_BRANDS.has(normalizedBrand)) return true;
   if (OUT_OF_FIPE_KEYWORDS.test(normalizedBrand)) return true;
-  if (model !== null && OUT_OF_FIPE_KEYWORDS.test(normalizePlaceName(model))) return true;
+  if (model !== null) {
+    const normalizedModel = normalizePlaceName(model);
+    if (OUT_OF_FIPE_KEYWORDS.test(normalizedModel)) return true;
+    if (OUT_OF_FIPE_BUS_PATTERN.test(normalizedModel)) return true;
+  }
   return false;
 }
 
@@ -183,13 +258,16 @@ export function matchFipeBrands(brand: string | null, brands: readonly FipeOptio
   if (brand === null) return [];
   const plain = normalizePlaceName(brand).replace(BRAND_PREFIX_PATTERN, "").trim();
   if (plain === "") return [];
-  const normalized = FIPE_BRAND_NAMES[plain] ?? plain;
-  const names = new Set([normalized, BRAND_ALIASES[normalized] ?? normalized]);
-  const partsOf = (label: string) =>
-    label
+  const multi = MULTI_FIPE_BRAND_NAMES[plain];
+  const candidateNames = multi ?? [FIPE_BRAND_NAMES[plain] ?? plain];
+  const names = new Set(candidateNames.flatMap((name) => [name, BRAND_ALIASES[name] ?? name]));
+  const partsOf = (label: string) => [
+    normalizePlaceName(label),
+    ...label
       .split(/\s+-\s+|\//)
       .map((part) => normalizePlaceName(part))
-      .map((part) => BRAND_ALIASES[part] ?? part);
+      .map((part) => BRAND_ALIASES[part] ?? part),
+  ];
 
   const exact = brands.filter((option) => partsOf(option.label).some((part) => names.has(part)));
   const exactCodes = new Set(exact.map((option) => option.code));
@@ -210,7 +288,8 @@ export function matchFipeBrand(brand: string | null, brands: readonly FipeOption
 
 /**
  * Desembrulha marca e modelo quando a fonte gravou prefixo/envelope no campo `brand` ("I", "IMP.", "MARCA", "M.",
- * "H.", "AMBULANCIA", "BAIXADO", "JTA") ou repetiu o nome da marca no início do `model`.
+ * "H.", "AMBULANCIA", "BAIXADO", "JTA", "VTE"/"VTP"/"VTNE"), gravou modelo no lugar da marca ("HB20", "HILUX") ou
+ * repetiu o nome da marca no início do `model`.
  */
 export function resolveFipeBrandAndModel(
   brand: string,
@@ -220,17 +299,29 @@ export function resolveFipeBrandAndModel(
   const normBrand = normalizePlaceName(brand);
   const rawModel = model === null ? "" : model.trim();
 
-  // Casos de abreviação partida no ponto/barra: "M." + "BENZ ..." e "H." + "DAVIDSON ...".
-  if (normBrand === "M." && /^BENZ\b/i.test(rawModel)) {
+  // Casos de abreviação partida no ponto/espaço: "M."/"M" + "BENZ ...", "H." + "DAVIDSON ...", "RANGE" + "ROVER ...".
+  if ((normBrand === "M." || normBrand === "M") && /^BENZ\b/i.test(rawModel)) {
     return {
       matchedBrands: matchFipeBrands("MERCEDES BENZ", brands),
-      model: rawModel.replace(/^BENZ\s*/i, "").trim() || null,
+      model: rawModel.replace(/^BENZ[/\s]*/i, "").trim() || null,
     };
   }
   if (normBrand === "H." && /^DAVIDSON\b/i.test(rawModel)) {
     return {
       matchedBrands: matchFipeBrands("HARLEY DAVIDSON", brands),
-      model: rawModel.replace(/^DAVIDSON\s*/i, "").trim() || null,
+      model: rawModel.replace(/^DAVIDSON[/\s]*/i, "").trim() || null,
+    };
+  }
+  if (normBrand === "RANGE" && /^ROVER\b/i.test(rawModel)) {
+    return {
+      matchedBrands: matchFipeBrands("LAND ROVER", brands),
+      model: `RANGE ${rawModel}`,
+    };
+  }
+  if (normBrand === "HYUNDAIAZERA") {
+    return {
+      matchedBrands: matchFipeBrands("HYUNDAI", brands),
+      model: rawModel ? `AZERA ${rawModel}` : "AZERA",
     };
   }
 
@@ -243,8 +334,8 @@ export function resolveFipeBrandAndModel(
   if (WRAPPER_BRANDS.has(normBrand) && rawModel !== "") {
     const cleaned = rawModel
       .replace(/^MODELO:?\s*/i, "")
-      .replace(/^EXTRA\s+/i, "")
-      .replace(/^(?:I|IMP)[./]\s*/i, "")
+      .replace(/^(?:EXTRA|BASCULANTE)\s+/i, "")
+      .replace(/^(?:I|IMP)[./\\]\s*/i, "")
       .trim();
     const slash = cleaned.indexOf("/");
     if (slash > 0 && slash < cleaned.length - 1) {
@@ -257,11 +348,62 @@ export function resolveFipeBrandAndModel(
     }
     const unwrapped = extractBrandFromModel(cleaned, brands);
     if (unwrapped !== null) return unwrapped;
+    const byLastWord = extractBrandFromLastWord(cleaned, null, brands);
+    if (byLastWord !== null) return byLastWord;
+    const inferred = BRAND_BY_MODEL[normalizePlaceName(cleaned).split(/\s+/)[0] ?? ""];
+    if (inferred) {
+      const found = matchFipeBrands(inferred, brands);
+      if (found.length > 0) return { matchedBrands: found, model: cleaned };
+    }
   }
 
   const matchedBrands = matchFipeBrands(brand, brands);
-  if (matchedBrands.length === 0) return { matchedBrands: [], model };
-  return { matchedBrands, model: model === null ? null : stripLeadingBrand(model, brand, matchedBrands) };
+  if (matchedBrands.length > 0) {
+    return { matchedBrands, model: model === null ? null : stripLeadingBrand(model, brand, matchedBrands) };
+  }
+
+  // Marca veio com modelo grudado ("VW GOL CITY (TREND)" | "TITAN 1.0..."): primeira palavra é a marca.
+  const brandWords = normBrand.split(/\s+/).filter(Boolean);
+  if (brandWords.length >= 2 && brandWords[0] && !GENERIC_BRAND_WORDS.has(brandWords[0])) {
+    const firstFound = matchFipeBrands(brandWords[0], brands);
+    if (firstFound.length > 0) {
+      const mergedModel = [brandWords.slice(1).join(" "), rawModel].filter(Boolean).join(" ").trim();
+      return { matchedBrands: firstFound, model: mergedModel || null };
+    }
+  }
+
+  // Modelo veio no campo `brand` e a marca no fim de `model` ("CG" | "150 FAN ESI HONDA", "YBR125K" | "YAMAHA").
+  if (rawModel !== "") {
+    const byLastWord = extractBrandFromLastWord(rawModel, normBrand, brands);
+    if (byLastWord !== null) return byLastWord;
+  }
+
+  // Modelo inequívoco gravado no campo `brand` ("HB20" | "1.0M UNIQUE", "HILUX" | "SRX LIMITED").
+  // Evita falso positivo com pulverizador agrícola "MONTANA RANGER 3000".
+  const inferredBrand =
+    normBrand === "MONTANA" && /\b(?:RANGER|3000|PARRUDA)\b/i.test(rawModel) ? undefined : BRAND_BY_MODEL[normBrand];
+  if (inferredBrand) {
+    const found = matchFipeBrands(inferredBrand, brands);
+    if (found.length > 0) {
+      return { matchedBrands: found, model: [normBrand, rawModel].filter(Boolean).join(" ").trim() };
+    }
+  }
+
+  return { matchedBrands: [], model };
+}
+
+function extractBrandFromLastWord(
+  text: string,
+  prefixModel: string | null,
+  brands: readonly FipeOption[],
+): { matchedBrands: FipeOption[]; model: string | null } | null {
+  const words = normalizePlaceName(text).split(/\s+/).filter(Boolean);
+  const last = words.at(-1);
+  if (!last || GENERIC_BRAND_WORDS.has(last)) return null;
+  const found = matchFipeBrands(last, brands);
+  if (found.length === 0) return null;
+  const rest = [prefixModel, ...words.slice(0, -1)].filter(Boolean).join(" ").trim();
+  return { matchedBrands: found, model: rest || null };
 }
 
 function extractBrandFromModel(
@@ -282,10 +424,17 @@ function extractBrandFromModel(
   return null;
 }
 
-/** Remove repetição da marca no início do modelo ("PEUGEOT 307 ..." → "307 ...", "AVELLOZ AZ1" → "AZ1"). */
+/** Remove repetição da marca no início do modelo ("PEUGEOT 307 ...", "BENZ/A 190", "RENAULT/LOGAN ..."). */
 function stripLeadingBrand(model: string, rawBrand: string, matchedBrands: readonly FipeOption[]): string | null {
-  const words = normalizePlaceName(model).split(/\s+/).filter(Boolean);
-  if (words.length < 2) return model;
+  const cleaned = model
+    .replace(/^BENZ[/\s]+/i, "")
+    .replace(/^[A-Z0-9.]+\//i, (prefix) => {
+      const token = normalizePlaceName(prefix.slice(0, -1));
+      return token === normalizePlaceName(rawBrand) ? "" : prefix;
+    })
+    .trim();
+  const words = normalizePlaceName(cleaned).split(/\s+/).filter(Boolean);
+  if (words.length === 0) return null;
   const brandTokens = new Set<string>();
   const plainBrand = normalizePlaceName(rawBrand).replace(BRAND_PREFIX_PATTERN, "").trim();
   if (plainBrand) {
@@ -299,10 +448,12 @@ function stripLeadingBrand(model: string, rawBrand: string, matchedBrands: reado
       if (norm) brandTokens.add(norm);
     }
   }
-  if (words[0] && brandTokens.has(words[0])) {
+  // Modelo igual à própria marca ("FIAT|FIAT", "GM|CHEVROLET") equivale a sem modelo.
+  if (words.length === 1 && words[0] && brandTokens.has(words[0])) return null;
+  if (words.length >= 2 && words[0] && brandTokens.has(words[0])) {
     return words.slice(1).join(" ") || null;
   }
-  return model;
+  return cleaned;
 }
 
 export type FipeModelChoice =
@@ -324,30 +475,61 @@ type Scored = { code: string; score: number };
 const MODEL_REWRITES: readonly [RegExp, string][] = [
   // "16 V" com espaço vira "16V" antes de `versionTokens` ler "16" como motor 1.6.
   [/\b(8|12|16|20|24)\s+V\b/g, "$1V"],
+  [/^CAMINHAO\s+/, ""],
   [/\bFIORIN0\b/g, "FIORINO"],
   [/^FIOR\b/, "FIORINO"],
   [/^KGOO\b/, "KANGOO"],
   [/^MEGANESD\b/, "MEGANE SEDAN"],
+  [/^MEGANEGT\b/, "MEGANE GRAND TOUR"],
   [/^ORO\b/, "OROCH"],
   [/^MAR\b/, "MARCH"],
   [/^APOLLO\b/, "APOLO"],
   [/^COROLA\b/, "COROLLA"],
+  [/^CCROSS\b/, "COROLLA CROSS"],
   [/^FESTA\b/, "FIESTA"],
+  [/^FIESTAS\b/, "FIESTA"],
   [/^VERSALLES\b/, "VERSAILLES"],
   [/^BANDEIRANTE\b/, "BAND"],
+  [/^BAN\s+IRANTE\b/, "BAND"],
   [/^R\.?\s*ROVER\b/, "RANGE ROVER"],
+  [/^DISC\b/, "DISCOVERY"],
   [/^D\.?\s*REY\b/, "DEL REY"],
   [/^UK2500\b/, "K 2500"],
   [/^GSXR(\d)/, "GSX R $1"],
+  [/^VSTROM(\d)/, "V STROM $1"],
+  [/^G\.?\s*VITARA\b/, "GRAND VITARA"],
+  [/^JIMMY\b/, "JIMNY"],
   [/^3201\b/, "320I"],
   [/^AZ1\b/, "AZ 01"],
   [/^HILUXSW4\b/, "HILUX SW4"],
   [/^PTCRUISER\b/, "PT CRUISER"],
+  [/^GCARAVAN\b/, "GRAND CARAVAN"],
   [/^CHEVROLETS10\b/, "S10"],
-  // Mercedes Sprinter vem como "313CDISTREET F", "311CDISTREETF", "416CDISPRINTERC BAU" ou "515 CDI SPRINTERM".
+  [/^PART(?:NET)?\b/, "PARTNER"],
+  [/^PATNER\b/, "PARTNER"],
+  [/^BERLI\b/, "BERLINGO"],
+  [/^BELINGO\b/, "BERLINGO"],
+  [/^STRAD\b/, "STRADA"],
+  [/^STYLO\b/, "STILO"],
+  [/^CROMO\b/, "CRONOS"],
+  [/^DUCTAO\b/, "DUCATO"],
+  [/^VERA\s+CRUZ\b/, "VERACRUZ"],
+  [/^TRAFFIC\b/, "TRAFIC"],
+  [/^GLAZ00\w*/, "GLA 200"],
+  [/^GLE450\b/, "GLE 450"],
+  [/^KYRONM200\w*/, "KYRON"],
+  [/^CITYCLASS\s+70C16\b/, "DAILY CHASSI 70C16"],
+  [/^FIAT\s+CITYCLASS\s+70C16\b/, "DAILY CHASSI 70C16"],
+  [/^420$/, "TRX 420"],
+  // Mercedes Sprinter vem como "313CDISTREET F", "311CDISTREETF", "416CDISPRINTERC BAU", "515 CDI SPRINTERM", "310D SPRINTERF", "CDI SPR".
   [/^(\d{3})CDI([A-Z]*)/, "SPRINTER $1 $2"],
   [/^(\d{3})\s+CDI\s+SPRINTER[A-Z]*/, "SPRINTER $1"],
+  [/^(\d{3})D\s+SPRINTER[A-Z]*/, "SPRINTER $1"],
+  [/^CDI\s+SPR\b/, "SPRINTER"],
 ];
+
+/** Textos que equivalem a modelo ausente no anúncio ("SEM MODELO", "SEM INFO", frases genéricas de estado). */
+const EMPTY_MODEL_PATTERN = /^(?:SEM MODELO|SEM INFO(?:\s+SEM INFO)?|VEICULO EM FUNCIONAMENTO\b.*)$/;
 
 /** Normaliza abreviações e erros de grafia conhecidos do modelo antes da comparação com a FIPE. */
 function normalizeModelForFipe(model: string): string {
@@ -372,6 +554,7 @@ function normalizeCandidateLabel(label: string): string {
 export function chooseFipeModels(model: string | null, candidates: readonly FipeOption[]): FipeModelChoice {
   if (model === null) return { kind: "none", reason: "no_model" };
   const normalizedModel = normalizeModelForFipe(model);
+  if (EMPTY_MODEL_PATTERN.test(normalizedModel)) return { kind: "none", reason: "no_model" };
   const base = baseModelOf(normalizedModel);
   if (base === null) return { kind: "none", reason: "no_model" };
   const listingWords = normalizedModel.split(/\s+/).slice(base.words);
@@ -677,7 +860,7 @@ export function marketValueOnSave(
  * mudarem, e diga em `MATCHER_CHANGES` o que a versão nova pode mudar: as correlações automáticas afetadas são refeitas
  * e os anúncios ligados a elas, recalculados.
  */
-export const MATCHER_VERSION = 6;
+export const MATCHER_VERSION = 7;
 
 /**
  * O que cada versão da regra muda (D-53). `all`: a escolha de quem já casou pode mudar, e todas as automáticas de
@@ -697,6 +880,9 @@ export const MATCHER_CHANGES: Readonly<Record<number, "all" | "unmatched">> = {
   // Combustíveis elétrico/híbrido (4 e 6), fallback multi-tipo e multi-marca, desembrulho de prefixos/marcas-envelope,
   // âncora numérica e submodelos na segunda leitura, correção de "16VH"/"13P" e separação de divergências reais.
   6: "unmatched",
+  // Desembrulho de modelo no campo marca, marca no fim do modelo (VTE/VTP/VTNE/CG), JTZ→Kymco, Motos→Carros fallback,
+  // abreviações adicionais e classificação de ônibus encarroçados fora da FIPE.
+  7: "unmatched",
 };
 
 /** Correlação automática anterior a esta versão é refeita, qualquer que seja o tipo: a última versão `all`. */

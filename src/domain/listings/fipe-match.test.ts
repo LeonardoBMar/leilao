@@ -109,12 +109,28 @@ describe("matchFipeBrand", () => {
       matchedBrands: [{ label: "ZONTES" }],
       model: "350E",
     });
+    expect(resolveFipeBrandAndModel("HB20", "1.0M UNIQUE", options(["Hyundai"]))).toMatchObject({
+      matchedBrands: [{ label: "Hyundai" }],
+      model: "HB20 1.0M UNIQUE",
+    });
+    expect(resolveFipeBrandAndModel("CG", "150 FAN ESI HONDA", options(["HONDA"]))).toMatchObject({
+      matchedBrands: [{ label: "HONDA" }],
+      model: "CG 150 FAN ESI",
+    });
+    expect(resolveFipeBrandAndModel("VW GOL CITY (TREND)", "TITAN 1.0", cheryBrands)).toMatchObject({
+      matchedBrands: [{ label: "VW - VolksWagen" }],
+      model: "GOL CITY (TREND) TITAN 1.0",
+    });
+    // Pulverizador agrícola "MONTANA RANGER 3000" não deve casar com Chevrolet Montana.
+    expect(resolveFipeBrandAndModel("MONTANA", "RANGER 3000", options(["GM - Chevrolet"])).matchedBrands).toEqual([]);
   });
 
   it("identifica veículos fora da tabela FIPE e separa divergências reais", () => {
     expect(isOutOfFipeVehicle("FACCHINI", "SRF LOED")).toBe(true);
     expect(isOutOfFipeVehicle("TRATOR MASSEY FERGUSON", "MF 6711")).toBe(true);
     expect(isOutOfFipeVehicle("RANDON", "SR BA")).toBe(true);
+    expect(isOutOfFipeVehicle("MERCEDES BENZ", "MPOLO SENIOR GVM")).toBe(true);
+    expect(isOutOfFipeVehicle("MONTANA", "RANGER 3000")).toBe(true);
     expect(isOutOfFipeVehicle("FIAT", "UNO")).toBe(false);
     expect(isRealFipeDivergence("out_of_fipe")).toBe(true);
     expect(isRealFipeDivergence("year_out_of_range")).toBe(true);
@@ -313,9 +329,9 @@ describe("settleFipeValue", () => {
 });
 
 describe("tipos e combustíveis", () => {
-  it("carros, picapes e caminhões tentam fallback entre tipos 1 e 3; equipamento não tenta", () => {
+  it("carros, picapes, caminhões e motos têm fallback seguro entre tipos; equipamento não tenta", () => {
     expect(fipeVehicleTypes("Carros")).toEqual([1, 3]);
-    expect(fipeVehicleTypes("Motos")).toEqual([2]);
+    expect(fipeVehicleTypes("Motos")).toEqual([2, 1]);
     expect(fipeVehicleTypes("Utilitarios")).toEqual([1, 3]);
     expect(fipeVehicleTypes("Pesados")).toEqual([3, 1]);
     expect(fipeVehicleTypes("Equipamentos")).toEqual([]);
