@@ -5,8 +5,8 @@ import { ButtonLink, EmptyState, Skeleton } from "@/components/ui";
 import { DismissListingButton } from "@/features/listings/components/dismiss-listing-button";
 import { ListingCard } from "@/features/listings/components/listing-card";
 import { getRegionOverview } from "@/features/listings/queries";
-import { CATALOG_LISTINGS_PATH, withQuery } from "@/features/listings/search";
 import { getUserPreferences } from "@/features/preferences/queries";
+import { CATALOG_LISTINGS_PATH, withQuery } from "@/lib/catalog-search";
 
 /**
  * "Para analisar agora" (D-44, DESIGN.md §15.1): os melhores anúncios da região ou dos monitores cujo provável

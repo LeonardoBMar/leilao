@@ -1,9 +1,8 @@
-import type { Cents } from "@/domain/money";
 import { toMonthInput } from "@/lib/dates";
+import type { ListingFipe } from "@/lib/draft-defaults";
 import { formatMoneyInput } from "@/lib/format";
 
-/** FIPE do anúncio ligado ao lote: o valor, o mês da tabela e de onde veio (casada pelo sistema ou da fonte). */
-export type ListingFipe = { value: Cents; refMonth: Date | null; source: string };
+export type { ListingFipe };
 
 export type FipeField = "fipeValue" | "fipeReferenceMonth" | "fipeReferenceSource";
 

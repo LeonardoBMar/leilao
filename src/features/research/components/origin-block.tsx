@@ -1,9 +1,9 @@
 import { ChartDataTable } from "@/components/charts/chart-data-table";
 import { DistributionChart } from "@/components/charts/distribution-chart";
 import type { ResearchFilters } from "@/domain/research/filters";
-import { ORIGIN_LABELS } from "@/features/listings/filter-labels";
 import { niceTicks } from "@/lib/charts";
 import { formatInteger, formatRatio } from "@/lib/format";
+import { ORIGIN_LABELS } from "@/lib/listing-filter-labels";
 
 import { CONDITION_LABELS, salesLabel, summaryDetail } from "../labels";
 import { getOriginDistribution } from "../queries";

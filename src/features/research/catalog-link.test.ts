@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { DEFAULT_EVALUATE_FILTERS } from "@/domain/research/evaluate";
 import { DEFAULT_RESEARCH_FILTERS } from "@/domain/research/filters";
-import { parseListingParams } from "@/features/listings/schemas";
+import { parseListingParams } from "@/lib/listing-filters";
 
 import { catalogParams, evaluateCatalogParams } from "./catalog-link";
 

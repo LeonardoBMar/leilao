@@ -1,7 +1,7 @@
 import { type VEHICLE_ORIGINS } from "@/domain/listings/origin";
 import { DEFAULT_EVALUATE_FILTERS, type EvaluateFilters, familyLabel } from "@/domain/research/evaluate";
 import { type RESEARCH_CONDITIONS } from "@/domain/research/filters";
-import { ORIGIN_LABELS } from "@/features/listings/filter-labels";
+import { ORIGIN_LABELS } from "@/lib/listing-filter-labels";
 
 import { mileageLabel, yearRangeLabel } from "../../labels";
 

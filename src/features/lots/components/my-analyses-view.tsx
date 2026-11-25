@@ -13,7 +13,7 @@ import {
   SectionTitle,
   Skeleton,
 } from "@/components/ui";
-import { catalogAuctionPath, type SearchParams, withQuery } from "@/features/listings/search";
+import { catalogAuctionPath, type SearchParams, withQuery } from "@/lib/catalog-search";
 import { formatDateTime } from "@/lib/format";
 
 import { activeLotFilters, clearedLotFilters } from "../filter-labels";

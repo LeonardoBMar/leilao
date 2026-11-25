@@ -14,8 +14,8 @@ import Link from "next/link";
 
 import { ButtonLink, cardVariants, Skeleton } from "@/components/ui";
 import { getRegionOverview } from "@/features/listings/queries";
-import { catalogAuctionPath } from "@/features/listings/search";
 import { getFollowedLotsOverview } from "@/features/lots/queries";
+import { catalogAuctionPath } from "@/lib/catalog-search";
 import { formatCompactDateTime, formatRatio } from "@/lib/format";
 import { cn } from "@/lib/utils";
 

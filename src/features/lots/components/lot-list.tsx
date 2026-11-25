@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui";
-import { withQuery } from "@/features/listings/search";
+import { withQuery } from "@/lib/catalog-search";
 import { formatDate } from "@/lib/format";
 
 import { activeLotFilters, clearedLotFilters } from "../filter-labels";

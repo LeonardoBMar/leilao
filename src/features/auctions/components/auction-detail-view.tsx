@@ -15,7 +15,7 @@ import {
   Skeleton,
   Stat,
 } from "@/components/ui";
-import { catalogAuctionPath } from "@/features/listings/search";
+import { catalogAuctionPath } from "@/lib/catalog-search";
 import { formatDateTime } from "@/lib/format";
 
 import { ORIGIN_LABELS, STATUS_BADGE_VARIANTS, STATUS_LABELS } from "../labels";

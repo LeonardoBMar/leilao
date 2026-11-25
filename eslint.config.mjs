@@ -56,11 +56,20 @@ const noCrossFeatureMutations = {
   group: ["@/features/*/mutations", "@/features/*/mutations/*"],
   message: "Features não importam mutations de outras features (ARCHITECTURE §3).",
 };
+const noCrossFeatureSchemas = {
+  group: ["@/features/*/schemas", "@/features/*/schemas/*"],
+  message: "Features não importam schemas de outras features (ARCHITECTURE §3).",
+};
 const noCrossFeatureComponents = {
   group: ["@/features/*/components", "@/features/*/components/*"],
   message: "Features não importam componentes de outras features; a rota em app/ compõe UI (ARCHITECTURE §3).",
 };
-const crossFeaturePrivateImports = [noCrossFeatureActions, noCrossFeatureMutations, noCrossFeatureComponents];
+const crossFeaturePrivateImports = [
+  noCrossFeatureActions,
+  noCrossFeatureMutations,
+  noCrossFeatureSchemas,
+  noCrossFeatureComponents,
+];
 
 export default defineConfig([
   ...nextVitals,
@@ -217,14 +226,20 @@ export default defineConfig([
       "src/features/watches/components/watch-form.tsx",
     ],
     rules: {
-      "no-restricted-imports": ["error", { patterns: [dbImports, noCrossFeatureActions, noCrossFeatureMutations] }],
+      "no-restricted-imports": [
+        "error",
+        { patterns: [dbImports, noCrossFeatureActions, noCrossFeatureMutations, noCrossFeatureSchemas] },
+      ],
     },
   },
   {
     // `createLotAction` cria opcionalmente o primeiro rascunho de análise na criação do lote.
     files: ["src/features/lots/actions.ts"],
     rules: {
-      "no-restricted-imports": ["error", { patterns: [dbImports, noCrossFeatureActions, noCrossFeatureComponents] }],
+      "no-restricted-imports": [
+        "error",
+        { patterns: [dbImports, noCrossFeatureActions, noCrossFeatureSchemas, noCrossFeatureComponents] },
+      ],
     },
   },
   globalIgnores([

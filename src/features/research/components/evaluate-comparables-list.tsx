@@ -10,8 +10,8 @@ import type { EstimateConfidence, SimilarityReason } from "@/domain/listings/est
 import type { VehicleOrigin } from "@/domain/listings/origin";
 import { cents } from "@/domain/money";
 import type { EvaluateFilters } from "@/domain/research/evaluate";
-import { ORIGIN_LABELS } from "@/features/listings/filter-labels";
 import { formatCompactBRL, formatDate, formatKm, formatRatio } from "@/lib/format";
+import { ORIGIN_LABELS } from "@/lib/listing-filter-labels";
 import { cn } from "@/lib/utils";
 
 import { CONFIDENCE_SHORT_LABELS, salesLabel, SIMILARITY_LABELS } from "../labels";

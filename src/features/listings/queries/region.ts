@@ -11,9 +11,9 @@ import {
 } from "@/domain/listings/criteria";
 import { byAnalysisPriority } from "@/domain/listings/estimates";
 import { distanceKm } from "@/domain/listings/geo";
-import { listingForDefaultsSelect } from "@/features/analyses/draft-defaults";
 import { getUserPreferences } from "@/features/preferences/queries";
 import type { Prisma } from "@/generated/prisma/client";
+import { listingForDefaultsSelect } from "@/lib/draft-defaults";
 import { requireUser } from "@/server/auth";
 import { storedCriteriaSelect } from "@/server/collector/alerts";
 import { db } from "@/server/db";

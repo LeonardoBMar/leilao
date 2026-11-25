@@ -19,8 +19,8 @@ import { distanceKm } from "@/domain/listings/geo";
 import { DEFAULT_REGION, type RegionConfig } from "@/domain/listings/region";
 import { trackerMissing } from "@/domain/listings/tracker";
 import { cents } from "@/domain/money";
-import { defaultsInputFromListing, type ListingForDefaults } from "@/features/analyses/draft-defaults";
 import type { Prisma } from "@/generated/prisma/client";
+import { defaultsInputFromListing, type ListingForDefaults } from "@/lib/draft-defaults";
 import { fuelSpellings, municipalitiesWithin } from "@/server/catalog-values";
 
 import { ENDS_WITHIN_HOURS, type ListingFilters, NEW_WINDOW_MS, type SortKey } from "../schemas";

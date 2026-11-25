@@ -17,8 +17,8 @@ import {
   MIN_SAMPLE,
   RATIO_BOUNDS,
 } from "@/domain/research/summary";
-import { CATEGORY_LABELS as LISTING_CATEGORY_LABELS, ORIGIN_LABELS } from "@/features/listings/filter-labels";
 import { formatCompactBRL, formatDecimal, formatInteger, formatRatio } from "@/lib/format";
+import { CATEGORY_LABELS as LISTING_CATEGORY_LABELS, ORIGIN_LABELS } from "@/lib/listing-filter-labels";
 
 export const CONDITION_LABELS = {
   "sem-monta": "Sem monta declarada",

@@ -5,7 +5,7 @@ import { useState } from "react";
 import { VEHICLE_ORIGINS } from "@/domain/listings/origin";
 import { type EvaluateFilters } from "@/domain/research/evaluate";
 import { normalizeYears, RESEARCH_MILEAGE_OPTIONS } from "@/domain/research/filters";
-import { ORIGIN_LABELS } from "@/features/listings/filter-labels";
+import { ORIGIN_LABELS } from "@/lib/listing-filter-labels";
 
 import { mileageLabel } from "../../labels";
 import {

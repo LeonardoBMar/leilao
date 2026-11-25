@@ -2,8 +2,8 @@ import { type ReactNode, Suspense } from "react";
 
 import { Skeleton } from "@/components/ui";
 import { type EvaluateFilters, familyLabel, targetFilters } from "@/domain/research/evaluate";
-import { ORIGIN_LABELS } from "@/features/listings/filter-labels";
 import { formatCompactBRL, formatKm } from "@/lib/format";
+import { ORIGIN_LABELS } from "@/lib/listing-filter-labels";
 
 import { getEvaluateModels, getEvaluation, getLotTarget } from "../queries";
 import { evaluateParams, parseEvaluateParams } from "../schemas";

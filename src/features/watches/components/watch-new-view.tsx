@@ -1,9 +1,9 @@
 import { FreshOnNavigation } from "@/components/layout/fresh-on-navigation";
 import { Skeleton } from "@/components/ui";
 import { listActiveSources } from "@/features/listings/queries";
-import { parseListingParams } from "@/features/listings/schemas";
-import type { SearchParams } from "@/features/listings/search";
 import { getUserPreferences } from "@/features/preferences/queries";
+import type { SearchParams } from "@/lib/catalog-search";
+import { parseListingParams } from "@/lib/listing-filters";
 
 import { createWatchAction } from "../actions";
 import { WatchForm } from "./watch-form";

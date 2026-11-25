@@ -3,9 +3,9 @@ import Link from "next/link";
 
 import { ButtonLink, EmptyState, Skeleton } from "@/components/ui";
 import { getRegionOverview } from "@/features/listings/queries";
-import { CATALOG_AUCTIONS_PATH, catalogAuctionPath } from "@/features/listings/search";
 import type { RegionAuction } from "@/features/listings/types";
 import { getUserPreferences } from "@/features/preferences/queries";
+import { CATALOG_AUCTIONS_PATH, catalogAuctionPath } from "@/lib/catalog-search";
 import { formatDayParts, formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 

@@ -4,8 +4,8 @@ import { cache } from "react";
 
 import { type EstimateContext, getEstimateContext, listingCardSelect, toListItem } from "@/features/listings/queries";
 import { toWatchItem, watchSelect } from "@/features/watches/queries";
-import { watchTitle } from "@/features/watches/summary";
 import type { Prisma } from "@/generated/prisma/client";
+import { watchTitle } from "@/lib/watch-summary";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
 

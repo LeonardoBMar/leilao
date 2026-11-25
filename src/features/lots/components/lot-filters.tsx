@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui";
-import { withQuery } from "@/features/listings/search";
+import { withQuery } from "@/lib/catalog-search";
 import { formatInteger } from "@/lib/format";
 import { cn } from "@/lib/utils";
 

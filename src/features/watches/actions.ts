@@ -4,8 +4,8 @@ import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { parseListingParams } from "@/features/listings/schemas";
 import { type ActionState, failure, validationError } from "@/lib/action-state";
+import { parseListingParams } from "@/lib/listing-filters";
 
 import { createWatch, deleteWatch, setWatchActive, updateWatch, type WatchError } from "./mutations";
 import { hasVehicleCriterion, quickWatchSchema, watchIdSchema, watchInputSchema } from "./schemas";

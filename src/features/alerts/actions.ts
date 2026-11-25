@@ -2,11 +2,13 @@
 
 import { refresh } from "next/cache";
 
-import { watchIdSchema } from "@/features/watches/schemas";
 import { type ActionState, failure } from "@/lib/action-state";
+import { entityId } from "@/lib/schemas";
 
 import { type AlertError, markAlertRead, markAllAlertsRead } from "./mutations";
 import { alertIdSchema } from "./schemas";
+
+const watchIdSchema = entityId();
 
 const ERRORS = { not_found: "Alerta não encontrado." } satisfies Record<AlertError, string>;
 

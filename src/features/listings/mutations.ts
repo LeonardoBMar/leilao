@@ -3,14 +3,9 @@ import "server-only";
 import { hasEnded } from "@/domain/listings/outcome";
 import { planTracker } from "@/domain/listings/tracker";
 import { cents } from "@/domain/money";
-import {
-  defaultsInputFromListing,
-  draftDefaults,
-  draftSourceOf,
-  listingForDefaultsSelect,
-} from "@/features/analyses/draft-defaults";
 import { getUserPreferences } from "@/features/preferences/queries";
 import type { Prisma } from "@/generated/prisma/client";
+import { defaultsInputFromListing, draftDefaults, draftSourceOf, listingForDefaultsSelect } from "@/lib/draft-defaults";
 import { err, ok, type Result } from "@/lib/result";
 import { requireUser } from "@/server/auth";
 import { db, isUniqueViolation } from "@/server/db";

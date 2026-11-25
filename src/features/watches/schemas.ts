@@ -11,7 +11,7 @@ import {
   MILEAGE_OPTIONS_KM,
   ORIGIN_KEYS,
 } from "@/domain/listings/criteria";
-import { DEFAULT_DISTANCE, DISTANCE_OPTIONS } from "@/features/listings/schemas";
+import { DEFAULT_DISTANCE, DISTANCE_OPTIONS } from "@/lib/listing-filters";
 import { checkbox, entityId, optionalInt, optionalPositiveBrlAmount, optionalText } from "@/lib/schemas";
 
 const YEAR_MESSAGE = "Informe um ano entre 1900 e 2100.";
