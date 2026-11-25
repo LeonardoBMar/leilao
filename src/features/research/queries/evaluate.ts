@@ -243,7 +243,7 @@ export const getOpenListingsFor = cache(async (filters: EvaluateFilters): Promis
         AND ${VEHICLE_KEY} = ${`${filters.vehicle.brand}|${filters.vehicle.model}`}
       ORDER BY l.ends_at ASC NULLS LAST, l.id LIMIT ${OPEN_LISTINGS_LIMIT}`,
   );
-  const inRecort = found.filter((row) =>
+  const matchingRows = found.filter((row) =>
     inCut(
       {
         brand: row.brand,
@@ -259,14 +259,14 @@ export const getOpenListingsFor = cache(async (filters: EvaluateFilters): Promis
     ),
   );
   const lots =
-    inRecort.length === 0
+    matchingRows.length === 0
       ? []
       : await db.lot.findMany({
-          where: { ownerId: user.id, listingId: { in: inRecort.map((row) => row.id) } },
+          where: { ownerId: user.id, listingId: { in: matchingRows.map((row) => row.id) } },
           select: { id: true, listingId: true },
         });
   const lotOf = new Map(lots.map((lot) => [lot.listingId, lot.id]));
-  return inRecort.map((row) => ({
+  return matchingRows.map((row) => ({
     id: row.id,
     url: row.url,
     title: row.title,

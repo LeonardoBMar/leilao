@@ -49,7 +49,6 @@ export async function getLimitIndicator(): Promise<LimitIndicator> {
 }
 
 const PENDING_LIMIT = 3;
-const PENDING_CANDIDATES = 50;
 const FIXABLE_PREVIEW_LIMIT = 50;
 
 const toCents = (value: number | null) => (value === null ? null : cents(value));
@@ -101,8 +100,6 @@ export const getPendingItems = cache(async (): Promise<PendingItems> => {
         auction: { archivedAt: null, startsAt: { lt: now } },
       },
       orderBy: { auction: { startsAt: "asc" } },
-      // Folga para os abertos que ainda não encerraram (saem no filtro abaixo).
-      take: PENDING_CANDIDATES,
       select: {
         id: true,
         lotNumber: true,
