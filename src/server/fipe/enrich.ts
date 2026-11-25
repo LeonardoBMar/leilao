@@ -330,6 +330,9 @@ export async function chooseForTable(
   if (allNoModel) {
     return { kind: "none", reason: "no_model", vehicleType: firstBrand.type, brandCode: firstBrand.brandCode };
   }
+  if (isOutOfFipeVehicle(identity.brand, identity.model)) {
+    return { kind: "none", reason: "out_of_fipe", vehicleType: firstBrand.type, brandCode: firstBrand.brandCode };
+  }
   // Se o tipo primário da categoria não tem nenhum modelo nesse ano (ex.: carro 1982, antes do início da FIPE em 1985),
   // o fallback para caminhões (que começa em 1981) não transforma ano fora da faixa em "no_candidates".
   if (!anyHadCandidates || (firstBrand.type === primaryType && !primaryHadCandidates)) {
