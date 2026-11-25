@@ -48,6 +48,19 @@ const noAnalysesImports = {
   group: ["@/features/analyses", "@/features/analyses/*"],
   message: "research não importa analyses (composição em app/ para evitar ciclo).",
 };
+const noCrossFeatureActions = {
+  group: ["@/features/*/actions", "@/features/*/actions/*"],
+  message: "Features não importam Server Actions de outras features (ARCHITECTURE §3).",
+};
+const noCrossFeatureMutations = {
+  group: ["@/features/*/mutations", "@/features/*/mutations/*"],
+  message: "Features não importam mutations de outras features (ARCHITECTURE §3).",
+};
+const noCrossFeatureComponents = {
+  group: ["@/features/*/components", "@/features/*/components/*"],
+  message: "Features não importam componentes de outras features; a rota em app/ compõe UI (ARCHITECTURE §3).",
+};
+const crossFeaturePrivateImports = [noCrossFeatureActions, noCrossFeatureMutations, noCrossFeatureComponents];
 
 export default defineConfig([
   ...nextVitals,
@@ -139,17 +152,23 @@ export default defineConfig([
     rules: { "no-restricted-imports": ["error", { patterns: [serverLayerImports] }] },
   },
   {
+    files: ["src/features/**"],
+    rules: { "no-restricted-imports": ["error", { patterns: [dbImports, ...crossFeaturePrivateImports] }] },
+  },
+  {
     files: [
       "src/features/*/queries.ts",
       "src/features/*/queries/**/*.ts",
       "src/features/*/mutations.ts",
       "src/features/*/mutations/**/*.ts",
     ],
-    rules: { "no-restricted-imports": "off" },
+    rules: { "no-restricted-imports": ["error", { patterns: crossFeaturePrivateImports }] },
   },
   {
     files: ["src/features/listings/**"],
-    rules: { "no-restricted-imports": ["error", { patterns: [dbImports, noWatchesImports] }] },
+    rules: {
+      "no-restricted-imports": ["error", { patterns: [dbImports, noWatchesImports, ...crossFeaturePrivateImports] }],
+    },
   },
   {
     files: [
@@ -158,11 +177,13 @@ export default defineConfig([
       "src/features/listings/mutations.ts",
       "src/features/listings/mutations/**/*.ts",
     ],
-    rules: { "no-restricted-imports": ["error", { patterns: [noWatchesImports] }] },
+    rules: { "no-restricted-imports": ["error", { patterns: [noWatchesImports, ...crossFeaturePrivateImports] }] },
   },
   {
     files: ["src/features/analyses/**"],
-    rules: { "no-restricted-imports": ["error", { patterns: [dbImports, noListingsImports] }] },
+    rules: {
+      "no-restricted-imports": ["error", { patterns: [dbImports, noListingsImports, ...crossFeaturePrivateImports] }],
+    },
   },
   {
     files: [
@@ -171,11 +192,13 @@ export default defineConfig([
       "src/features/analyses/mutations.ts",
       "src/features/analyses/mutations/**/*.ts",
     ],
-    rules: { "no-restricted-imports": ["error", { patterns: [noListingsImports] }] },
+    rules: { "no-restricted-imports": ["error", { patterns: [noListingsImports, ...crossFeaturePrivateImports] }] },
   },
   {
     files: ["src/features/research/**"],
-    rules: { "no-restricted-imports": ["error", { patterns: [dbImports, noAnalysesImports] }] },
+    rules: {
+      "no-restricted-imports": ["error", { patterns: [dbImports, noAnalysesImports, ...crossFeaturePrivateImports] }],
+    },
   },
   {
     files: [
@@ -184,7 +207,25 @@ export default defineConfig([
       "src/features/research/mutations.ts",
       "src/features/research/mutations/**/*.ts",
     ],
-    rules: { "no-restricted-imports": ["error", { patterns: [noAnalysesImports] }] },
+    rules: { "no-restricted-imports": ["error", { patterns: [noAnalysesImports, ...crossFeaturePrivateImports] }] },
+  },
+  {
+    // Exceções documentadas de composição entre features (D-34, D-43, D-44): novos casos devem compor pela rota em app/.
+    files: [
+      "src/features/dashboard/components/**",
+      "src/features/alerts/components/alert-card.tsx",
+      "src/features/watches/components/watch-form.tsx",
+    ],
+    rules: {
+      "no-restricted-imports": ["error", { patterns: [dbImports, noCrossFeatureActions, noCrossFeatureMutations] }],
+    },
+  },
+  {
+    // `createLotAction` cria opcionalmente o primeiro rascunho de análise na criação do lote.
+    files: ["src/features/lots/actions.ts"],
+    rules: {
+      "no-restricted-imports": ["error", { patterns: [dbImports, noCrossFeatureActions, noCrossFeatureComponents] }],
+    },
   },
   globalIgnores([
     ".next/**",
