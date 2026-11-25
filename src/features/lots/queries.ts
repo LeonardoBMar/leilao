@@ -13,7 +13,7 @@ import { db } from "@/server/db";
 
 import { toFixedLimit } from "./limit";
 import { LOT_GROUPS_PAGE_SIZE, LOT_POSITION_COMPARISONS, type LotFilters, LOTS_PAGE_SIZE } from "./schemas";
-import type { FollowedLotsOverview, LotDetail, LotGroupPage, LotListItem, LotPage } from "./types";
+import type { FollowedLotBase, FollowedLotsOverview, LotDetail, LotGroupPage, LotListItem, LotPage } from "./types";
 
 const listSelect = {
   id: true,
@@ -179,9 +179,9 @@ export async function listLots(filters: LotFilters, scope: { auctionId?: string 
  * usada diretamente pela sidebar (`FollowedLotsNav`, sem carregar estimativas) e enriquecida por
  * `getFollowedLotsOverview` no dashboard, evitando duas consultas paralelas na mesma requisição.
  */
-export const getFollowedLotsBase = cache(async () => {
+export const getFollowedLotsBase = cache(async (): Promise<FollowedLotBase[]> => {
   const user = await requireUser();
-  return db.lot.findMany({
+  const rows = await db.lot.findMany({
     where: {
       ownerId: user.id,
       archivedAt: null,
@@ -207,6 +207,22 @@ export const getFollowedLotsBase = cache(async () => {
       },
     },
   });
+
+  return rows.map(({ listing, ...row }) => ({
+    ...toListItem(row),
+    listing: listing
+      ? {
+          isOpen: listing.status === "open",
+          endsAt: listing.endsAt,
+          mileageKm: listing.mileageKm,
+          category: listing.category,
+          damageLevel: listing.damageLevel,
+          fipeCode: listing.fipeCode ?? listing.marketValueFipeCode,
+          origin: listing.vehicleOrigin,
+          marketValue: listing.marketValueCents === null ? null : cents(listing.marketValueCents),
+        }
+      : null,
+  }));
 });
 
 /**
@@ -218,9 +234,8 @@ export const getFollowedLotsOverview = cache(async (): Promise<FollowedLotsOverv
   await requireUser();
   const [rows, context] = await Promise.all([getFollowedLotsBase(), getEstimateContext()]);
 
-  const items = rows.map(({ listing, ...row }) => {
-    const item = toListItem(row);
-    const open = listing?.status === "open" && (listing.endsAt === null || listing.endsAt > context.now);
+  const items = rows.map(({ listing, ...item }) => {
+    const open = listing?.isOpen && (listing.endsAt === null || listing.endsAt > context.now);
     const price =
       listing && open
         ? estimatePrice(
@@ -231,9 +246,9 @@ export const getFollowedLotsOverview = cache(async (): Promise<FollowedLotsOverv
               mileageKm: listing.mileageKm,
               category: listing.category,
               damageLevel: listing.damageLevel,
-              fipeCode: listing.fipeCode ?? listing.marketValueFipeCode,
-              origin: listing.vehicleOrigin,
-              marketValue: listing.marketValueCents === null ? null : cents(listing.marketValueCents),
+              fipeCode: listing.fipeCode,
+              origin: listing.origin,
+              marketValue: listing.marketValue,
             },
             context.index,
           )

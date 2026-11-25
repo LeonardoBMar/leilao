@@ -1,5 +1,7 @@
+import type { DamageLevel } from "@/domain/listings/condition";
 import type { LimitFit, PriceEstimate } from "@/domain/listings/estimates";
 import type { MarketValueOrigin } from "@/domain/listings/fipe-match";
+import type { VehicleOrigin } from "@/domain/listings/origin";
 import type { LotBidStep } from "@/domain/lots/bid-history";
 import type { Cents } from "@/domain/money";
 
@@ -26,6 +28,23 @@ export type LotListItem = {
 };
 
 export type LotPage = { items: LotListItem[]; total: number; page: number; pageSize: number };
+
+/** Metadados mínimos do anúncio ligado usados para estimar o lance provável dos acompanhados (D-85). */
+export type FollowedLotListingMeta = {
+  isOpen: boolean;
+  endsAt: Date | null;
+  mileageKm: number | null;
+  category: string | null;
+  damageLevel: DamageLevel | null;
+  fipeCode: string | null;
+  origin: VehicleOrigin | null;
+  marketValue: Cents | null;
+};
+
+/** Lote acompanhado base (DTO compartilhado entre sidebar e dashboard, D-85). */
+export type FollowedLotBase = LotListItem & {
+  listing: FollowedLotListingMeta | null;
+};
 
 /** Lote acompanhado no dashboard (D-44): fim do anúncio ligado e o provável frente ao limite fixado. */
 export type FollowedLotItem = LotListItem & {
