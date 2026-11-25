@@ -41,7 +41,10 @@ export type SystemCollectorOverview = {
 };
 
 export type SystemFipeSummary = {
-  unmatched: number;
+  /** Chaves ativas sem casamento que são identificáveis / revisáveis. */
+  reviewable: number;
+  /** Chaves ativas sem casamento por divergência real (fora da FIPE, ano fora da faixa, manual). */
+  outOfFipe: number;
   matched: number;
   manual: number;
   pendingListings: number;

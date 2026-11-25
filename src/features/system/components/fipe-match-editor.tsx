@@ -36,7 +36,7 @@ function editorUrl(
   overrides: { item?: string; tipo?: FipeVehicleType; marca?: string },
 ): Route {
   const params = new URLSearchParams();
-  if (filters.situacao !== "none") params.set("situacao", filters.situacao);
+  if (filters.situacao !== "revisao") params.set("situacao", filters.situacao);
   if (filters.origem !== "todas") params.set("origem", filters.origem);
   if (filters.busca) params.set("busca", filters.busca);
   if (overrides.item) params.set("item", overrides.item);

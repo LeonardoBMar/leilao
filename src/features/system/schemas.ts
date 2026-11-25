@@ -21,7 +21,7 @@ const VEHICLE_TYPE_MAP = { "1": 1, "2": 2, "3": 3 } as const;
 const vehicleTypeSchema = z.enum(["1", "2", "3"]).transform((value) => VEHICLE_TYPE_MAP[value]);
 
 export const fipeQueueFiltersSchema = z.object({
-  situacao: z.enum(["none", "version", "family", "todos"]).catch("none"),
+  situacao: z.enum(["revisao", "fora-fipe", "none", "version", "family", "todos"]).catch("revisao"),
   origem: z.enum(["auto", "manual", "todas"]).catch("todas"),
   busca: optionalText().catch(undefined),
   item: entityId().optional().catch(undefined),

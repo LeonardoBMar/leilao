@@ -5,16 +5,16 @@ import {
   fipeFuelCodes,
   type FipeMatch,
   type FipeMatchModel,
-  type FipeOption,
   fipeReferenceMonth,
   type FipeTable,
   type FipeVehicleIdentity,
   fipeVehicleIdentity,
   type FipeVehicleType,
   fipeVehicleTypes,
-  matchFipeBrand,
+  isOutOfFipeVehicle,
   needsRematch,
   pickFipeTable,
+  resolveFipeBrandAndModel,
   settleFipeValue,
 } from "@/domain/listings/fipe-match";
 import { type ListingStatus, toListingCategory } from "@/domain/listings/types";
@@ -48,6 +48,8 @@ export type MatchReason =
   | "matched"
   | "no_type"
   | "no_brand"
+  | "out_of_fipe"
+  | "year_out_of_range"
   | Extract<ReturnType<typeof chooseFipeModels>, { kind: "none" }>["reason"]
   | "spread"
   | "no_value";
@@ -236,7 +238,15 @@ export async function evaluateListing(
 }
 
 function noneReason(reason: string | null): MatchReason {
-  const known: readonly MatchReason[] = ["no_type", "no_brand", "no_model", "no_candidates", "too_many"];
+  const known: readonly MatchReason[] = [
+    "no_type",
+    "no_brand",
+    "out_of_fipe",
+    "year_out_of_range",
+    "no_model",
+    "no_candidates",
+    "too_many",
+  ];
   return known.find((item) => item === reason) ?? "no_candidates";
 }
 
@@ -261,36 +271,72 @@ async function resolveMatch(
   return saveAutoMatch(identity, choice);
 }
 
-/** A regra de D-47 sobre as listas do catálogo: marca no tipo certo, modelos de todos os combustíveis possíveis. */
+/**
+ * A regra de D-47 sobre as listas do catálogo: tenta cada tipo compatível e cada marca casada (ex.: "Caoa Chery" e
+ * "Caoa Chery/Chery"; "Pesados" tentando caminhões e depois carros/utilitários) até encontrar versão/família. Quando
+ * nada casa, distingue divergência real (`out_of_fipe`, `year_out_of_range`) de pendência identificável (`no_brand`,
+ * `no_candidates`, `no_model`, `too_many`).
+ */
 export async function chooseForTable(
   catalog: FipeCatalog,
   table: FipeTable,
   identity: FipeVehicleIdentity,
 ): Promise<FipeMatchChoice> {
-  let found: { type: FipeVehicleType; brand: FipeOption } | null = null;
-  for (const type of fipeVehicleTypes(identity.category)) {
-    const brand = matchFipeBrand(identity.brand, await catalog.brands(table, type));
-    if (brand) {
-      found = { type, brand };
-      break;
-    }
-  }
-  if (found === null) return { kind: "none", reason: "no_brand", vehicleType: null, brandCode: null };
-  const { type, brand } = found;
+  const types = fipeVehicleTypes(identity.category);
+  const primaryType = types[0] ?? null;
+  let firstBrand: { type: FipeVehicleType; brandCode: string } | null = null;
+  let firstNonEmptyFailure: { type: FipeVehicleType; brandCode: string; reason: string } | null = null;
+  let primaryHadCandidates = false;
+  let anyHadCandidates = false;
+  let allNoModel = true;
 
-  // Candidatas de todos os combustíveis possíveis: a FIPE lista a moto flex ora como gasolina, ora como flex.
-  const candidates: FipeMatchModel[] = [];
-  for (const fuel of fipeFuelCodes(type, identity.fuel)) {
-    for (const model of await catalog.modelsByYear(table, type, brand.code, identity.modelYear, fuel)) {
-      if (candidates.some((item) => item.code === model.code)) continue;
-      candidates.push({ code: model.code, fuel, label: model.label });
+  for (const type of types) {
+    const brands = await catalog.brands(table, type);
+    const { matchedBrands, model } = resolveFipeBrandAndModel(identity.brand, identity.model, brands);
+    for (const brand of matchedBrands) {
+      if (firstBrand === null) firstBrand = { type, brandCode: brand.code };
+      if (model !== null) allNoModel = false;
+
+      // Candidatas de todos os combustíveis possíveis: a FIPE lista a moto flex ora como gasolina, ora como flex,
+      // e híbridos como 6 (híbrido) ou 1/5.
+      const candidates: FipeMatchModel[] = [];
+      for (const fuel of fipeFuelCodes(type, identity.fuel)) {
+        for (const item of await catalog.modelsByYear(table, type, brand.code, identity.modelYear, fuel)) {
+          if (candidates.some((existing) => existing.code === item.code)) continue;
+          candidates.push({ code: item.code, fuel, label: item.label });
+        }
+      }
+
+      if (candidates.length === 0) continue;
+      anyHadCandidates = true;
+      if (type === primaryType) primaryHadCandidates = true;
+
+      const choice = chooseFipeModels(model, candidates);
+      if (choice.kind !== "none") {
+        const codes = choice.kind === "version" ? [choice.code] : choice.codes;
+        const models = codes.flatMap((code) => candidates.filter((item) => item.code === code));
+        return { kind: choice.kind, vehicleType: type, brandCode: brand.code, models };
+      }
+      if (firstNonEmptyFailure === null) {
+        firstNonEmptyFailure = { type, brandCode: brand.code, reason: choice.reason };
+      }
     }
   }
-  const choice = chooseFipeModels(identity.model, candidates);
-  if (choice.kind === "none") return { kind: "none", reason: choice.reason, vehicleType: type, brandCode: brand.code };
-  const codes = choice.kind === "version" ? [choice.code] : choice.codes;
-  const models = codes.flatMap((code) => candidates.filter((item) => item.code === code));
-  return { kind: choice.kind, vehicleType: type, brandCode: brand.code, models };
+
+  if (firstBrand === null) {
+    const reason = isOutOfFipeVehicle(identity.brand, identity.model) ? "out_of_fipe" : "no_brand";
+    return { kind: "none", reason, vehicleType: null, brandCode: null };
+  }
+  if (allNoModel) {
+    return { kind: "none", reason: "no_model", vehicleType: firstBrand.type, brandCode: firstBrand.brandCode };
+  }
+  // Se o tipo primário da categoria não tem nenhum modelo nesse ano (ex.: carro 1982, antes do início da FIPE em 1985),
+  // o fallback para caminhões (que começa em 1981) não transforma ano fora da faixa em "no_candidates".
+  if (!anyHadCandidates || (firstBrand.type === primaryType && !primaryHadCandidates)) {
+    return { kind: "none", reason: "year_out_of_range", vehicleType: firstBrand.type, brandCode: firstBrand.brandCode };
+  }
+  const failure = firstNonEmptyFailure ?? { ...firstBrand, reason: "no_candidates" };
+  return { kind: "none", reason: failure.reason, vehicleType: failure.type, brandCode: failure.brandCode };
 }
 
 /** Grava o resultado no anúncio, só se ele continua sem valor da fonte (a fonte pode ter informado o dela no meio). */

@@ -8,15 +8,19 @@ import {
   fipeReferenceMonth,
   fipeVehicleIdentity,
   fipeVehicleTypes,
+  isOutOfFipeVehicle,
+  isRealFipeDivergence,
   marketValueOnSave,
   MATCHER_CHANGES,
   MATCHER_VERSION,
   matchFipeBrand,
+  matchFipeBrands,
   MAX_FAMILY_CANDIDATES,
   needsRematch,
   parseFipeMonth,
   pickFipeTable,
   rematchAllBelow,
+  resolveFipeBrandAndModel,
   settleFipeValue,
   versionTokens,
 } from "./fipe-match";
@@ -71,20 +75,64 @@ describe("matchFipeBrand", () => {
     expect(matchFipeBrand(brand, CAR_BRANDS)?.label).toBe(label);
   });
 
-  it("marca que a FIPE não tem fica sem casar", () => {
+  it("marca que a FIPE não tem fica sem casar e palavras genéricas não casam por engano", () => {
     expect(matchFipeBrand("FACCHINI", CAR_BRANDS)).toBeNull();
     expect(matchFipeBrand(null, CAR_BRANDS)).toBeNull();
+    expect(matchFipeBrand("MOTO", options(["MOTO GUZZI", "HONDA"]))).toBeNull();
+  });
+
+  it("retorna todas as marcas compatíveis (Caoa Chery e Caoa Chery/Chery) e desembrulha prefixos/envelopes", () => {
+    const cheryBrands = options(["Caoa Chery", "Caoa Chery/Chery", "Fiat", "VW - VolksWagen", "Mercedes-Benz"]);
+    expect(matchFipeBrands("CAOA CHERY", cheryBrands).map((item) => item.label)).toEqual([
+      "Caoa Chery",
+      "Caoa Chery/Chery",
+    ]);
+    expect(matchFipeBrand("IMP.HYUNDAI", options(["Hyundai"]))?.label).toBe("Hyundai");
+    expect(matchFipeBrand("MOTO HONDA", options(["HONDA"]))?.label).toBe("HONDA");
+    expect(matchFipeBrand("JTZ", options(["HAOJUE", "SUZUKI"]))?.label).toBe("HAOJUE");
+    expect(matchFipeBrand("HAOJIAN", options(["AVELLOZ"]))?.label).toBe("AVELLOZ");
+    expect(matchFipeBrand("MPOLO", options(["MARCOPOLO"]))?.label).toBe("MARCOPOLO");
+
+    expect(resolveFipeBrandAndModel("I", "FIAT CRONOS DRIVE 1.3", cheryBrands)).toMatchObject({
+      matchedBrands: [{ label: "Fiat" }],
+      model: "CRONOS DRIVE 1.3",
+    });
+    expect(resolveFipeBrandAndModel("MARCA", "MODELO: VW/GOL 1.6", cheryBrands)).toMatchObject({
+      matchedBrands: [{ label: "VW - VolksWagen" }],
+      model: "GOL 1.6",
+    });
+    expect(resolveFipeBrandAndModel("M.", "BENZ C250", cheryBrands)).toMatchObject({
+      matchedBrands: [{ label: "Mercedes-Benz" }],
+      model: "C250",
+    });
+    expect(resolveFipeBrandAndModel("JTA", "ZONTES 350E", options(["SUZUKI", "ZONTES"]))).toMatchObject({
+      matchedBrands: [{ label: "ZONTES" }],
+      model: "350E",
+    });
+  });
+
+  it("identifica veículos fora da tabela FIPE e separa divergências reais", () => {
+    expect(isOutOfFipeVehicle("FACCHINI", "SRF LOED")).toBe(true);
+    expect(isOutOfFipeVehicle("TRATOR MASSEY FERGUSON", "MF 6711")).toBe(true);
+    expect(isOutOfFipeVehicle("RANDON", "SR BA")).toBe(true);
+    expect(isOutOfFipeVehicle("FIAT", "UNO")).toBe(false);
+    expect(isRealFipeDivergence("out_of_fipe")).toBe(true);
+    expect(isRealFipeDivergence("year_out_of_range")).toBe(true);
+    expect(isRealFipeDivergence("manual")).toBe(true);
+    expect(isRealFipeDivergence("no_candidates")).toBe(false);
+    expect(isRealFipeDivergence("no_brand")).toBe(false);
   });
 });
 
 describe("versionTokens", () => {
-  it("cilindrada em várias grafias vira '1.x'; câmbio vira AUT/MEC; válvulas ficam", () => {
+  it("cilindrada em várias grafias vira '1.x'; câmbio vira AUT/MEC; válvulas ficam e códigos Detran não viram cilindrada", () => {
     expect(versionTokens(["GLI18", "CVT"])).toEqual(["GLI", "1.8", "AUT"]);
     expect(versionTokens(["16SE", "AT"])).toEqual(["1.6", "SE", "AUT"]);
     expect(versionTokens(["1.4AT", "LTZ"])).toEqual(["1.4", "AUT", "LTZ"]);
     expect(versionTokens(["10MT", "1000I", "14", "16V"])).toEqual(["1.0", "MEC", "1.0", "1.4", "16V"]);
     expect(versionTokens(["EXPR", "1016V"])).toEqual(["EXPR", "1.0", "16V"]);
     expect(versionTokens(["148V"])).toEqual(["1.4", "8V"]);
+    expect(versionTokens(["16VH", "13P", "13F", "20L"])).toEqual(["16V", "H", "13P", "13F", "2.0", "L"]);
   });
 });
 
@@ -182,6 +230,40 @@ describe("chooseFipeModels", () => {
       const citroen = options(["C3 Excl. 1.6 VTi Flex Start 16V 5p Aut.", "C4 LOUNGE Exclusive 1.6 Turbo Flex Aut."]);
       expect(version("C4L THP A EXCL", citroen)).toBe("C4 LOUNGE Exclusive 1.6 Turbo Flex Aut.");
     });
+
+    it("modelos numéricos, abreviações Detran, submodelos e válvulas coladas (v6)", () => {
+      const peugeot = options([
+        "207 Sedan Passion XR 1.4 Flex 8V 4p",
+        "207 Sed. Passion XR Sport 1.4 Flex 8V 4p",
+        "207 SW XR 1.4 Flex 8V 5p",
+      ]);
+      expect(chooseFipeModels("207PASSION XR S", peugeot).kind).toBe("family");
+      expect(version("207SW XR", peugeot)).toBe("207 SW XR 1.4 Flex 8V 5p");
+
+      const shineray = options(["XY 50-Q PHOENIX", "XY 50-Q CROSS", "XY 125 JET"]);
+      expect(chooseFipeModels("50Q", shineray).kind).toBe("family");
+
+      const classic = options(["Corsa Sed Class.Life 1.0/1.0 FlexPower", "Corsa Sed Class.Spirit 1.0/1.0 FlexPower"]);
+      expect(version("CLASSIC LIFE", classic)).toBe("Corsa Sed Class.Life 1.0/1.0 FlexPower");
+
+      const crosser = options(["XTZ 150 CROSSER S FLEX", "XTZ 150 CROSSER Z FLEX"]);
+      expect(version("CROSSER S ABS", crosser)).toBe("XTZ 150 CROSSER S FLEX");
+
+      const oroch = options(["DUSTER OROCH Dyna. 1.6 Flex 16V Mec.", "DUSTER Zen 1.6 16V Flex Mec."]);
+      expect(version("OROCH", oroch)).toBe("DUSTER OROCH Dyna. 1.6 Flex 16V Mec.");
+
+      const sprinter = options(["Sprinter 313 Furgão Curto 2.2 129cv Dies", "Sprinter 415 VAN Luxo T.A. 2.2 Diesel"]);
+      expect(version("313CDISTREET F", sprinter)).toBe("Sprinter 313 Furgão Curto 2.2 129cv Dies");
+
+      const bmw = options(["320iA", "325iA"]);
+      expect(version("320I PG51 (4P)", bmw)).toBe("320iA");
+
+      const escort = options(["Escort GLX 1.8i 16V 4p", "Escort GL 1.8i 16V 3p"]);
+      expect(version("ESCORT GLX 16VH", escort)).toBe("Escort GLX 1.8i 16V 4p");
+
+      const ranger = options(["Ranger XL 3.0 PSE 163cv 4x4 CD TB Diesel"]);
+      expect(version("RANGER XL 13P", ranger)).toBe("Ranger XL 3.0 PSE 163cv 4x4 CD TB Diesel");
+    });
   });
 
   it("família grande vale (até MAX_FAMILY_CANDIDATES); a dispersão de preço decide depois", () => {
@@ -231,8 +313,8 @@ describe("settleFipeValue", () => {
 });
 
 describe("tipos e combustíveis", () => {
-  it("picape e caminhão tentam os dois tipos; equipamento não tenta", () => {
-    expect(fipeVehicleTypes("Carros")).toEqual([1]);
+  it("carros, picapes e caminhões tentam fallback entre tipos 1 e 3; equipamento não tenta", () => {
+    expect(fipeVehicleTypes("Carros")).toEqual([1, 3]);
     expect(fipeVehicleTypes("Motos")).toEqual([2]);
     expect(fipeVehicleTypes("Utilitarios")).toEqual([1, 3]);
     expect(fipeVehicleTypes("Pesados")).toEqual([3, 1]);
@@ -240,11 +322,12 @@ describe("tipos e combustíveis", () => {
     expect(fipeVehicleTypes(null)).toEqual([]);
   });
 
-  it("combustível da fonte escolhe os códigos da FIPE", () => {
+  it("combustível da fonte escolhe os códigos da FIPE (incluindo elétrico 4 e híbrido 6)", () => {
     expect(fipeFuelCodes(1, "DIESEL")).toEqual([3]);
-    expect(fipeFuelCodes(1, "GASOL/ALC")).toEqual([5, 1, 2]);
-    expect(fipeFuelCodes(2, "GASOLINA")).toEqual([1, 5]);
-    expect(fipeFuelCodes(1, null)).toEqual([5, 1, 3]);
+    expect(fipeFuelCodes(1, "GASOL/ALC")).toEqual([5, 1, 2, 6]);
+    expect(fipeFuelCodes(1, "HIBRIDO")).toEqual([4, 6, 1, 5]);
+    expect(fipeFuelCodes(2, "GASOLINA")).toEqual([1, 5, 4]);
+    expect(fipeFuelCodes(1, null)).toEqual([5, 1, 3, 4, 6]);
   });
 });
 

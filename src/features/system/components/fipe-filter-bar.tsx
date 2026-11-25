@@ -11,7 +11,7 @@ import { type FipeQueueFilters, fipeQueueFiltersSchema } from "../schemas";
 function buildFipeUrl(next: Partial<FipeQueueFilters>, current: FipeQueueFilters): Route {
   const merged = { ...current, ...next };
   const params = new URLSearchParams();
-  if (merged.situacao !== "none") params.set("situacao", merged.situacao);
+  if (merged.situacao !== "revisao") params.set("situacao", merged.situacao);
   if (merged.origem !== "todas") params.set("origem", merged.origem);
   if (merged.busca) params.set("busca", merged.busca);
   if (merged.item) params.set("item", merged.item);
@@ -46,7 +46,7 @@ export function FipeFilterBar({ filters }: { filters: FipeQueueFilters }) {
         />
       </div>
 
-      <div className="w-44">
+      <div className="w-52">
         <SelectField
           label="Situação"
           value={filters.situacao}
@@ -55,7 +55,9 @@ export function FipeFilterBar({ filters }: { filters: FipeQueueFilters }) {
             if (parsed.success) apply({ situacao: parsed.data });
           }}
           options={[
-            { value: "none", label: "Sem casamento" },
+            { value: "revisao", label: "Para revisão" },
+            { value: "fora-fipe", label: "Fora da FIPE" },
+            { value: "none", label: "Todas sem casamento" },
             { value: "version", label: "Versão" },
             { value: "family", label: "Família" },
             { value: "todos", label: "Todas" },
@@ -83,7 +85,7 @@ export function FipeFilterBar({ filters }: { filters: FipeQueueFilters }) {
         <Button type="submit" variant="secondary">
           Filtrar
         </Button>
-        {filters.situacao !== "none" || filters.origem !== "todas" || filters.busca ? (
+        {filters.situacao !== "revisao" || filters.origem !== "todas" || filters.busca ? (
           <Button
             type="button"
             variant="ghost"

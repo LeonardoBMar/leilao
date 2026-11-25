@@ -23,10 +23,12 @@ export const SOURCE_HEALTH_VARIANTS: Record<
 export const FIPE_REASON_LABELS: Record<string, string> = {
   no_brand: "Marca não reconhecida na FIPE",
   no_model: "Modelo ausente no anúncio",
-  no_candidates: "Nenhuma versão FIPE para ano/combustível",
+  no_candidates: "Modelo sem casamento na FIPE",
   too_many: "Muitas versões candidatas",
   spread: "Versões com preços muito distantes",
   no_value: "Sem preço na tabela FIPE do mês",
+  out_of_fipe: "Fora da tabela FIPE (implemento/máquina/sem FIPE)",
+  year_out_of_range: "Ano-modelo fora da tabela FIPE",
   manual: "Marcado manualmente sem FIPE",
 };
 

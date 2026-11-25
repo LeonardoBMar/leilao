@@ -28,7 +28,7 @@ describe("system schemas", () => {
 
   it("aplica padrões seguros em fipeQueueFiltersSchema", () => {
     expect(fipeQueueFiltersSchema.parse({})).toEqual({
-      situacao: "none",
+      situacao: "revisao",
       origem: "todas",
       busca: undefined,
       item: undefined,
@@ -38,13 +38,14 @@ describe("system schemas", () => {
     expect(
       fipeQueueFiltersSchema.parse({ situacao: "invalido", origem: "manual", item: "nao-uuid", tipo: "2" }),
     ).toEqual({
-      situacao: "none",
+      situacao: "revisao",
       origem: "manual",
       busca: undefined,
       item: undefined,
       tipo: 2,
       marca: undefined,
     });
+    expect(fipeQueueFiltersSchema.parse({ situacao: "fora-fipe" }).situacao).toBe("fora-fipe");
   });
 
   it("exige ao menos um código FIPE quando mode é models e aceita vazio quando none", () => {

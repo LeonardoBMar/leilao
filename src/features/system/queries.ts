@@ -1,11 +1,11 @@
 import "server-only";
 
-import { type FipeVehicleType, pickFipeTable } from "@/domain/listings/fipe-match";
+import { type FipeVehicleType, NON_FIPE_REASONS, pickFipeTable } from "@/domain/listings/fipe-match";
 import { collectorHealth } from "@/domain/listings/health";
 import { requireAdmin } from "@/server/auth";
 import { db } from "@/server/db";
 import { createFipeCatalog, loadFipeModelCandidates } from "@/server/fipe/catalog";
-import { getFipeMatch, listFipeMatches } from "@/server/fipe/matches";
+import { getFipeMatch, listFipeMatches, notFromSource } from "@/server/fipe/matches";
 
 import { collectorRunErrorsSchema, type FipeQueueFilters } from "./schemas";
 import type {
@@ -113,30 +113,54 @@ export async function listSystemFipeQueue(
 ): Promise<{ summary: SystemFipeSummary; items: SystemFipeMatchItem[] }> {
   await requireAdmin();
   const catalog = createFipeCatalog();
+  const nonFipeList = [...NON_FIPE_REASONS];
+  const activeFilter = { listings: { some: notFromSource } };
 
-  const [kindCounts, manualCount, pendingListings, tables, items] = await Promise.all([
-    db.fipeMatch.groupBy({
-      by: ["kind"],
-      _count: { _all: true },
-    }),
-    db.fipeMatch.count({ where: { origin: "manual" } }),
-    db.listing.count({ where: { marketValueCheckedAt: null } }),
-    catalog.tables(),
-    listFipeMatches({
-      ...(filters.situacao === "todos" ? {} : { kind: filters.situacao }),
-      ...(filters.origem === "todas" ? {} : { origin: filters.origem }),
-      ...(filters.busca ? { search: filters.busca } : {}),
-      limit: FIPE_QUEUE_LIMIT,
-    }),
-  ]);
-
-  const countOf = (kind: "version" | "family" | "none") =>
-    kindCounts.find((group) => group.kind === kind)?._count._all ?? 0;
+  const [reviewableCount, outOfFipeCount, matchedCount, manualCount, pendingListings, tables, items] =
+    await Promise.all([
+      db.fipeMatch.count({
+        where: {
+          kind: "none",
+          ...activeFilter,
+          OR: [{ reason: null }, { reason: { notIn: nonFipeList } }],
+        },
+      }),
+      db.fipeMatch.count({
+        where: {
+          kind: "none",
+          ...activeFilter,
+          reason: { in: nonFipeList },
+        },
+      }),
+      db.fipeMatch.count({
+        where: {
+          kind: { in: ["version", "family"] },
+          ...activeFilter,
+        },
+      }),
+      db.fipeMatch.count({ where: { origin: "manual", ...activeFilter } }),
+      db.listing.count({ where: { marketValueCheckedAt: null } }),
+      catalog.tables(),
+      listFipeMatches({
+        ...(filters.situacao === "revisao"
+          ? { unmatchedScope: "reviewable" as const }
+          : filters.situacao === "fora-fipe"
+            ? { unmatchedScope: "out_of_fipe" as const }
+            : filters.situacao === "todos"
+              ? {}
+              : { kind: filters.situacao }),
+        ...(filters.origem === "todas" ? {} : { origin: filters.origem }),
+        ...(filters.busca ? { search: filters.busca } : {}),
+        onlyActive: true,
+        limit: FIPE_QUEUE_LIMIT,
+      }),
+    ]);
 
   return {
     summary: {
-      unmatched: countOf("none"),
-      matched: countOf("version") + countOf("family"),
+      reviewable: reviewableCount,
+      outOfFipe: outOfFipeCount,
+      matched: matchedCount,
       manual: manualCount,
       pendingListings,
       latestTableMonth: tables[0]?.month ?? null,

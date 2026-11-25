@@ -7,6 +7,7 @@ import {
   type FipeVehicleIdentity,
   type FipeVehicleType,
   MATCHER_VERSION,
+  NON_FIPE_REASONS,
   rematchAllBelow,
 } from "@/domain/listings/fipe-match";
 import { type FipeMatchKind, type FipeMatchOrigin, Prisma } from "@/generated/prisma/client";
@@ -221,17 +222,32 @@ export type FipeMatchListItem = StoredFipeMatch & {
   listings: number;
 };
 
-/** Correlações para o script de conferência (`db:fipe-match`), das que mais afetam anúncios às que menos. */
+/** Correlações para o script de conferência (`db:fipe-match`) e fila do Sistema, das que mais afetam anúncios às que menos. */
 export async function listFipeMatches(filter: {
   kind?: FipeMatchKind;
   origin?: FipeMatchOrigin;
+  /** Quando `kind === "none"`, separa pendências identificáveis (`reviewable`) de divergências reais (`out_of_fipe`). */
+  unmatchedScope?: "reviewable" | "out_of_fipe";
+  /** Ignora chaves órfãs sem nenhum anúncio sem valor da fonte. */
+  onlyActive?: boolean;
   search?: string;
   limit: number;
 }): Promise<FipeMatchListItem[]> {
+  const nonFipeList = [...NON_FIPE_REASONS];
+  const scopeWhere: Prisma.FipeMatchWhereInput =
+    filter.unmatchedScope === "reviewable"
+      ? { kind: "none", OR: [{ reason: null }, { reason: { notIn: nonFipeList } }] }
+      : filter.unmatchedScope === "out_of_fipe"
+        ? { kind: "none", reason: { in: nonFipeList } }
+        : filter.kind
+          ? { kind: filter.kind }
+          : {};
+
   const rows = await db.fipeMatch.findMany({
     where: {
-      ...(filter.kind ? { kind: filter.kind } : {}),
+      ...scopeWhere,
       ...(filter.origin ? { origin: filter.origin } : {}),
+      ...(filter.onlyActive ? { listings: { some: notFromSource } } : {}),
       ...(filter.search ? { vehicleKey: { contains: filter.search.toUpperCase() } } : {}),
     },
     orderBy: { listings: { _count: "desc" } },

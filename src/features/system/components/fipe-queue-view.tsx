@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui";
+import { isRealFipeDivergence } from "@/domain/listings/fipe-match";
 import { formatInteger, formatShortMonth } from "@/lib/format";
 
 import { FIPE_KIND_LABELS, fipeReasonLabel } from "../labels";
@@ -24,7 +25,7 @@ import { FipeMatchEditor } from "./fipe-match-editor";
 
 function itemHref(filters: FipeQueueFilters, id: string): Route {
   const params = new URLSearchParams();
-  if (filters.situacao !== "none") params.set("situacao", filters.situacao);
+  if (filters.situacao !== "revisao") params.set("situacao", filters.situacao);
   if (filters.origem !== "todas") params.set("origem", filters.origem);
   if (filters.busca) params.set("busca", filters.busca);
   params.set("item", id);
@@ -49,16 +50,16 @@ export async function FipeQueueView({
     <div className="grid gap-6">
       <Card className="p-4 md:p-5">
         <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat label="Sem casamento" note="Chaves na fila de revisão">
-            <span className={summary.unmatched > 0 ? "text-warning" : undefined}>
-              {formatInteger(summary.unmatched)}
+          <Stat label="Para revisão" note="Identificáveis sem casamento">
+            <span className={summary.reviewable > 0 ? "text-warning" : undefined}>
+              {formatInteger(summary.reviewable)}
             </span>
           </Stat>
-          <Stat label="Casadas" note="Versão ou família FIPE">
-            {formatInteger(summary.matched)}
+          <Stat label="Fora da FIPE" note="Divergências reais (ano/implemento)">
+            {formatInteger(summary.outOfFipe)}
           </Stat>
-          <Stat label="Manuais" note="Nunca sobrescritas pela regra">
-            {formatInteger(summary.manual)}
+          <Stat label="Casadas" note={`${formatInteger(summary.manual)} manuais`}>
+            {formatInteger(summary.matched)}
           </Stat>
           <Stat
             label="Anúncios na fila"
@@ -98,8 +99,14 @@ export async function FipeQueueView({
                     <TableCell className="font-mono text-caption text-foreground">{item.vehicleKey}</TableCell>
                     <TableCell>
                       <span className="flex flex-wrap gap-1">
-                        <Badge variant={item.kind === "none" ? "warning" : "success"}>
-                          {FIPE_KIND_LABELS[item.kind]}
+                        <Badge
+                          variant={
+                            item.kind !== "none" ? "success" : isRealFipeDivergence(item.reason) ? "outline" : "warning"
+                          }
+                        >
+                          {item.kind === "none" && isRealFipeDivergence(item.reason)
+                            ? "Fora da FIPE"
+                            : FIPE_KIND_LABELS[item.kind]}
                         </Badge>
                         {item.origin === "manual" ? <Badge variant="outline">Manual</Badge> : null}
                       </span>
