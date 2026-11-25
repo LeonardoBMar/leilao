@@ -36,6 +36,8 @@ export async function proxy(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const isAuthenticated = Boolean(data?.claims) || devAuthUserId(process.env, request.headers.get("host")) !== null;
   const { pathname, search } = request.nextUrl;
+  // Rotas de API respondem JSON (ex.: 401) sem redirecionar para `/login`, mantendo os cookies renovados (D-94).
+  if (pathname === "/api" || pathname.startsWith("/api/")) return response;
   const isPublic = PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 
   if (!isAuthenticated && !isPublic) {

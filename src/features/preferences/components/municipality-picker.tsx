@@ -1,6 +1,7 @@
 "use client";
 
 import { MapPin, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { z } from "zod";
 
@@ -10,14 +11,16 @@ import { cn } from "@/lib/utils";
 
 import type { MunicipalityOption } from "../types";
 
-const municipalityListSchema = z.array(
-  z.object({
-    ibgeCode: z.number(),
-    name: z.string(),
-    state: z.string(),
-    label: z.string(),
-  }),
-);
+const municipalityResponseSchema = z.object({
+  data: z.array(
+    z.object({
+      ibgeCode: z.number(),
+      name: z.string(),
+      state: z.string(),
+      label: z.string(),
+    }),
+  ),
+});
 
 type MunicipalityPickerProps = {
   initialIbgeCode: number | null;
@@ -26,6 +29,7 @@ type MunicipalityPickerProps = {
 };
 
 export function MunicipalityPicker({ initialIbgeCode, initialLabel, error }: MunicipalityPickerProps) {
+  const router = useRouter();
   const inputId = useId();
   const listboxId = useId();
   const messageId = `${inputId}-message`;
@@ -64,6 +68,8 @@ export function MunicipalityPicker({ initialIbgeCode, initialLabel, error }: Mun
 
     const trimmed = next.trim();
     if (trimmed.length < 2) {
+      abortRef.current?.abort();
+      requestSeqRef.current += 1;
       setResults([]);
       setActiveIndex(-1);
       setOpen(false);
@@ -79,13 +85,17 @@ export function MunicipalityPicker({ initialIbgeCode, initialLabel, error }: Mun
     const controller = new AbortController();
     abortRef.current = controller;
     timerRef.current = setTimeout(() => {
-      void fetch(`/api/municipios?q=${encodeURIComponent(trimmed)}`, { signal: controller.signal })
+      void fetch(`/api/v1/municipalities?q=${encodeURIComponent(trimmed)}`, { signal: controller.signal })
         .then(async (response) => {
+          if (response.status === 401) {
+            router.replace("/login");
+            return null;
+          }
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          return municipalityListSchema.parse(await response.json());
+          return municipalityResponseSchema.parse(await response.json()).data;
         })
         .then((items) => {
-          if (requestSeqRef.current !== seq) return;
+          if (items === null || requestSeqRef.current !== seq) return;
           setResults(items);
           setActiveIndex(items.length > 0 ? 0 : -1);
           setLoading(false);
@@ -113,6 +123,7 @@ export function MunicipalityPicker({ initialIbgeCode, initialLabel, error }: Mun
   function handleClear() {
     if (timerRef.current) clearTimeout(timerRef.current);
     if (blurTimerRef.current) clearTimeout(blurTimerRef.current);
+    abortRef.current?.abort();
     requestSeqRef.current += 1;
     setSelected(null);
     setQuery("");
