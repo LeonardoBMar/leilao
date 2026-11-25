@@ -1,8 +1,10 @@
 import "server-only";
 
+import { cacheLife, cacheTag } from "next/cache";
 import { cache } from "react";
 import { z } from "zod";
 
+import type { RegionConfig } from "@/domain/listings/region";
 import { effectiveMetric, type ResearchFilters } from "@/domain/research/filters";
 import { buildStateSummaries, isStateCode, type StateCode } from "@/domain/research/states";
 import {
@@ -19,11 +21,29 @@ import { requireUser } from "@/server/auth";
 
 import type { StateDetail, StateMapView, WhereView } from "../types";
 import { listSales, ratioDistribution } from "./shared";
-import { distanceKmSql, RATIO, rows, salesWhere, sql, statsColumns, statsShape, toStats } from "./sql";
+import {
+  cacheKeyFilters,
+  distanceKmSql,
+  RATIO,
+  RESEARCH_CACHE_TAG,
+  rows,
+  salesWhere,
+  sql,
+  statsColumns,
+  statsShape,
+  toStats,
+} from "./sql";
 
 /** Mapa: um resumo por estado, em % do valor de mercado ou, com modelo, em lance final (centavos). */
 export async function getStateMap(filters: ResearchFilters): Promise<StateMapView> {
   await requireUser();
+  return loadStateMap(cacheKeyFilters(filters, { keepMetric: true }));
+}
+
+async function loadStateMap(filters: ResearchFilters): Promise<StateMapView> {
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(RESEARCH_CACHE_TAG);
   const metric = effectiveMetric(filters);
   const value = metric === "ratio" ? RATIO : sql`l.final_bid_cents::float8`;
   const byState = await rows(
@@ -42,7 +62,15 @@ export async function getStateMap(filters: ResearchFilters): Promise<StateMapVie
  * os filtros e na medida do mapa (% da FIPE ou, com modelo, lance final).
  */
 export const getWhereView = cache(async (filters: ResearchFilters): Promise<WhereView> => {
+  await requireUser();
   const { region } = await getUserPreferences();
+  return loadWhereView(cacheKeyFilters(filters, { keepMetric: true }), region);
+});
+
+async function loadWhereView(filters: ResearchFilters, region: RegionConfig): Promise<WhereView> {
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(RESEARCH_CACHE_TAG);
   const metric = effectiveMetric(filters);
   const value = metric === "ratio" ? RATIO : sql`l.final_bid_cents::float8`;
   const where = salesWhere(filters, { ratio: metric === "ratio" });
@@ -87,11 +115,19 @@ export const getWhereView = cache(async (filters: ResearchFilters): Promise<Wher
           : [],
       ),
   };
-});
+}
 
 /** Detalhe do estado escolhido: distribuição frente à do Brasil, fontes e, se forem poucas, as vendas. */
 export async function getStateDetail(filters: ResearchFilters): Promise<StateDetail | null> {
   await requireUser();
+  if (filters.state === null) return null;
+  return loadStateDetail(cacheKeyFilters(filters));
+}
+
+async function loadStateDetail(filters: ResearchFilters): Promise<StateDetail | null> {
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(RESEARCH_CACHE_TAG);
   const { state } = filters;
   if (state === null) return null;
   const inState = salesWhere(filters, {});

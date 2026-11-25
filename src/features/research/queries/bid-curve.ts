@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cacheLife, cacheTag } from "next/cache";
 import { cache } from "react";
 import { z } from "zod";
 
@@ -12,7 +13,17 @@ import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
 
 import type { BidCurveView, SaleBids } from "../types";
-import { rows, salesSince, salesWhere, sql, statsColumns, statsShape, toStats } from "./sql";
+import {
+  cacheKeyFilters,
+  RESEARCH_CACHE_TAG,
+  rows,
+  salesSince,
+  salesWhere,
+  sql,
+  statsColumns,
+  statsShape,
+  toStats,
+} from "./sql";
 
 /**
  * Lances de uma venda do catálogo nas horas antes do fim, em degraus (só o que o coletor viu). `null` se o id não é de
@@ -20,6 +31,13 @@ import { rows, salesSince, salesWhere, sql, statsColumns, statsShape, toStats } 
  */
 export const getSaleBids = cache(async (saleId: string): Promise<SaleBids | null> => {
   await requireUser();
+  return loadSaleBids(saleId);
+});
+
+async function loadSaleBids(saleId: string): Promise<SaleBids | null> {
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(RESEARCH_CACHE_TAG);
   const sale = await db.listing.findFirst({
     // Mesma base dos outros blocos: venda com lance final na janela das estimativas.
     where: { id: saleId, status: "sold", finalBidCents: { gt: 0 }, endsAt: { gte: salesSince() } },
@@ -54,7 +72,7 @@ export const getSaleBids = cache(async (saleId: string): Promise<SaleBids | null
       cents(sale.finalBidCents),
     ),
   };
-});
+}
 
 /**
  * "Como o lance sobe": para cada venda e marca (horas antes do fim), a última observação com lance nas
@@ -62,6 +80,13 @@ export const getSaleBids = cache(async (saleId: string): Promise<SaleBids | null
  */
 export const getBidCurve = cache(async (filters: ResearchFilters): Promise<BidCurveView> => {
   await requireUser();
+  return loadBidCurve(cacheKeyFilters(filters));
+});
+
+async function loadBidCurve(filters: ResearchFilters): Promise<BidCurveView> {
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(RESEARCH_CACHE_TAG);
   const marks = Prisma.join(BID_CURVE_HOURS.map((hours) => sql`(${hours}::int)`));
   const marksRows = await rows(
     z.object({ hours: z.number().int(), ...statsShape }),
@@ -86,4 +111,4 @@ export const getBidCurve = cache(async (filters: ResearchFilters): Promise<BidCu
       }),
     ),
   };
-});
+}

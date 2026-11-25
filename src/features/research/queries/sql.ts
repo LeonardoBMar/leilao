@@ -12,6 +12,22 @@ import { type GroupStats, RATIO_BOUNDS } from "@/domain/research/summary";
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/server/db";
 
+/** Tag de cache compartilhada pelos blocos analíticos globais do Mercado (D-78, D-93). */
+export const RESEARCH_CACHE_TAG = "catalog-research";
+
+/** Remove campos que não afetam a consulta para evitar cache miss à toa (ex.: abrir `?venda=`). */
+export function cacheKeyFilters(
+  filters: ResearchFilters,
+  options: { keepMetric?: boolean; keepCompare?: boolean } = {},
+): ResearchFilters {
+  return {
+    ...filters,
+    sale: null,
+    metric: options.keepMetric ? filters.metric : "ratio",
+    compare: options.keepCompare ? filters.compare : null,
+  };
+}
+
 /** Vendas de um modelo devolvidas uma a uma (dispersão e tabela). */
 export const MODEL_SALES_LIMIT = 500;
 

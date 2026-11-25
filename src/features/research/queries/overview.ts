@@ -1,6 +1,6 @@
 import "server-only";
 
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { cache } from "react";
 import { z } from "zod";
 
@@ -20,9 +20,11 @@ import { catalogSources } from "@/server/catalog-values";
 
 import type { ResearchFacets, ResearchOverview } from "../types";
 import {
+  cacheKeyFilters,
   levelSchema,
   MODEL_SUGGESTIONS_LIMIT,
   RATIO,
+  RESEARCH_CACHE_TAG,
   rows,
   salesSince,
   salesWhere,
@@ -42,6 +44,7 @@ export const getResearchOverview = cache(async (): Promise<ResearchOverview> => 
 async function loadResearchOverview(): Promise<ResearchOverview> {
   "use cache";
   cacheLife("catalog");
+  cacheTag(RESEARCH_CACHE_TAG);
   const [row] = await rows(
     z.object({ sales: z.number().int(), fipeMatched: z.number().int(), since: z.date().nullable() }),
     sql`SELECT count(*)::int AS sales,
@@ -58,10 +61,17 @@ async function loadResearchOverview(): Promise<ResearchOverview> {
  */
 export async function getResearchFacets(filters: ResearchFilters): Promise<ResearchFacets> {
   await requireUser();
+  return loadResearchFacets(cacheKeyFilters(filters));
+}
+
+async function loadResearchFacets(filters: ResearchFilters): Promise<ResearchFacets> {
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(RESEARCH_CACHE_TAG);
   const level = sql`coalesce(l.damage_level::text, 'unclassified')`;
   const withinKm = filters.maxKm === null ? sql`true` : sql`coalesce(l.mileage_km <= ${filters.maxKm}, false)`;
   const [{ since }, facetRows, sourceRows, byYear, models] = await Promise.all([
-    getResearchOverview(),
+    loadResearchOverview(),
     rows(
       z.object({
         level: levelSchema,
@@ -170,6 +180,13 @@ export async function getResearchFacets(filters: ResearchFilters): Promise<Resea
 /** Vendas do filtro que ficam fora dos gráficos em %, por motivo. */
 export const getExcludedSales = cache(async (filters: ResearchFilters): Promise<ExcludedSales> => {
   await requireUser();
+  return loadExcludedSales(cacheKeyFilters(filters));
+});
+
+async function loadExcludedSales(filters: ResearchFilters): Promise<ExcludedSales> {
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(RESEARCH_CACHE_TAG);
   const [row] = await rows(
     z.object({ noMarketValue: z.number().int(), outOfBounds: z.number().int() }),
     sql`SELECT count(*) FILTER (WHERE coalesce(l.market_value_cents, 0) <= 0)::int AS "noMarketValue",
@@ -178,15 +195,22 @@ export const getExcludedSales = cache(async (filters: ResearchFilters): Promise<
       FROM listings l WHERE ${salesWhere(filters, {})}`,
   );
   return row ?? { noMarketValue: 0, outOfBounds: 0 };
-});
+}
 
 /** Lance final (centavos) de todas as vendas do filtro, para a leitura de um modelo em R$. */
 export const getPriceSummary = cache(async (filters: ResearchFilters): Promise<GroupSummary> => {
   await requireUser();
+  return loadPriceSummary(cacheKeyFilters(filters));
+});
+
+async function loadPriceSummary(filters: ResearchFilters): Promise<GroupSummary> {
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(RESEARCH_CACHE_TAG);
   const [row] = await rows(
     z.object(statsShape),
     sql`SELECT ${statsColumns(sql`l.final_bid_cents::float8`)} FROM listings l
       WHERE ${salesWhere(filters, {})} HAVING count(*) > 0`,
   );
   return summarize(row && toStats(row));
-});
+}

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cacheLife, cacheTag } from "next/cache";
 import { cache } from "react";
 import { z } from "zod";
 
@@ -30,7 +31,18 @@ import type {
   WeeklyTrend,
 } from "../types";
 import { ratioDistribution } from "./shared";
-import { levelSchema, RATIO, rows, salesWhere, sql, statsColumns, statsShape, toStats } from "./sql";
+import {
+  cacheKeyFilters,
+  levelSchema,
+  RATIO,
+  RESEARCH_CACHE_TAG,
+  rows,
+  salesWhere,
+  sql,
+  statsColumns,
+  statsShape,
+  toStats,
+} from "./sql";
 
 /**
  * Resumo e histograma do % da FIPE de cada grupo de um recorte, num eixo comum (o fim vem da maior proporção). `group`
@@ -66,6 +78,13 @@ async function groupedDistribution<K extends string>(
 /** "Quanto se paga por condição": todas as condições, com o resto dos filtros (D-45). */
 export const getConditionDistribution = cache(async (filters: ResearchFilters): Promise<ConditionDistribution> => {
   await requireUser();
+  return loadConditionDistribution(cacheKeyFilters(filters));
+});
+
+async function loadConditionDistribution(filters: ResearchFilters): Promise<ConditionDistribution> {
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(RESEARCH_CACHE_TAG);
   const { axisMax, of } = await groupedDistribution(
     levelSchema,
     sql`coalesce(l.damage_level::text, 'unclassified')`,
@@ -80,7 +99,7 @@ export const getConditionDistribution = cache(async (filters: ResearchFilters): 
     axisMax,
     looksMixed: unclassifiedLooksMixed(Object.fromEntries(conditionRows.map((row) => [row.condition, row.summary]))),
   };
-});
+}
 
 /**
  * "De quem se compra" (docs/PLANO-MERCADO.md §6): o % da FIPE por origem inferida do veículo (D-73), com todos os
@@ -88,13 +107,20 @@ export const getConditionDistribution = cache(async (filters: ResearchFilters): 
  */
 export const getOriginDistribution = cache(async (filters: ResearchFilters): Promise<OriginDistribution> => {
   await requireUser();
+  return loadOriginDistribution(cacheKeyFilters(filters));
+});
+
+async function loadOriginDistribution(filters: ResearchFilters): Promise<OriginDistribution> {
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(RESEARCH_CACHE_TAG);
   const { axisMax, of } = await groupedDistribution(
     z.enum(VEHICLE_ORIGINS),
     sql`l.vehicle_origin::text`,
     salesWhere(filters, { ratio: true }),
   );
   return { rows: VEHICLE_ORIGINS.map((origin) => ({ origin, ...of(origin) })), axisMax };
-});
+}
 
 /**
  * Tendência (D-75): o resumo do % da FIPE por semana (segunda a domingo, UTC) com todos os filtros; só aparece com
@@ -102,6 +128,13 @@ export const getOriginDistribution = cache(async (filters: ResearchFilters): Pro
  */
 export const getWeeklyTrend = cache(async (filters: ResearchFilters): Promise<WeeklyTrend> => {
   await requireUser();
+  return loadWeeklyTrend(cacheKeyFilters(filters));
+});
+
+async function loadWeeklyTrend(filters: ResearchFilters): Promise<WeeklyTrend> {
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(RESEARCH_CACHE_TAG);
   const byWeek = await rows(
     z.object({ week: z.date(), ...statsShape }),
     sql`SELECT date_trunc('week', l.ends_at AT TIME ZONE 'UTC') AS week, ${statsColumns(RATIO)}
@@ -115,7 +148,7 @@ export const getWeeklyTrend = cache(async (filters: ResearchFilters): Promise<We
         return summary.kind === "summary" ? [{ start, summary }] : [];
       }) ?? null,
   };
-});
+}
 
 /**
  * "Comparação": a distribuição do % do valor de mercado dos dois grupos (o dos filtros e o que a comparação troca), com
@@ -123,6 +156,14 @@ export const getWeeklyTrend = cache(async (filters: ResearchFilters): Promise<We
  */
 export const getComparison = cache(async (filters: ResearchFilters): Promise<ComparisonView | null> => {
   await requireUser();
+  if (comparisonGroups(filters) === null) return null;
+  return loadComparison(cacheKeyFilters(filters, { keepCompare: true }));
+});
+
+async function loadComparison(filters: ResearchFilters): Promise<ComparisonView | null> {
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(RESEARCH_CACHE_TAG);
   const groups = comparisonGroups(filters);
   if (groups === null) return null;
   const parts = await Promise.all(groups.map((group) => ratioDistribution(salesWhere(group, { ratio: true }))));
@@ -137,4 +178,4 @@ export const getComparison = cache(async (filters: ResearchFilters): Promise<Com
       },
     })),
   };
-});
+}

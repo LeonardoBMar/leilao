@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cacheLife, cacheTag } from "next/cache";
 import { cache } from "react";
 import { z } from "zod";
 
@@ -19,7 +20,19 @@ import { requireUser } from "@/server/auth";
 
 import type { ModelRanking, ModelSales } from "../types";
 import { listSales } from "./shared";
-import { MODEL_SALES_LIMIT, RATIO, rows, salesWhere, sql, statsColumns, statsShape, toStats, VEHICLE_KEY } from "./sql";
+import {
+  cacheKeyFilters,
+  MODEL_SALES_LIMIT,
+  RATIO,
+  RESEARCH_CACHE_TAG,
+  rows,
+  salesWhere,
+  sql,
+  statsColumns,
+  statsShape,
+  toStats,
+  VEHICLE_KEY,
+} from "./sql";
 
 const rankingRow = z.object({
   key: z.string(),
@@ -37,6 +50,13 @@ const rankingRow = z.object({
  */
 export async function getModelRanking(filters: ResearchFilters): Promise<ModelRanking> {
   await requireUser();
+  return loadModelRanking(cacheKeyFilters(filters));
+}
+
+async function loadModelRanking(filters: ResearchFilters): Promise<ModelRanking> {
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(RESEARCH_CACHE_TAG);
   const where = salesWhere({ ...filters, vehicle: null }, { ratio: true });
   const [groups, [span]] = await Promise.all([
     rows(
@@ -93,6 +113,14 @@ export async function getModelRanking(filters: ResearchFilters): Promise<ModelRa
 export const getModelSales = cache(async (filters: ResearchFilters): Promise<ModelSales | null> => {
   await requireUser();
   if (filters.vehicle === null) return null;
+  return loadModelSales(cacheKeyFilters(filters));
+});
+
+async function loadModelSales(filters: ResearchFilters): Promise<ModelSales | null> {
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(RESEARCH_CACHE_TAG);
+  if (filters.vehicle === null) return null;
   const where = salesWhere(filters, {});
   const ratioSafe = sql`(l.final_bid_cents::float8 / NULLIF(l.market_value_cents, 0))`;
   const ratioValid = sql`l.market_value_cents > 0 AND ${ratioSafe} BETWEEN ${RATIO_BOUNDS.min}::float8 AND ${RATIO_BOUNDS.max}::float8`;
@@ -128,4 +156,4 @@ export const getModelSales = cache(async (filters: ResearchFilters): Promise<Mod
       return [{ year, summary: summarize(toStats(row)), ratio: summarize(ratioStats) }];
     }),
   };
-});
+}

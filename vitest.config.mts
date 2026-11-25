@@ -8,6 +8,8 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
       // O pacote real lança erro fora do ambiente react-server; nos testes unitários ele é neutro.
       "server-only": fileURLToPath(new URL("./tests/stubs/server-only.ts", import.meta.url)),
+      // `cacheLife`/`cacheTag` exigem o runtime de Cache Components do Next; no Vitest são neutros.
+      "next/cache": fileURLToPath(new URL("./tests/stubs/next-cache.ts", import.meta.url)),
     },
   },
   test: {

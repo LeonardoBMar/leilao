@@ -38,6 +38,7 @@ export async function toggleSourceActiveAction(_prev: ActionState, formData: For
 
   updateTag("collector-status");
   updateTag("catalog-sources");
+  updateTag("catalog-research");
   refresh();
   return {
     status: "success",
