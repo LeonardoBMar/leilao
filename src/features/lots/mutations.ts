@@ -53,17 +53,11 @@ export async function createLot(auctionId: string, input: LotInput): Promise<Res
 
 export async function updateLot(id: string, input: LotInput): Promise<Result<null, SaveLotError>> {
   const user = await requireUser();
-  const current = await db.lot.findFirst({
-    where: { id, ownerId: user.id },
-    select: { currentBidCents: true, currentBidObservedAt: true },
-  });
-  if (!current) return err("not_found");
-
   // Lance atual e acompanhamento têm controles próprios na ficha; o formulário de edição não os envia.
   const { currentBidCents: _bid, isFollowed: _followed, ...data } = toLotData(input);
   try {
-    await db.lot.updateMany({ where: { id, ownerId: user.id }, data });
-    return ok(null);
+    const { count } = await db.lot.updateMany({ where: { id, ownerId: user.id }, data });
+    return count === 0 ? err("not_found") : ok(null);
   } catch (error) {
     if (isUniqueViolation(error)) return err("duplicate_lot_number");
     throw error;
