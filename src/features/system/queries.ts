@@ -1,10 +1,10 @@
 import "server-only";
 
-import { fipeFuelCodes, type FipeVehicleType, pickFipeTable } from "@/domain/listings/fipe-match";
+import { type FipeVehicleType, pickFipeTable } from "@/domain/listings/fipe-match";
 import { collectorHealth } from "@/domain/listings/health";
 import { requireAdmin } from "@/server/auth";
 import { db } from "@/server/db";
-import { createFipeCatalog } from "@/server/fipe/catalog";
+import { createFipeCatalog, loadFipeModelCandidates } from "@/server/fipe/catalog";
 import { getFipeMatch, listFipeMatches } from "@/server/fipe/matches";
 
 import { collectorRunErrorsSchema, type FipeQueueFilters } from "./schemas";
@@ -164,23 +164,10 @@ export async function getSystemFipeMatchEditor(
     (override?.vehicleType && override.vehicleType !== match.vehicleType ? null : match.brandCode);
   const selectedBrand = rawBrand && brands.some((brand) => brand.code === rawBrand) ? rawBrand : null;
 
-  const candidates: { code: string; fuel: number; label: string }[] = [];
-  if (table && selectedBrand) {
-    const fuels = fipeFuelCodes(selectedType, match.fuel);
-    const byFuel = await Promise.all(
-      fuels.map(async (fuel) => ({
-        fuel,
-        models: await catalog.modelsByYear(table, selectedType, selectedBrand, match.modelYear, fuel),
-      })),
-    );
-    for (const { fuel, models } of byFuel) {
-      for (const model of models) {
-        if (!candidates.some((item) => item.code === model.code)) {
-          candidates.push({ code: model.code, fuel, label: model.label });
-        }
-      }
-    }
-  }
+  const candidates =
+    table && selectedBrand
+      ? await loadFipeModelCandidates(catalog, table, selectedType, selectedBrand, match.modelYear, match.fuel)
+      : [];
 
   return {
     match,

@@ -2,7 +2,14 @@ import "server-only";
 
 import { z } from "zod";
 
-import type { FipeOption, FipeTable, FipeValue, FipeVehicleType } from "@/domain/listings/fipe-match";
+import {
+  fipeFuelCodes,
+  type FipeMatchModel,
+  type FipeOption,
+  type FipeTable,
+  type FipeValue,
+  type FipeVehicleType,
+} from "@/domain/listings/fipe-match";
 import { cents } from "@/domain/money";
 
 import { db } from "../db";
@@ -104,4 +111,31 @@ export function createFipeCatalog(): FipeCatalog {
       return new Map(rows.map((row) => [row.fipeCode, { value: cents(row.valueCents), fipeCode: row.fipeCode }]));
     },
   };
+}
+
+/** Carrega e deduplica as versões candidatas da FIPE para os combustíveis compatíveis de um veículo. */
+export async function loadFipeModelCandidates(
+  catalog: FipeCatalog,
+  table: FipeTable,
+  vehicleType: FipeVehicleType,
+  brandCode: string,
+  modelYear: number,
+  rawFuel: string | null,
+): Promise<FipeMatchModel[]> {
+  const fuels = fipeFuelCodes(vehicleType, rawFuel);
+  const byFuel = await Promise.all(
+    fuels.map(async (fuel) => ({
+      fuel,
+      models: await catalog.modelsByYear(table, vehicleType, brandCode, modelYear, fuel),
+    })),
+  );
+  const candidates: FipeMatchModel[] = [];
+  for (const { fuel, models } of byFuel) {
+    for (const model of models) {
+      if (!candidates.some((item) => item.code === model.code)) {
+        candidates.push({ code: model.code, fuel, label: model.label });
+      }
+    }
+  }
+  return candidates;
 }

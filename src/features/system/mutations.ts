@@ -1,10 +1,10 @@
 import "server-only";
 
-import { fipeFuelCodes, type FipeMatchModel, pickFipeTable } from "@/domain/listings/fipe-match";
+import { type FipeMatchModel, pickFipeTable } from "@/domain/listings/fipe-match";
 import { err, ok, type Result } from "@/lib/result";
 import { requireAdmin } from "@/server/auth";
 import { db } from "@/server/db";
-import { createFipeCatalog } from "@/server/fipe/catalog";
+import { createFipeCatalog, loadFipeModelCandidates } from "@/server/fipe/catalog";
 import { type FipeMatchChoice, getFipeMatch, resetMatchToAuto, setManualMatch } from "@/server/fipe/matches";
 
 import type { SaveManualFipeMatchInput } from "./schemas";
@@ -58,21 +58,7 @@ export async function saveManualFipeMatch(
     const table = pickFipeTable(new Date(), await catalog.tables());
     if (!table) return err("catalog_empty");
 
-    const fuels = fipeFuelCodes(vehicleType, match.fuel);
-    const byFuel = await Promise.all(
-      fuels.map(async (fuel) => ({
-        fuel,
-        models: await catalog.modelsByYear(table, vehicleType, brandCode, match.modelYear, fuel),
-      })),
-    );
-    const found: FipeMatchModel[] = [];
-    for (const { fuel, models } of byFuel) {
-      for (const model of models) {
-        if (!found.some((item) => item.code === model.code)) {
-          found.push({ code: model.code, fuel, label: model.label });
-        }
-      }
-    }
+    const found = await loadFipeModelCandidates(catalog, table, vehicleType, brandCode, match.modelYear, match.fuel);
 
     const uniqueCodes = Array.from(new Set(input.modelCodes));
     const selected: FipeMatchModel[] = [];
