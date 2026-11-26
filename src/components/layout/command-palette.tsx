@@ -405,6 +405,8 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         if (open) {
           setQuery("");
           setSelectedIndex(0);
+        } else {
+          setGuideDialogOpen(false);
         }
         onOpenChange(!open);
       }

@@ -137,7 +137,7 @@ export async function FollowedLots() {
                   )}
                 </p>
               </div>
-              <div className="grid gap-1.5">
+              <div className="grid gap-2">
                 <LimitProgress limit={lot.limit} bid={lot.currentBid} />
                 <ProbableLine lot={lot} />
               </div>
@@ -168,7 +168,7 @@ function ProbableLine({ lot }: { lot: FollowedLotItem }) {
   }
   const FitIcon = fit ? LIMIT_FIT_ICONS[fit] : null;
   return (
-    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-muted">
+    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-border/70 pt-1.5 text-caption text-muted">
       <span>
         Provável <Money value={price.median} className="font-medium text-foreground-secondary" /> (
         {priceEvidenceLabel(price)})

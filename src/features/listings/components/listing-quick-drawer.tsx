@@ -82,7 +82,7 @@ export function ListingQuickDrawer({
           )}
         </DialogTrigger>
       ) : null}
-      <DrawerContent side="right" className="max-w-lg" onCloseAutoFocus={onCloseAutoFocus}>
+      <DrawerContent side="responsive" className="md:max-w-lg" onCloseAutoFocus={onCloseAutoFocus}>
         <div className="border-b border-border px-5 py-4 md:px-6">
           <DialogHeader>
             <p className="font-mono text-overline text-muted uppercase">

@@ -72,7 +72,13 @@ export function MobileNav({ badges, followed, nextAuction }: MobileNavProps) {
             <HideOnDashboard>{followed}</HideOnDashboard>
           </Suspense>
         ) : null}
-        {nextAuction ? <div className="mt-auto grid grid-cols-1 gap-2.5">{nextAuction}</div> : null}
+        {nextAuction ? (
+          <div className="mt-auto grid grid-cols-1 gap-2.5">
+            <Suspense fallback={nextAuction}>
+              <HideOnDashboard>{nextAuction}</HideOnDashboard>
+            </Suspense>
+          </div>
+        ) : null}
       </DrawerContent>
     </Dialog>
   );
