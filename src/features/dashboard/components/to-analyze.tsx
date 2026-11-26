@@ -24,11 +24,17 @@ export async function ToAnalyze() {
         description={
           <>
             Aparecem aqui os lotes abertos da{" "}
-            <Link href="/sistema/preferencias" className="font-medium text-accent hover:underline">
+            <Link
+              href="/sistema/preferencias"
+              className="rounded-sm font-medium text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent"
+            >
               sua região-base
             </Link>{" "}
             (até {region.radiusKm} km de {region.label}) ou dos{" "}
-            <Link href="/monitores" className="font-medium text-accent hover:underline">
+            <Link
+              href="/monitores"
+              className="rounded-sm font-medium text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent"
+            >
               seus monitores
             </Link>{" "}
             cujo preço provável cabe no limite estimado.

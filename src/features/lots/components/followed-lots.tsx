@@ -104,7 +104,7 @@ export async function FollowedLots() {
                         ·
                       </span>
                       <span className="shrink-0 tabular-nums">
-                        visto{" "}
+                        lance visto{" "}
                         <time dateTime={lot.currentBidObservedAt.toISOString()}>
                           {formatCompactDateTime(lot.currentBidObservedAt)}
                         </time>

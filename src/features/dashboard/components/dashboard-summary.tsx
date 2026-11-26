@@ -82,7 +82,14 @@ export async function DashboardKpis() {
                 className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-y-0.5 group-hover:text-foreground"
               />
             </div>
-            <p className="text-heading-2 font-semibold text-foreground tabular-nums">{region.toAnalyzeTotal}</p>
+            <p
+              className={cn(
+                "text-heading-2 font-semibold tabular-nums",
+                region.toAnalyzeTotal === 0 ? "text-muted" : "text-foreground",
+              )}
+            >
+              {region.toAnalyzeTotal}
+            </p>
             <p className="text-caption text-muted tabular-nums">
               {region.toAnalyzeTotal === 0 ? (
                 "Nenhum cabe no limite"
@@ -113,7 +120,14 @@ export async function DashboardKpis() {
                 className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-y-0.5 group-hover:text-foreground"
               />
             </div>
-            <p className="text-heading-2 font-semibold text-foreground tabular-nums">{followedTotal}</p>
+            <p
+              className={cn(
+                "text-heading-2 font-semibold tabular-nums",
+                followedTotal === 0 ? "text-muted" : "text-foreground",
+              )}
+            >
+              {followedTotal}
+            </p>
             <p className="text-caption text-muted tabular-nums">
               {followedTotal === 0 ? (
                 "Nenhum lote ativo"

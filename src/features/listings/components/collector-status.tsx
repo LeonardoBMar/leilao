@@ -9,8 +9,8 @@ import { isCurrentUserAdmin } from "@/server/auth";
 import { getCollectorStatus } from "../queries";
 
 /**
- * Resumo operacional da coleta: veículos abertos na região e horário da última execução.
- * Falhas e atrasos de coleta ficam concentrados na central de notificações do header e em `/sistema`.
+ * Resumo operacional da coleta: veículos abertos na região, horário da última execução e badge de alerta quando
+ * houver falha ou atraso (detalhes completos na central de notificações do header e em `/sistema`).
  * Lê a sessão: renderizar dentro de <Suspense>.
  */
 export async function CollectorStatusLine({ compact = false }: { compact?: boolean }) {

@@ -27,7 +27,10 @@ export async function PendingItems() {
       id="pending-items"
       tabIndex={-1}
       aria-labelledby="pending-items-heading"
-      className={cn(cardVariants({ variant: "summary" }), "grid scroll-mt-20 gap-4 p-5 outline-none md:p-6")}
+      className={cn(
+        cardVariants({ variant: "summary" }),
+        "grid scroll-mt-20 gap-4 p-5 outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 md:p-6",
+      )}
     >
       <div className="flex items-center justify-between gap-3">
         <h2 id="pending-items-heading" className="flex items-center gap-2 text-heading-3 text-foreground">

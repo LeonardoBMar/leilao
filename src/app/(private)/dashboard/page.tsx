@@ -96,7 +96,11 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
 
       <div className="grid items-start gap-10 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] xl:gap-x-14">
         <div className="grid content-start gap-10">
-          <Section id="to-analyze" tabIndex={-1} className="scroll-mt-20 gap-3 outline-none">
+          <Section
+            id="to-analyze"
+            tabIndex={-1}
+            className="scroll-mt-20 gap-3 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4"
+          >
             <div className="grid gap-1">
               <SectionTitle className="flex items-center gap-2">
                 <Calculator aria-hidden="true" className="size-4 shrink-0 text-muted" />
@@ -117,7 +121,11 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
             </SectionErrorBoundary>
           </Section>
 
-          <Section id="followed-lots" tabIndex={-1} className="scroll-mt-20 gap-2 outline-none">
+          <Section
+            id="followed-lots"
+            tabIndex={-1}
+            className="scroll-mt-20 gap-2 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4"
+          >
             <SectionTitle className="flex items-center gap-2">
               <Eye aria-hidden="true" className="size-4 shrink-0 text-muted" />
               Lotes acompanhados
@@ -133,7 +141,11 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
             </SectionErrorBoundary>
           </Section>
 
-          <Section id="region-auctions" tabIndex={-1} className="scroll-mt-20 gap-3 outline-none">
+          <Section
+            id="region-auctions"
+            tabIndex={-1}
+            className="scroll-mt-20 gap-3 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4"
+          >
             <div className="grid gap-1">
               <SectionTitle className="flex items-center gap-2">
                 <CalendarDays aria-hidden="true" className="size-4 shrink-0 text-muted" />

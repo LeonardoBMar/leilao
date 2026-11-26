@@ -10,7 +10,7 @@ export default function DashboardLoading() {
     <div className="grid gap-8" aria-hidden="true">
       <div className="grid gap-5">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <div className="grid gap-1.5">
+          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
             <Skeleton className="h-9 w-28" />
             <CollectorStatusLineSkeleton compact />
           </div>
