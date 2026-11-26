@@ -5,6 +5,7 @@ import {
   Calculator,
   Car,
   ChartColumn,
+  Clock,
   Compass,
   Database,
   Eye,
@@ -21,7 +22,7 @@ import {
 } from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useState, useSyncExternalStore } from "react";
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -29,12 +30,50 @@ import { cn } from "@/lib/utils";
 import { getAdminRoleServerSnapshot, getAdminRoleSnapshot, subscribeAdminRole } from "./admin-role-store";
 import { matchesCommandQuery, normalizeCommandText } from "./command-palette-search";
 import { getCommandItemsServerSnapshot, getCommandItemsSnapshot, subscribeCommandItems } from "./command-palette-store";
+import { useIsMac } from "./use-is-mac";
+
+const RECENTS_STORAGE_KEY = "leilao.command-recents";
+const MAX_RECENTS = 3;
+
+type StoredRecent = { href: string; label: string; meta?: string };
+
+function readRecents(): readonly StoredRecent[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(RECENTS_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(
+        (entry): entry is StoredRecent =>
+          typeof entry === "object" &&
+          entry !== null &&
+          typeof (entry as StoredRecent).href === "string" &&
+          (entry as StoredRecent).href.startsWith("/") &&
+          typeof (entry as StoredRecent).label === "string",
+      )
+      .slice(0, MAX_RECENTS);
+  } catch {
+    return [];
+  }
+}
+
+function recordRecent(entry: StoredRecent) {
+  try {
+    const current = readRecents().filter((item) => item.href !== entry.href);
+    const next = [entry, ...current].slice(0, MAX_RECENTS);
+    window.localStorage.setItem(RECENTS_STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    // Modo privado ou quota excedida: segue sem persistir.
+  }
+}
 
 type CommandDestination = {
   href: Route;
   label: string;
   meta?: string;
-  group: "Navegação" | "Mercado" | "Ações" | "Sistema" | "Acompanhando" | "Buscar";
+  group: "Recentes" | "Navegação" | "Mercado" | "Ações" | "Sistema" | "Acompanhando" | "Buscar";
   keywords: string;
   icon: LucideIcon;
 };
@@ -135,14 +174,23 @@ type CommandPaletteProps = {
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const router = useRouter();
   const listboxId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const isMac = useIsMac();
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [recents, setRecents] = useState<readonly StoredRecent[]>([]);
   const isAdmin = useSyncExternalStore(subscribeAdminRole, getAdminRoleSnapshot, getAdminRoleServerSnapshot);
   const quickItems = useSyncExternalStore(
     subscribeCommandItems,
     getCommandItemsSnapshot,
     getCommandItemsServerSnapshot,
   );
+
+  useEffect(() => {
+    if (open) {
+      setRecents(readRecents());
+    }
+  }, [open]);
 
   const visibleDestinations = isAdmin
     ? DESTINATIONS
@@ -156,9 +204,28 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
   const trimmedQuery = query.trim();
   const normalized = normalizeCommandText(trimmedQuery);
+
+  const recentDestinations: readonly CommandDestination[] = !normalized
+    ? recents
+        .filter((item) => isAdmin || !item.href.startsWith("/sistema") || item.href === "/sistema/preferencias")
+        .map((item) => ({
+          href: item.href as Route,
+          label: item.label,
+          meta: item.meta,
+          group: "Recentes",
+          keywords: "",
+          icon: Clock,
+        }))
+    : [];
+  const recentHrefs = new Set(recentDestinations.map((item) => item.href));
+
+  // Sem consulta digitada, exibe apenas destinos principais e ações (sub-rotas de Mercado/Sistema entram ao digitar).
+  const defaultDestinations = visibleDestinations.filter(
+    (item) => (item.group === "Navegação" || item.group === "Ações") && !recentHrefs.has(item.href),
+  );
   const filteredDestinations = normalized
     ? visibleDestinations.filter((item) => matchesCommandQuery([item.label, item.keywords, item.group], normalized))
-    : visibleDestinations;
+    : defaultDestinations;
 
   const followedDestinations: readonly CommandDestination[] = quickItems.map((item) => ({
     href: item.href,
@@ -172,7 +239,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     ? followedDestinations.filter((item) =>
         matchesCommandQuery([item.label, item.meta, item.keywords, item.group], normalized),
       )
-    : followedDestinations.slice(0, 5);
+    : followedDestinations.filter((item) => !recentHrefs.has(item.href)).slice(0, 4);
 
   const searchActions: readonly CommandDestination[] =
     normalized.length >= 2
@@ -194,7 +261,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         ]
       : [];
 
-  const items = [...filteredDestinations, ...filteredFollowed, ...searchActions];
+  const items = [...recentDestinations, ...filteredFollowed, ...filteredDestinations, ...searchActions];
   const activeIndex = items.length > 0 ? Math.min(selectedIndex, items.length - 1) : -1;
   const activeOptionId = activeIndex >= 0 ? `${listboxId}-option-${activeIndex}` : undefined;
 
@@ -240,28 +307,32 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     onOpenChange(next);
   }
 
-  function navigateTo(href: Route) {
+  function navigateTo(destination: CommandDestination) {
+    if (destination.group !== "Buscar") {
+      recordRecent({ href: destination.href, label: destination.label, meta: destination.meta });
+    }
     handleOpenChange(false);
-    router.push(href);
+    router.push(destination.href);
   }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         hideClose
-        className="top-[18%] max-w-132 translate-y-0 gap-0 overflow-hidden p-0 transition-none duration-0"
+        className="top-[8%] max-w-132 translate-y-0 gap-0 overflow-hidden p-0 transition-none duration-0 sm:top-[18%]"
       >
         <DialogTitle className="sr-only">Navegação rápida</DialogTitle>
         <DialogDescription className="sr-only">
           Digite para filtrar telas do Leilão Tracker ou buscar um veículo ou lote, e pressione Enter para abrir.
         </DialogDescription>
-        <div className="flex items-center gap-2.5 border-b border-border px-3.5">
+        <div className="flex items-center gap-2 border-b border-border px-3.5">
           <Search aria-hidden="true" className="size-4 shrink-0 text-muted" />
           <input
-            type="search"
+            ref={inputRef}
+            type="text"
             role="combobox"
-            aria-expanded="true"
-            aria-controls={listboxId}
+            aria-expanded={items.length > 0}
+            aria-controls={items.length > 0 ? listboxId : undefined}
             aria-autocomplete="list"
             aria-activedescendant={activeOptionId}
             autoFocus
@@ -280,13 +351,27 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               } else if (event.key === "Enter" && activeIndex >= 0) {
                 event.preventDefault();
                 const item = items[activeIndex];
-                if (item) navigateTo(item.href);
+                if (item) navigateTo(item);
               }
             }}
             placeholder="Ir para uma tela ou buscar veículo/lote…"
             aria-label="Ir para uma tela ou buscar veículo ou lote"
             className="h-11 w-full bg-transparent text-base text-foreground outline-none placeholder:text-placeholder sm:text-body"
           />
+          {query.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => {
+                setQuery("");
+                setSelectedIndex(0);
+                inputRef.current?.focus();
+              }}
+              aria-label="Limpar busca"
+              className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted transition-colors outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:size-10"
+            >
+              <X aria-hidden="true" className="size-3.5" />
+            </button>
+          ) : null}
           <kbd className="hidden rounded-sm border border-border-strong bg-background px-1.5 py-0.5 font-mono text-caption text-muted sm:inline-block">
             ESC
           </kbd>
@@ -298,9 +383,11 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           </DialogClose>
         </div>
 
-        <div className="max-h-80 overflow-y-auto overscroll-contain p-1.5">
+        <div className="max-h-[min(20rem,50dvh)] overflow-y-auto overscroll-contain p-1.5">
           {items.length === 0 ? (
-            <p className="px-3 py-8 text-center text-body text-muted">Nenhum destino encontrado para “{query}”.</p>
+            <p role="status" className="px-3 py-8 text-center text-body text-muted">
+              Nenhum destino encontrado para “{query}”.
+            </p>
           ) : (
             <div id={listboxId} role="listbox" aria-label="Destinos" className="grid gap-2.5">
               {groupedItems.map(({ group, entries }, groupIndex) => {
@@ -318,13 +405,13 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                       const isSelected = index === activeIndex;
                       return (
                         <div
-                          key={item.href}
+                          key={`${group}:${item.href}`}
                           id={`${listboxId}-option-${index}`}
                           role="option"
                           aria-selected={isSelected}
                           onMouseEnter={() => setSelectedIndex(index)}
                           onMouseDown={(event) => event.preventDefault()}
-                          onClick={() => navigateTo(item.href)}
+                          onClick={() => navigateTo(item)}
                           className={cn(
                             "flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-2 text-start text-body select-none",
                             isSelected ? "bg-primary-subtle font-medium text-foreground" : "text-foreground-secondary",
@@ -364,7 +451,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             </span>
           </span>
           <span>
-            <kbd className="font-mono text-foreground-secondary">Ctrl+B</kbd> barra lateral
+            <kbd className="font-mono text-foreground-secondary">{isMac ? "⌘B" : "Ctrl+B"}</kbd> barra lateral
           </span>
         </div>
       </DialogContent>
