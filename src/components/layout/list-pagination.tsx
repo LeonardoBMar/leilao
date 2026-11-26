@@ -93,7 +93,12 @@ function PageLink({
   const className = cn(buttonVariants({ variant: "ghost", size: "md" }), "gap-1 px-3");
   if (disabled) {
     return (
-      <span aria-disabled="true" aria-label={label} className={cn(className, "pointer-events-none text-muted-subtle")}>
+      <span
+        role="link"
+        aria-disabled="true"
+        aria-label={label}
+        className={cn(className, "pointer-events-none text-muted-subtle")}
+      >
         {children}
       </span>
     );
