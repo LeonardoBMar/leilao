@@ -1,6 +1,7 @@
 import "server-only";
 
 import { criteriaToStored } from "@/domain/listings/criteria";
+import type { Prisma } from "@/generated/prisma/client";
 import { err, ok, type Result } from "@/lib/result";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
@@ -9,9 +10,9 @@ import type { WatchInput } from "./schemas";
 
 export type WatchError = "not_found";
 
-/** Critérios no formato gravado; `category` (substituída por `categories`, D-43) fica nula até sair do schema. */
+/** Critérios no formato gravado no banco (`Watch`). */
 function toWatchData(input: WatchInput) {
-  return { name: input.name, ...criteriaToStored(input.criteria), category: null };
+  return { name: input.name, ...criteriaToStored(input.criteria) } satisfies Prisma.WatchUpdateManyMutationInput;
 }
 
 /** Criado agora: só anúncios vistos daqui em diante geram alerta (`alertsFrom`, padrão do banco). */
