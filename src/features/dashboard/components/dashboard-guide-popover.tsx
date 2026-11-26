@@ -18,7 +18,7 @@ export function DashboardGuidePopover() {
       onClick={() => setGuideDialogOpen(true)}
       aria-label="Como ler este painel e atalhos de teclado"
       aria-haspopup="dialog"
-      className="h-10 gap-1.5 px-2 text-caption font-medium text-muted hover:text-foreground sm:h-8 pointer-coarse:h-11"
+      className="h-10 gap-1.5 px-2 text-caption font-medium text-muted hover:text-foreground sm:hidden pointer-coarse:h-11"
     >
       <CircleHelp aria-hidden="true" className="size-3.5 shrink-0" />
       <span>Como ler</span>
