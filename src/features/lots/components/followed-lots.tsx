@@ -58,7 +58,7 @@ export async function FollowedLots() {
           return (
             <li
               key={lot.id}
-              className="relative -mx-2 grid grid-cols-1 items-center gap-x-5 gap-y-3 rounded-md border-t border-border px-2 py-4 transition-colors duration-150 ease-[var(--ease-out)] hover:bg-background motion-reduce:transition-none @xl:grid-cols-[3.5rem_minmax(0,1fr)_8.75rem_13rem]"
+              className="relative -mx-2 grid grid-cols-1 items-center gap-x-5 gap-y-3 rounded-md border-t border-border px-2 py-4 transition-colors duration-150 ease-[var(--ease-out)] hover:bg-background motion-reduce:transition-none @xl:grid-cols-[3.5rem_minmax(0,1fr)_10rem_13rem]"
             >
               <span
                 title={lot.lotNumber}
@@ -110,7 +110,7 @@ export async function FollowedLots() {
                 </p>
               </div>
               <div className="grid gap-0.5 @xl:text-end">
-                <p className="text-caption text-muted tabular-nums">
+                <p className="text-caption whitespace-nowrap text-muted tabular-nums">
                   Lance
                   {lot.currentBid !== null && lot.currentBidObservedAt !== null ? (
                     <>
@@ -189,7 +189,7 @@ export function FollowedLotsSkeleton() {
       {[0, 1, 2].map((index) => (
         <div
           key={index}
-          className="grid grid-cols-1 items-center gap-x-5 gap-y-2 border-t border-border py-4 @xl:grid-cols-[3.5rem_minmax(0,1fr)_8.75rem_13rem]"
+          className="grid grid-cols-1 items-center gap-x-5 gap-y-2 border-t border-border py-4 @xl:grid-cols-[3.5rem_minmax(0,1fr)_10rem_13rem]"
         >
           <Skeleton className="hidden h-4 w-10 @xl:block" />
           <div className="grid gap-1.5">
