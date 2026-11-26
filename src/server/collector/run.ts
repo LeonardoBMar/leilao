@@ -376,18 +376,21 @@ async function collectListings(input: {
 
   let consecutiveFailures = 0;
   let consecutiveParseFailures = 0;
+  let consecutiveUnexpectedFailures = 0;
   for (const [index, visit] of visits.entries()) {
-    // Fim do tempo ou fonte que só falha (rede ou formato quebrado): o resto fica para a próxima execução.
+    // Fim do tempo ou fonte que só falha (rede, formato quebrado ou erro inesperado): o resto fica para a próxima execução.
     const stop =
       now().getTime() >= deadline
         ? DEADLINE_ERROR
         : consecutiveFailures >= MAX_CONSECUTIVE_FAILURES
           ? `${MAX_CONSECUTIVE_FAILURES} falhas seguidas`
-          : consecutiveParseFailures >= MAX_CONSECUTIVE_PARSE_FAILURES &&
-              counters.created === 0 &&
-              counters.updated === 0
-            ? `${MAX_CONSECUTIVE_PARSE_FAILURES} falhas seguidas de formato`
-            : null;
+          : consecutiveUnexpectedFailures >= MAX_CONSECUTIVE_FAILURES
+            ? `${MAX_CONSECUTIVE_FAILURES} falhas inesperadas seguidas`
+            : consecutiveParseFailures >= MAX_CONSECUTIVE_PARSE_FAILURES &&
+                counters.created === 0 &&
+                counters.updated === 0
+              ? `${MAX_CONSECUTIVE_PARSE_FAILURES} falhas seguidas de formato`
+              : null;
     if (stop) {
       fail("(execução)", `${stop}; ${visits.length - index} anúncios ficaram para a próxima execução`);
       return true;
@@ -398,6 +401,7 @@ async function collectListings(input: {
     let problem: string;
     let siteError = false;
     let parseError = false;
+    let unexpectedError = false;
     fetcher.resetSiteFailing();
     try {
       const outcome = await visitListing(source, fetcher, visit.externalId, { now: now(), place }, listReadAt);
@@ -405,17 +409,25 @@ async function collectListings(input: {
         counters[outcome.value]++;
         consecutiveFailures = 0;
         consecutiveParseFailures = 0;
+        consecutiveUnexpectedFailures = 0;
         continue;
+      }
+      // Orçamento de tempo local esgotado: encerra sem penalizar anúncios saudáveis com recordCheckFailure.
+      if (outcome.error === DEADLINE_ERROR) {
+        fail("(execução)", `${DEADLINE_ERROR}; ${visits.length - index} anúncios ficaram para a próxima execução`);
+        return true;
       }
       problem = outcome.error;
       siteError = fetcher.siteFailing;
       parseError = !siteError;
     } catch (error) {
-      // Erro inesperado (ex.: dado recusado por um CHECK do banco): não é queda do site.
+      // Erro inesperado (ex.: dado recusado por um CHECK do banco ou falha de conexão): não é queda do site.
       problem = describeError(error);
+      unexpectedError = true;
     }
     consecutiveFailures = siteError ? consecutiveFailures + 1 : 0;
     consecutiveParseFailures = parseError ? consecutiveParseFailures + 1 : 0;
+    consecutiveUnexpectedFailures = unexpectedError ? consecutiveUnexpectedFailures + 1 : 0;
     fail(url, problem);
     if (visit.reason === "due") await recordCheckFailure(source.id, visit.externalId, now());
   }

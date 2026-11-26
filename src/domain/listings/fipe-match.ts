@@ -832,6 +832,7 @@ type VehicleIdentity = {
   model: string | null;
   modelYear: number | null;
   category: string | null;
+  fuel?: string | null;
 };
 
 /**
@@ -851,7 +852,8 @@ export function marketValueOnSave(
     previous.brand !== input.brand ||
     previous.model !== input.model ||
     previous.modelYear !== input.modelYear ||
-    previous.category !== input.category;
+    previous.category !== input.category ||
+    fuelOf(previous.fuel ?? null) !== fuelOf(input.fuel ?? null);
   return changed ? { kind: "clear" } : { kind: "keep" };
 }
 

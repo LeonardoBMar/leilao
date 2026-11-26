@@ -24,6 +24,7 @@ import type { FipeCatalog } from "./catalog";
 import {
   findFipeMatch,
   type FipeMatchChoice,
+  fipePendingListingWhere,
   notFromSource,
   requeueStaleMatches,
   saveAutoMatch,
@@ -39,7 +40,6 @@ import {
  * correlação ou se chegar a tabela do mês dele (o valor veio de uma anterior).
  */
 
-const VEHICLE_CATEGORIES = ["Carros", "Utilitarios", "Motos", "Pesados"];
 const BATCH = 50;
 /** Chaves de veículo casadas ao mesmo tempo (D-63): ~1 anúncio por segundo em série, quase tudo espera de rede. */
 const CONCURRENCY = 8;
@@ -140,11 +140,7 @@ export async function enrichMarketValues(input: {
       where: {
         ...(dryRun && seen.size > 0 ? { id: { notIn: [...seen] } } : {}),
         ...(sourceId === undefined ? {} : { sourceId }),
-        marketValueCheckedAt: null,
-        ...notFromSource,
-        category: { in: VEHICLE_CATEGORIES },
-        brand: { not: null },
-        modelYear: { not: null },
+        ...fipePendingListingWhere,
       },
       // Abertos primeiro: é neles que o valor ajuda a decidir; depois o acervo, do mais novo ao mais antigo.
       orderBy: [{ status: "asc" }, { firstSeenAt: "desc" }],

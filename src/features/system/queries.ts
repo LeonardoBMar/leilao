@@ -5,7 +5,7 @@ import { collectorHealth } from "@/domain/listings/health";
 import { requireAdmin } from "@/server/auth";
 import { db } from "@/server/db";
 import { createFipeCatalog, loadFipeModelCandidates } from "@/server/fipe/catalog";
-import { getFipeMatch, listFipeMatches, notFromSource } from "@/server/fipe/matches";
+import { fipePendingListingWhere, getFipeMatch, listFipeMatches, notFromSource } from "@/server/fipe/matches";
 
 import { collectorRunErrorsSchema, type FipeQueueFilters } from "./schemas";
 import type {
@@ -139,7 +139,7 @@ export async function listSystemFipeQueue(
         },
       }),
       db.fipeMatch.count({ where: { origin: "manual", ...activeFilter } }),
-      db.listing.count({ where: { marketValueCheckedAt: null } }),
+      db.listing.count({ where: fipePendingListingWhere }),
       catalog.tables(),
       listFipeMatches({
         ...(filters.situacao === "revisao"

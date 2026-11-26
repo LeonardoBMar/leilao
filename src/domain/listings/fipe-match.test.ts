@@ -400,6 +400,18 @@ describe("marketValueOnSave", () => {
     expect(
       marketValueOnSave({ ...vehicle, origin: "fipe_family" }, { ...vehicle, modelYear: 2013, marketValue: null }),
     ).toEqual({ kind: "clear" });
+    expect(
+      marketValueOnSave(
+        { ...vehicle, fuel: "Flex", origin: "fipe_version" },
+        { ...vehicle, fuel: "Diesel", marketValue: null },
+      ),
+    ).toEqual({ kind: "clear" });
+    expect(
+      marketValueOnSave(
+        { ...vehicle, fuel: "Álcool/Gasolina", origin: "fipe_version" },
+        { ...vehicle, fuel: "FLEX", marketValue: null },
+      ),
+    ).toEqual({ kind: "keep" });
   });
 });
 

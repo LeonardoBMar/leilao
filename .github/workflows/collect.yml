@@ -26,6 +26,7 @@ jobs:
     timeout-minutes: 20
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      FIPE_LOOKUP: ${{ vars.FIPE_LOOKUP }}
       # Entrada manual passa por variável de ambiente, nunca interpolada direto no comando.
       MAX_VISITS: ${{ inputs.max_visits || '400' }}
     steps:

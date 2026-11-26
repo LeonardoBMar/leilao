@@ -184,9 +184,21 @@ export async function resetMatchToAuto(id: string): Promise<number> {
   });
 }
 
+/** Categorias elegíveis ao casamento na tabela FIPE (D-47). */
+export const FIPE_VEHICLE_CATEGORIES = ["Carros", "Utilitarios", "Motos", "Pesados"];
+
 /** Anúncios sem valor da fonte: o valor é do sistema (casado ou nenhum) e pode ser refeito. */
 export const notFromSource = {
   OR: [{ marketValueOrigin: null }, { marketValueOrigin: { in: ["fipe_version" as const, "fipe_family" as const] } }],
+};
+
+/** Predicado único da fila real de enriquecimento FIPE (compartilhado entre `enrichMarketValues` e `/sistema/fipe`). */
+export const fipePendingListingWhere = {
+  marketValueCheckedAt: null,
+  ...notFromSource,
+  category: { in: FIPE_VEHICLE_CATEGORIES },
+  brand: { not: null },
+  modelYear: { not: null },
 };
 
 /**
