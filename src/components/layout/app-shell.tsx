@@ -122,6 +122,7 @@ function HeaderRouteContext() {
   if (!context) return null;
 
   const SectionIcon = context.icon;
+  const isSubRoute = Boolean(context.detail) && pathname !== context.sectionHref;
 
   return (
     <nav aria-label="Localização atual" className="flex min-w-0 items-center">
@@ -131,13 +132,13 @@ function HeaderRouteContext() {
       >
         /
       </span>
-      <ol className="flex min-w-0 items-center gap-2 text-label">
+      <ol className="flex min-w-0 items-center gap-1.5 text-label sm:gap-2">
         <li className="flex min-w-0 items-center">
-          {context.detail ? (
+          {isSubRoute ? (
             <Link
               href={context.sectionHref}
               title={context.section}
-              className="-my-1.5 inline-flex min-w-0 items-center gap-1.5 rounded-sm py-1.5 text-muted transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent motion-reduce:transition-none pointer-coarse:min-h-11"
+              className="-my-1.5 inline-flex min-w-0 items-center gap-1 rounded-sm py-1.5 text-muted transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent motion-reduce:transition-none sm:gap-1.5 pointer-coarse:min-h-11"
             >
               <ChevronLeft aria-hidden="true" strokeWidth={1.75} className="size-3.5 shrink-0 text-muted sm:hidden" />
               <SectionIcon
@@ -149,7 +150,7 @@ function HeaderRouteContext() {
             </Link>
           ) : (
             <span
-              aria-current="page"
+              aria-current={context.detail ? undefined : "page"}
               title={context.section}
               className="inline-flex min-w-0 items-center gap-1.5 font-medium text-foreground"
             >
@@ -159,7 +160,7 @@ function HeaderRouteContext() {
           )}
         </li>
         {context.detail ? (
-          <li className="hidden min-w-0 items-center gap-2 sm:flex">
+          <li className={cn("min-w-0 items-center gap-1.5 sm:gap-2", isSubRoute ? "flex" : "hidden sm:flex")}>
             <span aria-hidden="true" className="shrink-0 font-mono text-caption text-border-strong select-none">
               /
             </span>
