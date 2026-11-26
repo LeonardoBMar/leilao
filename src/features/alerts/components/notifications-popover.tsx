@@ -271,8 +271,14 @@ export function NotificationsPopover({
                         loading={isMarkingAllRead}
                         loadingLabel="Marcando…"
                         onClick={() => {
-                          setConfirmMarkAll(false);
-                          runMarkAllRead(() => markAllAlertsReadAction(null));
+                          runMarkAllRead(async () => {
+                            try {
+                              return await markAllAlertsReadAction(null);
+                            } finally {
+                              setConfirmMarkAll(false);
+                              window.requestAnimationFrame(() => markAllTriggerRef.current?.focus());
+                            }
+                          });
                         }}
                       >
                         Confirmar ({unreadTotal})
