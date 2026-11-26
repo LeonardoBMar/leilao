@@ -89,10 +89,10 @@ export function ToAnalyzeSkeleton() {
   return (
     <div className="@container" aria-hidden="true">
       <div className="grid grid-cols-1 gap-5 @3xl:grid-cols-2 @3xl:gap-x-8">
-        <Skeleton className="h-28" />
-        <Skeleton className="h-28" />
-        <Skeleton className="h-28" />
-        <Skeleton className="h-28" />
+        <Skeleton className="h-36" />
+        <Skeleton className="h-36" />
+        <Skeleton className="h-36" />
+        <Skeleton className="h-36" />
       </div>
     </div>
   );

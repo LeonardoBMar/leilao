@@ -250,50 +250,95 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
         : null;
   const transparency = [evidence, limitOrigin].filter(Boolean).join(" · ");
 
+  const fullTitle = item.modelYear ? `${item.title} ${item.modelYear}` : item.title;
+
   return (
-    <article className="grid w-full grid-cols-[6.5rem_minmax(0,1fr)] gap-x-3.5 gap-y-2">
-      <div className="relative row-span-2 aspect-4/3 overflow-clip rounded-md bg-surface-subtle">
-        {item.photoUrl ? (
-          <Image src={item.photoUrl} alt="" fill unoptimized loading="lazy" sizes="8rem" className="object-cover" />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-muted-subtle">
-            <Car aria-hidden="true" className="size-6" />
+    <article className="grid w-full grid-cols-[6.5rem_minmax(0,1fr)] gap-x-3.5 gap-y-2.5">
+      <ListingQuickDrawer
+        item={item}
+        trigger={
+          <button
+            type="button"
+            aria-label={`Inspecionar ${fullTitle}`}
+            className="group relative row-span-2 aspect-4/3 overflow-clip rounded-md bg-surface-subtle outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent"
+          >
+            {item.photoUrl ? (
+              <Image
+                src={item.photoUrl}
+                alt=""
+                fill
+                unoptimized
+                loading="lazy"
+                sizes="8rem"
+                className="object-cover transition-transform duration-200 ease-[var(--ease-out)] group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center text-muted-subtle transition-colors group-hover:text-foreground">
+                <Car aria-hidden="true" className="size-6" />
+              </div>
+            )}
+          </button>
+        }
+      />
+      <div className="grid min-w-0 gap-2">
+        <div className="grid min-w-0 gap-1">
+          <h3 className="min-w-0 text-body font-semibold text-foreground">
+            <ListingQuickDrawer
+              item={item}
+              trigger={
+                <button
+                  type="button"
+                  title={fullTitle}
+                  className="line-clamp-2 max-w-full rounded-sm text-left outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent"
+                >
+                  {item.title}
+                  {item.modelYear ? (
+                    <span className="font-medium text-muted tabular-nums"> {item.modelYear}</span>
+                  ) : null}
+                </button>
+              }
+            />
+          </h3>
+          {fit !== null || item.damageLevel ? (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {fit !== null && FitIcon ? (
+                <Badge variant={LIMIT_FIT_VARIANTS[fit]}>
+                  <FitIcon aria-hidden="true" className="size-3 shrink-0" />
+                  {LIMIT_FIT_LABELS[fit]}
+                </Badge>
+              ) : null}
+              {item.damageLevel ? (
+                <Badge variant={DAMAGE_VARIANTS[item.damageLevel]}>{DAMAGE_LABELS[item.damageLevel]}</Badge>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+
+        <dl className="grid grid-cols-3 gap-x-3 gap-y-1 tabular-nums">
+          <div className="grid gap-0.5">
+            <dt className="text-caption text-muted">Lance</dt>
+            <dd className="text-label font-semibold text-foreground">
+              <Money value={bid} />
+            </dd>
           </div>
-        )}
-      </div>
-      <div className="grid min-w-0 gap-1">
-        <h3 className="line-clamp-2 min-w-0 text-body font-semibold text-foreground">
-          {item.title}
-          {item.modelYear ? <span className="font-medium text-muted tabular-nums"> {item.modelYear}</span> : null}
-        </h3>
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-muted tabular-nums">
-          <span>
-            Lance <Money value={bid} className="font-semibold text-foreground" />
-          </span>
           {price && price.kind !== "insufficient" ? (
-            <span>
-              · provável <Money value={price.median} />
-            </span>
+            <div className="grid gap-0.5">
+              <dt className="text-caption text-muted">Provável</dt>
+              <dd className="text-label font-medium text-foreground-secondary">
+                <Money value={price.median} />
+              </dd>
+            </div>
           ) : null}
           {limit && limit.kind !== "insufficient" ? (
-            limit.maxBid !== null ? (
-              <span>
-                · lim. <Money value={limit.maxBid} className="font-medium text-foreground-secondary" />
-              </span>
-            ) : (
-              <span>· sem lance viável</span>
-            )
+            <div className="grid gap-0.5">
+              <dt className="text-caption text-muted">Limite</dt>
+              <dd className="text-label font-medium text-foreground-secondary">
+                {limit.maxBid !== null ? <Money value={limit.maxBid} /> : "Sem lance viável"}
+              </dd>
+            </div>
           ) : null}
-          {fit !== null && FitIcon ? (
-            <Badge variant={LIMIT_FIT_VARIANTS[fit]}>
-              <FitIcon aria-hidden="true" className="size-3 shrink-0" />
-              {LIMIT_FIT_LABELS[fit]}
-            </Badge>
-          ) : null}
-          {item.damageLevel ? (
-            <Badge variant={DAMAGE_VARIANTS[item.damageLevel]}>{DAMAGE_LABELS[item.damageLevel]}</Badge>
-          ) : null}
-        </p>
+        </dl>
+
         {transparency ? <p className="text-caption text-muted">{transparency}</p> : null}
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-muted tabular-nums">
           <span className="inline-flex items-center gap-1.5">
