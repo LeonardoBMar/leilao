@@ -29,7 +29,7 @@ export async function PendingItems() {
       aria-labelledby="pending-items-heading"
       className={cn(
         cardVariants({ variant: "summary" }),
-        "grid scroll-mt-20 gap-4 p-5 outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 md:p-6",
+        "grid scroll-mt-6 gap-4 p-5 outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 md:p-6",
       )}
     >
       <div className="flex items-center justify-between gap-3">

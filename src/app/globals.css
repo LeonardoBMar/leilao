@@ -157,7 +157,7 @@
     min-width: 320px;
     background: var(--surface);
     color-scheme: light;
-    scroll-padding-block-start: 4rem;
+    scroll-padding-block-start: 3rem;
     scrollbar-color: var(--muted-subtle) transparent;
     scrollbar-width: thin;
   }
