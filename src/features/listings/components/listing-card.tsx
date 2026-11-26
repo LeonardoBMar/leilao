@@ -253,7 +253,7 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
   const fullTitle = item.modelYear ? `${item.title} ${item.modelYear}` : item.title;
 
   return (
-    <article className="grid w-full grid-cols-[6.5rem_minmax(0,1fr)] gap-x-3.5 gap-y-2.5">
+    <article className="grid w-full grid-cols-[5.25rem_minmax(0,1fr)] gap-x-3.5 gap-y-2.5 sm:grid-cols-[6.5rem_minmax(0,1fr)]">
       <div className="relative aspect-4/3 overflow-clip rounded-md bg-surface-subtle sm:row-span-2">
         {item.photoUrl ? (
           <Image src={item.photoUrl} alt="" fill unoptimized loading="lazy" sizes="8rem" className="object-cover" />
@@ -297,7 +297,7 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
           ) : null}
         </div>
 
-        <dl className="flex flex-wrap gap-x-4 gap-y-1.5 tabular-nums">
+        <dl title={transparency || undefined} className="flex flex-wrap gap-x-4 gap-y-1.5 tabular-nums">
           <div className="grid gap-0.5">
             <dt className="text-caption text-muted">Lance</dt>
             <dd className="text-label font-semibold whitespace-nowrap text-foreground">
@@ -322,7 +322,6 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
           ) : null}
         </dl>
 
-        {transparency ? <p className="text-caption text-muted">{transparency}</p> : null}
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-muted tabular-nums">
           <span className="inline-flex items-center gap-1.5">
             <Clock aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />

@@ -98,24 +98,18 @@ export async function FollowedLots() {
                       <time dateTime={lot.auction.startsAt.toISOString()}>{formatDate(lot.auction.startsAt)}</time>
                     )}
                   </span>
-                  {lot.currentBid !== null && lot.currentBidObservedAt !== null ? (
-                    <>
-                      <span aria-hidden="true" className="text-border-strong">
-                        ·
-                      </span>
-                      <span className="shrink-0 tabular-nums">
-                        lance visto{" "}
-                        <time dateTime={lot.currentBidObservedAt.toISOString()}>
-                          {formatCompactDateTime(lot.currentBidObservedAt)}
-                        </time>
-                      </span>
-                    </>
-                  ) : null}
                 </p>
               </div>
               <div className="grid gap-0.5 @2xl:text-end">
                 <p className="text-caption text-muted">Lance</p>
-                <p className="text-body-lg font-semibold text-foreground tabular-nums">
+                <p
+                  title={
+                    lot.currentBid !== null && lot.currentBidObservedAt !== null
+                      ? `Lance visto em ${formatCompactDateTime(lot.currentBidObservedAt)}`
+                      : undefined
+                  }
+                  className="text-body-lg font-semibold text-foreground tabular-nums"
+                >
                   <Money value={lot.currentBid} />
                 </p>
                 <p className="text-caption text-muted tabular-nums">

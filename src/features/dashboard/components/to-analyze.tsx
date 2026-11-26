@@ -68,7 +68,7 @@ export async function ToAnalyze() {
       </ul>
       {overview.truncated ? (
         <p className="text-caption text-muted">
-          Mostrando os primeiros resultados do filtro — há mais anúncios abertos na região.
+          Mostrando os primeiros resultados do filtro — há mais lotes abertos na região.
         </p>
       ) : null}
       {remaining > 0 || overview.dismissed.length > 0 ? (

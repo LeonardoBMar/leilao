@@ -29,25 +29,22 @@ export async function RecentAlerts() {
       </h2>
 
       <ul role="list" className="flex min-w-0 flex-1 flex-wrap gap-x-3 gap-y-1 text-caption text-muted">
-        {items.map((alert, index) => (
-          <li key={alert.id} className="flex min-w-0 items-center gap-2">
-            {index > 0 ? <span aria-hidden="true" className="size-1 shrink-0 rounded-full bg-border-strong" /> : null}
-            {alert.trackedLotId ? (
+        {items.map((alert, index) => {
+          const href = alert.trackedLotId ? (`/lotes/${alert.trackedLotId}` as const) : ("/alertas" as const);
+          return (
+            <li key={alert.id} className="flex min-w-0 items-center gap-2">
+              {index > 0 ? <span aria-hidden="true" className="size-1 shrink-0 rounded-full bg-border-strong" /> : null}
               <Link
-                href={`/lotes/${alert.trackedLotId}`}
-                className="inline-flex min-h-10 min-w-0 items-center rounded-sm outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent"
+                href={href}
+                className="inline-flex min-h-10 min-w-0 items-center rounded-sm outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:min-h-11"
               >
                 <span className="line-clamp-1" title={alert.title}>
                   {alert.title}
                 </span>
               </Link>
-            ) : (
-              <span className="line-clamp-1 min-w-0" title={alert.title}>
-                {alert.title}
-              </span>
-            )}
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ul>
 
       <div className="flex flex-wrap items-center gap-2">

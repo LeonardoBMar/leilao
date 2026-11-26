@@ -76,6 +76,7 @@ export async function DashboardKpis() {
               <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
                 <Calculator aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
                 Para analisar
+                <span className="sr-only"> — ir para a seção abaixo</span>
               </span>
               <ArrowDown
                 aria-hidden="true"
@@ -114,6 +115,7 @@ export async function DashboardKpis() {
               <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
                 <Eye aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
                 Acompanhados
+                <span className="sr-only"> — ir para a seção abaixo</span>
               </span>
               <ArrowDown
                 aria-hidden="true"
@@ -150,6 +152,7 @@ export async function DashboardKpis() {
                 <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
                   <ClipboardList aria-hidden="true" className="size-3.5 shrink-0 text-warning" />
                   Pendências
+                  <span className="sr-only"> — ir para a seção abaixo</span>
                 </span>
                 <ArrowDown
                   aria-hidden="true"
@@ -165,6 +168,7 @@ export async function DashboardKpis() {
                 <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
                   <ClipboardList aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
                   Pendências
+                  <span className="sr-only"> — abrir Minhas análises</span>
                 </span>
                 <ArrowUpRight
                   aria-hidden="true"
@@ -184,6 +188,7 @@ export async function DashboardKpis() {
                 <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
                   <CalendarClock aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
                   Próximo no catálogo
+                  <span className="sr-only"> — abrir página do leilão</span>
                 </span>
                 <ArrowUpRight
                   aria-hidden="true"
@@ -210,6 +215,7 @@ export async function DashboardKpis() {
                 <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
                   <CalendarClock aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
                   Próximo no catálogo
+                  <span className="sr-only"> — ir para a seção abaixo</span>
                 </span>
                 <ArrowDown
                   aria-hidden="true"

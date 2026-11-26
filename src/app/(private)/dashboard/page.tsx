@@ -5,7 +5,6 @@ import { Suspense } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { SectionErrorBoundary } from "@/components/layout/section-error-boundary";
 import { Alert, AlertDescription, AlertTitle, ButtonLink, Section, SectionTitle } from "@/components/ui";
-import { RecentAlerts } from "@/features/alerts/components/recent-alerts";
 import { DashboardGuidePopover } from "@/features/dashboard/components/dashboard-guide-popover";
 import {
   DashboardKpis,
@@ -86,14 +85,6 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
         </SectionErrorBoundary>
       </div>
 
-      <div className="empty:hidden">
-        <SectionErrorBoundary title="Alertas indisponíveis" fallbackHref="/alertas" fallbackLabel="Abrir Alertas">
-          <Suspense fallback={null}>
-            <RecentAlerts />
-          </Suspense>
-        </SectionErrorBoundary>
-      </div>
-
       <div className="grid items-start gap-10 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] xl:gap-x-14">
         <div className="grid content-start gap-10">
           <Section
@@ -167,17 +158,7 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
           </Section>
         </div>
 
-        <aside className="grid content-start gap-8" aria-label="Pendências e indicadores">
-          <SectionErrorBoundary
-            title="Pendências indisponíveis"
-            fallbackHref="/minhas-analises"
-            fallbackLabel="Abrir Minhas análises"
-          >
-            <Suspense fallback={null}>
-              <PendingItems />
-            </Suspense>
-          </SectionErrorBoundary>
-
+        <aside className="grid content-start gap-8" aria-label="Indicadores e pendências">
           <SectionErrorBoundary
             title="Indicador indisponível"
             fallbackHref="/mercado/calibracao"
@@ -185,6 +166,16 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
           >
             <Suspense fallback={<DecisionIndicatorSkeleton />}>
               <DecisionIndicator />
+            </Suspense>
+          </SectionErrorBoundary>
+
+          <SectionErrorBoundary
+            title="Pendências indisponíveis"
+            fallbackHref="/minhas-analises"
+            fallbackLabel="Abrir Minhas análises"
+          >
+            <Suspense fallback={null}>
+              <PendingItems />
             </Suspense>
           </SectionErrorBoundary>
         </aside>

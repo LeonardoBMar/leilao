@@ -42,8 +42,9 @@ class ErrorBoundaryInner extends Component<ErrorBoundaryInnerProps, ErrorBoundar
         <div className="grid gap-1">
           <AlertTitle>{this.props.title}</AlertTitle>
           <AlertDescription>
-            Ocorreu uma falha temporária nesta seção. Tente novamente ou use o atalho ao lado; seus dados salvos
-            permanecem intactos.
+            {fallbackHref && fallbackLabel
+              ? "Ocorreu uma falha temporária nesta seção. Tente novamente ou use o atalho abaixo; seus dados salvos permanecem intactos."
+              : "Ocorreu uma falha temporária nesta seção. Tente novamente em instantes; seus dados salvos permanecem intactos."}
           </AlertDescription>
         </div>
         <div className="flex flex-wrap items-center gap-2">
