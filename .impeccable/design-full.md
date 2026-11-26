@@ -294,15 +294,15 @@ Regras:
 
 | Token | Tamanho / linha | Peso padrão | Uso |
 | --- | --- | ---: | --- |
-| `display` | `46px / 50px` | `600` | O número que decide (lance máximo, folga até o limite). No máximo um por tela. Espaçamento `-0.035em`. |
-| `heading-1` | `32px / 38px` | `600` | Título da página. Espaçamento `-0.02em`. |
-| `heading-2` | `24px / 30px` | `500` | Valores de apoio (lance atual, meu limite) e título de dialog. Espaçamento `-0.02em`. |
-| `heading-3` | `15px / 22px` | `600` | Título de seção, card e grupo de formulário. |
-| `body-lg` | `16px / 24px` | `400` | Introdução e descrição importante. |
-| `body` | `14px / 20px` | `400` | Texto padrão, controles, células e navegação (500). |
-| `label` | `13px / 18px` | `500` | Labels de campo e tabs. |
-| `caption` | `12px / 16px` | `400` | Metadado, helper, timestamp e cabeçalho de tabela (500). |
-| `overline` | `12px / 16px` | `400` | Linha de contexto em `font-mono`, caixa alta, `0.02em`, cor `muted`. |
+| `display` | `42px / 1.08` | `600` | O número que decide (lance máximo, folga até o limite). No máximo um por tela. Espaçamento `-0.03em`. |
+| `heading-1` | `28px / 1.2` | `600` | Título da página. Espaçamento `-0.025em`. |
+| `heading-2` | `22px / 1.27` | `600` | Valores de apoio (lance atual, meu limite) e título de dialog. Espaçamento `-0.02em`. |
+| `heading-3` | `15px / 1.4` | `600` | Título de seção, card e grupo de formulário. Espaçamento `-0.01em`. |
+| `body-lg` | `16px / 1.5` | `400` | Introdução e descrição importante. |
+| `body` | `14px / 1.45` | `400` | Texto padrão, controles, células e navegação (500). |
+| `label` | `13px / 1.35` | `500` | Labels de campo e tabs. |
+| `caption` | `12px / 1.35` | `400` | Metadado, helper, timestamp e cabeçalho de tabela (500). |
+| `overline` | `12px / 1.35` | `500` | Linha de contexto em `font-mono`, caixa alta, `0.02em`, cor `muted`. |
 
 Regras:
 
