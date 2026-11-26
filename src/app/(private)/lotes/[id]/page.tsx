@@ -8,6 +8,7 @@ import { LotAnalysisPanel, LotAnalysisPanelSkeleton } from "@/features/analyses/
 import { listLotAnalyses } from "@/features/analyses/queries";
 import { LotPhotosPanel, LotPhotosPanelSkeleton } from "@/features/lot-images/components/lot-photos-panel";
 import { LotDetailSkeleton, LotDetailView } from "@/features/lots/components/lot-detail-view";
+import { LotPostAuctionPanel } from "@/features/post-auction/components/lot-post-auction-panel";
 import { LotMarketPanel, LotMarketPanelSkeleton } from "@/features/research/components/lot-market-panel";
 import { LotResultPanel, LotResultPanelSkeleton } from "@/features/results/components/lot-result-panel";
 import { RecordResultButton } from "@/features/results/components/record-result-button";
@@ -48,6 +49,11 @@ export default function LotPage({ params }: PageProps<"/lotes/[id]">) {
             <LotMarket params={params} />
           </Suspense>
         }
+        postAuction={
+          <Suspense fallback={null}>
+            <LotPostAuction params={params} />
+          </Suspense>
+        }
       />
     </Suspense>
   );
@@ -72,6 +78,11 @@ async function LotMarket({ params }: Pick<PageProps<"/lotes/[id]">, "params">) {
 async function LotPhotos({ params }: Pick<PageProps<"/lotes/[id]">, "params">) {
   const parsed = idSchema.safeParse((await params).id);
   return parsed.success ? <LotPhotosPanel lotId={parsed.data} /> : null;
+}
+
+async function LotPostAuction({ params }: Pick<PageProps<"/lotes/[id]">, "params">) {
+  const parsed = idSchema.safeParse((await params).id);
+  return parsed.success ? <LotPostAuctionPanel lotId={parsed.data} /> : null;
 }
 
 /**

@@ -3,10 +3,16 @@
 import { useState } from "react";
 
 import { Badge, Button, Card, CurrencyInput, Money } from "@/components/ui";
-import { calculateBreakEvenBid, compareToLimit, differenceToLimit, simulateBid } from "@/domain/finance/calculator";
+import {
+  calculateBreakEvenBid,
+  calculateReturnMetrics,
+  compareToLimit,
+  differenceToLimit,
+  simulateBid,
+} from "@/domain/finance/calculator";
 import { type Cents, cents, MAX_CENTS, parseBRL } from "@/domain/money";
 import type { LotMarketReference } from "@/features/research/types";
-import { formatBRL, formatMoneyInput } from "@/lib/format";
+import { formatBRL, formatDecimal, formatMoneyInput } from "@/lib/format";
 import { LIMIT_COMPARISON_LABELS, LIMIT_COMPARISON_VARIANTS } from "@/lib/limit-comparison";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +28,8 @@ type AnalysisSummaryProps = {
   market: LotMarketReference | null;
   /** Época das vendas do bloco Concorrência (análise fixada). */
   marketNote?: string;
+  /** Prazo estimado de giro (dias) para exibir ROI mensalizado e lucro por dia na simulação (D-96). */
+  expectedHoldDays?: number | null;
 };
 
 /**
@@ -29,12 +37,21 @@ type AnalysisSummaryProps = {
  * simulação de lance. A simulação é exploratória: não altera o lance atual do lote nem é gravada (SPEC RF-04).
  * Renderizar fora do <form> da análise, para o lance simulado nunca ser enviado.
  */
-export function AnalysisSummary({ model, currentBid, market, marketNote }: AnalysisSummaryProps) {
+export function AnalysisSummary({
+  model,
+  currentBid,
+  market,
+  marketNote,
+  expectedHoldDays = null,
+}: AnalysisSummaryProps) {
   const { outcome, complete } = model;
   const [bidText, setBidText] = useState(currentBid === null ? "" : formatMoneyInput(currentBid));
   const parsedBid = bidText.trim() === "" ? null : parseBRL(bidText);
   const bid = parsedBid !== null && parsedBid >= 0 ? parsedBid : null;
   const simulation = complete && bid !== null ? simulateBid(complete, bid) : null;
+  const returnMetrics = simulation
+    ? calculateReturnMetrics(simulation.totalCost, simulation.estimatedMargin, expectedHoldDays)
+    : null;
   const comparison = compareToLimit(outcome, bid);
   const breakEvenBid = complete ? calculateBreakEvenBid(complete) : null;
 
@@ -162,6 +179,22 @@ export function AnalysisSummary({ model, currentBid, market, marketNote }: Analy
             <Row label="Margem estimada" strong>
               <MarginValue value={simulation.estimatedMargin} />
             </Row>
+            {returnMetrics ? (
+              <Row label="ROI sobre custo total">
+                <span
+                  className={cn(
+                    "tabular-nums",
+                    returnMetrics.roiRatio > 0 && "text-success",
+                    returnMetrics.roiRatio < 0 && "text-error",
+                  )}
+                >
+                  {formatDecimal(returnMetrics.roiRatio * 100)}%
+                  {returnMetrics.monthlyRoiRatio !== null && expectedHoldDays !== null
+                    ? ` · ${formatDecimal(returnMetrics.monthlyRoiRatio * 100)}%/mês (${expectedHoldDays} d)`
+                    : ""}
+                </span>
+              </Row>
+            ) : null}
           </dl>
         ) : null}
         {/* Com limite e lance, o texto colorido já diz a situação; sem eles, o rótulo da comparação. */}

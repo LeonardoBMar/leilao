@@ -13,6 +13,7 @@ export type AnalysisDiffSnapshot = {
   status: "draft" | "fixed";
   inputs: AnalysisInputs;
   fipeValue: Cents | null;
+  expectedHoldDays?: number | null;
   maxBid: Cents | null;
   isViable: boolean | null;
   notes: string | null;
@@ -26,14 +27,18 @@ export type DiffMoneyField =
   | "transportCost"
   | "tiresCost"
   | "serviceCost"
-  | "otherFees";
+  | "otherFees"
+  | "debtsCost"
+  | "sellingCost"
+  | "taxCost";
 
 export type DiffValue =
   | { kind: "money"; value: Cents | null }
+  | { kind: "days"; value: number | null }
   | { kind: "commission"; mode: CommissionMode | null; fixed: Cents | null; rate: Bps | null }
   | { kind: "rate_or_money"; amount: Cents | null; rate: Bps | null };
 
-export type AnalysisDiffField = DiffMoneyField | "commission" | "riskReserve" | "desiredMargin";
+export type AnalysisDiffField = DiffMoneyField | "commission" | "riskReserve" | "desiredMargin" | "expectedHoldDays";
 
 export type AnalysisFieldChange = {
   field: AnalysisDiffField;
@@ -43,6 +48,8 @@ export type AnalysisFieldChange = {
   deltaCents: Cents | null;
   /** Diferença em bps (after − before) quando ambos os lados são percentuais comparáveis. */
   deltaBps: number | null;
+  /** Diferença em dias (after − before) quando ambos os lados são dias de giro comparáveis. */
+  deltaDays: number | null;
 };
 
 export type AnalysisDiff = {
@@ -65,6 +72,9 @@ const MONEY_FIELDS: readonly DiffMoneyField[] = [
   "tiresCost",
   "serviceCost",
   "otherFees",
+  "debtsCost",
+  "sellingCost",
+  "taxCost",
 ];
 
 function moneyValueOf(snapshot: AnalysisDiffSnapshot, field: DiffMoneyField): Cents | null {
@@ -118,6 +128,7 @@ export function diffAnalyses(base: AnalysisDiffSnapshot, target: AnalysisDiffSna
       after: { kind: "money", value: after },
       deltaCents: before !== null && after !== null ? cents(after - before) : null,
       deltaBps: null,
+      deltaDays: null,
     });
   }
 
@@ -148,6 +159,7 @@ export function diffAnalyses(base: AnalysisDiffSnapshot, target: AnalysisDiffSna
       },
       deltaCents,
       deltaBps,
+      deltaDays: null,
     });
   }
 
@@ -164,6 +176,7 @@ export function diffAnalyses(base: AnalysisDiffSnapshot, target: AnalysisDiffSna
       after: { kind: "rate_or_money", amount: target.inputs.riskReserve, rate: target.inputs.riskReserveRateBps },
       deltaCents: reserve.deltaCents,
       deltaBps: reserve.deltaBps,
+      deltaDays: null,
     });
   }
 
@@ -180,6 +193,20 @@ export function diffAnalyses(base: AnalysisDiffSnapshot, target: AnalysisDiffSna
       after: { kind: "rate_or_money", amount: target.inputs.desiredMargin, rate: target.inputs.desiredMarginRateBps },
       deltaCents: margin.deltaCents,
       deltaBps: margin.deltaBps,
+      deltaDays: null,
+    });
+  }
+
+  const baseDays = base.expectedHoldDays ?? null;
+  const targetDays = target.expectedHoldDays ?? null;
+  if (baseDays !== targetDays) {
+    changes.push({
+      field: "expectedHoldDays",
+      before: { kind: "days", value: baseDays },
+      after: { kind: "days", value: targetDays },
+      deltaCents: null,
+      deltaBps: null,
+      deltaDays: baseDays !== null && targetDays !== null ? targetDays - baseDays : null,
     });
   }
 

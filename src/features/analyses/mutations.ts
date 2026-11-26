@@ -30,6 +30,10 @@ function toAnalysisData(form: AnalysisForm) {
     tiresCostCents: inputs.tiresCost,
     serviceCostCents: inputs.serviceCost,
     otherFeesCents: inputs.otherFees,
+    debtsCostCents: inputs.debtsCost,
+    sellingCostCents: inputs.sellingCost,
+    taxCostCents: inputs.taxCost,
+    expectedHoldDays: references.expectedHoldDays,
     commissionMode: inputs.commissionMode,
     commissionFixedCents: inputs.commissionFixed,
     commissionRateBps: inputs.commissionRateBps,
@@ -82,6 +86,7 @@ export async function createDraft(lotId: string, sourceId?: string): Promise<Res
       fipeValueCents: true,
       fipeReferenceMonth: true,
       fipeReferenceSource: true,
+      expectedHoldDays: true,
       notes: true,
     },
   });

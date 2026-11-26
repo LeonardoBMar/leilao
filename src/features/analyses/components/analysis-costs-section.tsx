@@ -132,6 +132,20 @@ export function AnalysisCostsSection({
         <legend className="mb-4 text-heading-3 text-foreground">Estratégia</legend>
         {percent("riskReserveRate", "Reserva para imprevistos (%)", "Do valor de venda.")}
         {percent("desiredMarginRate", "Margem desejada (%)", "Do valor de venda: lucro pretendido ou economia mínima.")}
+        <Input
+          name="expectedHoldDays"
+          label="Prazo estimado de giro (opcional)"
+          suffix="dias"
+          inputMode="numeric"
+          placeholder="45"
+          className="tabular-nums"
+          helperText="Tempo estimado até revender o veículo; calcula o ROI mensalizado na prévia."
+          defaultValue={value(
+            "expectedHoldDays",
+            references.expectedHoldDays === null ? undefined : String(references.expectedHoldDays),
+          )}
+          error={fieldError(state, "expectedHoldDays")}
+        />
         {/* Análises anteriores ao % (D-38) guardavam R$; o campo aparece até o % ser preenchido. */}
         {saved.riskReserve !== null && saved.riskReserveRateBps === null
           ? money("riskReserve", "Reserva em R$ (versão anterior)", "Vale enquanto o % estiver vazio.")

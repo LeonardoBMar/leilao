@@ -14,7 +14,7 @@ import { applyRate, type Bps, type Cents, cents, sumCents } from "@/domain/money
  */
 
 /** Muda sempre que uma fórmula mudar. É persistida com cada análise fixada e nunca recalculada (SPEC §8). */
-export const FORMULA_VERSION = 2;
+export const FORMULA_VERSION = 3;
 
 export type CommissionMode = "fixed" | "percentage";
 
@@ -27,6 +27,12 @@ export type AnalysisInputs = {
   tiresCost: Cents | null;
   serviceCost: Cents | null;
   otherFees: Cents | null;
+  /** Fórmula v3 (D-96): débitos anteriores (IPVA, multas, licenciamento) assumidos pelo comprador. */
+  debtsCost: Cents | null;
+  /** Fórmula v3 (D-96): custos de comercialização (anúncios, comissão de venda, estética pré-venda). */
+  sellingCost: Cents | null;
+  /** Fórmula v3 (D-96): tributação / nota fiscal na revenda. */
+  taxCost: Cents | null;
   commissionMode: CommissionMode | null;
   commissionFixed: Cents | null;
   commissionRateBps: Bps | null;
@@ -84,7 +90,50 @@ const FIXED_COST_FIELDS = [
   "tiresCost",
   "serviceCost",
   "otherFees",
+  "debtsCost",
+  "sellingCost",
+  "taxCost",
 ] as const satisfies readonly AnalysisField[];
+
+/**
+ * Normaliza análises fixadas anteriores à v3 (D-96), nas quais `debtsCost`, `sellingCost` e `taxCost` não existiam
+ * no banco (ficam `null`). Usado apenas para leitura/simulação de versões históricas, nunca para rascunhos.
+ */
+export function normalizeLegacyInputs(inputs: AnalysisInputs, formulaVersion: number): AnalysisInputs {
+  if (formulaVersion >= 3) return inputs;
+  return {
+    ...inputs,
+    debtsCost: inputs.debtsCost ?? cents(0),
+    sellingCost: inputs.sellingCost ?? cents(0),
+    taxCost: inputs.taxCost ?? cents(0),
+  };
+}
+
+export type ReturnMetrics = {
+  /** Retorno sobre o capital investido (`margem / custo total`), ex.: 0,18 = 18%. */
+  roiRatio: number;
+  /** Retorno mensalizado linear (`roiRatio * 30 / holdDays`), quando `holdDays` foi informado. */
+  monthlyRoiRatio: number | null;
+  /** Margem estimada por dia imobilizado, quando `holdDays` foi informado. */
+  profitPerDay: Cents | null;
+};
+
+/**
+ * Métricas derivadas de retorno e giro de capital (D-96). Exploratório: não altera o limite fixado.
+ * Retorna `null` quando o custo total é menor ou igual a zero.
+ */
+export function calculateReturnMetrics(totalCost: Cents, margin: Cents, holdDays: number | null): ReturnMetrics | null {
+  if (totalCost <= 0) return null;
+  const roiRatio = margin / totalCost;
+  if (holdDays === null || holdDays <= 0) {
+    return { roiRatio, monthlyRoiRatio: null, profitPerDay: null };
+  }
+  return {
+    roiRatio,
+    monthlyRoiRatio: roiRatio * (30 / holdDays),
+    profitPerDay: cents(Math.round(margin / holdDays)),
+  };
+}
 
 /** Campos que faltam para calcular, na ordem do formulário. Rascunhos exibem esta lista. */
 export function missingFields(inputs: AnalysisInputs): AnalysisField[] {

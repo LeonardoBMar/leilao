@@ -15,11 +15,13 @@ import {
   DialogHeader,
   DialogTitle,
   Input,
+  RadioGroup,
+  RadioItem,
   Section,
   SectionHeader,
   SectionTitle,
 } from "@/components/ui";
-import { DEFAULT_COSTS, SALE_DISCOUNT_BPS } from "@/domain/finance/defaults";
+import { DEFAULT_BUYER_PROFILE, DEFAULT_COSTS, SALE_DISCOUNT_BPS } from "@/domain/finance/defaults";
 import { DEFAULT_REGION } from "@/domain/listings/region";
 import type { Bps } from "@/domain/money";
 import { fieldError, fieldValue, idleState } from "@/lib/action-state";
@@ -135,6 +137,43 @@ export function PreferencesForm({ preferences }: PreferencesFormProps) {
 
           <div className="grid gap-6">
             <div className="grid gap-3">
+              <div>
+                <h3 className="text-label font-semibold text-foreground">Perfil operacional</h3>
+                <p className="text-caption text-muted">
+                  Define a margem desejada padrão dos novos rascunhos e estimativas quando você não informa uma margem
+                  própria abaixo.
+                </p>
+              </div>
+              <RadioGroup
+                name="buyerProfile"
+                defaultValue={fieldValue(saveState, "buyerProfile") ?? raw.buyerProfile ?? DEFAULT_BUYER_PROFILE}
+                aria-label="Perfil operacional"
+                className="grid gap-3 md:grid-cols-3"
+              >
+                <RadioItem
+                  value="reseller"
+                  label="Revendedor / Lojista"
+                  description="Margem padrão de 15% com foco em compra, preparo e giro de estoque."
+                />
+                <RadioItem
+                  value="advisor"
+                  label="Assessor de arremate"
+                  description="Margem padrão de 10% para estudos e compra assistida de clientes."
+                />
+                <RadioItem
+                  value="personal"
+                  label="Uso próprio"
+                  description="Margem padrão de 0% (mantém apenas reserva de risco e desconto sobre a FIPE)."
+                />
+              </RadioGroup>
+              {fieldError(saveState, "buyerProfile") ? (
+                <p className="text-caption text-error" role="alert">
+                  {fieldError(saveState, "buyerProfile")}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="grid gap-3 border-t border-border pt-5">
               <div>
                 <h3 className="text-label font-semibold text-foreground">Margem, reserva e documentação</h3>
                 <p className="text-caption text-muted">

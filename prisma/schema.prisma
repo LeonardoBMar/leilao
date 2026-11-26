@@ -84,6 +84,44 @@ enum ResultSource {
   @@map("result_source")
 }
 
+/// Perfil operacional do usuário para premissas padrão da calculadora v3 (D-96).
+enum BuyerProfile {
+  reseller
+  personal
+  advisor
+
+  @@map("buyer_profile")
+}
+
+/// Etapa do veículo após arrematação pessoal (`personal_outcome = won`, D-96).
+enum PostAuctionStatus {
+  acquired
+  in_transit
+  in_repair
+  ready_for_sale
+  listed
+  sold
+
+  @@map("post_auction_status")
+}
+
+/// Categoria de despesa real lançada no pós-arremate (D-96).
+enum ExpenseCategory {
+  auction_commission
+  auction_fees
+  debts
+  transport
+  documentation
+  repair
+  tires
+  service
+  selling
+  tax
+  other
+
+  @@map("expense_category")
+}
+
 /// Leilão (SPEC RF-01).
 model Auction {
   id          String        @id @default(uuid(7)) @db.Uuid
@@ -138,11 +176,13 @@ model Lot {
   /// Anúncio coletado ligado ao lote (etapa 3): o coletor mantém o lance atual. Um lote por usuário e anúncio.
   listingId            String?   @map("listing_id") @db.Uuid
 
-  auction  Auction    @relation(fields: [auctionId, ownerId], references: [id, ownerId], onDelete: Restrict)
-  listing  Listing?   @relation(fields: [listingId], references: [id], onDelete: Restrict)
-  analyses Analysis[]
-  results  Result[]
-  images   LotImage[]
+  auction     Auction         @relation(fields: [auctionId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  listing     Listing?        @relation(fields: [listingId], references: [id], onDelete: Restrict)
+  analyses    Analysis[]
+  results     Result[]
+  images      LotImage[]
+  postAuction LotPostAuction?
+  expenses    LotExpense[]
 
   @@unique([id, ownerId])
   @@unique([auctionId, lotNumber])
@@ -174,6 +214,12 @@ model Analysis {
   tiresCostCents         Int?            @map("tires_cost_cents")
   serviceCostCents       Int?            @map("service_cost_cents")
   otherFeesCents         Int?            @map("other_fees_cents")
+  /// Fórmula v3 (D-96): débitos anteriores (IPVA/multas), custos de comercialização e impostos na revenda.
+  debtsCostCents         Int?            @map("debts_cost_cents")
+  sellingCostCents       Int?            @map("selling_cost_cents")
+  taxCostCents           Int?            @map("tax_cost_cents")
+  /// Tempo estimado de giro até a venda (dias), opcional: deriva ROI mensalizado na prévia e na leitura.
+  expectedHoldDays       Int?            @map("expected_hold_days") @db.SmallInt
   // Comissão (K ou p)
   commissionMode         CommissionMode? @map("commission_mode")
   commissionFixedCents   Int?            @map("commission_fixed_cents")
@@ -265,6 +311,51 @@ model LotImage {
   @@unique([lotId], map: "lot_images_one_cover_per_lot", where: { isCover: true })
   @@index([lotId, sortOrder])
   @@map("lot_images")
+}
+
+/// Gestão pós-arremate de um lote arrematado pelo usuário (D-96): etapa, prazos, placa privada e venda realizada.
+model LotPostAuction {
+  id             String            @id @default(uuid(7)) @db.Uuid
+  ownerId        String            @map("owner_id") @db.Uuid
+  lotId          String            @unique @map("lot_id") @db.Uuid
+  status         PostAuctionStatus @default(acquired)
+  paymentDueAt   DateTime?         @map("payment_due_at") @db.Date
+  paidAt         DateTime?         @map("paid_at") @db.Date
+  pickedUpAt     DateTime?         @map("picked_up_at") @db.Date
+  docReceivedAt  DateTime?         @map("doc_received_at") @db.Date
+  listedAt       DateTime?         @map("listed_at") @db.Date
+  soldAt         DateTime?         @map("sold_at") @db.Date
+  salePriceCents Int?              @map("sale_price_cents")
+  /// Placa mantida estritamente no registro privado do dono (nunca no catálogo global).
+  privatePlate   String?           @map("private_plate") @db.VarChar(10)
+  notes          String?
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  lot Lot @relation(fields: [lotId, ownerId], references: [id, ownerId], onDelete: Cascade)
+
+  @@unique([lotId, ownerId])
+  @@index([ownerId, status])
+  @@map("lot_post_auctions")
+}
+
+/// Despesa real lançada no pós-arremate de um lote (D-96): alimenta P&L realizado e desvio vs. análise fixada.
+model LotExpense {
+  id          String          @id @default(uuid(7)) @db.Uuid
+  ownerId     String          @map("owner_id") @db.Uuid
+  lotId       String          @map("lot_id") @db.Uuid
+  category    ExpenseCategory
+  description String
+  amountCents Int             @map("amount_cents")
+  incurredAt  DateTime        @map("incurred_at") @db.Date
+  createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  lot Lot @relation(fields: [lotId, ownerId], references: [id, ownerId], onDelete: Cascade)
+
+  @@index([ownerId, lotId, incurredAt])
+  @@index([lotId, category])
+  @@map("lot_expenses")
 }
 
 // ---------------------------------------------------------------------------
@@ -693,8 +784,9 @@ model ListingDismissal {
 
 /// Preferências persistidas por usuário: região base (município IBGE + raio) e sobrescritas das premissas padrão.
 model UserPreference {
-  ownerId               String   @id @map("owner_id") @db.Uuid
-  municipalityIbgeCode  Int?     @map("municipality_ibge_code")
+  ownerId               String        @id @map("owner_id") @db.Uuid
+  buyerProfile          BuyerProfile? @map("buyer_profile")
+  municipalityIbgeCode  Int?          @map("municipality_ibge_code")
   radiusKm              Int?     @map("radius_km")
   desiredMarginRateBps  Int?     @map("desired_margin_rate_bps")
   riskReserveRateBps    Int?     @map("risk_reserve_rate_bps")

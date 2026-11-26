@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { AnalysisInputs } from "@/domain/finance/calculator";
 import { type Cents, parsePercent } from "@/domain/money";
 import { calendarDateToUtc, monthToUtc } from "@/lib/dates";
-import { checkbox, entityId, optionalBrlAmount, optionalText } from "@/lib/schemas";
+import { checkbox, entityId, optionalBrlAmount, optionalInt, optionalText } from "@/lib/schemas";
 
 export const analysisIdSchema = entityId();
 export const lotIdSchema = entityId();
@@ -55,6 +55,10 @@ export const analysisFormSchema = z.object({
   tiresCost: optionalBrlAmount(),
   serviceCost: optionalBrlAmount(),
   otherFees: optionalBrlAmount(),
+  debtsCost: optionalBrlAmount(),
+  sellingCost: optionalBrlAmount(),
+  taxCost: optionalBrlAmount(),
+  expectedHoldDays: optionalInt(1, 3_650, "Informe um prazo entre 1 e 3.650 dias."),
   commissionMode: z.preprocess(emptyToUndefined, z.enum(["fixed", "percentage"]).optional()),
   commissionFixed: optionalBrlAmount(),
   commissionRate: optionalPercent(),
@@ -80,6 +84,9 @@ export function toAnalysisInputs(form: AnalysisForm): AnalysisInputs {
     tiresCost: form.tiresCost ?? null,
     serviceCost: form.serviceCost ?? null,
     otherFees: form.otherFees ?? null,
+    debtsCost: form.debtsCost ?? null,
+    sellingCost: form.sellingCost ?? null,
+    taxCost: form.taxCost ?? null,
     commissionMode: form.commissionMode ?? null,
     commissionFixed: form.commissionMode === "fixed" ? (form.commissionFixed ?? null) : null,
     commissionRateBps: form.commissionMode === "percentage" ? (form.commissionRate ?? null) : null,
@@ -98,6 +105,7 @@ export type AnalysisReferences = {
   fipeValue: Cents | null;
   fipeReferenceMonth: Date | null;
   fipeReferenceSource: string | null;
+  expectedHoldDays: number | null;
   notes: string | null;
   knownResultAtCreation: boolean;
 };
@@ -109,6 +117,7 @@ export function toAnalysisReferences(form: AnalysisForm): AnalysisReferences {
     fipeValue: form.fipeValue ?? null,
     fipeReferenceMonth: form.fipeReferenceMonth ?? null,
     fipeReferenceSource: form.fipeReferenceSource ?? null,
+    expectedHoldDays: form.expectedHoldDays ?? null,
     notes: form.notes ?? null,
     knownResultAtCreation: form.knownResultAtCreation,
   };

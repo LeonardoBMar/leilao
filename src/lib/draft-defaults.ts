@@ -176,6 +176,9 @@ export function draftDefaults(
     tiresCostCents: defaults.tiresCost,
     serviceCostCents: defaults.serviceCost,
     otherFeesCents: defaults.otherFees,
+    debtsCostCents: defaults.debtsCost,
+    sellingCostCents: defaults.sellingCost,
+    taxCostCents: defaults.taxCost,
     commissionMode: "percentage" as const,
     commissionRateBps: defaults.commissionRateBps,
     riskReserveBps: defaults.riskReserveRateBps,
@@ -219,6 +222,9 @@ function defaultsNote(
     basis.otherFees === "listing"
       ? `Outras taxas: depósito, vistoria e outras ${fromListing}.`
       : "Outras taxas: nenhuma informada.",
+    basis.buyerProfile === "personal"
+      ? "Débitos (IPVA/multas): R$ 0,00 por padrão (confira no edital). Perfil uso próprio: comercialização e impostos zerados."
+      : "Débitos, comercialização e impostos: R$ 0,00 por padrão; revise conforme o edital e o regime de revenda.",
     basis.commission === "listing"
       ? `Comissão: ${formatBps(defaults.commissionRateBps)} ${fromListing}.`
       : `Comissão: padrão ${formatBps(defaults.commissionRateBps)} sobre o lance; confira no edital.`,

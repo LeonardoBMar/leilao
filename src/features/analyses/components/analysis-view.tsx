@@ -65,6 +65,7 @@ export async function AnalysisView({
     status: analysis.status,
     inputs: analysis.inputs,
     fipeValue: analysis.references.fipeValue,
+    expectedHoldDays: analysis.references.expectedHoldDays,
     maxBid:
       analysis.status === "fixed"
         ? (analysis.outputs?.maxBid ?? null)

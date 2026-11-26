@@ -1,4 +1,4 @@
-import type { UserDefaultOverrides } from "@/domain/finance/defaults";
+import type { BuyerProfile, UserDefaultOverrides } from "@/domain/finance/defaults";
 import type { RegionConfig } from "@/domain/listings/region";
 import type { Bps, Cents } from "@/domain/money";
 
@@ -10,6 +10,7 @@ export type MunicipalityOption = {
 };
 
 export type RawUserPreferences = {
+  buyerProfile: BuyerProfile | null;
   municipalityIbgeCode: number | null;
   municipalityLabel: string | null;
   radiusKm: number | null;

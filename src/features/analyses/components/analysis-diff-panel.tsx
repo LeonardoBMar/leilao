@@ -25,15 +25,21 @@ const DIFF_FIELD_LABELS: Record<AnalysisDiffField, string> = {
   tiresCost: "Pneus",
   serviceCost: "Revisão",
   otherFees: "Outras taxas fixas",
+  debtsCost: "Débitos anteriores (IPVA/multas)",
+  sellingCost: "Comercialização",
+  taxCost: "Impostos na revenda",
   commission: "Comissão",
   riskReserve: "Reserva para imprevistos",
   desiredMargin: "Margem desejada",
+  expectedHoldDays: "Prazo estimado de giro",
 };
 
 function formatDiffValue(value: DiffValue): string {
   switch (value.kind) {
     case "money":
       return value.value === null ? "—" : formatBRL(value.value);
+    case "days":
+      return value.value === null ? "—" : `${value.value} dias`;
     case "commission":
       if (value.mode === "fixed") return value.fixed === null ? "Fixa (—)" : `${formatBRL(value.fixed)} (fixa)`;
       if (value.mode === "percentage") return value.rate === null ? "Percentual (—)" : `${formatBps(value.rate)} (%)`;
@@ -48,6 +54,8 @@ function isEmptyDiffValue(value: DiffValue): boolean {
   switch (value.kind) {
     case "money":
       return value.value === null;
+    case "days":
+      return value.value === null;
     case "commission":
       return (
         value.mode === null ||
@@ -59,7 +67,13 @@ function isEmptyDiffValue(value: DiffValue): boolean {
   }
 }
 
-function formatDelta(deltaCents: number | null, deltaBps: number | null, before: DiffValue, after: DiffValue): string {
+function formatDelta(
+  deltaCents: number | null,
+  deltaBps: number | null,
+  deltaDays: number | null,
+  before: DiffValue,
+  after: DiffValue,
+): string {
   if (deltaCents !== null) {
     if (deltaCents === 0) return "—";
     return `${deltaCents > 0 ? "+ " : "− "}${formatBRL(cents(Math.abs(deltaCents)))}`;
@@ -67,6 +81,10 @@ function formatDelta(deltaCents: number | null, deltaBps: number | null, before:
   if (deltaBps !== null) {
     if (deltaBps === 0) return "—";
     return `${deltaBps > 0 ? "+ " : "− "}${formatBps(Math.abs(deltaBps))}`;
+  }
+  if (deltaDays !== null) {
+    if (deltaDays === 0) return "—";
+    return `${deltaDays > 0 ? "+ " : "− "}${Math.abs(deltaDays)} dias`;
   }
   if (isEmptyDiffValue(before) && !isEmptyDiffValue(after)) return "Adicionado";
   if (!isEmptyDiffValue(before) && isEmptyDiffValue(after)) return "Removido";
@@ -139,10 +157,13 @@ export function AnalysisDiffPanel({ base, current }: AnalysisDiffPanelProps) {
                   <TableCell
                     className={cn(
                       "text-right tabular-nums",
-                      change.deltaCents === null && change.deltaBps === null && "text-muted",
+                      change.deltaCents === null &&
+                        change.deltaBps === null &&
+                        change.deltaDays === null &&
+                        "text-muted",
                     )}
                   >
-                    {formatDelta(change.deltaCents, change.deltaBps, change.before, change.after)}
+                    {formatDelta(change.deltaCents, change.deltaBps, change.deltaDays, change.before, change.after)}
                   </TableCell>
                 </TableRow>
               ))}

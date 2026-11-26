@@ -7,6 +7,7 @@ import { municipalitySearchSchema, userPreferencesInputSchema } from "./schemas"
 describe("userPreferencesInputSchema", () => {
   it("campos vazios viram null para manter o padrão do sistema", () => {
     const parsed = userPreferencesInputSchema.safeParse({
+      buyerProfile: "",
       municipalityIbgeCode: "",
       radiusKm: "",
       desiredMarginRateBps: "",
@@ -23,6 +24,7 @@ describe("userPreferencesInputSchema", () => {
     expect(parsed.success).toBe(true);
     if (!parsed.success) return;
     expect(parsed.data).toEqual({
+      buyerProfile: null,
       municipalityIbgeCode: null,
       radiusKm: null,
       desiredMarginRateBps: null,
@@ -40,6 +42,7 @@ describe("userPreferencesInputSchema", () => {
 
   it("converte percentuais pt-BR em bps e valores em reais em centavos", () => {
     const parsed = userPreferencesInputSchema.safeParse({
+      buyerProfile: "advisor",
       municipalityIbgeCode: "3509502",
       radiusKm: "250",
       desiredMarginRateBps: "18,5",
@@ -56,6 +59,7 @@ describe("userPreferencesInputSchema", () => {
     expect(parsed.success).toBe(true);
     if (!parsed.success) return;
     expect(parsed.data).toEqual({
+      buyerProfile: "advisor",
       municipalityIbgeCode: 3509502,
       radiusKm: 250,
       desiredMarginRateBps: bps(1_850),
@@ -73,6 +77,7 @@ describe("userPreferencesInputSchema", () => {
 
   it("rejeita raio, percentuais, IBGE e valores monetários fora dos limites seguros", () => {
     const parsed = userPreferencesInputSchema.safeParse({
+      buyerProfile: "invalid",
       municipalityIbgeCode: "123",
       radiusKm: "5",
       desiredMarginRateBps: "95",
@@ -89,6 +94,7 @@ describe("userPreferencesInputSchema", () => {
     expect(parsed.success).toBe(false);
     if (parsed.success) return;
     const fields = parsed.error.flatten().fieldErrors;
+    expect(fields.buyerProfile).toBeDefined();
     expect(fields.municipalityIbgeCode).toBeDefined();
     expect(fields.radiusKm).toBeDefined();
     expect(fields.desiredMarginRateBps).toBeDefined();

@@ -23,11 +23,21 @@ type LotDetailViewProps = {
   photos: React.ReactNode;
   /** "Mercado deste lote": faixa de arremate e vendas parecidas, composto pela rota. */
   market: React.ReactNode;
+  /** Pós-arremate: exibido quando o usuário arrematou o lote, composto pela rota (D-96). */
+  postAuction?: React.ReactNode;
   /** Próximo passo (analisar, continuar o rascunho ou registrar o resultado), em destaque no cabeçalho. */
   nextAction: React.ReactNode;
 };
 
-export async function LotDetailView({ params, analysis, result, photos, market, nextAction }: LotDetailViewProps) {
+export async function LotDetailView({
+  params,
+  analysis,
+  result,
+  photos,
+  market,
+  postAuction,
+  nextAction,
+}: LotDetailViewProps) {
   const parsed = lotIdSchema.safeParse((await params).id);
   if (!parsed.success) notFound();
   const lot = await getLot(parsed.data);
@@ -81,6 +91,7 @@ export async function LotDetailView({ params, analysis, result, photos, market, 
           {analysis}
           {market}
           {result}
+          {postAuction}
         </div>
 
         <aside className="grid content-start gap-6" aria-label="Veículo e fotos">

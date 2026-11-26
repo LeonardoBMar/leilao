@@ -14,7 +14,7 @@ import { formatBps, formatMoneyInput } from "@/lib/format";
 import { autosaveDraftAction, saveAnalysisAction } from "../actions";
 import { fipeFill } from "../fipe-fill";
 import { FIELD_LABELS, FIXED_COST_LABELS } from "../labels";
-import { readAnalysisInputs } from "../read-inputs";
+import { readAnalysisInputs, readExpectedHoldDays } from "../read-inputs";
 import { liveSummary } from "../summary-model";
 import type { AnalysisDetail } from "../types";
 import { AnalysisCostsSection } from "./analysis-costs-section";
@@ -55,6 +55,7 @@ export function AnalysisEditor({
     initialSaveState,
   );
   const [inputs, setInputs] = useState(analysis.inputs);
+  const [expectedHoldDays, setExpectedHoldDays] = useState<number | null>(analysis.references.expectedHoldDays);
   const [mode, setMode] = useState<CommissionMode | "">(analysis.inputs.commissionMode ?? "");
   const [intent, setIntent] = useState<"draft" | "fix">("draft");
   // "Estimar a partir da FIPE" remonta o formulário com os valores atuais mais os estimados (campos não controlados).
@@ -181,6 +182,7 @@ export function AnalysisEditor({
     const formData = new FormData(formRef.current);
     for (const [key, value] of Object.entries(overrides ?? {})) formData.set(key, value);
     setInputs(readAnalysisInputs(formData));
+    setExpectedHoldDays(readExpectedHoldDays(formData));
     scheduleAutosave(overrides);
   }
 
@@ -356,7 +358,12 @@ export function AnalysisEditor({
         </div>
       </form>
 
-      <AnalysisSummary model={summaryModel} currentBid={analysis.lot.currentBid} market={market} />
+      <AnalysisSummary
+        model={summaryModel}
+        currentBid={analysis.lot.currentBid}
+        market={market}
+        expectedHoldDays={expectedHoldDays}
+      />
 
       <MobileMaxBidBar
         model={summaryModel}

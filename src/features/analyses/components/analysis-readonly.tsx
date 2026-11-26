@@ -1,5 +1,5 @@
 import { DataList, DataRow, Money, Section, SectionTitle } from "@/components/ui";
-import { completeInputs } from "@/domain/finance/calculator";
+import { completeInputs, normalizeLegacyInputs } from "@/domain/finance/calculator";
 import type { LotMarketReference } from "@/features/research/types";
 import { formatBps, formatCalendarDate, formatMonth } from "@/lib/format";
 
@@ -20,7 +20,11 @@ export function AnalysisReadonly({
   marketNote: string;
 }) {
   const { inputs, references, outputs } = analysis;
-  const complete = completeInputs(inputs);
+  const isLegacy = outputs !== null && outputs.formulaVersion < 3;
+  const complete = completeInputs(outputs ? normalizeLegacyInputs(inputs, outputs.formulaVersion) : inputs);
+  const visibleFixedCosts = isLegacy
+    ? FIXED_COST_LABELS.filter(([field]) => inputs[field] !== null)
+    : FIXED_COST_LABELS;
 
   return (
     <div className="grid items-start gap-9 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_28.75rem] xl:gap-14">
@@ -56,7 +60,7 @@ export function AnalysisReadonly({
         <Section className="gap-2.5">
           <SectionTitle>Custos fora do lance</SectionTitle>
           <DataList>
-            {FIXED_COST_LABELS.map(([field, label]) => (
+            {visibleFixedCosts.map(([field, label]) => (
               <DataRow key={field} label={label}>
                 <Money value={inputs[field]} />
               </DataRow>
@@ -94,6 +98,11 @@ export function AnalysisReadonly({
             <DataRow label={<WithRate label="Margem desejada" rate={inputs.desiredMarginRateBps} />}>
               <Money value={inputs.desiredMargin} />
             </DataRow>
+            {references.expectedHoldDays !== null ? (
+              <DataRow label="Prazo estimado de giro">
+                <span className="tabular-nums">{references.expectedHoldDays} dias</span>
+              </DataRow>
+            ) : null}
           </DataList>
         </Section>
 
@@ -111,6 +120,7 @@ export function AnalysisReadonly({
           currentBid={analysis.lot.currentBid}
           market={market}
           marketNote={marketNote}
+          expectedHoldDays={references.expectedHoldDays}
         />
       ) : null}
     </div>

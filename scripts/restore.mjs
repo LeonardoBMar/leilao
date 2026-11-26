@@ -25,7 +25,7 @@ import pg from "pg";
 
 nextEnv.loadEnvConfig(process.cwd(), false, { info() {}, error: console.error });
 
-const TABLE_ORDER = ["auctions", "lots", "analyses", "results", "lot_images"];
+const TABLE_ORDER = ["auctions", "lots", "analyses", "results", "lot_images", "lot_post_auctions", "lot_expenses"];
 /** Backups antigos não têm `catalog` nem `sources`: vira vazio. `sources` e `fipe_matches` entram antes de `listings`. */
 const CATALOG_ORDER = ["sources", "fipe_matches", "listings", "listing_observations"];
 /**
@@ -85,6 +85,16 @@ function validate({ tables, catalog, watches }) {
   }
   for (const image of tables.lot_images) {
     if (lots.get(image.lot_id)?.owner_id !== image.owner_id) problems.push(`foto ${image.id}: lote ausente`);
+  }
+  for (const postAuction of tables.lot_post_auctions) {
+    if (lots.get(postAuction.lot_id)?.owner_id !== postAuction.owner_id) {
+      problems.push(`pós-arremate ${postAuction.id}: lote ausente`);
+    }
+  }
+  for (const expense of tables.lot_expenses) {
+    if (lots.get(expense.lot_id)?.owner_id !== expense.owner_id) {
+      problems.push(`despesa ${expense.id}: lote ausente`);
+    }
   }
   return problems;
 }
@@ -285,6 +295,7 @@ async function main() {
   const backup = JSON.parse(await readFile(path.join(backupDir, "database.json"), "utf8"));
   if (backup.format !== 1) throw new Error(`Formato de backup desconhecido: ${backup.format}`);
   const hasFipeMatches = backup.catalog?.fipe_matches !== undefined;
+  backup.tables = Object.fromEntries(TABLE_ORDER.map((table) => [table, backup.tables?.[table] ?? []]));
   backup.catalog = Object.fromEntries(CATALOG_ORDER.map((table) => [table, backup.catalog?.[table] ?? []]));
   backup.watches = Object.fromEntries(WATCH_ORDER.map((table) => [table, backup.watches?.[table] ?? []]));
 

@@ -79,11 +79,34 @@ describe("defaultAssumptions", () => {
       tiresCost: reais(2_400),
       serviceCost: reais(1_500),
       otherFees: cents(0),
+      debtsCost: cents(0),
+      sellingCost: cents(0),
+      taxCost: cents(0),
       commissionRateBps: bps(500),
       riskReserveRateBps: bps(500),
       desiredMarginRateBps: bps(1_500),
-      basis: { transport: "unknown_distance", documentation: "default", commission: "default", otherFees: "default" },
+      basis: {
+        buyerProfile: "reseller",
+        transport: "unknown_distance",
+        documentation: "default",
+        commission: "default",
+        otherFees: "default",
+      },
     });
+  });
+
+  it("respeita o perfil operacional configurado nas preferências (D-96)", () => {
+    const personal = defaultAssumptions(car(), { buyerProfile: "personal" });
+    expect(personal.basis.buyerProfile).toBe("personal");
+    expect(personal.desiredMarginRateBps).toBe(bps(0));
+
+    const advisor = defaultAssumptions(car(), { buyerProfile: "advisor" });
+    expect(advisor.basis.buyerProfile).toBe("advisor");
+    expect(advisor.desiredMarginRateBps).toBe(bps(1_000));
+
+    // Sobrescrita explícita de margem continua prevalecendo sobre o perfil
+    const customMargin = defaultAssumptions(car(), { buyerProfile: "personal", desiredMarginRateBps: bps(800) });
+    expect(customMargin.desiredMarginRateBps).toBe(bps(800));
   });
 
   it("o que o anúncio informa tem precedência; com local, guincho pela distância", () => {

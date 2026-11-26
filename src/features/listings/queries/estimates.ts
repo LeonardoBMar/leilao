@@ -2,6 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 
+import { normalizeLegacyInputs } from "@/domain/finance/calculator";
 import type { UserDefaultOverrides } from "@/domain/finance/defaults";
 import { type AnalysisSample, type EstimateIndex } from "@/domain/listings/estimates";
 import type { RegionConfig } from "@/domain/listings/region";
@@ -34,7 +35,12 @@ async function loadEstimateContext(now: Date): Promise<EstimateContext> {
         model: true,
         modelYear: true,
         listing: { select: { damageLevel: true } },
-        analyses: { where: { status: "fixed" }, orderBy: { version: "desc" }, take: 1, select: analysisColumns },
+        analyses: {
+          where: { status: "fixed" },
+          orderBy: { version: "desc" },
+          take: 1,
+          select: { ...analysisColumns, formulaVersion: true },
+        },
       },
     }),
     getUserPreferences(),
@@ -46,7 +52,7 @@ async function loadEstimateContext(now: Date): Promise<EstimateContext> {
       analyses.map((analysis) => ({
         ...lot,
         ...(listing ? { damageLevel: listing.damageLevel } : {}),
-        inputs: toInputs(analysis),
+        inputs: normalizeLegacyInputs(toInputs(analysis), analysis.formulaVersion ?? 1),
       })),
     ),
     now,

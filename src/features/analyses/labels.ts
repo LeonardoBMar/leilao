@@ -10,6 +10,9 @@ export const FIELD_LABELS = {
   tiresCost: "Pneus",
   serviceCost: "Revisão",
   otherFees: "Outras taxas",
+  debtsCost: "Débitos (IPVA/multas)",
+  sellingCost: "Custos de comercialização",
+  taxCost: "Impostos na revenda",
   commissionMode: "Modalidade da comissão",
   commissionFixed: "Comissão fixa",
   commissionRateBps: "Taxa de comissão",
@@ -26,6 +29,9 @@ export const FORM_FIELD = {
   tiresCost: "tiresCost",
   serviceCost: "serviceCost",
   otherFees: "otherFees",
+  debtsCost: "debtsCost",
+  sellingCost: "sellingCost",
+  taxCost: "taxCost",
   commissionMode: "commissionMode",
   commissionFixed: "commissionFixed",
   commissionRateBps: "commissionRate",
@@ -40,6 +46,9 @@ export const FIXED_COST_LABELS = [
   ["tiresCost", "Pneus"],
   ["serviceCost", "Revisão"],
   ["otherFees", "Outras taxas fixas"],
+  ["debtsCost", "Débitos anteriores (IPVA/multas)"],
+  ["sellingCost", "Comercialização (anúncio/venda)"],
+  ["taxCost", "Impostos na revenda"],
 ] as const;
 
 /**

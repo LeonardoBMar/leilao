@@ -1,5 +1,6 @@
 import "server-only";
 
+import { DEFAULT_BUYER_PROFILE } from "@/domain/finance/defaults";
 import { err, ok, type Result } from "@/lib/result";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
@@ -8,8 +9,12 @@ import type { UserPreferencesInput } from "./schemas";
 
 export type UpsertUserPreferencesError = "invalid_municipality";
 
-function hasAnyValue(input: UserPreferencesInput): boolean {
+function hasAnyValue(
+  input: UserPreferencesInput,
+  normalizedBuyerProfile: UserPreferencesInput["buyerProfile"],
+): boolean {
   return (
+    normalizedBuyerProfile !== null ||
     input.municipalityIbgeCode !== null ||
     input.radiusKm !== null ||
     input.desiredMarginRateBps !== null ||
@@ -38,12 +43,15 @@ export async function upsertUserPreferences(
     if (!exists) return err("invalid_municipality");
   }
 
-  if (!hasAnyValue(input)) {
+  const buyerProfile = input.buyerProfile === DEFAULT_BUYER_PROFILE ? null : input.buyerProfile;
+
+  if (!hasAnyValue(input, buyerProfile)) {
     await db.userPreference.deleteMany({ where: { ownerId: user.id } });
     return ok(undefined);
   }
 
   const data = {
+    buyerProfile,
     municipalityIbgeCode: input.municipalityIbgeCode,
     radiusKm: input.radiusKm,
     desiredMarginRateBps: input.desiredMarginRateBps,

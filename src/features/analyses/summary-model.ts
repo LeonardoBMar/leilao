@@ -4,6 +4,7 @@ import {
   type CompleteInputs,
   completeInputs,
   type MaxBidOutcome,
+  normalizeLegacyInputs,
 } from "@/domain/finance/calculator";
 import { cents } from "@/domain/money";
 
@@ -20,10 +21,10 @@ export function liveSummary(inputs: AnalysisInputs): SummaryModel {
 
 /**
  * Análise fixada: o limite e os totais vêm do que foi gravado na fixação (nunca recalculados; SPEC §8).
- * Só a simulação de novos lances usa a fórmula atual.
+ * Só a simulação de novos lances usa a fórmula atual; versões anteriores à v3 normalizam os campos novos como R$ 0.
  */
 export function fixedSummary(inputs: AnalysisInputs, outputs: AnalysisOutputs): SummaryModel {
-  const complete = completeInputs(inputs);
+  const complete = completeInputs(normalizeLegacyInputs(inputs, outputs.formulaVersion));
   if (!complete.ok) return { outcome: { kind: "incomplete", missing: complete.missing }, complete: null };
   const base = complete.value;
 

@@ -30,6 +30,12 @@ const TABLES = [
   { name: "lot_images", orderBy: "lot_id, sort_order, created_at" },
 ];
 
+/** Pós-arremate e despesas reais (D-96): por dono, apontam para lotes. Só existem a partir da migration própria. */
+const POST_AUCTION_TABLES = [
+  { name: "lot_post_auctions", orderBy: "created_at, id" },
+  { name: "lot_expenses", orderBy: "lot_id, incurred_at, id" },
+];
+
 /**
  * Catálogo coletado (D-25): global, sem dono. Entra no backup porque arremates antigos não podem ser coletados
  * de novo quando a página sai do ar na fonte. Municípios e fontes vêm de `db:seed` e das migrations.
@@ -121,6 +127,11 @@ async function main() {
     ).rows.map((row) => row.migration_name);
     for (const table of TABLES) {
       tables[table.name] = (await client.query(`select * from "${table.name}" order by ${table.orderBy}`)).rows;
+    }
+    if (migrations.some((name) => name.endsWith("_add_finance_v3_and_post_auction"))) {
+      for (const table of POST_AUCTION_TABLES) {
+        tables[table.name] = (await client.query(`select * from "${table.name}" order by ${table.orderBy}`)).rows;
+      }
     }
     if (migrations.some((name) => name.endsWith("_add_listings_catalog"))) {
       catalog.sources = (await client.query('select * from "sources" order by id')).rows;

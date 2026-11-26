@@ -29,6 +29,9 @@ export function readAnalysisInputs(formData: FormData): AnalysisInputs {
     tiresCost: money("tiresCost"),
     serviceCost: money("serviceCost"),
     otherFees: money("otherFees"),
+    debtsCost: money("debtsCost"),
+    sellingCost: money("sellingCost"),
+    taxCost: money("taxCost"),
     commissionMode,
     commissionFixed: commissionMode === "fixed" ? money("commissionFixed") : null,
     commissionRateBps: commissionMode === "percentage" ? percent("commissionRate") : null,
@@ -37,4 +40,14 @@ export function readAnalysisInputs(formData: FormData): AnalysisInputs {
     desiredMargin: marginRate === null ? money("desiredMargin") : null,
     desiredMarginRateBps: marginRate,
   };
+}
+
+/** Leitura leniente do prazo estimado de giro (dias) para prévia de ROI mensalizado. */
+export function readExpectedHoldDays(formData: FormData): number | null {
+  const value = formData.get("expectedHoldDays");
+  if (typeof value !== "string") return null;
+  const cleaned = value.replace(/\./g, "").trim();
+  if (cleaned === "") return null;
+  const parsed = Number(cleaned);
+  return Number.isInteger(parsed) && parsed >= 1 && parsed <= 3_650 ? parsed : null;
 }

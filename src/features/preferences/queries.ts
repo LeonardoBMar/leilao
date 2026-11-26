@@ -2,7 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 
-import type { UserDefaultOverrides } from "@/domain/finance/defaults";
+import { DEFAULT_BUYER_PROFILE, type UserDefaultOverrides } from "@/domain/finance/defaults";
 import { normalizePlaceName, stateCode } from "@/domain/listings/place";
 import { resolveRegion } from "@/domain/listings/region";
 import { bps, cents } from "@/domain/money";
@@ -13,6 +13,7 @@ import { db } from "@/server/db";
 import type { MunicipalityOption, RawUserPreferences, UserPreferences } from "./types";
 
 const EMPTY_RAW: RawUserPreferences = {
+  buyerProfile: null,
   municipalityIbgeCode: null,
   municipalityLabel: null,
   radiusKm: null,
@@ -38,6 +39,7 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences> => {
   const row = await db.userPreference.findUnique({
     where: { ownerId: user.id },
     select: {
+      buyerProfile: true,
       municipalityIbgeCode: true,
       radiusKm: true,
       desiredMarginRateBps: true,
@@ -73,6 +75,7 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences> => {
   }
 
   const raw: RawUserPreferences = {
+    buyerProfile: row.buyerProfile,
     municipalityIbgeCode: row.municipality?.ibgeCode ?? null,
     municipalityLabel: row.municipality ? `${row.municipality.name}/${row.municipality.state}` : null,
     radiusKm: row.radiusKm,
@@ -90,6 +93,7 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences> => {
   };
 
   const costOverrides: UserDefaultOverrides = {
+    buyerProfile: raw.buyerProfile,
     desiredMarginRateBps: raw.desiredMarginRateBps,
     riskReserveRateBps: raw.riskReserveRateBps,
     documentationCost: raw.documentationCost,
@@ -103,6 +107,7 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences> => {
   };
 
   const hasOverrides =
+    (raw.buyerProfile !== null && raw.buyerProfile !== DEFAULT_BUYER_PROFILE) ||
     raw.municipalityIbgeCode !== null ||
     raw.radiusKm !== null ||
     raw.desiredMarginRateBps !== null ||

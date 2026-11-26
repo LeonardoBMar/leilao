@@ -6,13 +6,16 @@ import {
   type AnalysisInputs,
   calculateBreakEvenBid,
   calculateMaxBid,
+  calculateReturnMetrics,
   compareToFixedLimit,
   compareToLimit,
   type CompleteInputs,
   completeInputs,
   differenceToLimit,
+  FORMULA_VERSION,
   type MaxBidOutcome,
   missingFields,
+  normalizeLegacyInputs,
   prepareFixedAnalysis,
   roomToFixedLimit,
   simulateBid,
@@ -20,7 +23,7 @@ import {
 
 const reais = (value: number) => cents(Math.round(value * 100));
 
-/** SPEC §7.3: comissão fixa. */
+/** SPEC §7.3: comissão fixa (com os novos campos v3 zerados). */
 const fixedExample: AnalysisInputs = {
   marketValue: reais(50_000),
   repairCost: reais(5_000),
@@ -29,6 +32,9 @@ const fixedExample: AnalysisInputs = {
   tiresCost: reais(0),
   serviceCost: reais(0),
   otherFees: reais(0),
+  debtsCost: reais(0),
+  sellingCost: reais(0),
+  taxCost: reais(0),
   commissionMode: "fixed",
   commissionFixed: reais(2_000),
   commissionRateBps: null,
@@ -358,5 +364,48 @@ describe("calculateBreakEvenBid", () => {
     expect(complete.ok).toBe(true);
     if (!complete.ok) return;
     expect(calculateBreakEvenBid(complete.value)).toBeNull();
+  });
+});
+
+describe("fórmula v3 (D-96): débitos, comercialização, impostos, legado e ROI", () => {
+  it("soma débitos, comercialização e impostos nos custos fixos e reduz o lance máximo", () => {
+    expect(FORMULA_VERSION).toBe(3);
+    const outcome = viable(
+      calculateMaxBid({
+        ...fixedExample,
+        debtsCost: reais(1_200),
+        sellingCost: reais(600),
+        taxCost: reais(400),
+      }),
+    );
+    expect(outcome.fixedCosts).toBe(reais(9_000));
+    expect(outcome.maxBid).toBe(reais(31_000));
+  });
+
+  it("exige débitos, comercialização e impostos preenchidos na v3", () => {
+    expect(missingFields({ ...fixedExample, debtsCost: null, sellingCost: null, taxCost: null })).toEqual([
+      "debtsCost",
+      "sellingCost",
+      "taxCost",
+    ]);
+  });
+
+  it("normalizeLegacyInputs preenche campos ausentes apenas em versões anteriores à v3", () => {
+    const legacy = { ...fixedExample, debtsCost: null, sellingCost: null, taxCost: null };
+    expect(missingFields(normalizeLegacyInputs(legacy, 2))).toEqual([]);
+    expect(missingFields(normalizeLegacyInputs(legacy, 3))).toEqual(["debtsCost", "sellingCost", "taxCost"]);
+  });
+
+  it("calculateReturnMetrics calcula ROI total, mensalizado e lucro por dia", () => {
+    const withHold = calculateReturnMetrics(reais(40_000), reais(8_000), 60);
+    expect(withHold).not.toBeNull();
+    expect(withHold?.roiRatio).toBeCloseTo(0.2, 6);
+    expect(withHold?.monthlyRoiRatio).toBeCloseTo(0.1, 6);
+    expect(withHold?.profitPerDay).toBe(cents(13_333));
+
+    const withoutHold = calculateReturnMetrics(reais(40_000), reais(8_000), null);
+    expect(withoutHold).toEqual({ roiRatio: 0.2, monthlyRoiRatio: null, profitPerDay: null });
+
+    expect(calculateReturnMetrics(cents(0), reais(8_000), 30)).toBeNull();
   });
 });

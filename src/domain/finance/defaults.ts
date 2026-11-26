@@ -28,6 +28,18 @@ export const REPAIR_RATE_BPS = {
   large: bps(5_000),
 } as const;
 
+/** Perfil operacional do comprador para ajustar premissas padrão da calculadora v3 (D-96). */
+export const BUYER_PROFILES = ["reseller", "personal", "advisor"] as const;
+export type BuyerProfile = (typeof BUYER_PROFILES)[number];
+export const DEFAULT_BUYER_PROFILE: BuyerProfile = "reseller";
+
+/** Margem desejada padrão por perfil operacional quando o usuário não define sobrescrita explícita. */
+export const PROFILE_DESIRED_MARGIN_BPS = {
+  reseller: bps(1_500),
+  advisor: bps(1_000),
+  personal: bps(0),
+} satisfies Record<BuyerProfile, Bps>;
+
 export const DEFAULT_COSTS = {
   car: { repairFloor: cents(200_000), tires: cents(240_000), service: cents(150_000) },
   motorcycle: { repairFloor: cents(80_000), tires: cents(90_000), service: cents(60_000) },
@@ -40,6 +52,9 @@ export const DEFAULT_COSTS = {
   /** Sem local do pátio: guincho de uma distância média. */
   towUnknownDistance: cents(150_000),
   otherFees: cents(0),
+  debts: cents(0),
+  selling: cents(0),
+  tax: cents(0),
   commissionRate: bps(500),
   riskReserveRate: bps(500),
   desiredMarginRate: bps(1_500),
@@ -71,6 +86,7 @@ export type DefaultsInput = {
 
 /** De onde veio cada número, para a nota do rascunho. */
 export type DefaultsBasis = {
+  buyerProfile: BuyerProfile;
   condition: DamageLevel | "none";
   saleDiscount: Bps | null;
   repairRate: Bps | null;
@@ -89,6 +105,9 @@ export type DefaultAssumptions = {
   tiresCost: Cents;
   serviceCost: Cents;
   otherFees: Cents;
+  debtsCost: Cents;
+  sellingCost: Cents;
+  taxCost: Cents;
   commissionRateBps: Bps;
   riskReserveRateBps: Bps;
   desiredMarginRateBps: Bps;
@@ -97,6 +116,7 @@ export type DefaultAssumptions = {
 
 /** Sobrescritas opcionais das premissas padrão definidas nas preferências do usuário. */
 export type UserDefaultOverrides = {
+  buyerProfile?: BuyerProfile | null;
   desiredMarginRateBps?: Bps | null;
   riskReserveRateBps?: Bps | null;
   documentationCost?: Cents | null;
@@ -155,6 +175,7 @@ export function towCost(distanceKm: number, overrides?: UserDefaultOverrides | n
 }
 
 export function defaultAssumptions(input: DefaultsInput, overrides?: UserDefaultOverrides | null): DefaultAssumptions {
+  const buyerProfile = overrides?.buyerProfile ?? DEFAULT_BUYER_PROFILE;
   const vehicle = input.isMotorcycle ? DEFAULT_COSTS.motorcycle : DEFAULT_COSTS.car;
   const fromFipe = estimateFromFipe(input, overrides);
   const tow = input.distanceKm === null ? null : towCost(input.distanceKm, overrides);
@@ -169,10 +190,14 @@ export function defaultAssumptions(input: DefaultsInput, overrides?: UserDefault
     tiresCost: vehicle.tires,
     serviceCost: vehicle.service,
     otherFees: input.otherFees ?? DEFAULT_COSTS.otherFees,
+    debtsCost: DEFAULT_COSTS.debts,
+    sellingCost: DEFAULT_COSTS.selling,
+    taxCost: DEFAULT_COSTS.tax,
     commissionRateBps: input.commissionRate ?? DEFAULT_COSTS.commissionRate,
     riskReserveRateBps: overrides?.riskReserveRateBps ?? DEFAULT_COSTS.riskReserveRate,
-    desiredMarginRateBps: overrides?.desiredMarginRateBps ?? DEFAULT_COSTS.desiredMarginRate,
+    desiredMarginRateBps: overrides?.desiredMarginRateBps ?? PROFILE_DESIRED_MARGIN_BPS[buyerProfile],
     basis: {
+      buyerProfile,
       condition: input.damageLevel ?? "none",
       saleDiscount: fromFipe.saleDiscount,
       repairRate: fromFipe.repairRate,
@@ -196,6 +221,9 @@ export function defaultInputs(input: DefaultsInput, overrides?: UserDefaultOverr
     tiresCost: defaults.tiresCost,
     serviceCost: defaults.serviceCost,
     otherFees: defaults.otherFees,
+    debtsCost: defaults.debtsCost,
+    sellingCost: defaults.sellingCost,
+    taxCost: defaults.taxCost,
     commissionMode: "percentage",
     commissionFixed: null,
     commissionRateBps: defaults.commissionRateBps,

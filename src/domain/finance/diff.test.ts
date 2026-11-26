@@ -12,6 +12,9 @@ const baseInputs: AnalysisInputs = {
   tiresCost: cents(0),
   serviceCost: cents(0),
   otherFees: cents(0),
+  debtsCost: cents(0),
+  sellingCost: cents(0),
+  taxCost: cents(0),
   commissionMode: "percentage",
   commissionFixed: null,
   commissionRateBps: bps(500),
@@ -87,5 +90,29 @@ describe("diffAnalyses", () => {
     expect(result.changes[0]?.deltaBps).toBeNull();
     expect(result.viabilityChanged).toBe(true);
     expect(result.maxBidDelta).toBeNull();
+  });
+
+  it("detecta alteração nos custos v3 e nos dias estimados de giro", () => {
+    const v1 = snapshot({ version: 1, expectedHoldDays: 45 });
+    const v2 = snapshot({
+      version: 2,
+      inputs: { ...baseInputs, debtsCost: cents(150_000), sellingCost: cents(80_000), taxCost: cents(50_000) },
+      expectedHoldDays: 60,
+    });
+    const result = diffAnalyses(v1, v2);
+    expect(result.changes.map((item) => item.field)).toEqual([
+      "debtsCost",
+      "sellingCost",
+      "taxCost",
+      "expectedHoldDays",
+    ]);
+    expect(result.changes[3]).toEqual({
+      field: "expectedHoldDays",
+      before: { kind: "days", value: 45 },
+      after: { kind: "days", value: 60 },
+      deltaCents: null,
+      deltaBps: null,
+      deltaDays: 15,
+    });
   });
 });

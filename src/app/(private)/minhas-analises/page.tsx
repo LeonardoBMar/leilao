@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { ButtonLink } from "@/components/ui";
 import { MyAnalysesView, MyAnalysesViewSkeleton } from "@/features/lots/components/my-analyses-view";
+import { PortfolioView, PortfolioViewSkeleton } from "@/features/post-auction/components/portfolio-view";
 
 export const metadata: Metadata = { title: "Minhas análises · Leilão Tracker" };
 
@@ -13,7 +14,7 @@ export default function MyAnalysesPage({ searchParams }: PageProps<"/minhas-anal
     <div className="grid gap-6">
       <PageHeader
         title="Minhas análises"
-        description="Os lotes que você levou para análise e os leilões que você cadastrou."
+        description="Os lotes que você levou para análise, os leilões que cadastrou e sua carteira de arrematados."
         actions={
           <ButtonLink href="/minhas-analises/leiloes/novo">
             <Plus aria-hidden="true" />
@@ -22,7 +23,14 @@ export default function MyAnalysesPage({ searchParams }: PageProps<"/minhas-anal
         }
       />
       <Suspense fallback={<MyAnalysesViewSkeleton />}>
-        <MyAnalysesView searchParams={searchParams} />
+        <MyAnalysesView
+          searchParams={searchParams}
+          portfolio={
+            <Suspense fallback={<PortfolioViewSkeleton />}>
+              <PortfolioView />
+            </Suspense>
+          }
+        />
       </Suspense>
     </div>
   );

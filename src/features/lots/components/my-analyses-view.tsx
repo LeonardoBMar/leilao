@@ -1,6 +1,7 @@
 import { Archive, Gavel, Plus, SearchX } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { ListPagination } from "@/components/layout/list-pagination";
 import {
@@ -25,27 +26,40 @@ import { LotRows, LotsView, readLotSearch } from "./lot-list";
 
 const BASE_PATH = "/minhas-analises";
 const BY_AUCTION = { vista: "leilao" } as const;
+const PORTFOLIO = { vista: "carteira" } as const;
 const AUCTION_UNIT = { one: "leilão", many: "leilões" };
 
 /**
- * "Minhas análises" (D-42): os lotes do usuário, todos (padrão) ou agrupados por leilão (`?vista=leilao`), com os
- * mesmos filtros. Renderizar dentro de <Suspense>.
+ * "Minhas análises" (D-42 / D-96): os lotes do usuário, todos (padrão), agrupados por leilão (`?vista=leilao`) ou a
+ * carteira de arrematados (`?vista=carteira`, composta via slot na rota). Renderizar dentro de <Suspense>.
  */
-export async function MyAnalysesView({ searchParams }: { searchParams: SearchParams }) {
+export async function MyAnalysesView({
+  searchParams,
+  portfolio,
+}: {
+  searchParams: SearchParams;
+  portfolio?: ReactNode;
+}) {
   const raw = await searchParams;
-  const byAuction = (Array.isArray(raw.vista) ? raw.vista[0] : raw.vista) === BY_AUCTION.vista;
+  const vista = Array.isArray(raw.vista) ? raw.vista[0] : raw.vista;
+  const isPortfolio = vista === PORTFOLIO.vista && portfolio !== undefined;
+  const byAuction = !isPortfolio && vista === BY_AUCTION.vista;
   const { filters, params } = readLotSearch(raw);
+
+  const tabs = [
+    { href: withQuery(BASE_PATH, params), label: "Todos os lotes", active: !byAuction && !isPortfolio },
+    { href: withQuery(BASE_PATH, { ...params, ...BY_AUCTION }), label: "Por leilão", active: byAuction },
+    ...(portfolio !== undefined
+      ? [{ href: withQuery(BASE_PATH, PORTFOLIO), label: "Carteira", active: isPortfolio }]
+      : []),
+  ];
 
   return (
     <div className="grid gap-6">
-      <LinkTabs
-        label="Visões de minhas análises"
-        tabs={[
-          { href: withQuery(BASE_PATH, params), label: "Todos os lotes", active: !byAuction },
-          { href: withQuery(BASE_PATH, { ...params, ...BY_AUCTION }), label: "Por leilão", active: byAuction },
-        ]}
-      />
-      {byAuction ? (
+      <LinkTabs label="Visões de minhas análises" tabs={tabs} />
+      {isPortfolio ? (
+        portfolio
+      ) : byAuction ? (
         <LotGroups filters={filters} params={params} />
       ) : (
         <LotsView searchParams={searchParams} basePath={BASE_PATH} />

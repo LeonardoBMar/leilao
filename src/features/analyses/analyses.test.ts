@@ -26,6 +26,10 @@ const fixedCommissionForm = {
   tiresCost: "0",
   serviceCost: "0",
   otherFees: "0",
+  debtsCost: "0",
+  sellingCost: "0",
+  taxCost: "0",
+  expectedHoldDays: "",
   commissionMode: "fixed",
   commissionFixed: "2.000",
   commissionRate: "",
@@ -161,6 +165,23 @@ describe("fixedSummary", () => {
       formulaVersion: 1,
     });
     expect(model.outcome.kind).toBe("not_viable");
+  });
+
+  it("análise fixada legada (v2) sem débitos/venda/impostos continua válida em modo leitura", () => {
+    const inputs = {
+      ...toAnalysisInputs(analysisFormSchema.parse(fixedCommissionForm)),
+      debtsCost: null,
+      sellingCost: null,
+      taxCost: null,
+    };
+    const model = fixedSummary(inputs, {
+      isViable: true,
+      maxBid: cents(3_320_000),
+      totalAtMaxBid: cents(4_400_000),
+      marginAtMaxBid: cents(600_000),
+      formulaVersion: 2,
+    });
+    expect(model.outcome).toMatchObject({ kind: "viable", maxBid: 3_320_000, fixedCosts: 680_000 });
   });
 });
 

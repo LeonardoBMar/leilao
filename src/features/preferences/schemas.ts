@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { BUYER_PROFILES } from "@/domain/finance/defaults";
 import { type Bps, type Cents, parsePercent } from "@/domain/money";
 import { optionalBrlAmount, optionalInt } from "@/lib/schemas";
 
@@ -35,6 +36,9 @@ function optionalMoneyCents(message: string) {
 }
 
 export const userPreferencesInputSchema = z.object({
+  buyerProfile: z
+    .preprocess(emptyToUndefined, z.enum(BUYER_PROFILES, "Selecione um perfil operacional válido.").optional())
+    .transform((value) => value ?? null),
   municipalityIbgeCode: optionalInt(1_000_000, 9_999_999, "Selecione um município válido da lista.").transform(
     (value) => value ?? null,
   ),
