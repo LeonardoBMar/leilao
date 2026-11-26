@@ -494,17 +494,23 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             ) : null}
             <DialogClose
               aria-label="Fechar busca"
-              className="hidden rounded-sm border border-border-strong bg-background px-1.5 py-0.5 font-mono text-caption text-muted transition-colors outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent sm:inline-flex sm:items-center"
+              className="hidden min-h-7 items-center rounded-sm border border-border-strong bg-background px-2 font-mono text-caption text-muted transition-colors outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent sm:inline-flex pointer-coarse:hidden"
             >
               ESC
             </DialogClose>
             <DialogClose
               aria-label="Fechar busca"
-              className="-mr-1.5 flex size-10 shrink-0 items-center justify-center rounded-md text-muted transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] sm:hidden"
+              className="-mr-1.5 flex size-10 shrink-0 items-center justify-center rounded-md text-muted transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] sm:hidden pointer-coarse:flex pointer-coarse:size-11"
             >
               <X aria-hidden="true" className="size-4.5" />
             </DialogClose>
           </div>
+
+          {trimmedQuery.length > 0 && items.length > 0 ? (
+            <span role="status" aria-live="polite" className="sr-only">
+              {items.length === 1 ? "1 resultado encontrado" : `${items.length} resultados encontrados`}
+            </span>
+          ) : null}
 
           <div className="max-h-[min(20rem,50dvh)] overflow-y-auto overscroll-contain p-1.5">
             {items.length === 0 ? (
@@ -575,8 +581,13 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                 <kbd className="font-mono text-foreground-secondary">Esc</kbd> fechar
               </span>
             </span>
-            <span>
-              <kbd className="font-mono text-foreground-secondary">{isMac ? "⌘B" : "Ctrl+B"}</kbd> barra lateral
+            <span className="flex items-center gap-3">
+              <span>
+                <kbd className="font-mono text-foreground-secondary">{isMac ? "⌘B" : "Ctrl+B"}</kbd> barra lateral
+              </span>
+              <span>
+                <kbd className="font-mono text-foreground-secondary">?</kbd> guia
+              </span>
             </span>
           </div>
         </DialogContent>

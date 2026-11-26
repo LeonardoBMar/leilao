@@ -1,6 +1,14 @@
 "use client";
 
-import { type LucideIcon, PanelLeftClose, PanelLeftOpen, Search, Settings, SlidersHorizontal } from "lucide-react";
+import {
+  ChevronLeft,
+  type LucideIcon,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Search,
+  Settings,
+  SlidersHorizontal,
+} from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -124,14 +132,19 @@ function HeaderRouteContext() {
         /
       </span>
       <ol className="flex min-w-0 items-center gap-2 text-label">
-        <li className={cn("min-w-0 items-center", context.detail ? "hidden sm:flex" : "flex")}>
+        <li className="flex min-w-0 items-center">
           {context.detail ? (
             <Link
               href={context.sectionHref}
               title={context.section}
               className="-my-1.5 inline-flex min-w-0 items-center gap-1.5 rounded-sm py-1.5 text-muted transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent motion-reduce:transition-none pointer-coarse:min-h-11"
             >
-              <SectionIcon aria-hidden="true" strokeWidth={1.75} className="size-3.5 shrink-0 text-muted-subtle" />
+              <ChevronLeft aria-hidden="true" strokeWidth={1.75} className="size-3.5 shrink-0 text-muted sm:hidden" />
+              <SectionIcon
+                aria-hidden="true"
+                strokeWidth={1.75}
+                className="hidden size-3.5 shrink-0 text-muted-subtle sm:inline"
+              />
               <span className="truncate">{context.section}</span>
             </Link>
           ) : (
@@ -146,11 +159,8 @@ function HeaderRouteContext() {
           )}
         </li>
         {context.detail ? (
-          <li className="flex min-w-0 items-center gap-2">
-            <span
-              aria-hidden="true"
-              className="hidden shrink-0 font-mono text-caption text-border-strong select-none sm:inline"
-            >
+          <li className="hidden min-w-0 items-center gap-2 sm:flex">
+            <span aria-hidden="true" className="shrink-0 font-mono text-caption text-border-strong select-none">
               /
             </span>
             <span
@@ -340,9 +350,7 @@ export function AppShell({
         >
           <Tooltip delayDuration={180} open={collapsed ? undefined : false}>
             <TooltipTrigger asChild>
-              <span>
-                <Brand href="/dashboard" compact={collapsed} />
-              </span>
+              <Brand href="/dashboard" compact={collapsed} />
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={10}>
               Início — Leilão Tracker

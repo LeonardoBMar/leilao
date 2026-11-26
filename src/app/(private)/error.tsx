@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useTransition } from "react";
 
 import { Alert, AlertDescription, AlertTitle, Button, ButtonLink } from "@/components/ui";
 
 export default function PrivateError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
+  const [isPending, startTransition] = useTransition();
+
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -27,7 +29,12 @@ export default function PrivateError({ error, retry }: { error: Error & { digest
         </AlertDescription>
       </Alert>
       <div className="flex flex-wrap gap-2">
-        <Button variant="secondary" onClick={() => retry()}>
+        <Button
+          variant="secondary"
+          loading={isPending}
+          loadingLabel="Tentando…"
+          onClick={() => startTransition(() => retry())}
+        >
           Tentar novamente
         </Button>
         <ButtonLink href="/dashboard" variant="ghost">

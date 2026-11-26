@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
-type BrandProps = {
+type BrandProps = Omit<React.ComponentPropsWithoutRef<"a">, "href" | "children"> & {
   href?: "/dashboard";
   compact?: boolean;
   /** Oculta o nome abaixo de `sm` (640 px) para manter o contexto de rota visível no header mobile. */
@@ -12,7 +12,7 @@ type BrandProps = {
 };
 
 /** Marca da casca v3.0 (DESIGN.md §9): quadrado em tinta com martelo e nome em Inter semibold. */
-export function Brand({ href, compact = false, hideLabelOnNarrow = false, className }: BrandProps) {
+export function Brand({ href, compact = false, hideLabelOnNarrow = false, className, ...props }: BrandProps) {
   const content = (
     <>
       <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-primary text-surface shadow-xs">
@@ -42,6 +42,7 @@ export function Brand({ href, compact = false, hideLabelOnNarrow = false, classN
             "max-sm:min-h-10 max-sm:min-w-10 max-sm:justify-center max-sm:gap-0 pointer-coarse:min-w-11",
           className,
         )}
+        {...props}
       >
         {content}
       </Link>

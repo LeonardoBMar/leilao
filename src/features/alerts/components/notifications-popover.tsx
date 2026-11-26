@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Bell, BellRing, Check, CheckCheck, ChevronRight } from "lucide-react";
+import { AlertTriangle, Bell, BellRing, Check, CheckCheck, ChevronRight, LoaderCircle } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -33,7 +33,9 @@ export function NotificationsPopover({
 }: NotificationsPopoverProps) {
   const [open, setOpen] = useState(false);
   const [confirmMarkAll, setConfirmMarkAll] = useState(false);
-  const { isPending: isMarkingRead, run: runMarkRead } = useActionToast();
+  const [pendingAlertId, setPendingAlertId] = useState<string | null>(null);
+  const { isPending: isMarkingAllRead, run: runMarkAllRead } = useActionToast();
+  const { isPending: isMarkingSingleRead, run: runMarkSingleRead } = useActionToast();
   const totalCount = unreadTotal + (collectorWarning ? 1 : 0);
   const hasNotifications = totalCount > 0;
   const isDestructive = collectorWarning?.variant === "destructive";
@@ -90,7 +92,7 @@ export function NotificationsPopover({
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent align="end" aria-label="Notificações" className="w-90 gap-0 p-0 sm:w-96">
+      <PopoverContent align="end" aria-label="Notificações" className="w-90 max-w-[calc(100vw-1rem)] gap-0 p-0 sm:w-96">
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <p className="text-label font-semibold text-foreground">Notificações</p>
           {hasNotifications ? (
@@ -106,7 +108,7 @@ export function NotificationsPopover({
             <p className="text-caption text-muted">Falhas de coleta e novos alertas aparecerão aqui.</p>
           </div>
         ) : (
-          <div className="divide-y divide-border">
+          <div className="max-h-[min(28rem,70dvh)] divide-y divide-border overflow-y-auto overscroll-contain">
             {collectorWarning ? (
               <div className="grid gap-2 px-4 py-3">
                 <p className="font-mono text-overline text-muted uppercase">Coleta</p>
@@ -203,13 +205,30 @@ export function NotificationsPopover({
                         </Link>
                         <button
                           type="button"
-                          disabled={isMarkingRead}
+                          aria-busy={isMarkingSingleRead && pendingAlertId === alert.id ? true : undefined}
                           aria-label={`Marcar alerta “${alert.title}” como lido`}
                           title="Marcar como lido"
-                          onClick={() => runMarkRead(() => markAlertReadAction(alert.id))}
-                          className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted transition-colors outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent disabled:opacity-50 pointer-coarse:size-11"
+                          onClick={() => {
+                            if (isMarkingSingleRead || isMarkingAllRead) return;
+                            setPendingAlertId(alert.id);
+                            runMarkSingleRead(async () => {
+                              try {
+                                return await markAlertReadAction(alert.id);
+                              } finally {
+                                setPendingAlertId(null);
+                              }
+                            });
+                          }}
+                          className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted transition-colors outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:size-11"
                         >
-                          <Check aria-hidden="true" className="size-3.5" />
+                          {isMarkingSingleRead && pendingAlertId === alert.id ? (
+                            <LoaderCircle
+                              aria-hidden="true"
+                              className="size-3.5 animate-spin motion-reduce:animate-none"
+                            />
+                          ) : (
+                            <Check aria-hidden="true" className="size-3.5" />
+                          )}
                         </button>
                       </li>
                     );
@@ -231,7 +250,7 @@ export function NotificationsPopover({
                         type="button"
                         variant="ghost"
                         size="sm"
-                        disabled={isMarkingRead}
+                        disabled={isMarkingAllRead}
                         onClick={() => setConfirmMarkAll(false)}
                       >
                         Cancelar
@@ -240,11 +259,11 @@ export function NotificationsPopover({
                         type="button"
                         variant="secondary"
                         size="sm"
-                        loading={isMarkingRead}
+                        loading={isMarkingAllRead}
                         loadingLabel="Marcando…"
                         onClick={() => {
                           setConfirmMarkAll(false);
-                          runMarkRead(() => markAllAlertsReadAction(null));
+                          runMarkAllRead(() => markAllAlertsReadAction(null));
                         }}
                       >
                         Confirmar ({unreadTotal})
@@ -255,14 +274,14 @@ export function NotificationsPopover({
                       type="button"
                       variant="ghost"
                       size="sm"
-                      loading={isMarkingRead}
+                      loading={isMarkingAllRead}
                       loadingLabel="Marcando…"
                       onClick={() => {
                         if (unreadTotal > 1) {
                           setConfirmMarkAll(true);
                           return;
                         }
-                        runMarkRead(() => markAllAlertsReadAction(null));
+                        runMarkAllRead(() => markAllAlertsReadAction(null));
                       }}
                     >
                       <CheckCheck aria-hidden="true" />

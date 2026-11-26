@@ -27,7 +27,11 @@ export function DashboardGuidePopover() {
           <span>Como ler</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" aria-label="Guia rápido do painel" className="w-88 gap-0 p-0 sm:w-96">
+      <PopoverContent
+        align="start"
+        aria-label="Guia rápido do painel"
+        className="w-88 max-w-[calc(100vw-1rem)] gap-0 p-0 sm:w-96"
+      >
         <div className="border-b border-border px-4 py-3">
           <p className="text-label font-semibold text-foreground">Como ler este painel</p>
           <p className="mt-0.5 text-caption text-muted">
