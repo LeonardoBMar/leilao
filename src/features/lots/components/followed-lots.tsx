@@ -51,14 +51,14 @@ export async function FollowedLots() {
 
   return (
     <div className="@container grid gap-3">
-      <ul role="list" className="border-b border-border">
+      <ul role="list" className="-mx-2 border-b border-border">
         {items.slice(0, SHOWN).map((lot) => {
           const lotTitle = `${lot.brand} ${lot.model} ${lot.modelYear}`;
           const closing = lot.endsAt ? formatClosingCountdown(lot.endsAt, now) : null;
           return (
             <li
               key={lot.id}
-              className="relative -mx-2 grid grid-cols-1 items-center gap-x-5 gap-y-3 rounded-md border-t border-border px-2 py-4 transition-colors duration-150 ease-[var(--ease-out)] hover:bg-background motion-reduce:transition-none @xl:grid-cols-[3.5rem_minmax(0,1fr)_10rem_13rem]"
+              className="relative grid grid-cols-1 items-center gap-x-5 gap-y-3 rounded-md border-t border-border px-2 py-4 transition-colors duration-150 ease-[var(--ease-out)] hover:bg-background motion-reduce:transition-none @xl:grid-cols-[3.5rem_minmax(0,1fr)_10rem_13rem]"
             >
               <span
                 title={lot.lotNumber}
