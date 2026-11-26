@@ -31,6 +31,7 @@ export function NotificationsPopover({
   isAdmin = false,
 }: NotificationsPopoverProps) {
   const [open, setOpen] = useState(false);
+  const [confirmMarkAll, setConfirmMarkAll] = useState(false);
   const { isPending: isMarkingRead, run: runMarkRead } = useActionToast();
   const totalCount = unreadTotal + (collectorWarning ? 1 : 0);
   const hasNotifications = totalCount > 0;
@@ -50,7 +51,13 @@ export function NotificationsPopover({
   const countBadgeVariant = isDestructive ? "destructive" : isWarning ? "warning" : "outline";
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setConfirmMarkAll(false);
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
           type="button"
@@ -163,7 +170,7 @@ export function NotificationsPopover({
                         <Link
                           href={href}
                           onClick={() => setOpen(false)}
-                          className="group flex min-h-10 items-center gap-2.5 rounded-md px-2 py-2 text-body transition-colors outline-none hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent"
+                          className="group flex min-h-10 items-center gap-2.5 rounded-md px-2 py-2 text-body transition-colors outline-none hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:min-h-11"
                         >
                           <BellRing aria-hidden="true" className="size-3.5 shrink-0 text-accent" />
                           <span className="line-clamp-1 min-w-0 flex-1 text-label text-foreground" title={alert.title}>
@@ -183,22 +190,55 @@ export function NotificationsPopover({
                   <Link
                     href="/alertas"
                     onClick={() => setOpen(false)}
-                    className="-mx-2 inline-flex min-h-10 items-center gap-1 rounded-md px-2 text-label font-medium text-accent outline-none hover:text-accent-hover hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent"
+                    className="-mx-2 inline-flex min-h-10 items-center gap-1 rounded-md px-2 text-label font-medium text-accent outline-none hover:text-accent-hover hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:min-h-11"
                   >
                     Ver todos os alertas
                     <ChevronRight aria-hidden="true" className="size-3.5" />
                   </Link>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    loading={isMarkingRead}
-                    loadingLabel="Marcando…"
-                    onClick={() => runMarkRead(() => markAllAlertsReadAction(null))}
-                  >
-                    <CheckCheck aria-hidden="true" />
-                    Marcar lidos
-                  </Button>
+                  {confirmMarkAll ? (
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={isMarkingRead}
+                        onClick={() => setConfirmMarkAll(false)}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        loading={isMarkingRead}
+                        loadingLabel="Marcando…"
+                        onClick={() => {
+                          setConfirmMarkAll(false);
+                          runMarkRead(() => markAllAlertsReadAction(null));
+                        }}
+                      >
+                        Confirmar ({unreadTotal})
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      loading={isMarkingRead}
+                      loadingLabel="Marcando…"
+                      onClick={() => {
+                        if (unreadTotal > 1) {
+                          setConfirmMarkAll(true);
+                          return;
+                        }
+                        runMarkRead(() => markAllAlertsReadAction(null));
+                      }}
+                    >
+                      <CheckCheck aria-hidden="true" />
+                      Marcar lidos
+                    </Button>
+                  )}
                 </div>
               </div>
             ) : null}

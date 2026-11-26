@@ -116,7 +116,7 @@ function HeaderRouteContext() {
   const SectionIcon = context.icon;
 
   return (
-    <nav aria-label="Localização atual" className="hidden min-w-0 items-center md:flex">
+    <nav aria-label="Localização atual" className="flex min-w-0 items-center">
       <span
         aria-hidden="true"
         className="mr-2 shrink-0 font-mono text-caption text-border-strong select-none lg:hidden"
@@ -124,7 +124,7 @@ function HeaderRouteContext() {
         /
       </span>
       <ol className="flex min-w-0 items-center gap-2 text-label">
-        <li className="flex min-w-0 items-center">
+        <li className={cn("min-w-0 items-center", context.detail ? "hidden sm:flex" : "flex")}>
           {context.detail ? (
             <Link
               href={context.sectionHref}
@@ -147,7 +147,10 @@ function HeaderRouteContext() {
         </li>
         {context.detail ? (
           <li className="flex min-w-0 items-center gap-2">
-            <span aria-hidden="true" className="shrink-0 font-mono text-caption text-border-strong select-none">
+            <span
+              aria-hidden="true"
+              className="hidden shrink-0 font-mono text-caption text-border-strong select-none sm:inline"
+            >
               /
             </span>
             <span

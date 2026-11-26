@@ -306,6 +306,7 @@ function NavList({
               onClick={() => setSystemOpenOverride(!systemOpen)}
               aria-expanded={systemOpen}
               aria-controls={systemListId}
+              aria-current={isSystemActive && !systemOpen ? "true" : undefined}
               className={cn(
                 "group relative flex h-10 w-full items-center gap-2.5 overflow-clip rounded-md px-2.5 text-left text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color] duration-150 ease-[var(--ease-out)] outline-none hover:bg-primary-subtle/70 hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent motion-reduce:transition-none lg:h-9 pointer-coarse:h-11",
                 isSystemActive && "font-semibold text-foreground",
@@ -346,7 +347,7 @@ function NavList({
                         className={cn(
                           "group relative flex h-10 items-center gap-2 rounded-md px-2.5 text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent motion-reduce:transition-none lg:h-8 pointer-coarse:h-11",
                           isSubActive
-                            ? "bg-surface-subtle font-semibold text-foreground ring-1 ring-border/70 ring-inset"
+                            ? "bg-primary-subtle font-semibold text-foreground ring-1 ring-border ring-inset"
                             : "hover:bg-primary-subtle/70 hover:text-foreground",
                         )}
                       >

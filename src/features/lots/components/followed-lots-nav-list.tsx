@@ -86,10 +86,15 @@ function LotSection({ items, totalCount, hasMore, pathname }: FollowedLotsNavLis
                     aria-current={isActive ? "page" : undefined}
                     className={cn(
                       "flex min-h-10 items-center gap-2.5 rounded-md px-2.5 text-label font-medium text-foreground-secondary transition-colors duration-120 outline-none hover:bg-primary-subtle/70 hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent motion-reduce:transition-none lg:min-h-9 pointer-coarse:min-h-11",
-                      isActive && "bg-primary-subtle/80 font-semibold text-foreground hover:bg-primary-subtle",
+                      isActive &&
+                        "bg-primary-subtle font-semibold text-foreground ring-1 ring-border ring-inset hover:bg-primary-subtle",
                     )}
                   >
-                    <span aria-hidden="true" className="flex w-4 shrink-0 justify-center">
+                    <span
+                      aria-hidden="true"
+                      title={LIMIT_COMPARISON_LABELS[lot.comparison]}
+                      className="flex w-4 shrink-0 justify-center"
+                    >
                       <span className={cn("size-1.75 rounded-full", DOT[lot.comparison])} />
                     </span>
                     {/* `relative` prende o `sr-only` (absoluto) ao nome cortado: sem ele, o texto oculto fica no fim do nome
