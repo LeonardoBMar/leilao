@@ -39,5 +39,8 @@ next-env.d.ts
 /tests/e2e/.report/
 /tests/e2e/.results/
 
+# Cobertura (Vitest)
+/coverage/
+
 # Backups locais (dados reais)
 /backups/

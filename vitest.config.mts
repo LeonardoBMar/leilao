@@ -15,7 +15,18 @@ export default defineConfig({
   test: {
     environment: "node",
     fsModuleCache: true,
+    // Isolamento padrão mantido: suítes com `vi.mock("@/server/db")` vazam entre si com `isolate: false` em 1 worker.
     include: ["src/**/*.test.{ts,tsx}"],
     restoreMocks: true,
+    coverage: {
+      provider: "v8",
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: ["src/generated/**", "src/**/*.test.{ts,tsx}", "src/**/*.int.test.{ts,tsx}", "src/types/**"],
+      reporter: ["text", "html", "json-summary"],
+      thresholds: {
+        // Domínio puro já supera 98%; meta de `src/server/**` (70%) entra após a onda estrutural de testes.
+        "src/domain/**": { lines: 95, functions: 95 },
+      },
+    },
   },
 });
