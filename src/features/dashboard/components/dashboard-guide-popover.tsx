@@ -1,48 +1,27 @@
 "use client";
 
 import { CircleHelp } from "lucide-react";
-import { useState } from "react";
 
-import { GlossaryContent } from "@/components/layout/glossary-content";
-import { Button, Popover, PopoverContent, PopoverTrigger } from "@/components/ui";
+import { setGuideDialogOpen } from "@/components/layout/guide-dialog-store";
+import { Button } from "@/components/ui";
 
 /**
- * Glossário contextual e referência de atalhos do painel (Nielsen #10): mantém a superfície limpa e entrega
- * definição imediata dos termos financeiros e atalhos sem tirar o usuário do fluxo.
+ * Gatilho contextual do guia no painel (Nielsen #10): abre o mesmo `GlobalGuideDialog` com busca de termos e atalhos,
+ * garantindo experiência única em toda a aplicação.
  */
 export function DashboardGuidePopover() {
-  const [open, setOpen] = useState(false);
-
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          aria-label="Como ler este painel e atalhos de teclado"
-          className="h-10 gap-1.5 px-2 text-caption font-medium text-muted hover:text-foreground sm:h-8 pointer-coarse:h-11"
-        >
-          <CircleHelp aria-hidden="true" className="size-3.5 shrink-0" />
-          <span>Como ler</span>
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        aria-label="Guia rápido do painel"
-        className="w-88 max-w-[calc(100vw-1rem)] gap-0 p-0 sm:w-96"
-      >
-        <div className="border-b border-border px-4 py-3">
-          <p className="text-label font-semibold text-foreground">Como ler este painel</p>
-          <p className="mt-0.5 text-caption text-muted">
-            Os números combinam histórico do catálogo com suas premissas de custo e margem.
-          </p>
-        </div>
-
-        <div className="grid max-h-[min(28rem,70dvh)] gap-3 overflow-y-auto overscroll-contain px-4 py-3.5">
-          <GlossaryContent onNavigate={() => setOpen(false)} />
-        </div>
-      </PopoverContent>
-    </Popover>
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      onClick={() => setGuideDialogOpen(true)}
+      aria-label="Como ler este painel e atalhos de teclado"
+      aria-haspopup="dialog"
+      className="h-10 gap-1.5 px-2 text-caption font-medium text-muted hover:text-foreground sm:h-8 pointer-coarse:h-11"
+    >
+      <CircleHelp aria-hidden="true" className="size-3.5 shrink-0" />
+      <span>Como ler</span>
+    </Button>
   );
 }
