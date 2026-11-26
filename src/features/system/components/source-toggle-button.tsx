@@ -1,10 +1,10 @@
 "use client";
 
 import { Pause, Play } from "lucide-react";
-import { useActionState, useEffect } from "react";
+import { useActionState } from "react";
 
 import { Button, toast } from "@/components/ui";
-import { idleState } from "@/lib/action-state";
+import { type ActionState, idleState } from "@/lib/action-state";
 
 import { toggleSourceActiveAction } from "../actions";
 
@@ -15,12 +15,12 @@ type SourceToggleButtonProps = {
 };
 
 export function SourceToggleButton({ sourceId, sourceName, active }: SourceToggleButtonProps) {
-  const [state, formAction, pending] = useActionState(toggleSourceActiveAction, idleState);
-
-  useEffect(() => {
-    if (state.status === "success" && state.message) toast.success(state.message);
-    else if (state.status === "error" && state.message) toast.error(state.message);
-  }, [state]);
+  const [, formAction, pending] = useActionState(async (prev: ActionState, formData: FormData) => {
+    const next = await toggleSourceActiveAction(prev, formData);
+    if (next.status === "success" && next.message) toast.success(next.message);
+    else if (next.status === "error" && next.message) toast.error(next.message);
+    return next;
+  }, idleState);
 
   return (
     <form action={formAction}>

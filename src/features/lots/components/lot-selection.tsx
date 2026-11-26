@@ -110,7 +110,7 @@ export function LotBulkBar() {
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0, transition: MOTION_ENTER_TRANSITION }}
           exit={{ opacity: 0, y: -6, transition: MOTION_EXIT_TRANSITION }}
-          className="sticky top-16 z-10 flex flex-wrap items-center gap-2 rounded-lg border border-border bg-surface p-2 shadow-sm lg:top-2"
+          className="sticky top-16 z-10 flex flex-wrap items-center gap-2 rounded-lg border border-border bg-surface p-2 shadow-sm lg:top-14"
         >
           <p className="px-2 text-label text-foreground tabular-nums">
             {count} {count === 1 ? "selecionado" : "selecionados"}

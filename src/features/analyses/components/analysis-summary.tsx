@@ -59,7 +59,7 @@ export function AnalysisSummary({ model, currentBid, market, marketNote }: Analy
   }
 
   return (
-    <Card variant="summary" className="grid gap-5.5 p-5 md:p-7 lg:sticky lg:top-6">
+    <Card variant="summary" className="grid gap-5.5 p-5 md:p-7 lg:sticky lg:top-16">
       <section aria-label="Lance máximo" className="grid gap-1.5">
         <p className="text-caption text-muted">Lance máximo</p>
         {outcome.kind === "viable" ? (

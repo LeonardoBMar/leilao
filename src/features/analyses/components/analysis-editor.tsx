@@ -8,7 +8,7 @@ import type { CommissionMode } from "@/domain/finance/calculator";
 import { estimateFromFipe, type UserDefaultOverrides } from "@/domain/finance/defaults";
 import { type Cents, parseBRL } from "@/domain/money";
 import type { LotMarketReference } from "@/features/research/types";
-import { fieldValue, idleState } from "@/lib/action-state";
+import { type ActionState, fieldValue, idleState } from "@/lib/action-state";
 import { formatBps, formatMoneyInput } from "@/lib/format";
 
 import { autosaveDraftAction, saveAnalysisAction } from "../actions";
@@ -38,7 +38,11 @@ export function AnalysisEditor({
   costOverrides?: UserDefaultOverrides;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
-  const [state, formAction, pending] = useActionState(saveAnalysisAction.bind(null, analysis.id), idleState);
+  const [state, formAction, pending] = useActionState(async (prev: ActionState, formData: FormData) => {
+    const next = await saveAnalysisAction(analysis.id, prev, formData);
+    if (next.status === "success" && next.message) toast.success(next.message);
+    return next;
+  }, idleState);
   const [inputs, setInputs] = useState(analysis.inputs);
   const [mode, setMode] = useState<CommissionMode | "">(analysis.inputs.commissionMode ?? "");
   const [intent, setIntent] = useState<"draft" | "fix">("draft");
@@ -49,13 +53,10 @@ export function AnalysisEditor({
   const autosaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const autosaveSeqRef = useRef(0);
   const hasPendingAutosaveRef = useRef(false);
+  const pendingFormDataRef = useRef<FormData | null>(null);
   const isSavingAutosave = autosave.kind === "saving";
 
   useEffect(() => {
-    if (state.status === "success" && state.message) {
-      toast.success(state.message);
-      return;
-    }
     if (state.status === "error" && state.fieldErrors && formRef.current) {
       const firstErrorField = Object.keys(state.fieldErrors)[0];
       if (!firstErrorField) return;
@@ -73,12 +74,23 @@ export function AnalysisEditor({
   useEffect(() => {
     const seq = autosaveSeqRef;
     const pendingFlag = hasPendingAutosaveRef;
+    const pendingData = pendingFormDataRef;
+    const analysisId = analysis.id;
     return () => {
       clearTimeout(autosaveTimer.current);
       seq.current += 1;
-      pendingFlag.current = false;
+      // Com Next.js 16 <Activity>, navegar por <Link> executa o cleanup: despacha o rascunho pendente para não perder a edição.
+      if (pendingFlag.current && pendingData.current) {
+        const snapshot = pendingData.current;
+        pendingFlag.current = false;
+        pendingData.current = null;
+        void autosaveDraftAction(analysisId, snapshot);
+      } else {
+        pendingFlag.current = false;
+        pendingData.current = null;
+      }
     };
-  }, []);
+  }, [analysis.id]);
 
   useEffect(() => {
     function warnUnsaved(event: BeforeUnloadEvent) {
@@ -93,20 +105,29 @@ export function AnalysisEditor({
     clearTimeout(autosaveTimer.current);
     autosaveSeqRef.current += 1;
     hasPendingAutosaveRef.current = false;
+    pendingFormDataRef.current = null;
   }
 
   /** Rascunho salvo sozinho após uma pausa na digitação, com o status discreto no rodapé. */
   function scheduleAutosave(overrides?: Record<string, string>) {
     clearTimeout(autosaveTimer.current);
+    if (!formRef.current) {
+      hasPendingAutosaveRef.current = false;
+      pendingFormDataRef.current = null;
+      return;
+    }
+    const snapshot = new FormData(formRef.current);
+    for (const [key, value] of Object.entries(overrides ?? {})) snapshot.set(key, value);
     hasPendingAutosaveRef.current = true;
+    pendingFormDataRef.current = snapshot;
     autosaveTimer.current = setTimeout(() => {
-      if (!formRef.current) {
+      const formData = pendingFormDataRef.current;
+      if (!formData) {
         hasPendingAutosaveRef.current = false;
         return;
       }
+      pendingFormDataRef.current = null;
       const seq = ++autosaveSeqRef.current;
-      const formData = new FormData(formRef.current);
-      for (const [key, value] of Object.entries(overrides ?? {})) formData.set(key, value);
       setAutosave({ kind: "saving" });
       void autosaveDraftAction(analysis.id, formData).then(
         (result) => {

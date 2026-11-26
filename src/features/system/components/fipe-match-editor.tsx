@@ -3,7 +3,7 @@
 import { RotateCcw, X } from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 
 import {
   Alert,
@@ -58,33 +58,29 @@ export function FipeMatchEditor({ editor, filters }: FipeMatchEditorProps) {
   const [lastAction, setLastAction] = useState<"save" | "none" | "reset" | null>(null);
   const [saveState, saveModelsAction, savingModels] = useActionState(async (prev: ActionState, formData: FormData) => {
     setLastAction("save");
-    return saveManualFipeMatchAction(prev, formData);
+    const next = await saveManualFipeMatchAction(prev, formData);
+    if (next.status === "success" && next.message) toast.success(next.message);
+    else if (next.status === "error" && next.message) toast.error(next.message);
+    return next;
   }, idleState);
   const [noneState, markNoneAction, markingNone] = useActionState(async (prev: ActionState, formData: FormData) => {
     setLastAction("none");
     const next = await saveManualFipeMatchAction(prev, formData);
-    if (next.status === "success") setSelectedCodes([]);
+    if (next.status === "success") {
+      setSelectedCodes([]);
+      if (next.message) toast.success(next.message);
+    } else if (next.status === "error" && next.message) {
+      toast.error(next.message);
+    }
     return next;
   }, idleState);
   const [resetState, resetAction, resetting] = useActionState(async (prev: ActionState, formData: FormData) => {
     setLastAction("reset");
-    return revertFipeMatchToAutoAction(prev, formData);
+    const next = await revertFipeMatchToAutoAction(prev, formData);
+    if (next.status === "success" && next.message) toast.success(next.message);
+    else if (next.status === "error" && next.message) toast.error(next.message);
+    return next;
   }, idleState);
-
-  useEffect(() => {
-    if (saveState.status === "success" && saveState.message) toast.success(saveState.message);
-    else if (saveState.status === "error" && saveState.message) toast.error(saveState.message);
-  }, [saveState]);
-
-  useEffect(() => {
-    if (noneState.status === "success" && noneState.message) toast.success(noneState.message);
-    else if (noneState.status === "error" && noneState.message) toast.error(noneState.message);
-  }, [noneState]);
-
-  useEffect(() => {
-    if (resetState.status === "success" && resetState.message) toast.success(resetState.message);
-    else if (resetState.status === "error" && resetState.message) toast.error(resetState.message);
-  }, [resetState]);
 
   const query = candidateFilter.trim().toLowerCase();
   const visibleCandidates = query

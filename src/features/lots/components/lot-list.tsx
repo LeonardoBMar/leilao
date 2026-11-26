@@ -127,7 +127,7 @@ function LotList({
   return (
     <section aria-label="Lotes" className="grid gap-4">
       {/* A chave remonta a seleção quando a página ou os filtros mudam. */}
-      <LotSelectionProvider key={JSON.stringify(params)} ids={result.items.map((lot) => lot.id)}>
+      <LotSelectionProvider key={`${result.page}:${JSON.stringify(params)}`} ids={result.items.map((lot) => lot.id)}>
         <LotBulkBar />
         <LotRows items={result.items} showAuction={showAuction} />
       </LotSelectionProvider>
