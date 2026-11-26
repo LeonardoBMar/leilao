@@ -1,12 +1,13 @@
 "use client";
 
-import { AlertTriangle, Bell, BellRing, ChevronRight } from "lucide-react";
+import { AlertTriangle, Bell, BellRing, CheckCheck, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
-import { Badge, Button, Popover, PopoverContent, PopoverTrigger } from "@/components/ui";
+import { Badge, Button, Popover, PopoverContent, PopoverTrigger, useActionToast } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
+import { markAllAlertsReadAction } from "../actions";
 import type { RecentUnreadAlert } from "../queries";
 
 export type CollectorNotification = {
@@ -30,6 +31,7 @@ export function NotificationsPopover({
   isAdmin = false,
 }: NotificationsPopoverProps) {
   const [open, setOpen] = useState(false);
+  const { isPending: isMarkingRead, run: runMarkRead } = useActionToast();
   const totalCount = unreadTotal + (collectorWarning ? 1 : 0);
   const hasNotifications = totalCount > 0;
   const isDestructive = collectorWarning?.variant === "destructive";
@@ -177,7 +179,7 @@ export function NotificationsPopover({
                   })}
                 </ul>
 
-                <div>
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <Link
                     href="/alertas"
                     onClick={() => setOpen(false)}
@@ -186,6 +188,17 @@ export function NotificationsPopover({
                     Ver todos os alertas
                     <ChevronRight aria-hidden="true" className="size-3.5" />
                   </Link>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    loading={isMarkingRead}
+                    loadingLabel="Marcando…"
+                    onClick={() => runMarkRead(() => markAllAlertsReadAction(null))}
+                  >
+                    <CheckCheck aria-hidden="true" />
+                    Marcar lidos
+                  </Button>
                 </div>
               </div>
             ) : null}
