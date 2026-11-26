@@ -82,7 +82,7 @@ export function NotificationsPopover({
               aria-hidden="true"
               className={cn(
                 "absolute top-1.5 right-1.5 size-2 rounded-full ring-2 ring-surface",
-                isWarning && unreadTotal === 0 ? "bg-warning" : "bg-accent",
+                isWarning ? "bg-warning" : "bg-accent",
               )}
             />
           ) : null}

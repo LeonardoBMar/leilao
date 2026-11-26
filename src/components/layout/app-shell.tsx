@@ -230,6 +230,7 @@ export function AppShell({
   const [scrolled, setScrolled] = useState(false);
   const [sidebarFade, setSidebarFade] = useState({ top: false, bottom: false });
   const [sidebarTransitionReady, setSidebarTransitionReady] = useState(false);
+  const [sidebarAnimate, setSidebarAnimate] = useState(true);
   const canvasRef = useRef<HTMLDivElement>(null);
   const sidebarNavRef = useRef<HTMLDivElement>(null);
   const sidebarContentRef = useRef<HTMLDivElement>(null);
@@ -251,6 +252,8 @@ export function AppShell({
       if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "b") return;
       if (!window.matchMedia("(min-width: 64rem)").matches) return;
       event.preventDefault();
+      // Atalhos de teclado devem responder instantaneamente, sem animação de largura (DESIGN.md).
+      setSidebarAnimate(false);
       setSidebarCollapsed(!getSidebarSnapshot());
     }
     window.addEventListener("keydown", onKeyDown);
@@ -323,6 +326,7 @@ export function AppShell({
         className={cn(
           "sticky top-0 z-40 hidden h-dvh shrink-0 flex-col border-r border-border bg-background lg:flex",
           sidebarTransitionReady &&
+            sidebarAnimate &&
             "transition-[width] duration-220 ease-[var(--ease-out)] motion-reduce:transition-none",
           collapsed ? "w-14" : "w-66",
         )}
@@ -339,7 +343,10 @@ export function AppShell({
             <TooltipTrigger asChild>
               <button
                 type="button"
-                onClick={() => setSidebarCollapsed(!collapsed)}
+                onClick={() => {
+                  setSidebarAnimate(true);
+                  setSidebarCollapsed(!collapsed);
+                }}
                 aria-label={collapsed ? "Expandir barra lateral" : "Recolher barra lateral"}
                 aria-expanded={!collapsed}
                 aria-controls="sidebar-nav"

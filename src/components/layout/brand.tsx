@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 type BrandProps = {
   href?: "/dashboard";
   compact?: boolean;
-  /** Oculta o nome abaixo de 360 px para evitar overflow horizontal em viewports estreitos (320 px). */
+  /** Oculta o nome abaixo de `sm` (640 px) para manter o contexto de rota visível no header mobile. */
   hideLabelOnNarrow?: boolean;
   className?: string;
 };
@@ -22,7 +22,7 @@ export function Brand({ href, compact = false, hideLabelOnNarrow = false, classN
         className={cn(
           "overflow-clip text-body leading-none font-semibold tracking-[-0.015em] whitespace-nowrap text-foreground transition-[opacity,max-width] duration-160 ease-[var(--ease-out)] motion-reduce:transition-none",
           compact ? "max-w-0 opacity-0" : "max-w-40 opacity-100",
-          hideLabelOnNarrow && "max-[359px]:sr-only",
+          hideLabelOnNarrow && "max-sm:sr-only",
         )}
       >
         Leilão Tracker
@@ -38,7 +38,7 @@ export function Brand({ href, compact = false, hideLabelOnNarrow = false, classN
         className={cn(
           "inline-flex min-w-0 items-center rounded-md py-1 outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent",
           compact ? "gap-0" : "gap-2",
-          hideLabelOnNarrow && "max-[359px]:gap-0",
+          hideLabelOnNarrow && "max-sm:gap-0",
           className,
         )}
       >
@@ -52,7 +52,7 @@ export function Brand({ href, compact = false, hideLabelOnNarrow = false, classN
       className={cn(
         "inline-flex min-w-0 items-center",
         compact ? "gap-0" : "gap-2",
-        hideLabelOnNarrow && "max-[359px]:gap-0",
+        hideLabelOnNarrow && "max-sm:gap-0",
         className,
       )}
     >

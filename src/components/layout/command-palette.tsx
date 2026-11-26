@@ -22,8 +22,8 @@ import {
   X,
 } from "lucide-react";
 import type { Route } from "next";
-import { useRouter } from "next/navigation";
-import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { Suspense, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -256,6 +256,23 @@ type CommandPaletteProps = {
   onOpenChange: (open: boolean) => void;
 };
 
+/** Registra navegações por links comuns (sidebar/dashboard) no histórico de Recentes da paleta. */
+function RecordPathnameRecent() {
+  const pathname = usePathname();
+  const prevPathname = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!pathname || pathname === prevPathname.current) return;
+    prevPathname.current = pathname;
+    const match = DESTINATIONS.find((entry) => entry.href === pathname);
+    if (match && match.href) {
+      recordRecent({ href: match.href, label: match.label, meta: match.meta });
+    }
+  }, [pathname]);
+
+  return null;
+}
+
 /**
  * Paleta de salto rápido (`⌘K` / `Ctrl+K`).
  * Sem animação de entrada/saída (emil-design-eng: ações de teclado frequentes devem ser instantâneas).
@@ -409,148 +426,161 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent
-        hideClose
-        className="top-[8%] max-w-132 translate-y-0 gap-0 overflow-hidden p-0 transition-none duration-0 sm:top-[18%]"
-      >
-        <DialogTitle className="sr-only">Navegação rápida</DialogTitle>
-        <DialogDescription className="sr-only">
-          Digite para filtrar telas do Leilão Tracker ou buscar um veículo ou lote, e pressione Enter para abrir.
-        </DialogDescription>
-        <div className="flex items-center gap-2 border-b border-border px-3.5">
-          <Search aria-hidden="true" className="size-4 shrink-0 text-muted" />
-          <input
-            ref={inputRef}
-            type="text"
-            role="combobox"
-            aria-expanded={items.length > 0}
-            aria-controls={items.length > 0 ? listboxId : undefined}
-            aria-autocomplete="list"
-            aria-activedescendant={activeOptionId}
-            autoFocus
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              setSelectedIndex(0);
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "ArrowDown") {
-                event.preventDefault();
-                setSelectedIndex((current) => (items.length > 0 ? (current + 1) % items.length : 0));
-              } else if (event.key === "ArrowUp") {
-                event.preventDefault();
-                setSelectedIndex((current) => (items.length > 0 ? (current - 1 + items.length) % items.length : 0));
-              } else if (event.key === "Enter" && activeIndex >= 0) {
-                event.preventDefault();
-                const item = items[activeIndex];
-                if (item) activateDestination(item);
-              }
-            }}
-            placeholder="Ir para uma tela ou digitar para buscar veículo/lote…"
-            aria-label="Ir para uma tela ou buscar veículo ou lote"
-            className="h-11 w-full bg-transparent text-base text-foreground outline-none placeholder:text-placeholder sm:text-body"
-          />
-          {query.length > 0 ? (
-            <button
-              type="button"
-              onClick={() => {
-                setQuery("");
+    <>
+      <Suspense fallback={null}>
+        <RecordPathnameRecent />
+      </Suspense>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent
+          hideClose
+          className="top-[8%] max-w-132 translate-y-0 gap-0 overflow-hidden p-0 transition-none duration-0 sm:top-[18%]"
+        >
+          <DialogTitle className="sr-only">Navegação rápida</DialogTitle>
+          <DialogDescription className="sr-only">
+            Digite para filtrar telas do Leilão Tracker ou buscar um veículo ou lote, e pressione Enter para abrir.
+          </DialogDescription>
+          <div className="flex items-center gap-2 border-b border-border px-3.5">
+            <Search aria-hidden="true" className="size-4 shrink-0 text-muted" />
+            <input
+              ref={inputRef}
+              type="text"
+              role="combobox"
+              aria-expanded={items.length > 0}
+              aria-controls={items.length > 0 ? listboxId : undefined}
+              aria-autocomplete="list"
+              aria-activedescendant={activeOptionId}
+              autoFocus
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value);
                 setSelectedIndex(0);
-                inputRef.current?.focus();
               }}
-              aria-label="Limpar busca"
-              className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted transition-colors outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:size-10"
+              onKeyDown={(event) => {
+                if (event.key === "ArrowDown") {
+                  event.preventDefault();
+                  setSelectedIndex((current) => (items.length > 0 ? (current + 1) % items.length : 0));
+                } else if (event.key === "ArrowUp") {
+                  event.preventDefault();
+                  setSelectedIndex((current) => (items.length > 0 ? (current - 1 + items.length) % items.length : 0));
+                } else if (event.key === "Home" && items.length > 0) {
+                  event.preventDefault();
+                  setSelectedIndex(0);
+                } else if (event.key === "End" && items.length > 0) {
+                  event.preventDefault();
+                  setSelectedIndex(items.length - 1);
+                } else if (event.key === "Enter" && activeIndex >= 0) {
+                  event.preventDefault();
+                  const item = items[activeIndex];
+                  if (item) activateDestination(item);
+                }
+              }}
+              placeholder="Ir para uma tela ou digitar para buscar veículo/lote…"
+              aria-label="Ir para uma tela ou buscar veículo ou lote"
+              className="h-11 w-full bg-transparent text-base text-foreground outline-none placeholder:text-placeholder sm:text-body"
+            />
+            {query.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery("");
+                  setSelectedIndex(0);
+                  inputRef.current?.focus();
+                }}
+                aria-label="Limpar busca"
+                className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted transition-colors outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:size-10"
+              >
+                <X aria-hidden="true" className="size-3.5" />
+              </button>
+            ) : null}
+            <DialogClose
+              aria-label="Fechar busca"
+              className="hidden rounded-sm border border-border-strong bg-background px-1.5 py-0.5 font-mono text-caption text-muted transition-colors outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent sm:inline-flex sm:items-center"
             >
-              <X aria-hidden="true" className="size-3.5" />
-            </button>
-          ) : null}
-          <DialogClose
-            aria-label="Fechar busca"
-            className="hidden rounded-sm border border-border-strong bg-background px-1.5 py-0.5 font-mono text-caption text-muted transition-colors outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent sm:inline-flex sm:items-center"
-          >
-            ESC
-          </DialogClose>
-          <DialogClose
-            aria-label="Fechar busca"
-            className="-mr-1.5 flex size-10 shrink-0 items-center justify-center rounded-md text-muted transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] sm:hidden"
-          >
-            <X aria-hidden="true" className="size-4.5" />
-          </DialogClose>
-        </div>
+              ESC
+            </DialogClose>
+            <DialogClose
+              aria-label="Fechar busca"
+              className="-mr-1.5 flex size-10 shrink-0 items-center justify-center rounded-md text-muted transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] sm:hidden"
+            >
+              <X aria-hidden="true" className="size-4.5" />
+            </DialogClose>
+          </div>
 
-        <div className="max-h-[min(20rem,50dvh)] overflow-y-auto overscroll-contain p-1.5">
-          {items.length === 0 ? (
-            <p role="status" className="px-3 py-8 text-center text-body text-muted">
-              Nenhum destino encontrado para “{query}”.
-            </p>
-          ) : (
-            <div id={listboxId} role="listbox" aria-label="Destinos" className="grid gap-2.5">
-              {groupedItems.map(({ group, entries }, groupIndex) => {
-                const headingId = `${listboxId}-group-${groupIndex}`;
-                return (
-                  <div key={group} role="group" aria-labelledby={headingId} className="grid gap-0.5">
-                    <p
-                      id={headingId}
-                      className="px-2.5 pt-1 pb-0.5 font-mono text-overline font-medium text-muted uppercase"
-                    >
-                      {group}
-                    </p>
-                    {entries.map(({ item, index }) => {
-                      const Icon = item.icon;
-                      const isSelected = index === activeIndex;
-                      return (
-                        <div
-                          key={item.id}
-                          id={`${listboxId}-option-${index}`}
-                          role="option"
-                          aria-selected={isSelected}
-                          onMouseEnter={() => setSelectedIndex(index)}
-                          onMouseDown={(event) => event.preventDefault()}
-                          onClick={() => activateDestination(item)}
-                          className={cn(
-                            "flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-2 text-start text-body select-none",
-                            isSelected ? "bg-primary-subtle font-medium text-foreground" : "text-foreground-secondary",
-                          )}
-                        >
-                          <Icon
-                            aria-hidden="true"
-                            strokeWidth={1.75}
-                            className={cn("size-4 shrink-0", isSelected ? "text-foreground" : "text-muted-subtle")}
-                          />
-                          <span className="min-w-0 flex-1 truncate">
-                            <span>{item.label}</span>
-                            {item.meta ? (
-                              <span className="ml-2 text-caption font-normal text-muted">{item.meta}</span>
-                            ) : null}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+          <div className="max-h-[min(20rem,50dvh)] overflow-y-auto overscroll-contain p-1.5">
+            {items.length === 0 ? (
+              <p role="status" className="px-3 py-8 text-center text-body text-muted">
+                Nenhum destino encontrado para “{query}”.
+              </p>
+            ) : (
+              <div id={listboxId} role="listbox" aria-label="Destinos" className="grid gap-2.5">
+                {groupedItems.map(({ group, entries }, groupIndex) => {
+                  const headingId = `${listboxId}-group-${groupIndex}`;
+                  return (
+                    <div key={group} role="group" aria-labelledby={headingId} className="grid gap-0.5">
+                      <p
+                        id={headingId}
+                        className="px-2.5 pt-1 pb-0.5 font-mono text-overline font-medium text-muted uppercase"
+                      >
+                        {group}
+                      </p>
+                      {entries.map(({ item, index }) => {
+                        const Icon = item.icon;
+                        const isSelected = index === activeIndex;
+                        return (
+                          <div
+                            key={item.id}
+                            id={`${listboxId}-option-${index}`}
+                            role="option"
+                            aria-selected={isSelected}
+                            onMouseEnter={() => setSelectedIndex(index)}
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => activateDestination(item)}
+                            className={cn(
+                              "flex min-h-10 w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-2 text-start text-body select-none pointer-coarse:min-h-11",
+                              isSelected
+                                ? "bg-primary-subtle font-medium text-foreground"
+                                : "text-foreground-secondary",
+                            )}
+                          >
+                            <Icon
+                              aria-hidden="true"
+                              strokeWidth={1.75}
+                              className={cn("size-4 shrink-0", isSelected ? "text-foreground" : "text-muted-subtle")}
+                            />
+                            <span className="min-w-0 flex-1 truncate">
+                              <span>{item.label}</span>
+                              {item.meta ? (
+                                <span className="ml-2 text-caption font-normal text-muted">{item.meta}</span>
+                              ) : null}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
-        <div className="hidden items-center justify-between gap-3 border-t border-border bg-background px-3.5 py-2 text-caption text-muted sm:flex">
-          <span className="flex items-center gap-3">
-            <span>
-              <kbd className="font-mono text-foreground-secondary">↑↓</kbd> navegar
+          <div className="hidden items-center justify-between gap-3 border-t border-border bg-background px-3.5 py-2 text-caption text-muted sm:flex">
+            <span className="flex items-center gap-3">
+              <span>
+                <kbd className="font-mono text-foreground-secondary">↑↓</kbd> navegar
+              </span>
+              <span>
+                <kbd className="font-mono text-foreground-secondary">↵</kbd> abrir
+              </span>
+              <span>
+                <kbd className="font-mono text-foreground-secondary">Esc</kbd> fechar
+              </span>
             </span>
             <span>
-              <kbd className="font-mono text-foreground-secondary">↵</kbd> abrir
+              <kbd className="font-mono text-foreground-secondary">{isMac ? "⌘B" : "Ctrl+B"}</kbd> barra lateral
             </span>
-            <span>
-              <kbd className="font-mono text-foreground-secondary">Esc</kbd> fechar
-            </span>
-          </span>
-          <span>
-            <kbd className="font-mono text-foreground-secondary">{isMac ? "⌘B" : "Ctrl+B"}</kbd> barra lateral
-          </span>
-        </div>
-      </DialogContent>
-    </Dialog>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

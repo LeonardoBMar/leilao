@@ -184,8 +184,9 @@ function NavList({
                     ) : null}
                   </Link>
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={10}>
-                  {label}
+                <TooltipContent side="right" sideOffset={10} className="inline-flex items-center gap-2">
+                  <span>{label}</span>
+                  {badges?.[href] ? <span className="empty:hidden">{badges[href]}</span> : null}
                 </TooltipContent>
               </Tooltip>
             </li>
