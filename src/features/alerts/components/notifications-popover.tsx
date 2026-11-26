@@ -73,7 +73,7 @@ export function NotificationsPopover({
           {isDestructive ? (
             <span
               aria-hidden="true"
-              className="absolute top-0.5 right-0.5 flex size-4 items-center justify-center rounded-full bg-error text-caption leading-none font-bold text-white ring-2 ring-surface"
+              className="absolute top-0.5 right-0.5 flex size-4 items-center justify-center rounded-full bg-error text-caption leading-none font-bold text-surface ring-2 ring-surface"
             >
               !
             </span>
@@ -127,6 +127,9 @@ export function NotificationsPopover({
                     <div className="grid min-w-0 flex-1 gap-0.5">
                       <span className="text-label font-semibold text-foreground">{collectorWarning.label}</span>
                       <span className="text-caption text-foreground-secondary">{collectorWarning.impact}</span>
+                      <span className="text-caption text-muted">
+                        Os dados voltam a atualizar assim que a coleta normalizar.
+                      </span>
                     </div>
                     <ChevronRight
                       aria-hidden="true"
@@ -147,6 +150,9 @@ export function NotificationsPopover({
                     <div className="grid min-w-0 flex-1 gap-0.5">
                       <span className="text-label font-semibold text-foreground">{collectorWarning.label}</span>
                       <span className="text-caption text-foreground-secondary">{collectorWarning.impact}</span>
+                      <span className="text-caption text-muted">
+                        Os dados voltam a atualizar assim que a coleta normalizar.
+                      </span>
                     </div>
                   </div>
                 )}

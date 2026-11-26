@@ -2,13 +2,14 @@
 
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
-import { Component, type ErrorInfo, type ReactNode } from "react";
+import { Component, type ErrorInfo, type ReactNode, useTransition } from "react";
 
 import { Alert, AlertDescription, AlertTitle, Button, ButtonLink } from "@/components/ui";
 
 type ErrorBoundaryInnerProps = {
   title: string;
-  onRetry: () => void;
+  isRetrying: boolean;
+  onRetry: (reset: () => void) => void;
   fallbackHref?: Route;
   fallbackLabel?: string;
   children: ReactNode;
@@ -30,13 +31,12 @@ class ErrorBoundaryInner extends Component<ErrorBoundaryInnerProps, ErrorBoundar
   }
 
   private handleRetry = () => {
-    this.setState({ hasError: false });
-    this.props.onRetry();
+    this.props.onRetry(() => this.setState({ hasError: false }));
   };
 
   override render() {
     if (!this.state.hasError) return this.props.children;
-    const { fallbackHref, fallbackLabel } = this.props;
+    const { fallbackHref, fallbackLabel, isRetrying } = this.props;
     return (
       <Alert variant="error" className="grid gap-3">
         <div className="grid gap-1">
@@ -48,7 +48,14 @@ class ErrorBoundaryInner extends Component<ErrorBoundaryInnerProps, ErrorBoundar
           </AlertDescription>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button type="button" variant="secondary" size="sm" onClick={this.handleRetry}>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            loading={isRetrying}
+            loadingLabel="Tentando…"
+            onClick={this.handleRetry}
+          >
             Tentar novamente
           </Button>
           {fallbackHref && fallbackLabel ? (
@@ -75,12 +82,19 @@ export function SectionErrorBoundary({
   children: ReactNode;
 }) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   return (
     <ErrorBoundaryInner
       title={title}
+      isRetrying={isPending}
       fallbackHref={fallbackHref}
       fallbackLabel={fallbackLabel}
-      onRetry={() => router.refresh()}
+      onRetry={(reset) => {
+        startTransition(() => {
+          router.refresh();
+          reset();
+        });
+      }}
     >
       {children}
     </ErrorBoundaryInner>

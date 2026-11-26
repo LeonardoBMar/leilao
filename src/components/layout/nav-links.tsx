@@ -109,8 +109,9 @@ function NavList({
   const isAdmin = useSyncExternalStore(subscribeAdminRole, getAdminRoleSnapshot, getAdminRoleServerSnapshot);
   const isSystemActive = pathname !== null && (pathname === "/sistema" || pathname.startsWith("/sistema/"));
   const isPreferencesActive = pathname === "/sistema/preferencias";
-  const [systemOpenOverride, setSystemOpenOverride] = useState<boolean | null>(null);
-  const systemOpen = systemOpenOverride ?? isSystemActive;
+  const [systemOpenOverride, setSystemOpenOverride] = useState<{ pathname: string | null; open: boolean } | null>(null);
+  const systemOpen =
+    systemOpenOverride && systemOpenOverride.pathname === pathname ? systemOpenOverride.open : isSystemActive;
 
   const list = (
     <LayoutGroup id={groupId}>
@@ -303,7 +304,7 @@ function NavList({
           <div className="grid gap-1">
             <button
               type="button"
-              onClick={() => setSystemOpenOverride(!systemOpen)}
+              onClick={() => setSystemOpenOverride({ pathname, open: !systemOpen })}
               aria-expanded={systemOpen}
               aria-controls={systemListId}
               aria-current={isSystemActive && !systemOpen ? "true" : undefined}
