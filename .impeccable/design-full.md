@@ -852,7 +852,7 @@ Easing padrão: `cubic-bezier(0.2, 0, 0, 1)`. Saída pode usar `cubic-bezier(0.4
 
 ### 15.1 Dashboard (`/dashboard`)
 
-1. `PageHeader` com título **“Visão geral”**, linha compacta da coleta à direita (`X veículos abertos até 150 km de … · Coleta dd mmm, hh:mm`), e ações **“Ver leilões”** (`primary`) e **“Novo leilão”** (`secondary`).
+1. `PageHeader` com título **“Início”**, linha compacta da coleta à direita (`X veículos abertos até 150 km de … · Coleta dd mmm, hh:mm`), e ações **“Ver leilões”** (`primary`) e **“Novo leilão”** (`secondary`).
 2. Faixa de KPIs operacionais (`DashboardKpis`) em grade hairline (`2` colunas no mobile, `4` em `@3xl+`): **Para analisar**, **Acompanhados** (destaque suave em `error-subtle` a 40% quando houver provável acima do limite), **Pendências** (destaque suave em `warning-subtle` a 40% quando houver pendências) e **Próximo no catálogo**, cada célula ligada à seção ou leilão correspondente.
 3. Alertas não lidos e saúde da coleta consolidados na central de notificações do header (`NotificationsPopover`) e no contador `accent` da sidebar, mantendo o canvas do dashboard focado na triagem operacional.
 4. Duas colunas no desktop amplo (`1,7 : 1`):
