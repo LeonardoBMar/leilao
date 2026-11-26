@@ -14,7 +14,7 @@ import Image from "next/image";
 
 import { Badge, ButtonLink, Money } from "@/components/ui";
 import type { LimitFit } from "@/domain/listings/estimates";
-import type { Cents } from "@/domain/money";
+import { type Cents, cents } from "@/domain/money";
 import { formatDateTime, formatKm, formatRatio } from "@/lib/format";
 import {
   CONDITION_FLAG_LABELS,
@@ -29,6 +29,7 @@ import {
   marketValueOriginLabel,
   priceEvidenceLabel,
 } from "@/lib/listing-labels";
+import { cn } from "@/lib/utils";
 
 import type { ListingListItem } from "../types";
 import { AddToTrackerButton } from "./add-to-tracker-button";
@@ -249,6 +250,10 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
       : limit?.kind === "estimated"
         ? `${limit.n} ${limit.n === 1 ? "análise" : "análises"}`
         : null;
+  const headroom =
+    limit && limit.kind !== "insufficient" && limit.maxBid !== null && price && price.kind !== "insufficient"
+      ? limit.maxBid - price.median
+      : null;
 
   const fullTitle = item.modelYear ? `${item.title} ${item.modelYear}` : item.title;
 
@@ -313,6 +318,19 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
                 <dt className="text-caption text-muted">Limite{limitOrigin ? ` (${limitOrigin})` : ""}</dt>
                 <dd className="text-label font-medium whitespace-nowrap text-foreground-secondary">
                   {limit.maxBid !== null ? <Money value={limit.maxBid} /> : "Sem lance viável"}
+                </dd>
+              </div>
+            ) : null}
+            {headroom !== null ? (
+              <div className="grid gap-0.5">
+                <dt className="text-caption text-muted">{headroom >= 0 ? "Folga est." : "Acima est."}</dt>
+                <dd
+                  className={cn(
+                    "text-label font-semibold whitespace-nowrap",
+                    headroom >= 0 ? "text-success" : "text-error",
+                  )}
+                >
+                  <Money value={cents(Math.abs(headroom))} />
                 </dd>
               </div>
             ) : null}
