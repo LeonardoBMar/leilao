@@ -15,6 +15,7 @@ export type CollectorNotification = {
   variant: "destructive" | "warning";
   label: string;
   impact: string;
+  lastFinishedAt?: string | null;
 };
 
 type NotificationsPopoverProps = {
@@ -34,19 +35,25 @@ export function NotificationsPopover({
   const [open, setOpen] = useState(false);
   const [confirmMarkAll, setConfirmMarkAll] = useState(false);
   const [pendingAlertId, setPendingAlertId] = useState<string | null>(null);
+  const [dismissedWarningKey, setDismissedWarningKey] = useState<string | null>(null);
   const cancelConfirmRef = useRef<HTMLButtonElement>(null);
   const markAllTriggerRef = useRef<HTMLButtonElement>(null);
   const { isPending: isMarkingAllRead, run: runMarkAllRead } = useActionToast();
   const { isPending: isMarkingSingleRead, run: runMarkSingleRead } = useActionToast();
-  const totalCount = unreadTotal + (collectorWarning ? 1 : 0);
+  const warningKey = collectorWarning
+    ? `${collectorWarning.variant}:${collectorWarning.label}:${collectorWarning.lastFinishedAt ?? ""}`
+    : null;
+  const activeCollectorWarning =
+    collectorWarning && (isAdmin || dismissedWarningKey !== warningKey) ? collectorWarning : null;
+  const totalCount = unreadTotal + (activeCollectorWarning ? 1 : 0);
   const hasNotifications = totalCount > 0;
-  const isDestructive = collectorWarning?.variant === "destructive";
-  const isWarning = collectorWarning?.variant === "warning";
+  const isDestructive = activeCollectorWarning?.variant === "destructive";
+  const isWarning = activeCollectorWarning?.variant === "warning";
 
   const statusSuffix = isDestructive
     ? " — falha na coleta"
     : isWarning
-      ? ` — ${collectorWarning.label.toLowerCase()}`
+      ? ` — ${activeCollectorWarning.label.toLowerCase()}`
       : "";
 
   const triggerLabel = hasNotifications
@@ -78,9 +85,9 @@ export function NotificationsPopover({
           {isDestructive ? (
             <span
               aria-hidden="true"
-              className="absolute top-0.5 right-0.5 flex size-4 items-center justify-center rounded-full bg-error text-caption leading-none font-bold text-surface ring-2 ring-surface"
+              className="absolute top-0.5 right-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-error px-1 text-caption leading-none font-bold text-surface tabular-nums ring-2 ring-surface"
             >
-              !
+              {unreadTotal > 0 ? (unreadTotal > 99 ? "99+" : unreadTotal) : "!"}
             </span>
           ) : hasNotifications ? (
             <span
@@ -113,7 +120,7 @@ export function NotificationsPopover({
           </div>
         ) : (
           <div className="max-h-[min(28rem,70dvh)] divide-y divide-border overflow-y-auto overscroll-contain">
-            {collectorWarning ? (
+            {activeCollectorWarning ? (
               <div className="grid gap-2 px-4 py-3">
                 <p className="font-mono text-overline text-muted uppercase">Coleta</p>
                 {isAdmin ? (
@@ -121,10 +128,10 @@ export function NotificationsPopover({
                     href="/sistema"
                     onClick={() => setOpen(false)}
                     className={cn(
-                      "group flex items-start gap-2.5 rounded-md border p-2.5 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent",
+                      "group flex items-start gap-2.5 rounded-md border p-2.5 transition-[box-shadow,border-color] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent",
                       isDestructive
-                        ? "border-error-border bg-error-subtle hover:bg-error-subtle/80"
-                        : "border-warning-border bg-warning-subtle hover:bg-warning-subtle/80",
+                        ? "border-error-border bg-error-subtle hover:ring-1 hover:ring-error-border hover:ring-inset"
+                        : "border-warning-border bg-warning-subtle hover:ring-1 hover:ring-warning-border hover:ring-inset",
                     )}
                   >
                     <AlertTriangle
@@ -132,10 +139,12 @@ export function NotificationsPopover({
                       className={cn("mt-0.5 size-4 shrink-0", isDestructive ? "text-error" : "text-warning")}
                     />
                     <div className="grid min-w-0 flex-1 gap-0.5">
-                      <span className="text-label font-semibold text-foreground">{collectorWarning.label}</span>
-                      <span className="text-caption text-foreground-secondary">{collectorWarning.impact}</span>
-                      <span className="text-caption text-muted">
-                        Os dados voltam a atualizar assim que a coleta normalizar.
+                      <span className="text-label font-semibold text-foreground">{activeCollectorWarning.label}</span>
+                      <span className="text-caption text-foreground-secondary">{activeCollectorWarning.impact}</span>
+                      <span className="text-caption text-muted tabular-nums">
+                        {activeCollectorWarning.lastFinishedAt
+                          ? `Última coleta concluída: ${formatCompactDateTime(new Date(activeCollectorWarning.lastFinishedAt))}.`
+                          : "Os dados voltam a atualizar assim que a coleta normalizar."}
                       </span>
                     </div>
                     <ChevronRight
@@ -146,21 +155,34 @@ export function NotificationsPopover({
                 ) : (
                   <div
                     className={cn(
-                      "flex items-start gap-2.5 rounded-md border p-2.5",
+                      "grid gap-2 rounded-md border p-2.5",
                       isDestructive ? "border-error-border bg-error-subtle" : "border-warning-border bg-warning-subtle",
                     )}
                   >
-                    <AlertTriangle
-                      aria-hidden="true"
-                      className={cn("mt-0.5 size-4 shrink-0", isDestructive ? "text-error" : "text-warning")}
-                    />
-                    <div className="grid min-w-0 flex-1 gap-0.5">
-                      <span className="text-label font-semibold text-foreground">{collectorWarning.label}</span>
-                      <span className="text-caption text-foreground-secondary">{collectorWarning.impact}</span>
-                      <span className="text-caption text-muted">
-                        Os dados voltam a atualizar assim que a coleta normalizar.
-                      </span>
+                    <div className="flex items-start gap-2.5">
+                      <AlertTriangle
+                        aria-hidden="true"
+                        className={cn("mt-0.5 size-4 shrink-0", isDestructive ? "text-error" : "text-warning")}
+                      />
+                      <div className="grid min-w-0 flex-1 gap-0.5">
+                        <span className="text-label font-semibold text-foreground">{activeCollectorWarning.label}</span>
+                        <span className="text-caption text-foreground-secondary">{activeCollectorWarning.impact}</span>
+                        <span className="text-caption text-muted tabular-nums">
+                          {activeCollectorWarning.lastFinishedAt
+                            ? `Última coleta concluída: ${formatCompactDateTime(new Date(activeCollectorWarning.lastFinishedAt))}.`
+                            : "Os dados voltam a atualizar assim que a coleta normalizar."}
+                        </span>
+                      </div>
                     </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setDismissedWarningKey(warningKey)}
+                      className="w-fit justify-self-end"
+                    >
+                      Dispensar aviso
+                    </Button>
                   </div>
                 )}
               </div>

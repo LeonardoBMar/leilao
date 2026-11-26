@@ -9,12 +9,14 @@ const LIMIT = 5;
 function collectorNotificationOf(
   collector: Awaited<ReturnType<typeof getCollectorStatus>>,
 ): CollectorNotification | null {
+  const lastFinishedAt = collector.lastFinishedAt ? collector.lastFinishedAt.toISOString() : null;
   if (collector.health === "failed") {
     return {
       variant: "destructive",
       label:
         collector.failingSources.length > 0 ? `Coleta falhou: ${collector.failingSources.join(", ")}` : "Coleta falhou",
       impact: "Os lances e anúncios das fontes com falha podem estar desatualizados.",
+      lastFinishedAt,
     };
   }
   if (collector.health === "late") {
@@ -22,6 +24,7 @@ function collectorNotificationOf(
       variant: "warning",
       label: "Coleta atrasada",
       impact: "A coleta está atrasada; novos lotes e lances podem levar mais tempo para atualizar.",
+      lastFinishedAt,
     };
   }
   if (collector.health === "ok" && collector.failedListings > 0) {
@@ -32,6 +35,7 @@ function collectorNotificationOf(
           ? "1 lote com falha na coleta"
           : `${collector.failedListings} lotes com falha na coleta`,
       impact: "Alguns anúncios não puderam ser atualizados na última coleta.",
+      lastFinishedAt,
     };
   }
   return null;
