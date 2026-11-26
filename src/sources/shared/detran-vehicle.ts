@@ -1,6 +1,8 @@
 // Marca e modelo no formato do registro nacional de veículos ("VW/GOL 1.6", "I/FIAT SIENA"), o mesmo que os Detrans
 // escrevem nos lotes (Detran-MG, Detran-SC).
 
+import { nonEmpty } from "./extract";
+
 /**
  * Prefixos antes da barra que não são a marca: importado (`I/`, `IMP/`) e montadora (`JTA/SUZUKI`, `Y/YAMAHA`).
  * Nesses casos a marca é a primeira palavra depois da barra.
@@ -33,9 +35,4 @@ export function splitDetranVehicle(text: string | null): { brand: string | null;
 
 function brandName(brand: string): string | null {
   return nonEmpty(BRAND_NAMES[brand] ?? brand);
-}
-
-function nonEmpty(text: string): string | null {
-  const trimmed = text.trim();
-  return trimmed === "" ? null : trimmed;
 }

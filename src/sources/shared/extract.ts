@@ -84,7 +84,8 @@ export function extractJsonLd(html: string): unknown[] {
   return blocks;
 }
 
-function parseJson(text: string): unknown {
+/** Faz parse de JSON retornando `null` em caso de erro de sintaxe. */
+export function parseJson(text: string): unknown {
   try {
     const value: unknown = JSON.parse(text);
     return value;
@@ -244,4 +245,43 @@ export function parseBrasiliaDateTime(text: string): Date | null {
 /** Valor em reais vindo da fonte (ex.: 23900 ou 41247.5) para centavos inteiros. */
 export function reaisToCents(value: number): Cents {
   return cents(Math.round(value * 100));
+}
+
+/** Remove tags HTML, decodifica entidades e colapsa espaços em uma única linha. */
+export function htmlToText(html: string): string {
+  return decodeHtmlEntities(html.replace(/<[^>]*>/g, " "))
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Texto aparado, ou `null` quando ausente ou vazio. */
+export function nonEmpty(text: string | null | undefined): string | null {
+  const trimmed = text?.trim() ?? "";
+  return trimmed === "" ? null : trimmed;
+}
+
+/** Remove strings vazias e duplicadas preservando a ordem da primeira ocorrência. */
+export function uniqueNonEmpty(values: readonly string[]): string[] {
+  return [...new Set(values.filter((value) => value !== ""))];
+}
+
+/** Escapa metacaracteres de expressão regular para busca literal. */
+export function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Remove diacríticos, converte para maiúsculas e apara espaços nas bordas. */
+export function plainUpper(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .trim();
+}
+
+/** Ano de 4 dígitos entre 1900 e `maxYear` (padrão 2100); inválido ou fora da faixa vira `null`. */
+export function parseYear(value: string | number | null | undefined, maxYear = 2100): number | null {
+  if (value == null) return null;
+  const year = typeof value === "number" ? value : /^\d{4}$/.test(value.trim()) ? Number(value.trim()) : Number.NaN;
+  return Number.isInteger(year) && year >= 1900 && year <= maxYear ? year : null;
 }

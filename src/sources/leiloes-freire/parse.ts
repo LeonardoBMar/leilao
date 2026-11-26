@@ -5,7 +5,7 @@ import { bps, type Cents } from "@/domain/money";
 
 import { LEILOES_FREIRE_IMAGE_ORIGIN } from "../image-origins";
 import { splitDetranVehicle } from "../shared/detran-vehicle";
-import { decodeHtmlEntities, reaisToCents } from "../shared/extract";
+import { decodeHtmlEntities, htmlToText, nonEmpty, reaisToCents, uniqueNonEmpty as unique } from "../shared/extract";
 import { redactVehicleIds } from "../shared/redact";
 import { categoryOfVehicle, isKnownVehicleBrand } from "../shared/vehicle-category";
 import type { ListingDetails } from "../types";
@@ -358,15 +358,5 @@ function money(text: string | null): Cents | null {
 }
 
 function plain(html: string): string {
-  return decodeHtmlEntities(decodeHtmlEntities(html).replace(/<[^>]*>/g, " "))
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function nonEmpty(text: string): string | null {
-  return text.trim() === "" ? null : text.trim();
-}
-
-function unique(values: readonly string[]): string[] {
-  return [...new Set(values.filter((value) => value !== ""))];
+  return htmlToText(decodeHtmlEntities(html));
 }

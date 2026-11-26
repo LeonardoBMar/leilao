@@ -11,7 +11,14 @@ import { bps, type Cents, parseBRL } from "@/domain/money";
 import { formatDate } from "@/lib/format";
 
 import { FREITAS_IMAGE_ORIGIN } from "../image-origins";
-import { decodeHtmlEntities, htmlToLines, parseBrasiliaDateTime } from "../shared/extract";
+import {
+  decodeHtmlEntities,
+  htmlToLines,
+  htmlToText as plain,
+  nonEmpty,
+  parseBrasiliaDateTime,
+  parseJson,
+} from "../shared/extract";
 import { redactVehicleIds } from "../shared/redact";
 import type { ListingDetails } from "../types";
 
@@ -493,16 +500,6 @@ function photoUrl(url: string | undefined): string | null {
   return url?.startsWith(`${FREITAS_IMAGE_ORIGIN}/`) ? url : null;
 }
 
-function plain(html: string): string {
-  return decodeHtmlEntities(html.replace(/<[^>]*>/g, " "))
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function nonEmpty(text: string): string | null {
-  return text.trim() === "" ? null : text.trim();
-}
-
 function readRaw(raw: unknown): FreitasRaw | null {
   if (!isRecord(raw) || typeof raw.auctionId !== "string" || !isRecord(raw.card)) return null;
   const card = raw.card;
@@ -544,15 +541,6 @@ function readPage(page: Record<string, unknown>): FreitasPage {
     opensAt: text("opensAt"),
     yardAddress: text("yardAddress"),
   };
-}
-
-function parseJson(text: string): unknown {
-  try {
-    const value: unknown = JSON.parse(text);
-    return value;
-  } catch {
-    return null;
-  }
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>

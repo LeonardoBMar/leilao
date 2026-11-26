@@ -15,7 +15,7 @@ import { bps } from "@/domain/money";
 import { err, ok, type Result } from "@/lib/result";
 
 import { LEILO_IMAGE_ORIGIN } from "../image-origins";
-import { extractAssignedJson, extractJsonLd, reaisToCents } from "../shared/extract";
+import { extractAssignedJson, extractJsonLd, parseYear as toYear, reaisToCents } from "../shared/extract";
 import { redactVehicleIds } from "../shared/redact";
 import type { ListingDetails, ParseError } from "../types";
 import { type LeiloLot, leiloLotSchema, type LeiloVehicleLd, leiloVehicleLdSchema } from "./schema";
@@ -268,11 +268,6 @@ const toDate = (value: string | null | undefined) => (value ? new Date(value) : 
 const toInt = (value: number | null | undefined) => (value == null ? null : Math.round(value));
 const centsOrNull = (value: number | null | undefined) => (value == null ? null : reaisToCents(value));
 const fromPhotoOrigin = (urls: readonly string[]) => urls.filter((url) => url.startsWith(PHOTO_ORIGIN));
-
-function toYear(value: string | number | null | undefined): number | null {
-  const year = Number(value);
-  return Number.isInteger(year) && year >= 1900 && year <= 2100 ? year : null;
-}
 
 function normalizeState(value: string | null | undefined): string | null {
   const state = value?.trim().toUpperCase();

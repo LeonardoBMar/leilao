@@ -6,7 +6,16 @@ import { bps, type Cents, parseBRL } from "@/domain/money";
 import { formatDate } from "@/lib/format";
 
 import { LEILAO_ONLINE_IMAGE_ORIGIN } from "../image-origins";
-import { decodeHtmlEntities, htmlToLines, parseBrasiliaDateTime } from "../shared/extract";
+import {
+  decodeHtmlEntities,
+  escapeRegExp,
+  htmlToLines,
+  htmlToText as plain,
+  nonEmpty,
+  parseBrasiliaDateTime,
+  parseYear,
+  uniqueNonEmpty as unique,
+} from "../shared/extract";
 import { redactVehicleIds } from "../shared/redact";
 import type { ListingDetails } from "../types";
 import { type LeilaoOnlineRaw, leilaoOnlineRawSchema } from "./schema";
@@ -385,9 +394,7 @@ function brandName(brand: string): string | null {
 }
 
 function toYear(value: string | undefined, now: Date): number | null {
-  if (value === undefined || !/^\d{4}$/.test(value)) return null;
-  const year = Number(value);
-  return year >= 1900 && year <= now.getUTCFullYear() + 1 ? year : null;
+  return parseYear(value, now.getUTCFullYear() + 1);
 }
 
 /** "2026-10-14 15:00:00" ou "06/10/2026 15:31:25", em horário de Brasília → instante UTC. */
@@ -398,22 +405,4 @@ function siteDateTime(text: string): Date | null {
 function money(text: string): Cents | null {
   const value = parseBRL(text.replace(/[^\d.,]/g, ""));
   return value !== null && value > 0 ? value : null;
-}
-
-function plain(html: string): string {
-  return decodeHtmlEntities(html.replace(/<[^>]*>/g, " "))
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function nonEmpty(text: string): string | null {
-  return text.trim() === "" ? null : text.trim();
-}
-
-function unique(values: readonly string[]): string[] {
-  return [...new Set(values.filter((value) => value !== ""))];
-}
-
-function escapeRegExp(text: string): string {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

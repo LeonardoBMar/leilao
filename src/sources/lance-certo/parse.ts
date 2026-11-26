@@ -7,7 +7,7 @@ import { type Cents, cents, parseBRL } from "@/domain/money";
 
 import { LANCE_CERTO_IMAGE_ORIGIN } from "../image-origins";
 import { splitDetranVehicle } from "../shared/detran-vehicle";
-import { decodeHtmlEntities } from "../shared/extract";
+import { decodeHtmlEntities, htmlToText as plain, nonEmpty, uniqueNonEmpty as unique } from "../shared/extract";
 import { REDACTED, redactVehicleIds } from "../shared/redact";
 import { categoryOfVehicle, isKnownVehicleBrand } from "../shared/vehicle-category";
 import type { ListingDetails } from "../types";
@@ -445,18 +445,4 @@ function span(html: string, id: string): string | null {
 
 function rawSpan(html: string, id: string): string | null {
   return new RegExp(`id="ContentPlaceHolder1_${id}"[^>]*>([\\s\\S]*?)</span>`).exec(html)?.[1] ?? null;
-}
-
-function plain(html: string): string {
-  return decodeHtmlEntities(html.replace(/<[^>]*>/g, " "))
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function nonEmpty(text: string): string | null {
-  return text.trim() === "" ? null : text.trim();
-}
-
-function unique(values: readonly string[]): string[] {
-  return [...new Set(values.filter((value) => value !== ""))];
 }

@@ -4,7 +4,17 @@ import type { ListingCategory, ListingInput, ListingStatus } from "@/domain/list
 import { bps, type Cents, sumCents } from "@/domain/money";
 
 import { SUPORTE_LEILOES_IMAGE_ORIGIN } from "../image-origins";
-import { decodeHtmlEntities, extractAssignedJson, htmlToLines, reaisToCents } from "../shared/extract";
+import {
+  decodeHtmlEntities,
+  escapeRegExp,
+  extractAssignedJson,
+  htmlToLines,
+  htmlToText as plain,
+  nonEmpty,
+  parseYear,
+  reaisToCents,
+  uniqueNonEmpty as unique,
+} from "../shared/extract";
 import { redactVehicleIds } from "../shared/redact";
 import { categoryOfVehicle } from "../shared/vehicle-category";
 import type { ListingDetails } from "../types";
@@ -326,9 +336,7 @@ function isSalvage(title: string): boolean {
 }
 
 function toYear(value: string | undefined, now: Date): number | null {
-  if (value === undefined) return null;
-  const year = Number(value);
-  return year >= 1900 && year <= now.getUTCFullYear() + 1 ? year : null;
+  return parseYear(value, now.getUTCFullYear() + 1);
 }
 
 /** "2026-10-02 14:27:59.000000" no fuso informado → instante UTC. Fuso desconhecido: `null` (nunca adivinhado). */
@@ -353,22 +361,4 @@ function money(text: string | null): Cents | null {
   if (text === null) return null;
   const value = Number(text);
   return Number.isFinite(value) && value > 0 ? reaisToCents(value) : null;
-}
-
-function plain(html: string): string {
-  return decodeHtmlEntities(html.replace(/<[^>]*>/g, " "))
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function nonEmpty(text: string): string | null {
-  return text.trim() === "" ? null : text.trim();
-}
-
-function unique(values: readonly string[]): string[] {
-  return [...new Set(values.filter((value) => value !== ""))];
-}
-
-function escapeRegExp(text: string): string {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

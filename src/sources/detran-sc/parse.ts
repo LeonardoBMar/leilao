@@ -9,7 +9,7 @@ import { err, ok, type Result } from "@/lib/result";
 
 import { ASTAVERO_IMAGE_ORIGIN } from "../image-origins";
 import { splitDetranVehicle } from "../shared/detran-vehicle";
-import { htmlToLines, reaisToCents } from "../shared/extract";
+import { htmlToLines, nonEmpty, parseJson, parseYear as toYear, plainUpper, reaisToCents } from "../shared/extract";
 import { redactVehicleIds } from "../shared/redact";
 import type { ListingDetails, ParseError } from "../types";
 import {
@@ -346,31 +346,8 @@ function conditionOf(salvage: boolean): ListingCondition {
   return salvage ? { ...EMPTY_CONDITION, damageLevel: "salvage" } : EMPTY_CONDITION;
 }
 
-function parseJson(text: string): unknown {
-  try {
-    const value: unknown = JSON.parse(text);
-    return value;
-  } catch {
-    return null;
-  }
-}
-
 function isoOrNull(text: string | null | undefined): string | null {
   if (!text) return null;
   const date = new Date(text);
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
-}
-
-function toYear(text: string | undefined): number | null {
-  const year = text === undefined ? Number.NaN : Number(text);
-  return Number.isInteger(year) && year >= 1900 && year <= 2100 ? year : null;
-}
-
-function plainUpper(text: string): string {
-  return text.normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase().trim();
-}
-
-function nonEmpty(text: string | null | undefined): string | null {
-  const trimmed = text?.trim() ?? "";
-  return trimmed === "" ? null : trimmed;
 }

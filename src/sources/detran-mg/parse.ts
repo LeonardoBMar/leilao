@@ -8,7 +8,7 @@ import { err, ok, type Result } from "@/lib/result";
 
 import { DETRAN_MG_IMAGE_ORIGIN } from "../image-origins";
 import { splitDetranVehicle } from "../shared/detran-vehicle";
-import { decodeHtmlEntities, htmlToLines } from "../shared/extract";
+import { decodeHtmlEntities, htmlToLines, nonEmpty, parseYear as toYear } from "../shared/extract";
 import { categoryOfVehicle } from "../shared/vehicle-category";
 import type { ListingDetails, ParseError } from "../types";
 import { type DetranLiveLot, detranLiveLotSchema, detranLiveResponseSchema } from "./schema";
@@ -373,14 +373,4 @@ function money(text: string | null | undefined): Cents | null {
   // "R$ 1.500,00" na página; "1500.00" na consulta interna.
   if (/^\d+(\.\d{1,2})?$/.test(text.trim())) return parseBRL(text.trim().replace(".", ","));
   return parseBRL(text.replace(/R\$\s*/i, ""));
-}
-
-function toYear(text: string | null): number | null {
-  const year = text === null ? Number.NaN : Number(text);
-  return Number.isInteger(year) && year >= 1900 && year <= 2100 ? year : null;
-}
-
-function nonEmpty(text: string): string | null {
-  const trimmed = text.trim();
-  return trimmed === "" ? null : trimmed;
 }
