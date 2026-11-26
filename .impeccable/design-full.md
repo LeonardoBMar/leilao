@@ -711,7 +711,7 @@ Ordem inicial:
 - A conta (avatar com dropdown de Preferências, Guia e atalhos e Sair) fica ancorada no rodapé da sidebar no desktop e no canto direito do header fixo (`48px`) abaixo de `lg`, ao lado da central de notificações (falhas de coleta + novos alertas).
 - A sidebar fica sobre o papel (`background`), separada por borda hairline `border`.
 - Item: altura mínima de 36 px, `radius-md`, 1 px entre itens, ícone 16 px em `muted-subtle`, texto `body` peso 500 em `foreground-secondary`.
-- Ativo: fundo `primary-subtle` (sem borda nem sombra), texto e ícone em tinta, peso 600; mantém a mesma cor no hover.
+- Ativo: fundo `primary-subtle` com contorno hairline `border`, texto e ícone em tinta, peso 600; mantém a mesma cor no hover.
 - Hover: fundo `primary-subtle` a 60%, texto e ícone em tinta.
 - Não usar badges de contagem na navegação salvo necessidade operacional validada. Única exceção validada: **não lidos em Alertas** (etapa 2 de docs/PLANO-COLETA.md), pílula `accent` com texto branco alinhada à direita, some quando é zero.
 
@@ -857,7 +857,7 @@ Easing padrão: `cubic-bezier(0.2, 0, 0, 1)`. Saída pode usar `cubic-bezier(0.4
 3. Alertas não lidos e saúde da coleta consolidados na central de notificações do header (`NotificationsPopover`) e no contador `accent` da sidebar, mantendo o canvas do dashboard focado na triagem operacional.
 4. Duas colunas no desktop amplo (`1,7 : 1`):
    - à esquerda, nesta ordem (`SPEC §5`):
-     - **“Para analisar agora”**: até `4` `ListingCard` compactos em grade de `2` colunas em `@3xl+` (1 coluna abaixo), mostrando lance, preço provável, limite estimado, evidência (`n`, confiança e origem do limite), ações (`Analisar agora`, `Inspecionar`, `Dispensar`), aviso quando truncado e rodapé **“Ver mais N no catálogo”** quando houver mais candidatos;
+     - **“Para analisar agora”**: até `4` `ListingCard` compactos em grade de `2` colunas em `@3xl+` (1 coluna abaixo), mostrando lance, preço provável (`n`), limite estimado (origem), inspeção rápida pelo título/miniatura (`ListingQuickDrawer`), ações (`Analisar agora`, `Dispensar`), aviso quando truncado e rodapé **“Ver mais N no catálogo”** quando houver mais candidatos;
      - **“Lotes acompanhados”**: linhas com toda a área clicável (`≥ 44px`), número do lote em mono, veículo, leilão, urgência de encerramento (≤24h em `warning`) e frescor do lance observado, rótulos visíveis **Lance** / **Limite**, barra `LimitProgress` com a diferença em texto e o provável frente ao limite;
      - **“Próximos leilões na região”**: agenda agrupada por dia (dia grande, mês e dia da semana à esquerda; marcador sólido quando há lote que cabe no limite, hora, nome, fonte, lotes no filtro e quantos cabem à direita) com linha inteira clicável (`≥ 44px`).
    - à direita (`<aside>`):

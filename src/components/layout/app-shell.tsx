@@ -442,7 +442,11 @@ export function AppShell({
                 </Suspense>
               </div>
               {nextAuction ? (
-                <div className="mt-auto grid w-full min-w-0 grid-cols-1 gap-2.5 pt-2">{nextAuction}</div>
+                <div className="mt-auto grid w-full min-w-0 grid-cols-1 gap-2.5 pt-2">
+                  <Suspense fallback={nextAuction}>
+                    <HideOnDashboard>{nextAuction}</HideOnDashboard>
+                  </Suspense>
+                </div>
               ) : null}
             </div>
           </div>

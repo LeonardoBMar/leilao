@@ -256,9 +256,14 @@ type CommandPaletteProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-/** Registra navegações por links comuns (sidebar/dashboard) no histórico de Recentes da paleta. */
+/** Registra navegações por links comuns (sidebar/dashboard/lotes acompanhados) no histórico de Recentes da paleta. */
 function RecordPathnameRecent() {
   const pathname = usePathname();
+  const quickItems = useSyncExternalStore(
+    subscribeCommandItems,
+    getCommandItemsSnapshot,
+    getCommandItemsServerSnapshot,
+  );
   const prevPathname = useRef<string | null>(null);
 
   useEffect(() => {
@@ -267,8 +272,13 @@ function RecordPathnameRecent() {
     const match = DESTINATIONS.find((entry) => entry.href === pathname);
     if (match && match.href) {
       recordRecent({ href: match.href, label: match.label, meta: match.meta });
+      return;
     }
-  }, [pathname]);
+    const quickMatch = quickItems.find((entry) => entry.href === pathname);
+    if (quickMatch) {
+      recordRecent({ href: quickMatch.href, label: quickMatch.label, meta: quickMatch.meta });
+    }
+  }, [pathname, quickItems]);
 
   return null;
 }
