@@ -1,11 +1,14 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect, useTransition } from "react";
 
 import { Alert, AlertDescription, AlertTitle, Button, ButtonLink } from "@/components/ui";
 
 export default function PrivateError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
   const [isPending, startTransition] = useTransition();
+  const pathname = usePathname();
+  const isDashboard = pathname === "/dashboard";
 
   useEffect(() => {
     console.error(error);
@@ -17,8 +20,8 @@ export default function PrivateError({ error, retry }: { error: Error & { digest
         <AlertTitle>Não foi possível abrir esta tela</AlertTitle>
         <AlertDescription className="grid gap-1.5">
           <p>
-            Ocorreu uma falha temporária ao carregar os dados. Tente novamente abaixo ou volte ao Início; seus dados
-            salvos não foram alterados.
+            Ocorreu uma falha temporária ao carregar os dados. Tente novamente abaixo
+            {isDashboard ? " ou recarregue a página" : " ou volte ao Início"}; seus dados salvos não foram alterados.
           </p>
           {error.digest ? (
             <p className="text-caption text-muted">
@@ -37,9 +40,15 @@ export default function PrivateError({ error, retry }: { error: Error & { digest
         >
           Tentar novamente
         </Button>
-        <ButtonLink href="/dashboard" variant="ghost">
-          Voltar ao Início
-        </ButtonLink>
+        {isDashboard ? (
+          <Button variant="ghost" onClick={() => window.location.reload()}>
+            Recarregar página
+          </Button>
+        ) : (
+          <ButtonLink href="/dashboard" variant="ghost">
+            Voltar ao Início
+          </ButtonLink>
+        )}
       </div>
     </div>
   );
