@@ -191,6 +191,10 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  a {
+    text-underline-offset: 0.18em;
+  }
+
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]) {
     cursor: pointer;
