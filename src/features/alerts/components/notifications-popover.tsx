@@ -86,10 +86,12 @@ export function NotificationsPopover({
             <span
               aria-hidden="true"
               className={cn(
-                "absolute top-1.5 right-1.5 size-2 rounded-full ring-2 ring-surface",
+                "absolute top-0.5 right-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full px-1 text-caption leading-none font-semibold text-surface tabular-nums ring-2 ring-surface",
                 isWarning ? "bg-warning" : "bg-accent",
               )}
-            />
+            >
+              {totalCount > 99 ? "99+" : totalCount}
+            </span>
           ) : null}
         </Button>
       </PopoverTrigger>
