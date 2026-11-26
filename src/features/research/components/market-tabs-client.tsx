@@ -6,14 +6,13 @@ import { useSyncExternalStore } from "react";
 
 import { LinkTabs } from "@/components/ui";
 
-import { CALIBRATION_PATH, MARKET_PATH, PANORAMA_PATH } from "../search";
+import { CALIBRATION_PATH, MARKET_PATH, type MarketTab, PANORAMA_PATH } from "../search";
 import {
   marketContextServerSnapshot,
   marketContextSnapshot,
   pickSharedQuery,
   subscribeMarketContext,
 } from "../tab-context";
-import type { MarketTab } from "./market-tabs";
 
 function withQueryString(basePath: string, query: string): Route {
   return (query ? `${basePath}?${query}` : basePath) as Route;

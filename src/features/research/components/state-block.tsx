@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 
 import { BRAZIL_MAP_CREDIT } from "@/components/charts/brazil-geometry";
 import { BrazilMap } from "@/components/charts/brazil-map";
-import { ChartDataTable } from "@/components/charts/chart-data-table";
 import { DistributionChart } from "@/components/charts/distribution-chart";
 import { MapLegend } from "@/components/charts/map-legend";
 import { RangeBars } from "@/components/charts/range-bars";
@@ -12,7 +11,7 @@ import { effectiveMetric, type ResearchFilters } from "@/domain/research/filters
 import { STATE_NAMES } from "@/domain/research/states";
 import { MIN_SAMPLE } from "@/domain/research/summary";
 import { niceTicks } from "@/lib/charts";
-import { formatBRL, formatDate, formatInteger, formatRatio } from "@/lib/format";
+import { formatBRL, formatDate, formatRatio } from "@/lib/format";
 
 import { formatMetric, METRIC_LABELS, salesLabel, summaryDetail } from "../labels";
 import { getStateDetail, getStateMap, getWhereView } from "../queries";
@@ -20,6 +19,7 @@ import { researchHref } from "../search";
 import { stateMapRegions, stateRangeRows, whereRangeRows } from "../state-regions";
 import type { StateDetail } from "../types";
 import { ResearchBlock } from "./research-block";
+import { SummaryDataTable } from "./summary-data-table";
 
 export const STATE_BLOCK_TITLE = "Onde";
 
@@ -149,14 +149,9 @@ export async function StateBlock({ filters, noSales }: { filters: ResearchFilter
                 </div>
                 <StateDetailPanel detail={detail} />
               </div>
-              <ChartDataTable
-                columns={[
-                  { key: "state", label: "Estado" },
-                  { key: "sales", label: "Vendas", align: "right" },
-                  { key: "low", label: "25% (baixo)", align: "right" },
-                  { key: "median", label: "Mediana", align: "right" },
-                  { key: "high", label: "75% (alto)", align: "right" },
-                ]}
+              <SummaryDataTable
+                labelHeading="Estado"
+                formatValue={(value) => formatMetric(map.metric, value)}
                 rows={withSales
                   .toSorted(
                     (a, b) =>
@@ -164,15 +159,8 @@ export async function StateBlock({ filters, noSales }: { filters: ResearchFilter
                   )
                   .map(({ state, summary }) => ({
                     key: state,
-                    state: STATE_NAMES[state],
-                    sales: summary.kind === "none" ? "0" : formatInteger(summary.n),
-                    ...(summary.kind === "summary"
-                      ? {
-                          low: formatMetric(map.metric, summary.low),
-                          median: formatMetric(map.metric, summary.median),
-                          high: formatMetric(map.metric, summary.high),
-                        }
-                      : {}),
+                    label: STATE_NAMES[state],
+                    summary,
                   }))}
               />
             </div>

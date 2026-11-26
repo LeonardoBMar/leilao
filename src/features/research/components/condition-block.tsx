@@ -1,15 +1,15 @@
 import type { ReactNode } from "react";
 
-import { ChartDataTable } from "@/components/charts/chart-data-table";
 import { DistributionChart } from "@/components/charts/distribution-chart";
 import type { ResearchFilters } from "@/domain/research/filters";
 import { niceTicks } from "@/lib/charts";
-import { formatInteger, formatRatio } from "@/lib/format";
+import { formatRatio } from "@/lib/format";
 
 import { CONDITION_LABELS, salesLabel, summaryDetail } from "../labels";
 import { getConditionDistribution } from "../queries";
 import { researchHref } from "../search";
 import { ResearchBlock } from "./research-block";
+import { SummaryDataTable } from "./summary-data-table";
 
 export const CONDITION_BLOCK_TITLE = "Quanto se paga por condição";
 
@@ -63,25 +63,12 @@ export async function ConditionBlock({ filters, noSales }: { filters: ResearchFi
               Sem monta declarada inclui avariados que a fonte não classificou, por isso fica perto da pequena monta.
             </p>
           ) : null}
-          <ChartDataTable
-            columns={[
-              { key: "condition", label: "Condição" },
-              { key: "sales", label: "Vendas", align: "right" },
-              { key: "low", label: "25% (baixo)", align: "right" },
-              { key: "median", label: "Mediana", align: "right" },
-              { key: "high", label: "75% (alto)", align: "right" },
-            ]}
+          <SummaryDataTable
+            labelHeading="Condição"
             rows={rows.map(({ condition, summary }) => ({
               key: condition,
-              condition: CONDITION_LABELS[condition],
-              sales: summary.kind === "none" ? "0" : formatInteger(summary.n),
-              ...(summary.kind === "summary"
-                ? {
-                    low: formatRatio(summary.low),
-                    median: formatRatio(summary.median),
-                    high: formatRatio(summary.high),
-                  }
-                : {}),
+              label: CONDITION_LABELS[condition],
+              summary,
             }))}
           />
         </>

@@ -8,6 +8,7 @@ import type { ResearchFilters, ResearchVehicle } from "@/domain/research/filters
 import { evaluateParams, researchParams } from "./schemas";
 
 /** Abas do Mercado (D-71): Avaliar um veículo, Panorama do catálogo (a antiga Pesquisa) e Calibração. */
+export type MarketTab = "evaluate" | "panorama" | "calibration";
 export const MARKET_PATH = "/mercado";
 export const PANORAMA_PATH = "/mercado/panorama";
 export const CALIBRATION_PATH = "/mercado/calibracao";

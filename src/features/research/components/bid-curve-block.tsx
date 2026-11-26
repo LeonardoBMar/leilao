@@ -1,12 +1,12 @@
-import { ChartDataTable } from "@/components/charts/chart-data-table";
 import { LineBand } from "@/components/charts/line-band";
 import type { ResearchFilters } from "@/domain/research/filters";
 import { MIN_SAMPLE } from "@/domain/research/summary";
 import { niceRange } from "@/lib/charts";
-import { formatInteger, formatRatio } from "@/lib/format";
+import { formatRatio } from "@/lib/format";
 
 import { riseLabel, salesLabel } from "../labels";
 import { getBidCurve } from "../queries";
+import { SummaryDataTable } from "./summary-data-table";
 
 /**
  * "Como o lance sobe" (D-45), dentro de "Como lemos os dados": o lance observado como % do lance final, de 48 h a 1 h
@@ -31,21 +31,12 @@ export async function BidCurveSection({ filters }: { filters: ResearchFilters })
       ) : (
         <>
           <BidCurveChart points={points} />
-          <ChartDataTable
-            columns={[
-              { key: "hours", label: "Antes do fim" },
-              { key: "sales", label: "Vendas", align: "right" },
-              { key: "low", label: "25% (baixo)", align: "right" },
-              { key: "median", label: "Mediana", align: "right" },
-              { key: "high", label: "75% (alto)", align: "right" },
-            ]}
+          <SummaryDataTable
+            labelHeading="Antes do fim"
             rows={points.map(({ hours, summary }) => ({
               key: String(hours),
-              hours: `${hours} h`,
-              sales: formatInteger(summary.n),
-              low: formatRatio(summary.low),
-              median: formatRatio(summary.median),
-              high: formatRatio(summary.high),
+              label: `${hours} h`,
+              summary,
             }))}
           />
         </>

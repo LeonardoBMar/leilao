@@ -1,7 +1,7 @@
 import type { DamageLevel } from "../listings/condition";
 import { type CategoryKey, MILEAGE_OPTIONS_KM } from "../listings/criteria";
 import { vehicleKey } from "../listings/vehicle-key";
-import { STATE_NAMES, type StateCode } from "./states";
+import { STATE_NAMES, type StateCode } from "./state-codes";
 
 /**
  * Filtros da Pesquisa (docs/PLANO-PESQUISA.md §4, D-45). As chaves vão na URL. A condição é sempre uma: misturar

@@ -1,14 +1,14 @@
-import { ChartDataTable } from "@/components/charts/chart-data-table";
 import { DistributionChart } from "@/components/charts/distribution-chart";
 import type { ResearchFilters } from "@/domain/research/filters";
 import { niceTicks } from "@/lib/charts";
-import { formatInteger, formatRatio } from "@/lib/format";
+import { formatRatio } from "@/lib/format";
 import { ORIGIN_LABELS } from "@/lib/listing-filter-labels";
 
 import { CONDITION_LABELS, salesLabel, summaryDetail } from "../labels";
 import { getOriginDistribution } from "../queries";
 import type { OriginDistribution } from "../types";
 import { ResearchBlock } from "./research-block";
+import { SummaryDataTable } from "./summary-data-table";
 
 export const ORIGIN_BLOCK_TITLE = "De quem se compra";
 
@@ -73,25 +73,12 @@ export async function OriginBlock({ filters }: { filters: ResearchFilters }) {
             A origem vem do comitente e do tipo de retomada que a fonte informa; sem sinal claro, fica em
             &ldquo;Outras&rdquo;.
           </p>
-          <ChartDataTable
-            columns={[
-              { key: "origin", label: "Origem" },
-              { key: "sales", label: "Vendas", align: "right" },
-              { key: "low", label: "25% (baixo)", align: "right" },
-              { key: "median", label: "Mediana", align: "right" },
-              { key: "high", label: "75% (alto)", align: "right" },
-            ]}
+          <SummaryDataTable
+            labelHeading="Origem"
             rows={rows.map(({ origin, summary }) => ({
               key: origin,
-              origin: ORIGIN_LABELS[origin],
-              sales: summary.kind === "none" ? "0" : formatInteger(summary.n),
-              ...(summary.kind === "summary"
-                ? {
-                    low: formatRatio(summary.low),
-                    median: formatRatio(summary.median),
-                    high: formatRatio(summary.high),
-                  }
-                : {}),
+              label: ORIGIN_LABELS[origin],
+              summary,
             }))}
           />
         </>

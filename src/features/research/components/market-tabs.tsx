@@ -2,10 +2,10 @@ import { Suspense } from "react";
 
 import { LinkTabs } from "@/components/ui";
 
-import { CALIBRATION_PATH, MARKET_PATH, PANORAMA_PATH } from "../search";
+import { CALIBRATION_PATH, MARKET_PATH, type MarketTab, PANORAMA_PATH } from "../search";
 import { MarketTabsClient } from "./market-tabs-client";
 
-export type MarketTab = "evaluate" | "panorama" | "calibration";
+export type { MarketTab };
 
 function StaticMarketTabs({ active }: { active: MarketTab }) {
   return (

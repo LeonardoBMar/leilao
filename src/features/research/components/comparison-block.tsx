@@ -1,15 +1,15 @@
 import type { ReactNode } from "react";
 
-import { ChartDataTable } from "@/components/charts/chart-data-table";
 import { DistributionChart } from "@/components/charts/distribution-chart";
 import type { ResearchFilters } from "@/domain/research/filters";
 import { niceTicks } from "@/lib/charts";
-import { formatInteger, formatRatio } from "@/lib/format";
+import { formatRatio } from "@/lib/format";
 
 import { smallSampleLabel, summaryDetail } from "../labels";
 import { getComparison } from "../queries";
 import type { ComparisonView } from "../types";
 import { ResearchBlock } from "./research-block";
+import { SummaryDataTable } from "./summary-data-table";
 
 export const COMPARISON_BLOCK_TITLE = "Comparação";
 
@@ -66,25 +66,12 @@ export async function ComparisonBlock({ filters, noSales }: { filters: ResearchF
               emphasis: index === 0,
             }))}
           />
-          <ChartDataTable
-            columns={[
-              { key: "group", label: "Grupo" },
-              { key: "sales", label: "Vendas", align: "right" },
-              { key: "low", label: "25% (baixo)", align: "right" },
-              { key: "median", label: "Mediana", align: "right" },
-              { key: "high", label: "75% (alto)", align: "right" },
-            ]}
+          <SummaryDataTable
+            labelHeading="Grupo"
             rows={groups.map(({ label, distribution: { summary } }, index) => ({
               key: String(index),
-              group: label,
-              sales: summary.kind === "none" ? "0" : formatInteger(summary.n),
-              ...(summary.kind === "summary"
-                ? {
-                    low: formatRatio(summary.low),
-                    median: formatRatio(summary.median),
-                    high: formatRatio(summary.high),
-                  }
-                : {}),
+              label,
+              summary,
             }))}
           />
         </>

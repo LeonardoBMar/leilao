@@ -1,13 +1,13 @@
-import { ChartDataTable } from "@/components/charts/chart-data-table";
 import { LineBand } from "@/components/charts/line-band";
 import type { ResearchFilters } from "@/domain/research/filters";
 import { TREND_MIN_WEEKLY_SALES } from "@/domain/research/summary";
 import { niceRange } from "@/lib/charts";
-import { formatCalendarDayMonth, formatInteger, formatRatio } from "@/lib/format";
+import { formatCalendarDayMonth, formatRatio } from "@/lib/format";
 
 import { salesLabel } from "../labels";
 import { getWeeklyTrend } from "../queries";
 import { ResearchBlock } from "./research-block";
+import { SummaryDataTable } from "./summary-data-table";
 
 const TREND_BLOCK_TITLE = "Tendência";
 
@@ -55,21 +55,12 @@ export async function TrendBlock({ filters }: { filters: ResearchFilters }) {
           },
         }))}
       />
-      <ChartDataTable
-        columns={[
-          { key: "week", label: "Semana de" },
-          { key: "sales", label: "Vendas", align: "right" },
-          { key: "low", label: "25% (baixo)", align: "right" },
-          { key: "median", label: "Mediana", align: "right" },
-          { key: "high", label: "75% (alto)", align: "right" },
-        ]}
+      <SummaryDataTable
+        labelHeading="Semana de"
         rows={weeks.map(({ start, summary }) => ({
           key: start.toISOString(),
-          week: formatCalendarDayMonth(start),
-          sales: formatInteger(summary.n),
-          low: formatRatio(summary.low),
-          median: formatRatio(summary.median),
-          high: formatRatio(summary.high),
+          label: formatCalendarDayMonth(start),
+          summary,
         }))}
       />
     </ResearchBlock>
