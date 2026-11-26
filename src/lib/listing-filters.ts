@@ -127,64 +127,68 @@ const distanceParam = z
   })
   .catch(undefined);
 
-export const listingFiltersSchema = z
-  .object({
-    busca: text,
-    anoDe: year,
-    anoAte: year,
-    precoDe: reais,
-    precoAte: reais,
-    mercado: numberOption(MARKET_PCT_OPTIONS),
-    kmAte: numberOption(MILEAGE_OPTIONS_KM),
-    distancia: distanceParam,
-    categoria: categories,
-    condicao: z.enum(CONDITION_KEYS).catch(DEFAULT_CONDITION),
-    ocultar: list(HIDE_KEYS),
-    fonte: sourceList,
-    origem: list(ORIGIN_KEYS),
-    combustivel: list(FUEL_KEYS),
-    chave: flag,
-    lances: option(["com", "sem"]),
-    encerra: option(["24h", "48h", "7d"]),
-    novos: flag,
-    analisados: option(["esconder", "so"]),
-    situacao: z.enum(["abertos", "encerrados"]).catch("abertos"),
-    ordem: z.enum(SORT_KEYS).catch("encerra"),
-    pagina: z.coerce.number().int().min(1).max(10_000).catch(1),
-  })
-  .transform((input): ListingFilters => {
-    // Faixas invertidas na URL (editada à mão) são trocadas, em vez de não mostrar nada.
-    const [yearFrom, yearTo] = ordered(input.anoDe, input.anoAte);
-    const [minPrice, maxPrice] = ordered(input.precoDe, input.precoAte);
-    const ended = input.situacao === "encerrados";
-    return {
-      criteria: {
-        search: input.busca ?? null,
-        yearFrom: yearFrom ?? null,
-        yearTo: yearTo ?? null,
-        minPrice: minPrice === undefined ? null : cents(minPrice * 100),
-        maxPrice: maxPrice === undefined ? null : cents(maxPrice * 100),
-        maxMarketPct: input.mercado ?? null,
-        maxMileageKm: input.kmAte ?? null,
-        radiusKm: input.distancia === undefined ? DEFAULT_RADIUS_KM : input.distancia,
-        categories: input.categoria,
-        condition: input.condicao,
-        hide: input.ocultar,
-        sources: input.fonte,
-        origins: input.origem,
-        fuels: input.combustivel,
-        keyOnly: input.chave,
-      },
-      // Prazo só faz sentido para abertos.
-      endsWithin: ended ? null : (input.encerra ?? null),
-      bids: input.lances ?? null,
-      newOnly: input.novos,
-      analyzed: input.analisados ?? null,
-      ended,
-      sort: input.ordem,
-      page: input.pagina,
-    };
-  });
+const listingFiltersRawSchema = z.object({
+  busca: text,
+  anoDe: year,
+  anoAte: year,
+  precoDe: reais,
+  precoAte: reais,
+  mercado: numberOption(MARKET_PCT_OPTIONS),
+  kmAte: numberOption(MILEAGE_OPTIONS_KM),
+  distancia: distanceParam,
+  categoria: categories,
+  condicao: z.enum(CONDITION_KEYS).catch(DEFAULT_CONDITION),
+  ocultar: list(HIDE_KEYS),
+  fonte: sourceList,
+  origem: list(ORIGIN_KEYS),
+  combustivel: list(FUEL_KEYS),
+  chave: flag,
+  lances: option(["com", "sem"]),
+  encerra: option(["24h", "48h", "7d"]),
+  novos: flag,
+  analisados: option(["esconder", "so"]),
+  situacao: z.enum(["abertos", "encerrados"]).catch("abertos"),
+  ordem: z.enum(SORT_KEYS).catch("encerra"),
+  pagina: z.coerce.number().int().min(1).max(10_000).catch(1),
+});
+
+function toListingFilters(input: z.infer<typeof listingFiltersRawSchema>, defaultRadiusKm: number): ListingFilters {
+  // Faixas invertidas na URL (editada à mão) são trocadas, em vez de não mostrar nada.
+  const [yearFrom, yearTo] = ordered(input.anoDe, input.anoAte);
+  const [minPrice, maxPrice] = ordered(input.precoDe, input.precoAte);
+  const ended = input.situacao === "encerrados";
+  return {
+    criteria: {
+      search: input.busca ?? null,
+      yearFrom: yearFrom ?? null,
+      yearTo: yearTo ?? null,
+      minPrice: minPrice === undefined ? null : cents(minPrice * 100),
+      maxPrice: maxPrice === undefined ? null : cents(maxPrice * 100),
+      maxMarketPct: input.mercado ?? null,
+      maxMileageKm: input.kmAte ?? null,
+      radiusKm: input.distancia === undefined ? defaultRadiusKm : input.distancia,
+      categories: input.categoria,
+      condition: input.condicao,
+      hide: input.ocultar,
+      sources: input.fonte,
+      origins: input.origem,
+      fuels: input.combustivel,
+      keyOnly: input.chave,
+    },
+    // Prazo só faz sentido para abertos.
+    endsWithin: ended ? null : (input.encerra ?? null),
+    bids: input.lances ?? null,
+    newOnly: input.novos,
+    analyzed: input.analisados ?? null,
+    ended,
+    sort: input.ordem,
+    page: input.pagina,
+  };
+}
+
+export const listingFiltersSchema = listingFiltersRawSchema.transform((input) =>
+  toListingFilters(input, DEFAULT_RADIUS_KM),
+);
 
 function ordered(from: number | undefined, to: number | undefined): [number | undefined, number | undefined] {
   return from !== undefined && to !== undefined && from > to ? [to, from] : [from, to];
@@ -198,12 +202,7 @@ export function parseListingParams(
   const flat = Object.fromEntries(
     Object.entries(raw).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value]),
   );
-  const parsed = listingFiltersSchema.parse(flat);
-  const explicitDistance = distanceParam.parse(flat.distancia);
-  if (explicitDistance === undefined && defaultRadiusKm !== DEFAULT_RADIUS_KM) {
-    return { ...parsed, criteria: { ...parsed.criteria, radiusKm: defaultRadiusKm } };
-  }
-  return parsed;
+  return toListingFilters(listingFiltersRawSchema.parse(flat), defaultRadiusKm);
 }
 
 const sameKeys = (a: readonly string[], b: readonly string[]) =>
