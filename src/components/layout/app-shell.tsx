@@ -340,8 +340,8 @@ export function AppShell({
       >
         <div
           className={cn(
-            "flex shrink-0 items-center",
-            collapsed ? "flex-col gap-2 px-2.5 pt-2 pb-0.5" : "h-12 justify-between pr-2.5 pl-4",
+            "flex h-12 shrink-0 items-center",
+            collapsed ? "justify-center px-2.5" : "justify-between pr-2.5 pl-4",
           )}
         >
           <Tooltip delayDuration={180} open={collapsed ? undefined : false}>
@@ -353,38 +353,56 @@ export function AppShell({
             </TooltipContent>
           </Tooltip>
 
-          <Tooltip delayDuration={200}>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                onClick={() => {
-                  setSidebarAnimate(true);
-                  setSidebarCollapsed(!collapsed);
-                }}
-                aria-label={collapsed ? "Expandir barra lateral" : "Recolher barra lateral"}
-                aria-expanded={!collapsed}
-                aria-controls="sidebar-nav"
-                aria-keyshortcuts="Control+B Meta+B"
-                className={cn(
-                  "inline-flex shrink-0 items-center justify-center rounded-md text-muted-subtle transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-primary-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.95] motion-reduce:transition-none motion-reduce:active:scale-100",
-                  collapsed ? "h-9 w-full pointer-coarse:h-11" : "size-8 pointer-coarse:size-11",
-                )}
-              >
-                {collapsed ? (
-                  <PanelLeftOpen aria-hidden="true" strokeWidth={1.75} className="size-4" />
-                ) : (
+          {!collapsed ? (
+            <Tooltip delayDuration={200}>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSidebarAnimate(true);
+                    setSidebarCollapsed(true);
+                  }}
+                  aria-label="Recolher barra lateral"
+                  aria-expanded={true}
+                  aria-controls="sidebar-nav"
+                  aria-keyshortcuts="Control+B Meta+B"
+                  className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-subtle transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-primary-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.95] motion-reduce:transition-none motion-reduce:active:scale-100 pointer-coarse:size-11"
+                >
                   <PanelLeftClose aria-hidden="true" strokeWidth={1.75} className="size-4" />
-                )}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={8}>
-              {collapsed ? "Expandir barra lateral" : "Recolher barra lateral"} ({isMac ? "⌘B" : "Ctrl+B"})
-            </TooltipContent>
-          </Tooltip>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8}>
+                Recolher barra lateral ({isMac ? "⌘B" : "Ctrl+B"})
+              </TooltipContent>
+            </Tooltip>
+          ) : null}
         </div>
 
-        {/* Gatilho da paleta de comandos integrado ao topo da sidebar (padrão Linear/Attio) */}
-        <div className="shrink-0 px-2.5 pt-2 pb-1">
+        {/* Gatilho da paleta de comandos (e botão expandir na rail recolhida) integrado ao topo da sidebar */}
+        <div className="grid shrink-0 gap-1.5 px-2.5 pt-2 pb-1">
+          {collapsed ? (
+            <Tooltip delayDuration={200}>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSidebarAnimate(true);
+                    setSidebarCollapsed(false);
+                  }}
+                  aria-label="Expandir barra lateral"
+                  aria-expanded={false}
+                  aria-controls="sidebar-nav"
+                  aria-keyshortcuts="Control+B Meta+B"
+                  className="inline-flex h-9 w-full shrink-0 items-center justify-center rounded-md text-muted-subtle transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-primary-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.95] motion-reduce:transition-none motion-reduce:active:scale-100 pointer-coarse:h-11"
+                >
+                  <PanelLeftOpen aria-hidden="true" strokeWidth={1.75} className="size-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8}>
+                Expandir barra lateral ({isMac ? "⌘B" : "Ctrl+B"})
+              </TooltipContent>
+            </Tooltip>
+          ) : null}
           <Tooltip delayDuration={180} open={collapsed ? undefined : false}>
             <TooltipTrigger asChild>
               <button
