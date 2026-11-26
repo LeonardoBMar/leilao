@@ -128,7 +128,7 @@ export async function RegionAuctions() {
         ))}
       </ol>
       <ButtonLink href={CATALOG_AUCTIONS_PATH} variant="secondary" size="sm" className="w-fit">
-        Ver todos<span className="sr-only"> os leilões</span>
+        Ver todos os leilões
         <ChevronRight aria-hidden="true" />
       </ButtonLink>
     </div>

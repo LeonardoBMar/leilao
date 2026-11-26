@@ -147,7 +147,8 @@ export async function FollowedLots() {
       </ul>
       {items.length > SHOWN ? (
         <ButtonLink href={ALL_FOLLOWED_HREF} variant="secondary" size="sm" className="w-fit">
-          Ver todos<span className="sr-only"> os lotes acompanhados</span>
+          Ver todos os {items.length}
+          <span className="sr-only"> lotes acompanhados</span>
           <ChevronRight aria-hidden="true" />
         </ButtonLink>
       ) : null}
