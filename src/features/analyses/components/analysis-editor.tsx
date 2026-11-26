@@ -45,7 +45,9 @@ export function AnalysisEditor({
     async (prev: ActionState<{ updatedAt?: string }>, formData: FormData) => {
       const next = await saveAnalysisAction(analysis.id, prev, formData);
       if (next.status === "success") {
-        if (next.data?.updatedAt) lastSavedAtRef.current = next.data.updatedAt;
+        if (next.data?.updatedAt && next.data.updatedAt > lastSavedAtRef.current) {
+          lastSavedAtRef.current = next.data.updatedAt;
+        }
         if (next.message) toast.success(next.message);
       }
       return next;
@@ -64,6 +66,12 @@ export function AnalysisEditor({
   const hasPendingAutosaveRef = useRef(false);
   const pendingFormDataRef = useRef<FormData | null>(null);
   const isSavingAutosave = autosave.kind === "saving";
+
+  // Mantém a guarda otimista alinhada após `refresh()` (ex.: tentativa de fixar com erro de validação).
+  useEffect(() => {
+    const serverUpdatedAt = analysis.updatedAt.toISOString();
+    if (serverUpdatedAt > lastSavedAtRef.current) lastSavedAtRef.current = serverUpdatedAt;
+  }, [analysis.updatedAt]);
 
   useEffect(() => {
     if (state.status === "error" && state.fieldErrors && formRef.current) {
@@ -84,6 +92,7 @@ export function AnalysisEditor({
     const seq = autosaveSeqRef;
     const pendingFlag = hasPendingAutosaveRef;
     const pendingData = pendingFormDataRef;
+    const savedAt = lastSavedAtRef;
     const analysisId = analysis.id;
     return () => {
       clearTimeout(autosaveTimer.current);
@@ -93,7 +102,14 @@ export function AnalysisEditor({
         const snapshot = pendingData.current;
         pendingFlag.current = false;
         pendingData.current = null;
-        void autosaveDraftAction(analysisId, snapshot, lastSavedAtRef.current);
+        void autosaveDraftAction(analysisId, snapshot, savedAt.current).then(
+          (result) => {
+            if (result.status === "success" && result.data?.updatedAt && result.data.updatedAt > savedAt.current) {
+              savedAt.current = result.data.updatedAt;
+            }
+          },
+          () => {},
+        );
       } else {
         pendingFlag.current = false;
         pendingData.current = null;
