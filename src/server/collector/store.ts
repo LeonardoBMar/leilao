@@ -6,7 +6,7 @@ import { marketValueOnSave } from "@/domain/listings/fipe-match";
 import { type Coordinates, distanceKm } from "@/domain/listings/geo";
 import { inferOrigin } from "@/domain/listings/origin";
 import { municipalityKey } from "@/domain/listings/place";
-import { DEFAULT_REGION } from "@/domain/listings/region";
+import { DEFAULT_REGION, type RegionConfig, resolveRegion } from "@/domain/listings/region";
 import { nextCheckAt, retryAfterFailure, TRACKED_REFRESH_MS } from "@/domain/listings/schedule";
 import type { ListingInput } from "@/domain/listings/types";
 import { vehicleKey } from "@/domain/listings/vehicle-key";
@@ -37,6 +37,27 @@ export async function loadPlaceLookup(): Promise<PlaceLookup> {
     const row = byKey.get(municipalityKey(city, state));
     return row ? { ibgeCode: row.ibgeCode, latitude: row.latitude, longitude: row.longitude } : null;
   };
+}
+
+/**
+ * Regiões ativas configuradas pelos usuários (`user_preferences`, D-89) + fallback `DEFAULT_REGION`.
+ * Deduplicadas por centro e raio, para manter a agenda de revisitas de 6 h alinhada à região real de cada usuário.
+ */
+export async function loadActiveRegions(): Promise<RegionConfig[]> {
+  const rows = await db.userPreference.findMany({
+    select: {
+      radiusKm: true,
+      municipality: { select: { ibgeCode: true, name: true, state: true, latitude: true, longitude: true } },
+    },
+  });
+  if (rows.length === 0) return [DEFAULT_REGION];
+  const unique = new Map<string, RegionConfig>();
+  for (const row of rows) {
+    const region = resolveRegion(row);
+    const key = `${region.center.latitude.toFixed(4)}|${region.center.longitude.toFixed(4)}|${region.radiusKm}`;
+    if (!unique.has(key)) unique.set(key, region);
+  }
+  return [...unique.values()];
 }
 
 /** Tamanho dos lotes para consultas `IN (...)` e atualizações em massa no coletor. */
@@ -176,11 +197,11 @@ const storedListingSelect = {
 export async function saveListing(
   sourceId: string,
   input: ListingInput,
-  context: { now: Date; place: PlaceLookup },
+  context: { now: Date; place: PlaceLookup; regions?: readonly RegionConfig[] },
 ): Promise<"created" | "updated"> {
-  const { now } = context;
+  const { now, regions = [DEFAULT_REGION] } = context;
   const place = context.place(input.location.city, input.location.state);
-  const inRegion = place !== null && distanceKm(DEFAULT_REGION.center, place) <= DEFAULT_REGION.radiusKm;
+  const inRegion = place !== null && regions.some((region) => distanceKm(region.center, place) <= region.radiusKm);
   const fields = {
     url: input.url,
     lotNumber: input.lotNumber,

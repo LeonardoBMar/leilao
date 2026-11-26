@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui";
-import type { ListingCriteria } from "@/domain/listings/criteria";
+import { DEFAULT_RADIUS_KM, type ListingCriteria } from "@/domain/listings/criteria";
 import { formatInteger } from "@/lib/format";
 
 import { activeFilters, clearedFilters, sortLabel } from "../../filter-labels";
@@ -33,6 +33,7 @@ type ListingFilterBarProps = {
   total: number;
   facets: ListingFacetsView;
   regionLabel: string;
+  defaultRadiusKm?: number;
   currentYear: number;
   saveWatch?: React.ReactNode;
 };
@@ -51,6 +52,7 @@ export function ListingFilterBar({
   total,
   facets,
   regionLabel,
+  defaultRadiusKm = DEFAULT_RADIUS_KM,
   currentYear,
   saveWatch,
 }: ListingFilterBarProps) {
@@ -63,10 +65,10 @@ export function ListingFilterBar({
     statusRef.current?.focus();
   };
   const [isPending, startTransition] = useTransition();
-  const [filters, setOptimisticFilters] = useOptimistic(parseListingParams(params));
+  const [filters, setOptimisticFilters] = useOptimistic(parseListingParams(params, defaultRadiusKm));
   const { criteria } = filters;
   const sourceNames = Object.fromEntries(facets.sources.map((source) => [source.id, source.name]));
-  const chips = activeFilters(filters, sourceNames);
+  const chips = activeFilters(filters, sourceNames, defaultRadiusKm);
   const moreCount = chips.filter((chip) => !BAR_FILTERS.includes(chip.id)).length;
   const mobileCount = chips.filter((chip) => chip.id !== "busca").length;
 
@@ -74,7 +76,7 @@ export function ListingFilterBar({
     const target = { ...next, page: 1 };
     startTransition(() => {
       setOptimisticFilters(target);
-      router.push(withQuery(basePath, listingParams(target)), { scroll: false });
+      router.push(withQuery(basePath, listingParams(target, defaultRadiusKm)), { scroll: false });
     });
   }
   const applyCriteria = (patch: Partial<ListingCriteria>) =>
@@ -111,6 +113,7 @@ export function ListingFilterBar({
           scope={scope}
           facets={facets}
           regionLabel={regionLabel}
+          defaultRadiusKm={defaultRadiusKm}
           currentYear={currentYear}
           countText={countText}
           isPending={isPending}
@@ -119,7 +122,7 @@ export function ListingFilterBar({
           hasChips={chips.length > 0}
           onApply={apply}
           onApplyCriteria={applyCriteria}
-          onClearAll={() => apply(clearedFilters(filters))}
+          onClearAll={() => apply(clearedFilters(filters, defaultRadiusKm))}
         />
       </div>
 
@@ -129,7 +132,7 @@ export function ListingFilterBar({
           const chip = chips.find((item) => item.id === id);
           if (chip) applyAndFocusStatus(chip.without);
         }}
-        onClearAll={() => applyAndFocusStatus(clearedFilters(filters))}
+        onClearAll={() => applyAndFocusStatus(clearedFilters(filters, defaultRadiusKm))}
         shortcuts={shortcuts.map((shortcut) => ({ id: shortcut.label, label: shortcut.label }))}
         onApplyShortcut={(id) => {
           const shortcut = shortcuts.find((item) => item.label === id);

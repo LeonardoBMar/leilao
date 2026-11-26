@@ -22,14 +22,11 @@ export async function CatalogAuctionsView({
   searchParams: SearchParams;
   renderSaveWatch?: (query: string) => React.ReactNode;
 }) {
-  const { filters, params } = readListingSearch(await searchParams);
-  const [page, facets, { region }] = await Promise.all([
-    listCatalogAuctions(filters),
-    getListingFacets(filters),
-    getUserPreferences(),
-  ]);
-  const hasFilters = activeFilters(filters, {}).length > 0;
-  const saveWatch = renderSaveWatch?.(new URLSearchParams(listingParams(filters)).toString());
+  const [raw, { region }] = await Promise.all([searchParams, getUserPreferences()]);
+  const { filters, params } = readListingSearch(raw, region.radiusKm);
+  const [page, facets] = await Promise.all([listCatalogAuctions(filters), getListingFacets(filters)]);
+  const hasFilters = activeFilters(filters, {}, region.radiusKm).length > 0;
+  const saveWatch = renderSaveWatch?.(new URLSearchParams(listingParams(filters, region.radiusKm)).toString());
 
   return (
     <div className="grid gap-6">
@@ -41,6 +38,7 @@ export async function CatalogAuctionsView({
         total={page.total}
         facets={facets}
         regionLabel={region.label}
+        defaultRadiusKm={region.radiusKm}
         currentYear={new Date().getUTCFullYear()}
         saveWatch={saveWatch}
       />
@@ -48,11 +46,14 @@ export async function CatalogAuctionsView({
         <EmptyState
           icon={Gavel}
           title={filters.ended ? "Nenhum leilão encerrado encontrado" : "Nenhum leilão aberto encontrado"}
-          description="O coletor busca lotes novos a cada 12 horas. Tire um filtro ou aumente a distância."
+          description="O coletor busca lotes novos a cada 4 horas. Tire um filtro ou aumente a distância."
           action={
             hasFilters ? (
               <ButtonLink
-                href={withQuery(CATALOG_AUCTIONS_PATH, listingParams(clearedFilters(filters)))}
+                href={withQuery(
+                  CATALOG_AUCTIONS_PATH,
+                  listingParams(clearedFilters(filters, region.radiusKm), region.radiusKm),
+                )}
                 variant="secondary"
               >
                 Limpar filtros

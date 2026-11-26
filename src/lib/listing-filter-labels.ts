@@ -118,7 +118,11 @@ export type ActiveFilter = { id: string; label: string; without: ListingFilters 
  * Filtros ativos, na ordem da barra. Padrões (distância de 150 km, veículos, abertos, ordem) não viram chip:
  * a distância e a categoria aparecem nos próprios controles. `sourceNames` dá o nome das fontes.
  */
-export function activeFilters(filters: ListingFilters, sourceNames: Readonly<Record<string, string>>): ActiveFilter[] {
+export function activeFilters(
+  filters: ListingFilters,
+  sourceNames: Readonly<Record<string, string>>,
+  defaultRadiusKm: number = DEFAULT_RADIUS_KM,
+): ActiveFilter[] {
   const { criteria } = filters;
   const withCriteria = (patch: Partial<ListingCriteria>): ListingFilters => ({
     ...filters,
@@ -143,8 +147,8 @@ export function activeFilters(filters: ListingFilters, sourceNames: Readonly<Rec
   add("ano", years === null ? null : `Ano: ${years}`, withCriteria({ yearFrom: null, yearTo: null }));
   add(
     "distancia",
-    criteria.radiusKm === DEFAULT_RADIUS_KM ? null : distanceLabel(criteria.radiusKm),
-    withCriteria({ radiusKm: DEFAULT_RADIUS_KM }),
+    criteria.radiusKm === defaultRadiusKm ? null : distanceLabel(criteria.radiusKm),
+    withCriteria({ radiusKm: defaultRadiusKm }),
   );
   if (criteria.categories === null) {
     add("categoria", "Todas as categorias", withCriteria({ categories: DEFAULT_CATEGORIES }));
@@ -210,10 +214,10 @@ export function activeFilters(filters: ListingFilters, sourceNames: Readonly<Rec
 }
 
 /** Filtros sem nenhuma restrição além dos padrões, mantendo situação e ordem ("Limpar tudo"). */
-export function clearedFilters(filters: ListingFilters): ListingFilters {
+export function clearedFilters(filters: ListingFilters, defaultRadiusKm: number = DEFAULT_RADIUS_KM): ListingFilters {
   return {
     ...filters,
-    criteria: DEFAULT_CRITERIA,
+    criteria: { ...DEFAULT_CRITERIA, radiusKm: defaultRadiusKm },
     endsWithin: null,
     bids: null,
     newOnly: false,

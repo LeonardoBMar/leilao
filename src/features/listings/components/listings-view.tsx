@@ -27,14 +27,16 @@ type ListingsViewProps = {
 
 /** Anúncios coletados, com filtros na URL. Renderizar dentro de <Suspense>. */
 export async function ListingsView({ searchParams, basePath, auction, renderSaveWatch }: ListingsViewProps) {
-  const { filters, params } = readListingSearch(await searchParams);
-  const [page, facets, { region }] = await Promise.all([
+  const [raw, { region }] = await Promise.all([searchParams, getUserPreferences()]);
+  const { filters, params } = readListingSearch(raw, region.radiusKm);
+  const [page, facets] = await Promise.all([
     listListings(filters, { auction }),
     getListingFacets(filters, { auction }),
-    getUserPreferences(),
   ]);
-  const hasFilters = activeFilters(filters, {}).length > 0;
-  const saveWatch = auction ? undefined : renderSaveWatch?.(new URLSearchParams(listingParams(filters)).toString());
+  const hasFilters = activeFilters(filters, {}, region.radiusKm).length > 0;
+  const saveWatch = auction
+    ? undefined
+    : renderSaveWatch?.(new URLSearchParams(listingParams(filters, region.radiusKm)).toString());
 
   return (
     <div className="grid gap-6">
@@ -46,6 +48,7 @@ export async function ListingsView({ searchParams, basePath, auction, renderSave
         total={page.total}
         facets={facets}
         regionLabel={region.label}
+        defaultRadiusKm={region.radiusKm}
         currentYear={new Date().getUTCFullYear()}
         saveWatch={saveWatch}
       />
@@ -56,11 +59,14 @@ export async function ListingsView({ searchParams, basePath, auction, renderSave
           description={
             auction
               ? "Nenhum lote deste leilão atende aos filtros. Tire um filtro ou aumente a distância."
-              : "O coletor busca lotes novos a cada 12 horas. Tire um filtro ou aumente a distância."
+              : "O coletor busca lotes novos a cada 4 horas. Tire um filtro ou aumente a distância."
           }
           action={
             hasFilters ? (
-              <ButtonLink href={withQuery(basePath, listingParams(clearedFilters(filters)))} variant="secondary">
+              <ButtonLink
+                href={withQuery(basePath, listingParams(clearedFilters(filters, region.radiusKm), region.radiusKm))}
+                variant="secondary"
+              >
                 Limpar filtros
               </ButtonLink>
             ) : null

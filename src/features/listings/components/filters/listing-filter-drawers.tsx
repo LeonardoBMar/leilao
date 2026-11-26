@@ -19,7 +19,7 @@ import {
   PopoverTrigger,
   SegmentedControl,
 } from "@/components/ui";
-import type { ListingCriteria } from "@/domain/listings/criteria";
+import { DEFAULT_RADIUS_KM, type ListingCriteria } from "@/domain/listings/criteria";
 import { cn } from "@/lib/utils";
 
 import { distanceLabel, ENDS_WITHIN_LABELS, priceRangeLabel, yearRangeLabel } from "../../filter-labels";
@@ -95,6 +95,7 @@ type ListingFilterDrawersProps = {
   scope: FilterBarScope;
   facets: ListingFacetsView;
   regionLabel: string;
+  defaultRadiusKm?: number;
   currentYear: number;
   countText: string;
   isPending: boolean;
@@ -112,6 +113,7 @@ export function ListingFilterDrawers({
   scope,
   facets,
   regionLabel,
+  defaultRadiusKm = DEFAULT_RADIUS_KM,
   currentYear,
   countText,
   isPending,
@@ -216,10 +218,10 @@ export function ListingFilterDrawers({
             icon={<MapPin aria-hidden="true" />}
             label="Distância"
             value={distanceLabel(criteria.radiusKm)}
-            active={criteria.radiusKm !== 150}
+            active={criteria.radiusKm !== defaultRadiusKm}
           />
           <PopoverContent className="w-96">
-            <DistanceField {...control} regionLabel={regionLabel} />
+            <DistanceField {...control} regionLabel={regionLabel} defaultRadiusKm={defaultRadiusKm} />
           </PopoverContent>
         </Popover>
         <Dialog>
@@ -261,7 +263,7 @@ export function ListingFilterDrawers({
               <YearFields {...control} currentYear={currentYear} />
             </FilterSection>
             <FilterSection title="Distância">
-              <DistanceField {...control} regionLabel={regionLabel} />
+              <DistanceField {...control} regionLabel={regionLabel} defaultRadiusKm={defaultRadiusKm} />
             </FilterSection>
             {moreFilters}
           </DrawerBody>

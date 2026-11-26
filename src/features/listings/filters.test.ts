@@ -144,4 +144,16 @@ describe("activeFilters", () => {
     expect(activeFilters(cleared, {})).toEqual([]);
     expect(cleared).toMatchObject({ ended: true, sort: "novos" });
   });
+
+  it("respeita raio padrão personalizado do usuário (D-89)", () => {
+    const filters = parseListingParams({}, 300);
+    expect(filters.criteria.radiusKm).toBe(300);
+    expect(activeFilters(filters, {}, 300)).toEqual([]);
+    expect(listingParams(filters, 300)).toEqual({});
+
+    const custom = parseListingParams({ distancia: "200" }, 300);
+    expect(custom.criteria.radiusKm).toBe(200);
+    expect(activeFilters(custom, {}, 300).map((chip) => chip.id)).toEqual(["distancia"]);
+    expect(clearedFilters(custom, 300).criteria.radiusKm).toBe(300);
+  });
 });

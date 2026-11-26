@@ -1,6 +1,7 @@
 import "server-only";
 
 import { planVisits } from "@/domain/listings/collect";
+import { DEFAULT_REGION, type RegionConfig } from "@/domain/listings/region";
 import { err, ok, type Result } from "@/lib/result";
 import { listingContractProblems } from "@/sources/shared/contract";
 import type { SourceAdapter } from "@/sources/types";
@@ -21,6 +22,7 @@ import {
   findStoredRaw,
   findTrackedVisits,
   hasOpenListings,
+  loadActiveRegions,
   loadPlaceLookup,
   markGone,
   markSeen,
@@ -125,11 +127,12 @@ export async function runCollection({
   const deadline = startedAt.getTime() + budgetMs;
   const catalog = fipe !== undefined ? fipe : env.FIPE_LOOKUP === "on" ? createFipeCatalog() : null;
   await closeStaleRuns(startedAt);
-  // Uma leitura dos municípios para todas as fontes; se falhar, cada fonte registra a falha na sua execução.
+  // Uma leitura dos municípios e regiões ativas para todas as fontes; se falhar, cada fonte registra a falha.
   const place = loadPlaceLookup().then(
     (lookup): PlaceLoad => ({ ok: true, lookup }),
     (error: unknown): PlaceLoad => ({ ok: false, error }),
   );
+  const regions = loadActiveRegions().catch((): RegionConfig[] => [DEFAULT_REGION]);
   const errors: RunError[] = [];
   const warnings: string[] = [];
   const warn = (message: string) => {
@@ -168,7 +171,7 @@ export async function runCollection({
   const [runs, matchedDuring] = await Promise.all([
     Promise.all(
       sources.map((source) =>
-        collectSource({ source, fetcher: createFetcher(source, deadline), maxVisits, deadline, place, now }),
+        collectSource({ source, fetcher: createFetcher(source, deadline), maxVisits, deadline, place, regions, now }),
       ),
     ),
     enrich(deadline, 3),
@@ -266,9 +269,10 @@ async function collectSource(input: {
   maxVisits: number;
   deadline: number;
   place: Promise<PlaceLoad>;
+  regions: Promise<RegionConfig[]>;
   now: () => Date;
 }): Promise<SourceRun> {
-  const { source, fetcher, maxVisits, deadline, place, now } = input;
+  const { source, fetcher, maxVisits, deadline, place, regions, now } = input;
   const errors: RunError[] = [];
   const counters = { discovered: 0, created: 0, updated: 0, failed: 0 };
   const fail = (url: string, error: string) => {
@@ -294,7 +298,7 @@ async function collectSource(input: {
         select: { id: true },
       });
       runId = run.id;
-      const places = await place;
+      const [places, activeRegions] = await Promise.all([place, regions]);
       if (!places.ok) throw places.error;
       discoveryFailed = await collectListings({
         source,
@@ -302,6 +306,7 @@ async function collectSource(input: {
         maxVisits: Math.min(maxVisits, source.maxVisitsPerRun ?? maxVisits),
         deadline,
         place: places.lookup,
+        regions: activeRegions,
         now,
         fail,
         counters,
@@ -349,11 +354,12 @@ async function collectListings(input: {
   maxVisits: number;
   deadline: number;
   place: PlaceLookup;
+  regions: readonly RegionConfig[];
   now: () => Date;
   fail: (url: string, error: string) => void;
   counters: { discovered: number; created: number; updated: number; failed: number };
 }): Promise<boolean> {
-  const { source, fetcher, maxVisits, deadline, place, now, fail, counters } = input;
+  const { source, fetcher, maxVisits, deadline, place, regions, now, fail, counters } = input;
   const discovery = await source.discover(fetcher, now());
   for (const { url, error } of discovery.errors) fail(url, error);
   counters.discovered = discovery.listings.length;
@@ -404,7 +410,7 @@ async function collectListings(input: {
     let unexpectedError = false;
     fetcher.resetSiteFailing();
     try {
-      const outcome = await visitListing(source, fetcher, visit.externalId, { now: now(), place }, listReadAt);
+      const outcome = await visitListing(source, fetcher, visit.externalId, { now: now(), place, regions }, listReadAt);
       if (outcome.ok) {
         counters[outcome.value]++;
         consecutiveFailures = 0;

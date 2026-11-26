@@ -115,6 +115,18 @@ const categories = z
     return keys.length > 0 ? keys : DEFAULT_CATEGORIES;
   });
 
+const distanceParam = z
+  .string()
+  .optional()
+  .transform((value): number | null | undefined => {
+    if (value === undefined) return undefined;
+    if (value === "todas") return null;
+    if (!/^\d{2,4}$/.test(value)) return undefined;
+    const km = Number(value);
+    return Number.isInteger(km) && km >= 10 && km <= 5_000 ? km : undefined;
+  })
+  .catch(undefined);
+
 export const listingFiltersSchema = z
   .object({
     busca: text,
@@ -124,7 +136,7 @@ export const listingFiltersSchema = z
     precoAte: reais,
     mercado: numberOption(MARKET_PCT_OPTIONS),
     kmAte: numberOption(MILEAGE_OPTIONS_KM),
-    distancia: z.enum([...DISTANCE_OPTIONS, "todas"]).catch(DEFAULT_DISTANCE),
+    distancia: distanceParam,
     categoria: categories,
     condicao: z.enum(CONDITION_KEYS).catch(DEFAULT_CONDITION),
     ocultar: list(HIDE_KEYS),
@@ -154,7 +166,7 @@ export const listingFiltersSchema = z
         maxPrice: maxPrice === undefined ? null : cents(maxPrice * 100),
         maxMarketPct: input.mercado ?? null,
         maxMileageKm: input.kmAte ?? null,
-        radiusKm: input.distancia === "todas" ? null : Number(input.distancia),
+        radiusKm: input.distancia === undefined ? DEFAULT_RADIUS_KM : input.distancia,
         categories: input.categoria,
         condition: input.condicao,
         hide: input.ocultar,
@@ -179,10 +191,19 @@ function ordered(from: number | undefined, to: number | undefined): [number | un
 }
 
 /** URL crua (`searchParams`) → filtros. Parâmetro repetido: vale o primeiro. */
-export function parseListingParams(raw: Readonly<Record<string, string | string[] | undefined>>): ListingFilters {
-  return listingFiltersSchema.parse(
-    Object.fromEntries(Object.entries(raw).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value])),
+export function parseListingParams(
+  raw: Readonly<Record<string, string | string[] | undefined>>,
+  defaultRadiusKm: number = DEFAULT_RADIUS_KM,
+): ListingFilters {
+  const flat = Object.fromEntries(
+    Object.entries(raw).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value]),
   );
+  const parsed = listingFiltersSchema.parse(flat);
+  const explicitDistance = distanceParam.parse(flat.distancia);
+  if (explicitDistance === undefined && defaultRadiusKm !== DEFAULT_RADIUS_KM) {
+    return { ...parsed, criteria: { ...parsed.criteria, radiusKm: defaultRadiusKm } };
+  }
+  return parsed;
 }
 
 const sameKeys = (a: readonly string[], b: readonly string[]) =>
@@ -192,7 +213,10 @@ const sameKeys = (a: readonly string[], b: readonly string[]) =>
  * Filtros → parâmetros da URL, sem os padrões e sem página (quem pagina acrescenta). É o inverso de
  * `parseListingParams`: `parseListingParams(listingParams(f))` devolve `f` com a página 1.
  */
-export function listingParams(filters: ListingFilters): Record<string, string> {
+export function listingParams(
+  filters: ListingFilters,
+  defaultRadiusKm: number = DEFAULT_RADIUS_KM,
+): Record<string, string> {
   const { criteria } = filters;
   const reaisOf = (value: number | null) => (value === null ? undefined : String(Math.round(value / 100)));
   const csv = (items: readonly string[]) => (items.length > 0 ? items.join(",") : undefined);
@@ -205,7 +229,7 @@ export function listingParams(filters: ListingFilters): Record<string, string> {
     mercado: criteria.maxMarketPct?.toString(),
     kmAte: criteria.maxMileageKm?.toString(),
     distancia:
-      criteria.radiusKm === DEFAULT_RADIUS_KM
+      criteria.radiusKm === defaultRadiusKm
         ? undefined
         : criteria.radiusKm === null
           ? "todas"

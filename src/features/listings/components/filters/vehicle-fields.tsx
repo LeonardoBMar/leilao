@@ -29,13 +29,26 @@ import { ANY_OPTION, type CriteriaControlProps } from "./criteria-types";
 
 type Counts<K extends string> = Partial<Record<K, number>> | undefined;
 
-export function DistanceField({ criteria, onChange, regionLabel }: CriteriaControlProps & { regionLabel: string }) {
+export function DistanceField({
+  criteria,
+  onChange,
+  regionLabel,
+  defaultRadiusKm,
+}: CriteriaControlProps & { regionLabel: string; defaultRadiusKm?: number }) {
+  const kmOptions = Array.from(
+    new Set([
+      ...RADIUS_OPTIONS_KM,
+      ...(defaultRadiusKm !== undefined ? [defaultRadiusKm] : []),
+      ...(criteria.radiusKm !== null ? [criteria.radiusKm] : []),
+    ]),
+  ).sort((a, b) => a - b);
+
   return (
     <SegmentedControl
       label={`Distância de ${regionLabel}`}
       value={criteria.radiusKm === null ? "todas" : String(criteria.radiusKm)}
       options={[
-        ...RADIUS_OPTIONS_KM.map((km) => ({ value: String(km), label: `${km} km` })),
+        ...kmOptions.map((km) => ({ value: String(km), label: `${km} km` })),
         { value: "todas", label: "Qualquer" },
       ]}
       onValueChange={(value) => onChange({ radiusKm: value === "todas" ? null : Number(value) })}

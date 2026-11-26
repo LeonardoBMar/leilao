@@ -1,5 +1,7 @@
 import type { Route } from "next";
 
+import { DEFAULT_RADIUS_KM } from "@/domain/listings/criteria";
+
 import { type ListingFilters, listingParams, parseListingParams } from "./listing-filters";
 
 export type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -26,10 +28,13 @@ export function withQuery(path: string, params: Readonly<Record<string, string |
  * Filtros dos anúncios a partir da URL: `filters` para a consulta e `params` (forma canônica, sem padrões nem página)
  * para a barra de filtros, links e paginação.
  */
-export function readListingSearch(raw: Record<string, string | string[] | undefined>): {
+export function readListingSearch(
+  raw: Record<string, string | string[] | undefined>,
+  defaultRadiusKm: number = DEFAULT_RADIUS_KM,
+): {
   filters: ListingFilters;
   params: Record<string, string>;
 } {
-  const filters = parseListingParams(raw);
-  return { filters, params: listingParams(filters) };
+  const filters = parseListingParams(raw, defaultRadiusKm);
+  return { filters, params: listingParams(filters, defaultRadiusKm) };
 }
