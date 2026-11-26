@@ -126,12 +126,6 @@ function HeaderRouteContext() {
 
   return (
     <nav aria-label="Localização atual" className="flex min-w-0 items-center">
-      <span
-        aria-hidden="true"
-        className="mr-2 shrink-0 font-mono text-caption text-border-strong select-none lg:hidden"
-      >
-        /
-      </span>
       <ol className="flex min-w-0 items-center gap-1.5 text-label sm:gap-2">
         <li className="flex min-w-0 items-center">
           {isSubRoute ? (
@@ -468,10 +462,9 @@ export function AppShell({
           )}
         >
           <div className="mx-auto flex h-full w-full max-w-360 items-center justify-between gap-3 px-4 md:px-6 lg:px-8">
-            <div className="flex min-w-0 items-center gap-2.5">
-              <div className="flex min-w-0 items-center gap-2 lg:hidden">
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="flex shrink-0 items-center lg:hidden">
                 <MobileNav badges={badges} followed={followed} nextAuction={nextAuction} />
-                <Brand href="/dashboard" hideLabelOnNarrow />
               </div>
               <Suspense fallback={null}>
                 <HeaderRouteContext />
