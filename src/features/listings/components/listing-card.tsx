@@ -1,11 +1,11 @@
 import {
   Car,
-  ChevronRight,
   CircleAlert,
   CircleCheck,
   ClipboardCheck,
   Clock,
   ExternalLink,
+  Eye,
   type LucideIcon,
   MapPin,
   TriangleAlert,
@@ -271,9 +271,9 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
             {item.title}
             {item.modelYear ? <span className="font-medium text-muted tabular-nums"> {item.modelYear}</span> : null}
           </span>
-          <ChevronRight
+          <Eye
             aria-hidden="true"
-            className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+            className="size-3.5 shrink-0 text-muted-subtle transition-colors duration-150 ease-[var(--ease-out)] group-hover:text-foreground motion-reduce:transition-none"
           />
         </>
       }
