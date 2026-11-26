@@ -113,7 +113,7 @@ function DrawerFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "flex gap-3 border-t border-border px-5 py-4 md:justify-end md:px-6 [&>*]:flex-1 md:[&>*]:flex-none",
+        "flex gap-3 border-t border-border px-5 py-4 empty:hidden md:justify-end md:px-6 [&>*]:flex-1 md:[&>*]:flex-none",
         className,
       )}
       {...props}
