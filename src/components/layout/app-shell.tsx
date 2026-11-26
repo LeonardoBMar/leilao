@@ -89,7 +89,7 @@ function resolveRouteContext(
     detailMono = lotCode !== null;
   } else if (pathname.startsWith("/analise/")) detail = "Análise financeira";
   else if (pathname === "/alertas") detail = "Novos lotes";
-  else if (pathname === "/monitores") detail = "Monitores";
+  else if (pathname === "/monitores") detail = null;
   else if (pathname === "/monitores/novo") detail = "Novo monitor";
   else if (pathname.startsWith("/monitores/")) detail = "Editar monitor";
   else if (pathname === "/mercado") detail = "Avaliar";

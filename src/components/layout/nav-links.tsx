@@ -51,7 +51,8 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/dashboard", label: "Início", icon: House },
   { href: "/leiloes", label: "Leilões", icon: Gavel },
   { href: "/minhas-analises", label: "Minhas análises", icon: Calculator, sections: ["/lotes", "/analise"] },
-  { href: "/alertas", label: "Alertas", icon: BellRing, sections: ["/monitores"] },
+  { href: "/monitores", label: "Monitores", icon: Radar },
+  { href: "/alertas", label: "Alertas", icon: BellRing },
   { href: "/mercado", label: "Mercado", icon: ChartColumn },
 ];
 
@@ -142,7 +143,6 @@ function NavList({
                       }
                     }}
                     aria-current={isActive ? "page" : undefined}
-                    aria-label={collapsed ? label : undefined}
                     className={cn(
                       "group relative flex h-10 items-center gap-2.5 overflow-clip rounded-md px-2.5 text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 lg:h-9 pointer-coarse:h-11",
                       isActive ? "font-semibold text-foreground" : "hover:bg-primary-subtle/70 hover:text-foreground",
@@ -153,7 +153,7 @@ function NavList({
                         aria-hidden="true"
                         layoutId="nav-active-pill"
                         transition={MOTION_SPRING}
-                        className="pointer-events-none absolute inset-0 rounded-md bg-surface-subtle ring-1 ring-border/70 ring-inset"
+                        className="pointer-events-none absolute inset-0 rounded-md bg-primary-subtle ring-1 ring-border ring-inset"
                       />
                     ) : null}
                     <Icon
@@ -164,14 +164,7 @@ function NavList({
                         isActive && "text-foreground",
                       )}
                     />
-                    <span
-                      className={cn(
-                        "relative z-10 truncate transition-opacity duration-150 ease-[var(--ease-out)] motion-reduce:transition-none",
-                        collapsed ? "pointer-events-none opacity-0" : "opacity-100",
-                      )}
-                    >
-                      {label}
-                    </span>
+                    <span className={collapsed ? "sr-only" : "relative z-10 truncate"}>{label}</span>
                     {badges?.[href] ? (
                       <span
                         data-collapsed={collapsed ? "true" : "false"}
@@ -210,7 +203,6 @@ function NavList({
                 href="/sistema/preferencias"
                 onClick={() => onNavigate?.()}
                 aria-current={isPreferencesActive ? "page" : undefined}
-                aria-label={collapsed ? "Preferências" : undefined}
                 className={cn(
                   "group relative flex h-10 items-center gap-2.5 overflow-clip rounded-md px-2.5 text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 lg:h-9 pointer-coarse:h-11",
                   isPreferencesActive
@@ -223,7 +215,7 @@ function NavList({
                     aria-hidden="true"
                     layoutId="nav-active-pill"
                     transition={MOTION_SPRING}
-                    className="pointer-events-none absolute inset-0 rounded-md bg-surface-subtle ring-1 ring-border/70 ring-inset"
+                    className="pointer-events-none absolute inset-0 rounded-md bg-primary-subtle ring-1 ring-border ring-inset"
                   />
                 ) : null}
                 <SlidersHorizontal
@@ -234,14 +226,7 @@ function NavList({
                     isPreferencesActive && "text-foreground",
                   )}
                 />
-                <span
-                  className={cn(
-                    "relative z-10 truncate transition-opacity duration-150 ease-[var(--ease-out)] motion-reduce:transition-none",
-                    collapsed ? "pointer-events-none opacity-0" : "opacity-100",
-                  )}
-                >
-                  Preferências
-                </span>
+                <span className={collapsed ? "sr-only" : "relative z-10 truncate"}>Preferências</span>
               </Link>
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={10}>
@@ -256,6 +241,7 @@ function NavList({
                   <button
                     type="button"
                     aria-label="Sistema"
+                    aria-current={isSystemActive ? "true" : undefined}
                     className={cn(
                       "group relative flex h-9 w-full items-center gap-2.5 overflow-clip rounded-md px-2.5 text-label font-medium whitespace-nowrap text-foreground-secondary transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 pointer-coarse:h-11",
                       isSystemActive
@@ -268,7 +254,7 @@ function NavList({
                         aria-hidden="true"
                         layoutId="nav-active-pill"
                         transition={MOTION_SPRING}
-                        className="pointer-events-none absolute inset-0 rounded-md bg-surface-subtle ring-1 ring-border/70 ring-inset"
+                        className="pointer-events-none absolute inset-0 rounded-md bg-primary-subtle ring-1 ring-border ring-inset"
                       />
                     ) : null}
                     <Settings

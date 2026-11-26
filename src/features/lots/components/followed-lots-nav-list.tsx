@@ -94,7 +94,10 @@ function LotSection({ items, totalCount, hasMore, pathname }: FollowedLotsNavLis
                     </span>
                     {/* `relative` prende o `sr-only` (absoluto) ao nome cortado: sem ele, o texto oculto fica no fim do nome
                         inteiro, fora do corte, e cria rolagem horizontal no menu. */}
-                    <span className="relative min-w-0 flex-1 truncate">
+                    <span
+                      title={lot.modelYear !== null ? `${lot.model} ${lot.modelYear}` : lot.model}
+                      className="relative min-w-0 flex-1 truncate"
+                    >
                       {lot.modelYear !== null ? `${lot.model} ${lot.modelYear}` : lot.model}
                       <span className="sr-only">: {LIMIT_COMPARISON_LABELS[lot.comparison]}</span>
                     </span>
