@@ -195,7 +195,10 @@ export async function DashboardKpis() {
                   className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-x-0 motion-reduce:group-hover:translate-y-0"
                 />
               </div>
-              <p className="truncate text-heading-2 font-semibold whitespace-nowrap text-foreground tabular-nums">
+              <p
+                title={nextAuction.date ? formatCompactDateTime(nextAuction.date) : undefined}
+                className="truncate text-body-lg font-semibold whitespace-nowrap text-foreground tabular-nums sm:text-heading-2"
+              >
                 {nextAuction.date ? (
                   <time dateTime={nextAuction.date.toISOString()}>{formatCompactDateTime(nextAuction.date)}</time>
                 ) : (

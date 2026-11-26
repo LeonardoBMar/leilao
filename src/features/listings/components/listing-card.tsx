@@ -32,7 +32,7 @@ import {
 
 import type { ListingListItem } from "../types";
 import { AddToTrackerButton } from "./add-to-tracker-button";
-import { ListingQuickDrawer } from "./listing-quick-drawer";
+import { CompactListingInspect, ListingQuickDrawer } from "./listing-quick-drawer";
 
 type ListingCardProps = {
   item: ListingListItem;
@@ -254,41 +254,40 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
   const fullTitle = item.modelYear ? `${item.title} ${item.modelYear}` : item.title;
 
   return (
-    <article className="grid w-full grid-cols-[5.25rem_minmax(0,1fr)] gap-x-3.5 gap-y-2.5 sm:grid-cols-[6.5rem_minmax(0,1fr)]">
-      <div className="relative aspect-4/3 overflow-clip rounded-md bg-surface-subtle sm:row-span-2">
-        {item.photoUrl ? (
-          <Image src={item.photoUrl} alt="" fill unoptimized loading="lazy" sizes="8rem" className="object-cover" />
+    <CompactListingInspect
+      item={item}
+      fullTitle={fullTitle}
+      media={
+        item.photoUrl ? (
+          <Image
+            src={item.photoUrl}
+            alt=""
+            fill
+            unoptimized
+            loading="lazy"
+            sizes="8rem"
+            className="object-cover transition-transform duration-200 ease-[var(--ease-out)] group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+          />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-muted-subtle">
+          <div className="absolute inset-0 flex items-center justify-center text-muted-subtle transition-colors group-hover:text-foreground motion-reduce:transition-none">
             <Car aria-hidden="true" className="size-6" />
           </div>
-        )}
-      </div>
-      <div className="grid min-w-0 gap-2">
-        <div className="grid min-w-0 gap-1">
-          <h3 className="min-w-0 text-body font-semibold text-foreground">
-            <ListingQuickDrawer
-              item={item}
-              trigger={
-                <button
-                  type="button"
-                  title={`Inspecionar ${fullTitle}`}
-                  className="group -my-1.5 inline-flex min-h-10 max-w-full items-center gap-1 rounded-sm py-1.5 text-left outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:min-h-11"
-                >
-                  <span className="line-clamp-2">
-                    {item.title}
-                    {item.modelYear ? (
-                      <span className="font-medium text-muted tabular-nums"> {item.modelYear}</span>
-                    ) : null}
-                  </span>
-                  <ChevronRight
-                    aria-hidden="true"
-                    className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
-                  />
-                </button>
-              }
-            />
-          </h3>
+        )
+      }
+      title={
+        <>
+          <span className="line-clamp-2">
+            {item.title}
+            {item.modelYear ? <span className="font-medium text-muted tabular-nums"> {item.modelYear}</span> : null}
+          </span>
+          <ChevronRight
+            aria-hidden="true"
+            className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+          />
+        </>
+      }
+      content={
+        <>
           {fit !== null || item.damageLevel ? (
             <div className="flex flex-wrap items-center gap-1.5">
               {fit !== null && FitIcon ? (
@@ -302,54 +301,56 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
               ) : null}
             </div>
           ) : null}
-        </div>
 
-        <dl className="flex flex-wrap gap-x-4 gap-y-1.5 tabular-nums">
-          <div className="grid gap-0.5">
-            <dt className="text-caption text-muted">Lance</dt>
-            <dd className="text-label font-semibold whitespace-nowrap text-foreground">
-              <Money value={bid} />
-            </dd>
-          </div>
-          {price && price.kind !== "insufficient" ? (
+          <dl className="mt-1 flex flex-wrap gap-x-4 gap-y-1.5 tabular-nums">
             <div className="grid gap-0.5">
-              <dt className="text-caption text-muted">Provável</dt>
-              <dd className="text-label font-medium whitespace-nowrap text-foreground-secondary">
-                <Money value={price.median} />
+              <dt className="text-caption text-muted">Lance</dt>
+              <dd className="text-label font-semibold whitespace-nowrap text-foreground">
+                <Money value={bid} />
               </dd>
             </div>
-          ) : null}
-          {limit && limit.kind !== "insufficient" ? (
-            <div className="grid gap-0.5">
-              <dt className="text-caption text-muted">Limite</dt>
-              <dd className="text-label font-medium whitespace-nowrap text-foreground-secondary">
-                {limit.maxBid !== null ? <Money value={limit.maxBid} /> : "Sem lance viável"}
-              </dd>
-            </div>
-          ) : null}
-        </dl>
+            {price && price.kind !== "insufficient" ? (
+              <div className="grid gap-0.5">
+                <dt className="text-caption text-muted">Provável</dt>
+                <dd className="text-label font-medium whitespace-nowrap text-foreground-secondary">
+                  <Money value={price.median} />
+                </dd>
+              </div>
+            ) : null}
+            {limit && limit.kind !== "insufficient" ? (
+              <div className="grid gap-0.5">
+                <dt className="text-caption text-muted">Limite</dt>
+                <dd className="text-label font-medium whitespace-nowrap text-foreground-secondary">
+                  {limit.maxBid !== null ? <Money value={limit.maxBid} /> : "Sem lance viável"}
+                </dd>
+              </div>
+            ) : null}
+          </dl>
 
-        {transparency ? <p className="text-caption text-muted tabular-nums">{transparency}</p> : null}
+          {transparency ? <p className="mt-1 text-caption text-muted tabular-nums">{transparency}</p> : null}
 
-        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-muted tabular-nums">
-          <span className="inline-flex items-center gap-1.5">
-            <Clock aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
-            Encerra{" "}
-            {item.endsAt ? <time dateTime={item.endsAt.toISOString()}>{formatDateTime(item.endsAt)}</time> : "—"}
-          </span>
-          {item.city && item.state ? (
+          <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-muted tabular-nums">
             <span className="inline-flex items-center gap-1.5">
-              <MapPin aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
-              {item.city}/{item.state}
-              {item.distanceKm === null ? null : ` · ${Math.round(item.distanceKm)} km`}
+              <Clock aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
+              Encerra{" "}
+              {item.endsAt ? <time dateTime={item.endsAt.toISOString()}>{formatDateTime(item.endsAt)}</time> : "—"}
             </span>
-          ) : null}
-        </p>
-      </div>
-      <div className="col-span-full flex flex-wrap items-center gap-2 sm:col-start-2">
-        <TrackerAction item={item} openDirectly variant="secondary" />
-        {footer}
-      </div>
-    </article>
+            {item.city && item.state ? (
+              <span className="inline-flex items-center gap-1.5">
+                <MapPin aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
+                {item.city}/{item.state}
+                {item.distanceKm === null ? null : ` · ${Math.round(item.distanceKm)} km`}
+              </span>
+            ) : null}
+          </p>
+        </>
+      }
+      actions={
+        <>
+          <TrackerAction item={item} openDirectly variant="secondary" />
+          {footer}
+        </>
+      }
+    />
   );
 }

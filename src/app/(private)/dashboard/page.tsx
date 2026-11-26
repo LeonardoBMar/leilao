@@ -159,25 +159,23 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
         </div>
 
         <aside className="grid content-start gap-8" aria-label="Pendências e indicadores">
-          <SectionErrorBoundary
-            title="Pendências indisponíveis"
-            fallbackHref="/minhas-analises"
-            fallbackLabel="Abrir Minhas análises"
-          >
-            <Suspense fallback={null}>
+          <Suspense fallback={<DecisionIndicatorSkeleton />}>
+            <SectionErrorBoundary
+              title="Pendências indisponíveis"
+              fallbackHref="/minhas-analises"
+              fallbackLabel="Abrir Minhas análises"
+            >
               <PendingItems />
-            </Suspense>
-          </SectionErrorBoundary>
+            </SectionErrorBoundary>
 
-          <SectionErrorBoundary
-            title="Indicador indisponível"
-            fallbackHref="/mercado/calibracao"
-            fallbackLabel="Ver calibração"
-          >
-            <Suspense fallback={<DecisionIndicatorSkeleton />}>
+            <SectionErrorBoundary
+              title="Indicador indisponível"
+              fallbackHref="/mercado/calibracao"
+              fallbackLabel="Ver calibração"
+            >
               <DecisionIndicator />
-            </Suspense>
-          </SectionErrorBoundary>
+            </SectionErrorBoundary>
+          </Suspense>
         </aside>
       </div>
     </div>

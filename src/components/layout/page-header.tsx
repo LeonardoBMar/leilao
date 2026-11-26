@@ -14,7 +14,7 @@ type PageHeaderProps = Omit<React.ComponentProps<"header">, "title"> & {
 
 function PageHeader({ title, inlineMeta, description, eyebrow, meta, actions, className, ...props }: PageHeaderProps) {
   return (
-    <header className={cn("flex flex-col gap-4 md:flex-row md:items-end md:justify-between", className)} {...props}>
+    <header className={cn("flex flex-col gap-4 md:flex-row md:items-start md:justify-between", className)} {...props}>
       <div className="grid min-w-0 gap-1">
         {eyebrow ? <p className="font-mono text-caption text-muted">{eyebrow}</p> : null}
         {inlineMeta ? (

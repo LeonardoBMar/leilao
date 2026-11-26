@@ -117,12 +117,14 @@ export async function FollowedLots() {
                   <Money value={lot.currentBid} />
                 </p>
                 <p className="text-caption text-muted tabular-nums">
-                  {lot.limit?.isViable && lot.limit.maxBid !== null ? (
+                  {lot.limit === null ? (
+                    "Sem limite fixado"
+                  ) : lot.limit.isViable && lot.limit.maxBid !== null ? (
                     <>
                       Limite <Money value={lot.limit.maxBid} className="font-medium text-foreground-secondary" />
                     </>
                   ) : (
-                    "Sem limite fixado"
+                    "Sem lance viável"
                   )}
                 </p>
               </div>

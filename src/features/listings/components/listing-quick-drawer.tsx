@@ -41,14 +41,18 @@ type ListingQuickDrawerProps = {
   item: ListingListItem;
   /** Gatilho customizado (ex.: título clicável); sem ele, renderiza o botão "Inspecionar". */
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 /**
  * Gaveta de pré-visualização rápida de um anúncio do catálogo: reúne foto, condição, leitura financeira
  * e a escolha direta entre salvar na fila ou abrir o rascunho em um clique.
  */
-export function ListingQuickDrawer({ item, trigger }: ListingQuickDrawerProps) {
-  const [open, setOpen] = useState(false);
+export function ListingQuickDrawer({ item, trigger, open: controlledOpen, onOpenChange }: ListingQuickDrawerProps) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = controlledOpen ?? uncontrolledOpen;
+  const setOpen = onOpenChange ?? setUncontrolledOpen;
   const isOpen = item.status === "open";
   const bid = isOpen ? (item.currentBid ?? item.minimumBid) : item.finalBid;
   const ratio = bid !== null && item.marketValue !== null && item.marketValue > 0 ? bid / item.marketValue : null;
@@ -61,14 +65,16 @@ export function ListingQuickDrawer({ item, trigger }: ListingQuickDrawerProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger ?? (
-          <Button type="button" variant="ghost" size="sm" className="w-fit">
-            <Eye aria-hidden="true" />
-            Inspecionar
-          </Button>
-        )}
-      </DialogTrigger>
+      {trigger !== null ? (
+        <DialogTrigger asChild>
+          {trigger ?? (
+            <Button type="button" variant="ghost" size="sm" className="w-fit">
+              <Eye aria-hidden="true" />
+              Inspecionar
+            </Button>
+          )}
+        </DialogTrigger>
+      ) : null}
       <DrawerContent side="right" className="max-w-lg">
         <div className="border-b border-border px-5 py-4 md:px-6">
           <DialogHeader>
@@ -265,5 +271,53 @@ export function ListingQuickDrawer({ item, trigger }: ListingQuickDrawerProps) {
         </DrawerFooter>
       </DrawerContent>
     </Dialog>
+  );
+}
+
+type CompactListingInspectProps = {
+  item: ListingListItem;
+  fullTitle: string;
+  media: React.ReactNode;
+  title: React.ReactNode;
+  content: React.ReactNode;
+  actions: React.ReactNode;
+};
+
+/**
+ * Permite abrir a mesma instância de `ListingQuickDrawer` clicando tanto na miniatura quanto no título do
+ * `CompactCard`, mantendo apenas 1 parada de teclado (título) e 1 árvore de Dialog.
+ */
+export function CompactListingInspect({ item, fullTitle, media, title, content, actions }: CompactListingInspectProps) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <article className="grid w-full grid-cols-[5.25rem_minmax(0,1fr)] gap-x-3.5 gap-y-2.5 sm:grid-cols-[6.5rem_minmax(0,1fr)]">
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-hidden="true"
+        onClick={() => setOpen(true)}
+        className="group relative aspect-4/3 cursor-pointer overflow-clip rounded-md bg-surface-subtle sm:row-span-2"
+      >
+        {media}
+      </button>
+      <div className="grid min-w-0 gap-2">
+        <div className="grid min-w-0 gap-1">
+          <h3 className="min-w-0 text-body font-semibold text-foreground">
+            <button
+              type="button"
+              title={`Inspecionar ${fullTitle}`}
+              onClick={() => setOpen(true)}
+              className="group -my-1.5 inline-flex min-h-10 max-w-full cursor-pointer items-center gap-1 rounded-sm py-1.5 text-left outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:min-h-11"
+            >
+              {title}
+            </button>
+          </h3>
+          {content}
+        </div>
+      </div>
+      <div className="col-span-full flex flex-wrap items-center gap-2 sm:col-start-2">{actions}</div>
+      <ListingQuickDrawer item={item} trigger={null} open={open} onOpenChange={setOpen} />
+    </article>
   );
 }
