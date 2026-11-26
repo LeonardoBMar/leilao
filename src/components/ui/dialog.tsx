@@ -45,7 +45,7 @@ function DialogContent({ className, children, hideClose = false, instant = false
       <DialogOverlay instant={instant} />
       <DialogPrimitive.Content
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-120 -translate-x-1/2 -translate-y-1/2 gap-5 overflow-y-auto overscroll-contain rounded-xl border border-border bg-surface-elevated p-5 shadow-lg outline-none md:p-6",
+          "fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-120 -translate-x-1/2 -translate-y-1/2 gap-5 overflow-y-auto overscroll-contain rounded-xl bg-surface-elevated p-5 shadow-lg outline-none md:p-6",
           instant
             ? "scale-100 opacity-100 transition-none duration-0"
             : "scale-[0.98] opacity-0 transition-[opacity,transform] duration-200 ease-[var(--ease-out)] data-[state=open]:scale-100 data-[state=open]:opacity-100 motion-reduce:transition-none starting:scale-[0.98] starting:opacity-0",
