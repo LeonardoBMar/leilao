@@ -91,7 +91,8 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
         </SectionErrorBoundary>
       </div>
 
-      <div className="grid items-start gap-10 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] xl:gap-x-14">
+      <div className="@container">
+        <div className="grid items-start gap-10 @5xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] @5xl:gap-x-14">
         <div className="grid content-start gap-10">
           <Section
             id="to-analyze"
@@ -188,6 +189,7 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
             </Suspense>
           </SectionErrorBoundary>
         </aside>
+        </div>
       </div>
     </div>
   );
