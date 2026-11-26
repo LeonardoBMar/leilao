@@ -51,6 +51,7 @@ export function AddToTrackerButton({
         if (disabled || isPending) return;
         onPendingChange?.(true);
         startTransition(async () => {
+          let navigating = false;
           try {
             const result = await addListingToTrackerAction(listingId);
             if (result.status !== "success") {
@@ -60,12 +61,13 @@ export function AddToTrackerButton({
             onAdded?.();
             const { href } = result.data;
             if (isOpenMode) {
+              navigating = true;
               router.push(href);
               return;
             }
             toast.success(result.message, { action: { label: "Abrir análise", onClick: () => router.push(href) } });
           } finally {
-            onPendingChange?.(false);
+            if (!navigating) onPendingChange?.(false);
           }
         });
       }}
