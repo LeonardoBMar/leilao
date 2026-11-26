@@ -166,6 +166,19 @@ function NavList({
                       )}
                     />
                     <span className={collapsed ? "sr-only" : "relative z-10 truncate"}>{label}</span>
+                    {hasRestoredQuery ? (
+                      <>
+                        <span className="sr-only"> (com filtros salvos)</span>
+                        <span
+                          aria-hidden="true"
+                          title="Retoma os últimos filtros usados"
+                          className={cn(
+                            "z-10 size-1.5 shrink-0 rounded-full bg-accent",
+                            collapsed ? "pointer-events-none absolute bottom-1.5 left-1.5" : "relative",
+                          )}
+                        />
+                      </>
+                    ) : null}
                     {badges?.[href] ? (
                       <>
                         <span className="sr-only"> </span>
