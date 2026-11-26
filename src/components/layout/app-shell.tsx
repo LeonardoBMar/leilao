@@ -77,7 +77,7 @@ function resolveRouteContext(
 
   let detail: string | null = null;
   let detailMono = false;
-  if (pathname === "/dashboard") detail = "Visão geral";
+  if (pathname === "/dashboard") detail = null;
   else if (pathname === "/leiloes") detail = "Catálogo";
   else if (pathname === "/leiloes/veiculos") detail = "Todos os veículos";
   else if (pathname.startsWith("/leiloes/")) detail = "Leilão do catálogo";
@@ -244,6 +244,7 @@ export function AppShell({
     function onKeyDown(event: KeyboardEvent) {
       if (isEditableTarget(event.target)) return;
       if (!event.altKey && !event.ctrlKey && !event.metaKey && event.key === "?") {
+        if (document.querySelector('[role="dialog"]')) return;
         event.preventDefault();
         setGuideDialogOpen(true);
         return;
@@ -337,7 +338,16 @@ export function AppShell({
             collapsed ? "flex-col gap-2 px-2.5 pt-2 pb-0.5" : "h-12 justify-between pr-2.5 pl-4",
           )}
         >
-          <Brand href="/dashboard" compact={collapsed} />
+          <Tooltip delayDuration={180} open={collapsed ? undefined : false}>
+            <TooltipTrigger asChild>
+              <span>
+                <Brand href="/dashboard" compact={collapsed} />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={10}>
+              Início — Leilão Tracker
+            </TooltipContent>
+          </Tooltip>
 
           <Tooltip delayDuration={200}>
             <TooltipTrigger asChild>

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, CircleAlert, CircleCheck, type LucideIcon, Minus, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense, useId, useState } from "react";
@@ -9,13 +9,13 @@ import type { LimitComparison } from "@/domain/finance/calculator";
 import { LIMIT_COMPARISON_LABELS } from "@/lib/limit-comparison";
 import { cn } from "@/lib/utils";
 
-const DOT = {
-  below_limit: "bg-success",
-  at_limit: "bg-warning",
-  above_limit: "bg-error",
-  no_viable_bid: "bg-muted-subtle",
-  unavailable: "bg-muted-subtle",
-} as const satisfies Record<LimitComparison, string>;
+const STATUS_META = {
+  below_limit: { icon: CircleCheck, className: "text-success" },
+  at_limit: { icon: TriangleAlert, className: "text-warning" },
+  above_limit: { icon: CircleAlert, className: "text-error" },
+  no_viable_bid: { icon: Minus, className: "text-muted-subtle" },
+  unavailable: { icon: Minus, className: "text-muted-subtle" },
+} as const satisfies Record<LimitComparison, { icon: LucideIcon; className: string }>;
 
 export type FollowedLotNavItem = {
   id: string;
@@ -79,6 +79,7 @@ function LotSection({ items, totalCount, hasMore, pathname }: FollowedLotsNavLis
             {items.map((lot) => {
               const href = `/lotes/${lot.id}` as const;
               const isActive = pathname !== null && (pathname === href || pathname.startsWith(`${href}/`));
+              const { icon: StatusIcon, className: statusClassName } = STATUS_META[lot.comparison];
               return (
                 <li key={lot.id}>
                   <Link
@@ -95,7 +96,7 @@ function LotSection({ items, totalCount, hasMore, pathname }: FollowedLotsNavLis
                       title={LIMIT_COMPARISON_LABELS[lot.comparison]}
                       className="flex w-4 shrink-0 justify-center"
                     >
-                      <span className={cn("size-1.75 rounded-full", DOT[lot.comparison])} />
+                      <StatusIcon strokeWidth={2} className={cn("size-3.5", statusClassName)} />
                     </span>
                     {/* `relative` prende o `sr-only` (absoluto) ao nome cortado: sem ele, o texto oculto fica no fim do nome
                         inteiro, fora do corte, e cria rolagem horizontal no menu. */}

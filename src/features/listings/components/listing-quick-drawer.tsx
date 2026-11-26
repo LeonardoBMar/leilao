@@ -233,7 +233,7 @@ export function ListingQuickDrawer({ item, trigger, open: controlledOpen, onOpen
             href={item.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex w-fit items-center gap-1 text-label text-accent hover:underline"
+            className="inline-flex min-h-10 w-fit items-center gap-1 rounded-sm text-label text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:min-h-11"
           >
             Ver lote no {item.sourceName}
             <ExternalLink aria-hidden="true" className="size-3.5" />

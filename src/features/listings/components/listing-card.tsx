@@ -167,7 +167,7 @@ export function ListingCard({ item, header, footer, eager = false, compact = fal
           href={item.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="ml-auto inline-flex items-center gap-1 rounded-sm text-label text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent"
+          className="ml-auto inline-flex min-h-10 items-center gap-1 rounded-sm text-label text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:min-h-11"
         >
           {item.sourceName}
           <ExternalLink aria-hidden="true" className="size-3.5" />

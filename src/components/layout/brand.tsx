@@ -36,9 +36,10 @@ export function Brand({ href, compact = false, hideLabelOnNarrow = false, classN
         href={href}
         aria-label={compact ? "Leilão Tracker" : undefined}
         className={cn(
-          "inline-flex min-w-0 items-center rounded-md py-1 outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent",
+          "inline-flex min-w-0 items-center rounded-md py-1 outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:min-h-11",
           compact ? "gap-0" : "gap-2",
-          hideLabelOnNarrow && "max-sm:gap-0",
+          hideLabelOnNarrow &&
+            "max-sm:min-h-10 max-sm:min-w-10 max-sm:justify-center max-sm:gap-0 pointer-coarse:min-w-11",
           className,
         )}
       >

@@ -50,7 +50,7 @@ export function MobileNav({ badges, followed, nextAuction }: MobileNavProps) {
         <CloseOnPathnameChange onClose={() => setIsOpen(false)} />
       </Suspense>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Abrir menu">
+        <Button variant="ghost" size="icon" aria-label="Abrir menu" className="pointer-coarse:size-11">
           <Menu aria-hidden="true" />
         </Button>
       </DialogTrigger>
