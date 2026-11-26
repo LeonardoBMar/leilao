@@ -138,7 +138,7 @@ export async function FollowedLots() {
                 </p>
               </div>
               <div className="grid gap-2">
-                <LimitProgress limit={lot.limit} bid={lot.currentBid} />
+                <LimitProgress limit={lot.limit} bid={lot.currentBid} neutralWhenPositive={lot.fit === "above"} />
                 <ProbableLine lot={lot} />
               </div>
             </li>

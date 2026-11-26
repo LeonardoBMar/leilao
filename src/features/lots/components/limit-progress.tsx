@@ -10,7 +10,16 @@ import type { LotLimit } from "../types";
  * Lance atual frente ao limite em uma linha de lista (DESIGN.md §15.1): barra até o limite e a diferença em texto.
  * A barra é decorativa; o texto sempre diz a situação (cor nunca sozinha).
  */
-export function LimitProgress({ limit, bid }: { limit: LotLimit | null; bid: Cents | null }) {
+export function LimitProgress({
+  limit,
+  bid,
+  neutralWhenPositive = false,
+}: {
+  limit: LotLimit | null;
+  bid: Cents | null;
+  /** Mantém o texto de folga atual neutro quando outro sinal adjacente (ex.: provável acima) exige atenção prioritária. */
+  neutralWhenPositive?: boolean;
+}) {
   const comparison = compareToFixedLimit(toFixedLimit(limit), bid);
   const maxBid = limit?.isViable ? limit.maxBid : null;
 
@@ -39,7 +48,7 @@ export function LimitProgress({ limit, bid }: { limit: LotLimit | null; bid: Cen
       <span
         className={cn(
           "text-caption font-medium tabular-nums",
-          gap > 0 ? "text-success" : gap === 0 ? "text-warning" : "text-error",
+          gap > 0 ? (neutralWhenPositive ? "text-foreground-secondary" : "text-success") : gap === 0 ? "text-warning" : "text-error",
         )}
       >
         {text}
