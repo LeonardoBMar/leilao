@@ -63,12 +63,12 @@ export async function RegionAuctions() {
           >
             {key === "sem-data" ? (
               <p className="grid content-start">
-                <span className="text-heading-1 tabular-nums">{parts.day}</span>
+                <span className="text-heading-2 font-semibold tabular-nums">{parts.day}</span>
                 <span className="text-caption text-muted">Sem data</span>
               </p>
             ) : (
               <time dateTime={key} className="grid content-start">
-                <span className="text-heading-1 tabular-nums">{parts.day}</span>
+                <span className="text-heading-2 font-semibold tabular-nums">{parts.day}</span>
                 <span className="text-label text-foreground-secondary">{parts.month}</span>
                 <span className="text-caption text-muted">{parts.weekday}</span>
               </time>

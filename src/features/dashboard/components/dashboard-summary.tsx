@@ -298,7 +298,7 @@ export async function DecisionIndicator() {
       ) : (
         <div className="grid gap-3">
           <p className="grid gap-1 text-body text-foreground-secondary">
-            <span className="text-heading-1 text-foreground tabular-nums">
+            <span className="text-heading-2 font-semibold text-foreground tabular-nums">
               {indicator.withinLimit} <span className="font-medium text-muted">de {indicator.comparable}</span>
             </span>{" "}
             resultados comparáveis ficaram dentro do limite
