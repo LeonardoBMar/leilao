@@ -48,7 +48,13 @@ export function LimitProgress({
       <span
         className={cn(
           "text-caption font-medium tabular-nums",
-          gap > 0 ? (neutralWhenPositive ? "text-foreground-secondary" : "text-success") : gap === 0 ? "text-warning" : "text-error",
+          gap > 0
+            ? neutralWhenPositive
+              ? "text-foreground-secondary"
+              : "text-success"
+            : gap === 0
+              ? "text-warning"
+              : "text-error",
         )}
       >
         {text}
