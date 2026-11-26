@@ -13,11 +13,18 @@ function DialogPortal(props: DialogPrimitive.DialogPortalProps) {
   return <DialogPrimitive.Portal {...props} />;
 }
 
-function DialogOverlay({ className, ...props }: DialogPrimitive.DialogOverlayProps) {
+type DialogOverlayProps = DialogPrimitive.DialogOverlayProps & {
+  instant?: boolean;
+};
+
+function DialogOverlay({ className, instant = false, ...props }: DialogOverlayProps) {
   return (
     <DialogPrimitive.Overlay
       className={cn(
-        "fixed inset-0 z-50 overflow-hidden overscroll-contain bg-[var(--overlay)] opacity-0 transition-opacity duration-200 ease-[var(--ease-out)] data-[state=open]:opacity-100 motion-reduce:transition-none starting:opacity-0",
+        "fixed inset-0 z-50 overflow-hidden overscroll-contain bg-[var(--overlay)]",
+        instant
+          ? "opacity-100 transition-none duration-0"
+          : "opacity-0 transition-opacity duration-200 ease-[var(--ease-out)] data-[state=open]:opacity-100 motion-reduce:transition-none starting:opacity-0",
         className,
       )}
       {...props}
@@ -28,15 +35,20 @@ function DialogOverlay({ className, ...props }: DialogPrimitive.DialogOverlayPro
 type DialogContentProps = DialogPrimitive.DialogContentProps & {
   /** Oculta o botão de fechar no canto superior direito (ex.: paleta de comando com Escape). */
   hideClose?: boolean;
+  /** Desliga a transição de entrada do overlay e do conteúdo (ex.: paleta de comando instantânea). */
+  instant?: boolean;
 };
 
-function DialogContent({ className, children, hideClose = false, ...props }: DialogContentProps) {
+function DialogContent({ className, children, hideClose = false, instant = false, ...props }: DialogContentProps) {
   return (
     <DialogPortal>
-      <DialogOverlay />
+      <DialogOverlay instant={instant} />
       <DialogPrimitive.Content
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-120 -translate-x-1/2 -translate-y-1/2 scale-[0.98] gap-5 overflow-y-auto overscroll-contain rounded-xl border border-border bg-surface-elevated p-5 opacity-0 shadow-lg transition-[opacity,transform] duration-200 ease-[var(--ease-out)] outline-none data-[state=open]:scale-100 data-[state=open]:opacity-100 motion-reduce:transition-none md:p-6 starting:scale-[0.98] starting:opacity-0",
+          "fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-120 -translate-x-1/2 -translate-y-1/2 gap-5 overflow-y-auto overscroll-contain rounded-xl border border-border bg-surface-elevated p-5 shadow-lg outline-none md:p-6",
+          instant
+            ? "scale-100 opacity-100 transition-none duration-0"
+            : "scale-[0.98] opacity-0 transition-[opacity,transform] duration-200 ease-[var(--ease-out)] data-[state=open]:scale-100 data-[state=open]:opacity-100 motion-reduce:transition-none starting:scale-[0.98] starting:opacity-0",
           className,
         )}
         {...props}

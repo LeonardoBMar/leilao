@@ -447,7 +447,8 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent
           hideClose
-          className="top-[8%] max-w-132 translate-y-0 gap-0 overflow-hidden p-0 transition-none duration-0 sm:top-[18%]"
+          instant
+          className="top-[8%] max-w-132 translate-y-0 gap-0 overflow-hidden p-0 sm:top-[18%]"
         >
           <DialogTitle className="sr-only">Navegação rápida</DialogTitle>
           <DialogDescription className="sr-only">
