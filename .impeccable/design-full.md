@@ -109,7 +109,7 @@ O projeto possui a fundação em Next.js 16, Tailwind CSS 4, Radix UI, `motion` 
 
 - Em 21/11/2026 o usuário escolheu a direção **v3.0 — "Cirúrgico & Monocromático"** (Precision Workbench claro estilo Linear Light), substituindo a antiga Direção A (papel quente `#F7F7F4`, Hanken Grotesk e sidebar fixa de `296px`).
 - Fontes obrigatórias: **Inter** (`cv02`, `cv03`, `cv04`, `cv11`) na interface e **JetBrains Mono** em códigos (número do lote, atalhos `⌘K`, identificadores).
-- Casca arquitetônica de borda a borda: **Sidebar colapsável** (`264px` expandida ↔ `56px` só ícones, atalho `Ctrl+B`) em `#FAFAFB` com **header próprio de `56px`** (marca e botão de recolher/expandir centralizado sobre a divisória entre sidebar e header), e **Header fixo de `56px` à direita da sidebar** sobre o canvas branco puro (`#FFFFFF`) com breadcrumb clicável à esquerda, salto rápido `⌘K` centralizado e central de notificações + menu da conta à direita, separados por linhas hairline (`#EAECEF`).
+- Casca arquitetônica de borda a borda: **Sidebar colapsável** (`264px` expandida ↔ `56px` só ícones, atalho `Ctrl+B`) em `#FAFAFB` com topo próprio de `48px` (marca e botão de recolher/expandir), gatilho de busca rápida `⌘K` integrado no topo da sidebar e dock da conta ancorado no rodapé, e **Header fixo de `48px` à direita da sidebar** sobre o canvas branco puro (`#FFFFFF`) com breadcrumb clicável à esquerda e central de notificações (+ busca e conta abaixo de `lg`) à direita, separados por linhas hairline (`#EAECEF`).
 - Paleta acromática cirúrgica: ação principal em **tinta** (`#111318`). Cor aparece apenas no **veredicto financeiro** (`#047857` esmeralda / `#BE123C` carmesim / `#92400E` âmbar), em foco/links (`#1D4ED8`) e na escala sequencial dos gráficos de Mercado.
 - Acabamento guiado pelo combo de skills do projeto (`impeccable`, `emil-design-eng`, skills de Jakub Krehel, `web-design-guidelines`, `frontend-design` e `modern-web-guidance`): curvas customizadas (`--ease-out`, `--ease-drawer`), `active:scale-[0.97]`, popovers orientados pelo gatilho, zero animação em ações de teclado (`⌘K`, `Ctrl+B`), `text-wrap: balance/pretty`, `line-height` sem unidade, `overscroll-behavior: contain` em overlays e inputs em `16px` no mobile (`text-base sm:text-body`).
 
@@ -199,7 +199,7 @@ Os nomes semânticos são a API visual do projeto. O código deve consumir `back
 | `placeholder` | `#626773` | Sugestão de preenchimento, com contraste de texto normal. | Substituir o label. |
 | `border` | `#EAECEF` | Linhas hairline: header, sidebar, divisores, linhas de tabela e borda de cards. | Identificar controles, erro ou foco. |
 | `border-strong` | `#DADDE3` | Divisores marcados e contorno do botão Secondary. | Identificar limites de campos. |
-| `control-border` | `#C5C9D2` | Inputs, selects, checkbox e radio (≥ 3:1 sobre `surface`). | Contornar todos os cards. |
+| `control-border` | `#878C98` | Inputs, selects, checkbox e radio (≥ 3:1 sobre `surface`). | Contornar todos os cards. |
 | `overlay` | `rgba(17, 19, 24, 0.42)` | Fundo atrás de dialogs e drawers. | Superfícies permanentes. |
 
 #### Tinta, acento e interação
@@ -346,9 +346,9 @@ Regras:
 | --- | ---: | --- |
 | `radius-none` | `0` | Divisores e mídia que encosta nos limites do container. |
 | `radius-sm` | `4px` | Badges pequenos e elementos compactos. |
-| `radius-md` | `7px` | Inputs, botões, selects, tooltips e itens da navegação. |
-| `radius-lg` | `12px` | Painel principal, cards, alerts, dropdowns e popovers. |
-| `radius-xl` | `16px` | Dialogs, drawers e cards de destaque. |
+| `radius-md` | `6px` | Inputs, botões, selects, tooltips e itens da navegação. |
+| `radius-lg` | `10px` | Painel principal, cards, alerts, dropdowns e popovers. |
+| `radius-xl` | `14px` | Dialogs, drawers e cards de destaque. |
 | `radius-full` | `9999px` | Badges (pílula), contadores, avatares e indicadores circulares. |
 
 Não misturar raios diferentes em elementos equivalentes. Inputs e botões lado a lado devem compartilhar `radius-md`.
@@ -390,9 +390,9 @@ O design é mobile first. Breakpoint indica mudança de composição, não uma c
 
 ### 4.1 Estrutura privada
 
-- Em `lg` ou maior, a sidebar colapsável (`264px` expandida ↔ `56px` recolhida, atalho `Ctrl+B`/`⌘B`) fica sobre `background` (`#FAFAFB`), separada por borda hairline `border`, com header próprio de `56px` (marca e botão recolher/expandir centralizado sobre a linha divisória). Na rota `/dashboard`, o grupo `Acompanhando` da sidebar é ocultado para evitar duplicação com a seção principal.
-- A coluna principal à direita traz o header fixo de `56px` sobre `surface` (`#FFFFFF`) com breadcrumb clicável à esquerda, gatilho da paleta rápida `CommandPalette` (`⌘K`/`Ctrl K`) centralizado e notificações (falhas de coleta + novos alertas) + menu da conta (Preferências e Sair) à direita, seguido pelo canvas em `surface` (`#FFFFFF`).
-- Abaixo de `lg`, o mesmo header fixo de `56px` traz o menu em gaveta (`MobileNav`), a marca, o gatilho da paleta rápida, as notificações e o menu da conta.
+- Em `lg` ou maior, a sidebar colapsável (`264px` expandida ↔ `56px` recolhida, atalho `Ctrl+B`/`⌘B`) fica sobre `background` (`#FAFAFB`), separada por borda hairline `border`, com topo próprio de `48px` (marca e botão recolher/expandir), gatilho da paleta rápida `CommandPalette` (`⌘K`/`Ctrl+K`) integrado e dock da conta no rodapé. Na rota `/dashboard`, o grupo `Acompanhando` da sidebar é ocultado para evitar duplicação com a seção principal.
+- A coluna principal à direita traz o header fixo de `48px` sobre `surface` (`#FFFFFF`) com breadcrumb clicável à esquerda e central de notificações (falhas de coleta + novos alertas) à direita, seguido pelo canvas em `surface` (`#FFFFFF`).
+- Abaixo de `lg`, o mesmo header fixo de `48px` traz o menu em gaveta (`MobileNav`), a marca, o contexto de rota (`md+`), o gatilho da paleta rápida, as notificações e o menu da conta.
 - A área de conteúdo usa largura máxima de `1440px` (`max-w-360`), centralizada na coluna principal.
 - Padding horizontal: `16px` no mobile (`px-4`), `24px` em `md` (`px-6`) e `32px` em `lg` (`px-8`).
 - Padding vertical da página: `24px` no mobile (`py-6`) e `28px` no desktop `lg` (`py-7`).
@@ -697,7 +697,7 @@ Usar para informação faltante, análise retrospectiva, resultado não compará
 
 Ordem inicial:
 
-1. Marca: quadrado de 28 px em tinta com o martelo e “Leilão Tracker” (`src/components/layout/brand.tsx`).
+1. Marca: quadrado de 24 px em tinta com o martelo e “Leilão Tracker” (`src/components/layout/brand.tsx`).
 2. Início (ícone de casa, rota `/dashboard`).
 3. Leilões (o catálogo coletado, por leilão ou todos os veículos; docs/PLANO-COLETA.md e docs/PLANO-NAVEGACAO.md): porta de entrada do fluxo descobrir → analisar.
 4. Minhas análises (os lotes do usuário, todos ou por leilão).
@@ -708,7 +708,7 @@ Ordem inicial:
 8. Espaço flexível.
 9. Cartão **Próximo leilão** (véu de 3% de tinta, `radius-lg`): data e hora, nome e quantidade de lotes; leva ao leilão. Some sem leilão próximo.
 
-- A conta (avatar com dropdown de Preferências e Sair) e a central de notificações (falhas de coleta + novos alertas) ficam no canto direito do header fixo (`56px`).
+- A conta (avatar com dropdown de Preferências, Guia e atalhos e Sair) fica ancorada no rodapé da sidebar no desktop e no canto direito do header fixo (`48px`) abaixo de `lg`, ao lado da central de notificações (falhas de coleta + novos alertas).
 - A sidebar fica sobre o papel (`background`), separada por borda hairline `border`.
 - Item: altura mínima de 36 px, `radius-md`, 1 px entre itens, ícone 16 px em `muted-subtle`, texto `body` peso 500 em `foreground-secondary`.
 - Ativo: fundo `primary-subtle` (sem borda nem sombra), texto e ícone em tinta, peso 600; mantém a mesma cor no hover.
