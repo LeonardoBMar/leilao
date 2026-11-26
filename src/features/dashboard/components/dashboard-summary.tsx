@@ -65,7 +65,7 @@ export async function DashboardKpis() {
       <ul
         role="list"
         aria-label="Resumo operacional"
-        className="grid grid-cols-2 gap-px overflow-clip rounded-lg border border-border bg-border @3xl:grid-cols-4"
+        className="grid grid-cols-1 gap-px overflow-clip rounded-lg border border-border bg-border min-[420px]:grid-cols-2 @3xl:grid-cols-4"
       >
         <li>
           <a href="#to-analyze" className={kpiLinkClass}>
