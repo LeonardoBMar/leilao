@@ -717,7 +717,7 @@ Ordem inicial:
 
 ### Navegação mobile
 
-- Topbar de 56 px com marca/contexto e botão de menu.
+- Topbar de 48 px com botão de menu, marca (ícone compacto abaixo de `sm`), contexto de rota, busca rápida, notificações e conta.
 - Menu abre drawer lateral com os mesmos destinos, extras e ordem da sidebar; qualquer link clicado fecha o drawer.
 - Não criar navegação inferior enquanto existirem poucos destinos e ações contextuais importantes.
 
@@ -854,7 +854,7 @@ Easing padrão: `cubic-bezier(0.2, 0, 0, 1)`. Saída pode usar `cubic-bezier(0.4
 
 1. `PageHeader` com título **“Visão geral”**, linha compacta da coleta à direita (`X veículos abertos até 150 km de … · Coleta dd mmm, hh:mm`), e ações **“Ver leilões”** (`primary`) e **“Novo leilão”** (`secondary`).
 2. Faixa de KPIs operacionais (`DashboardKpis`) em grade hairline (`2` colunas no mobile, `4` em `@3xl+`): **Para analisar**, **Acompanhados** (destaque suave em `error-subtle` a 40% quando houver provável acima do limite), **Pendências** (destaque suave em `warning-subtle` a 40% quando houver pendências) e **Próximo no catálogo**, cada célula ligada à seção ou leilão correspondente.
-3. Faixa compacta de alertas não lidos e saúde da coleta (`RecentAlerts`), quando houver alertas ou falha/atraso na coleta (neste caso explicando o impacto e oferecendo link para `/leiloes`).
+3. Alertas não lidos e saúde da coleta consolidados na central de notificações do header (`NotificationsPopover`) e no contador `accent` da sidebar, mantendo o canvas do dashboard focado na triagem operacional.
 4. Duas colunas no desktop amplo (`1,7 : 1`):
    - à esquerda, nesta ordem (`SPEC §5`):
      - **“Para analisar agora”**: até `4` `ListingCard` compactos em grade de `2` colunas em `@3xl+` (1 coluna abaixo), mostrando lance, preço provável, limite estimado, evidência (`n`, confiança e origem do limite), ações (`Analisar agora`, `Inspecionar`, `Dispensar`), aviso quando truncado e rodapé **“Ver mais N no catálogo”** quando houver mais candidatos;
