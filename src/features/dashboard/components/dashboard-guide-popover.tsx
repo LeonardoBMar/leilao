@@ -4,6 +4,7 @@ import { CircleHelp, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
+import { useIsMac } from "@/components/layout/use-is-mac";
 import { Button, Popover, PopoverContent, PopoverTrigger } from "@/components/ui";
 
 /**
@@ -12,6 +13,7 @@ import { Button, Popover, PopoverContent, PopoverTrigger } from "@/components/ui
  */
 export function DashboardGuidePopover() {
   const [open, setOpen] = useState(false);
+  const isMac = useIsMac();
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -63,13 +65,13 @@ export function DashboardGuidePopover() {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-foreground-secondary">
             <span>
               <kbd className="rounded-sm border border-border-strong bg-surface px-1.5 py-0.5 font-mono text-caption text-foreground">
-                Ctrl+K
+                {isMac ? "⌘K" : "Ctrl+K"}
               </kbd>{" "}
               busca rápida
             </span>
             <span>
               <kbd className="rounded-sm border border-border-strong bg-surface px-1.5 py-0.5 font-mono text-caption text-foreground">
-                Ctrl+B
+                {isMac ? "⌘B" : "Ctrl+B"}
               </kbd>{" "}
               barra lateral
             </span>

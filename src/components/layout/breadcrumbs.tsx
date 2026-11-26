@@ -16,7 +16,7 @@ function BreadcrumbLink<RouteType>({ children, ...props }: LinkProps<RouteType> 
         /
       </span>
       <Link
-        className="rounded-sm outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent"
+        className="inline-flex min-h-10 items-center rounded-sm outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent sm:min-h-0"
         {...props}
       >
         {children}

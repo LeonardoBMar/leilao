@@ -59,7 +59,7 @@ function LotSection({ items, totalCount, hasMore, pathname }: FollowedLotsNavLis
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
         aria-controls={listId}
-        className="group flex min-h-10 w-full items-center gap-1.5 rounded-md px-2.5 text-left text-overline font-medium text-muted transition-colors duration-150 ease-[var(--ease-out)] outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent motion-reduce:transition-none lg:min-h-7 pointer-coarse:min-h-11"
+        className="group flex min-h-10 w-full items-center gap-1.5 rounded-md px-2.5 text-left font-mono text-overline font-medium text-muted uppercase transition-colors duration-150 ease-[var(--ease-out)] outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent motion-reduce:transition-none lg:min-h-7 pointer-coarse:min-h-11"
       >
         <ChevronRight
           aria-hidden="true"

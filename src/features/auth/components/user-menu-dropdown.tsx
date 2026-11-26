@@ -1,12 +1,18 @@
 "use client";
 
-import { ChevronsUpDown, LoaderCircle, LogOut, SlidersHorizontal, UserRound } from "lucide-react";
+import { ChevronsUpDown, CircleHelp, LoaderCircle, LogOut, SlidersHorizontal, UserRound } from "lucide-react";
 import Link from "next/link";
-import { useSyncExternalStore, useTransition } from "react";
+import { useState, useSyncExternalStore, useTransition } from "react";
 
 import { getSidebarServerSnapshot, getSidebarSnapshot, subscribeSidebar } from "@/components/layout/sidebar-store";
+import { useIsMac } from "@/components/layout/use-is-mac";
 import {
   Badge,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -34,6 +40,8 @@ function subscribeNoop() {
 /** Avatar e menu da conta (compacto no header mobile ou dock ancorado no rodapé da sidebar desktop). */
 export function UserMenuDropdown({ email, devBypass, variant = "header" }: UserMenuDropdownProps) {
   const [isPending, startTransition] = useTransition();
+  const [guideOpen, setGuideOpen] = useState(false);
+  const isMac = useIsMac();
   const isSidebar = variant === "sidebar";
   const collapsed = useSyncExternalStore(
     isSidebar ? subscribeSidebar : subscribeNoop,
@@ -86,80 +94,140 @@ export function UserMenuDropdown({ email, devBypass, variant = "header" }: UserM
   );
 
   return (
-    <DropdownMenu>
-      {isSidebar ? (
-        <Tooltip delayDuration={180} open={collapsed ? undefined : false}>
-          <TooltipTrigger asChild>
-            <DropdownMenuTrigger asChild>{sidebarTrigger}</DropdownMenuTrigger>
-          </TooltipTrigger>
-          <TooltipContent side="right" sideOffset={10}>
-            {collapsedAccountLabel}
-          </TooltipContent>
-        </Tooltip>
-      ) : (
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            aria-label="Menu da conta"
-            className="relative inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-border-strong bg-primary-subtle text-caption font-semibold text-foreground-secondary transition-[background-color,border-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:border-control-border hover:bg-primary-subtle-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 sm:size-9 pointer-coarse:size-11"
-          >
-            {initial ?? <UserRound aria-hidden="true" className="size-4" />}
-            {devBypass ? (
-              <span
-                aria-hidden="true"
-                className="absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full bg-warning ring-2 ring-surface"
-              />
-            ) : null}
-          </button>
-        </DropdownMenuTrigger>
-      )}
+    <>
+      <DropdownMenu>
+        {isSidebar ? (
+          <Tooltip delayDuration={180} open={collapsed ? undefined : false}>
+            <TooltipTrigger asChild>
+              <DropdownMenuTrigger asChild>{sidebarTrigger}</DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={10}>
+              {collapsedAccountLabel}
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label={devBypass ? "Menu da conta (Modo dev)" : "Menu da conta"}
+              className="relative inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-border-strong bg-primary-subtle text-caption font-semibold text-foreground-secondary transition-[background-color,border-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:border-control-border hover:bg-primary-subtle-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 sm:size-9 pointer-coarse:size-11"
+            >
+              {initial ?? <UserRound aria-hidden="true" className="size-4" />}
+              {devBypass ? (
+                <span
+                  aria-hidden="true"
+                  className="absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full bg-warning ring-2 ring-surface"
+                />
+              ) : null}
+            </button>
+          </DropdownMenuTrigger>
+        )}
 
-      <DropdownMenuContent
-        side={isSidebar ? (collapsed ? "right" : "top") : "bottom"}
-        align={isSidebar ? (collapsed ? "end" : "start") : "end"}
-        sideOffset={collapsed && isSidebar ? 10 : 8}
-        className="w-60"
-      >
-        <DropdownMenuLabel className="grid gap-1.5 font-normal">
-          <span className="truncate text-label font-medium text-foreground" title={email ?? undefined}>
-            {email ?? "Sua conta"}
-          </span>
-          {devBypass ? (
-            <Badge variant="warning" className="justify-self-start">
-              Modo dev: login desligado
-            </Badge>
-          ) : null}
-        </DropdownMenuLabel>
-
-        <DropdownMenuSeparator />
-
-        <DropdownMenuItem asChild>
-          <Link href="/sistema/preferencias">
-            <SlidersHorizontal aria-hidden="true" className="text-muted" />
-            Preferências
-          </Link>
-        </DropdownMenuItem>
-
-        <DropdownMenuSeparator />
-
-        <DropdownMenuItem
-          aria-busy={isPending || undefined}
-          onSelect={(event) => {
-            event.preventDefault();
-            if (isPending) return;
-            startTransition(async () => {
-              await logoutAction();
-            });
-          }}
+        <DropdownMenuContent
+          side={isSidebar ? (collapsed ? "right" : "top") : "bottom"}
+          align={isSidebar ? (collapsed ? "end" : "start") : "end"}
+          sideOffset={collapsed && isSidebar ? 10 : 8}
+          className="w-60"
         >
-          {isPending ? (
-            <LoaderCircle aria-hidden="true" className="animate-spin text-muted motion-reduce:animate-none" />
-          ) : (
-            <LogOut aria-hidden="true" className="text-muted" />
-          )}
-          {isPending ? "Saindo…" : "Sair"}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <DropdownMenuLabel className="grid gap-1.5 font-normal">
+            <span className="truncate text-label font-medium text-foreground" title={email ?? undefined}>
+              {email ?? "Sua conta"}
+            </span>
+            {devBypass ? (
+              <Badge variant="warning" className="justify-self-start">
+                Modo dev: login desligado
+              </Badge>
+            ) : null}
+          </DropdownMenuLabel>
+
+          <DropdownMenuSeparator />
+
+          <DropdownMenuItem asChild>
+            <Link href="/sistema/preferencias">
+              <SlidersHorizontal aria-hidden="true" className="text-muted" />
+              Preferências
+            </Link>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onSelect={() => setGuideOpen(true)}>
+            <CircleHelp aria-hidden="true" className="text-muted" />
+            Guia e atalhos
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+
+          <DropdownMenuItem
+            aria-busy={isPending || undefined}
+            onSelect={(event) => {
+              event.preventDefault();
+              if (isPending) return;
+              startTransition(async () => {
+                await logoutAction();
+              });
+            }}
+          >
+            {isPending ? (
+              <LoaderCircle aria-hidden="true" className="animate-spin text-muted motion-reduce:animate-none" />
+            ) : (
+              <LogOut aria-hidden="true" className="text-muted" />
+            )}
+            {isPending ? "Saindo…" : "Sair"}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Dialog open={guideOpen} onOpenChange={setGuideOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Guia rápido e atalhos</DialogTitle>
+            <DialogDescription>
+              Conceitos financeiros e atalhos de teclado disponíveis em todas as telas do Leilão Tracker.
+            </DialogDescription>
+          </DialogHeader>
+
+          <dl className="grid gap-3 text-body">
+            <div className="grid gap-0.5">
+              <dt className="text-label font-semibold text-foreground">Preço provável</dt>
+              <dd className="text-caption text-foreground-secondary">
+                Mediana dos arremates comparáveis do mesmo modelo no catálogo, sempre acompanhada do tamanho da base
+                (n).
+              </dd>
+            </div>
+            <div className="grid gap-0.5">
+              <dt className="text-label font-semibold text-foreground">Limite estimado e premissas padrão</dt>
+              <dd className="text-caption text-foreground-secondary">
+                Lance máximo calculado pelas suas análises anteriores ou pelas premissas padrão de margem, guincho e
+                custos em Preferências.
+              </dd>
+            </div>
+            <div className="grid gap-0.5">
+              <dt className="text-label font-semibold text-foreground">Resultados comparáveis e calibração</dt>
+              <dd className="text-caption text-foreground-secondary">
+                Lotes com análise fixada antes do leilão e resultado registrado, usados para acompanhar a precisão dos
+                seus limites.
+              </dd>
+            </div>
+          </dl>
+
+          <div className="grid gap-2 border-t border-border pt-4 text-caption">
+            <p className="font-mono text-overline font-medium text-muted uppercase">Atalhos de teclado</p>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-foreground-secondary">
+              <span>
+                <kbd className="rounded-sm border border-border-strong bg-background px-1.5 py-0.5 font-mono text-caption text-foreground">
+                  {isMac ? "⌘K" : "Ctrl+K"}
+                </kbd>{" "}
+                busca e salto rápido
+              </span>
+              <span>
+                <kbd className="rounded-sm border border-border-strong bg-background px-1.5 py-0.5 font-mono text-caption text-foreground">
+                  {isMac ? "⌘B" : "Ctrl+B"}
+                </kbd>{" "}
+                recolher barra lateral
+              </span>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

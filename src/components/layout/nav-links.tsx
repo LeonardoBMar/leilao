@@ -166,17 +166,20 @@ function NavList({
                     />
                     <span className={collapsed ? "sr-only" : "relative z-10 truncate"}>{label}</span>
                     {badges?.[href] ? (
-                      <span
-                        data-collapsed={collapsed ? "true" : "false"}
-                        className={cn(
-                          "z-10 empty:hidden",
-                          collapsed
-                            ? "pointer-events-none absolute top-1.5 right-1.5"
-                            : "relative ml-auto transition-opacity duration-150 motion-reduce:transition-none",
-                        )}
-                      >
-                        {badges[href]}
-                      </span>
+                      <>
+                        <span className="sr-only"> </span>
+                        <span
+                          data-collapsed={collapsed ? "true" : "false"}
+                          className={cn(
+                            "z-10 empty:hidden",
+                            collapsed
+                              ? "pointer-events-none absolute top-1.5 right-1.5"
+                              : "relative ml-auto transition-opacity duration-150 motion-reduce:transition-none",
+                          )}
+                        >
+                          {badges[href]}
+                        </span>
+                      </>
                     ) : null}
                   </Link>
                 </TooltipTrigger>
@@ -192,7 +195,7 @@ function NavList({
       {/* Grupo separado: admins veem Sistema (Coleta, FIPE, Preferências); usuários comuns veem só Preferências (D-90) */}
       <div className={cn("grid gap-1", collapsed ? "mt-3 border-t border-border/70 pt-3" : "mt-5")}>
         {!collapsed ? (
-          <p className="px-2.5 pb-0.5 text-overline font-medium text-muted">
+          <p className="px-2.5 pb-0.5 font-mono text-overline font-medium text-muted uppercase">
             {isAdmin ? "Administração" : "Configurações"}
           </p>
         ) : null}

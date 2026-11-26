@@ -41,7 +41,10 @@ class ErrorBoundaryInner extends Component<ErrorBoundaryInnerProps, ErrorBoundar
       <Alert variant="error" className="grid gap-3">
         <div className="grid gap-1">
           <AlertTitle>{this.props.title}</AlertTitle>
-          <AlertDescription>Não foi possível carregar esta seção agora.</AlertDescription>
+          <AlertDescription>
+            Ocorreu uma falha temporária nesta seção. Tente novamente ou use o atalho ao lado; seus dados salvos
+            permanecem intactos.
+          </AlertDescription>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button type="button" variant="secondary" size="sm" onClick={this.handleRetry}>

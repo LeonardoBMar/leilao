@@ -21,6 +21,7 @@ import {
 import { MobileNav } from "./mobile-nav";
 import { NAV_ITEMS, type NavBadges, NavLinks } from "./nav-links";
 import { getSidebarServerSnapshot, getSidebarSnapshot, setSidebarCollapsed, subscribeSidebar } from "./sidebar-store";
+import { useIsMac } from "./use-is-mac";
 
 type RouteContext = {
   section: string;
@@ -113,7 +114,13 @@ function HeaderRouteContext() {
   const SectionIcon = context.icon;
 
   return (
-    <nav aria-label="Localização atual" className="hidden min-w-0 items-center lg:flex">
+    <nav aria-label="Localização atual" className="hidden min-w-0 items-center md:flex">
+      <span
+        aria-hidden="true"
+        className="mr-2 shrink-0 font-mono text-caption text-border-strong select-none lg:hidden"
+      >
+        /
+      </span>
       <ol className="flex min-w-0 items-center gap-2 text-label">
         <li className="flex min-w-0 items-center">
           {context.detail ? (
@@ -190,19 +197,6 @@ type AppShellProps = {
   children: ReactNode;
 };
 
-function subscribeNoop() {
-  return () => {};
-}
-
-function getIsMacSnapshot(): boolean {
-  if (typeof navigator === "undefined") return false;
-  return /Mac|iPhone|iPad|iPod/i.test(navigator.platform);
-}
-
-function getIsMacServerSnapshot(): boolean {
-  return false;
-}
-
 function isEditableTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   if (target.isContentEditable) return true;
@@ -226,7 +220,7 @@ export function AppShell({
   children,
 }: AppShellProps) {
   const collapsed = useSyncExternalStore(subscribeSidebar, getSidebarSnapshot, getSidebarServerSnapshot);
-  const isMac = useSyncExternalStore(subscribeNoop, getIsMacSnapshot, getIsMacServerSnapshot);
+  const isMac = useIsMac();
   const [commandOpen, setCommandOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [sidebarFade, setSidebarFade] = useState({ top: false, bottom: false });
@@ -451,9 +445,10 @@ export function AppShell({
                 onClick={() => setCommandOpen(true)}
                 aria-label={isMac ? "Ir para tela ou buscar (⌘K)" : "Ir para tela ou buscar (Ctrl+K)"}
                 aria-keyshortcuts="Control+K Meta+K"
-                className="size-10 text-muted hover:text-foreground sm:size-9 lg:hidden pointer-coarse:size-11"
+                className="size-10 text-muted hover:text-foreground sm:h-9 sm:w-auto sm:gap-1.5 sm:px-2.5 lg:hidden pointer-coarse:h-11 pointer-coarse:min-w-11"
               >
                 <Search aria-hidden="true" strokeWidth={1.75} className="size-4" />
+                <span className="hidden text-label font-normal sm:inline">Buscar</span>
               </Button>
               {notifications}
               {sidebarAccount ? <div className="lg:hidden">{account}</div> : account}
