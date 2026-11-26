@@ -20,8 +20,8 @@ Esta pasta contém as primitivas reutilizáveis do Leilão Tracker. Os contratos
 | Filtro | `ToggleChip`, `RemovableChip` | Chip de escolha múltipla (`aria-pressed`) e chip de filtro ativo com “×”. |
 | Estrutura | `Section`, `SectionHeader`, `SectionTitle`, `DataList`, `DataRow`, `Stat`, `Card`, `Table`, `Tabs`, `LinkTabs`, `MotionList`, `MotionListItem`, `Pagination` | Seções com linhas finas (padrão da direção A), painéis em destaque, listas com FLIP (`MotionList`) e navegação local (`LinkTabs`: visões irmãs pela URL). `Stat`: rótulo pequeno sobre o valor, em grade. |
 | Estado | `Badge`, `Alert`, `Skeleton`, `Spinner`, `EmptyState` | Estado semântico, carregamento e ausência de dados (`EmptyState variant="inline"` dentro de seções). |
-| Overlay | `Dialog`, `DrawerContent`, `DrawerBody`, `DrawerFooter`, `Popover`, `DropdownMenu`, `Tooltip` | Interações acessíveis providas por Radix. Drawer é um `Dialog` com `DrawerContent side="right" \| "bottom"`. |
-| Feedback | `Toaster`, `toast` | Confirmações e falhas globais breves. |
+| Overlay | `Dialog`, `ConfirmDialog`, `DrawerContent`, `DrawerBody`, `DrawerFooter`, `Popover`, `DropdownMenu`, `Tooltip` | Interações acessíveis providas por Radix. Drawer é um `Dialog` com `DrawerContent side="right" \| "bottom"`. `ConfirmDialog` encapsula confirmação de ações destrutivas/irreversíveis. |
+| Feedback | `Toaster`, `toast`, `useActionToast` | Confirmações e falhas globais breves. `useActionToast` envolve Server Actions em `useTransition` com feedback automático de `ActionState`. |
 
 ## Exemplos
 

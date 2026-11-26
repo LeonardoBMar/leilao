@@ -1,20 +1,8 @@
 "use client";
 
 import { Lock, Trash2 } from "lucide-react";
-import { useTransition } from "react";
 
-import {
-  Button,
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  toast,
-} from "@/components/ui";
+import { Button, ConfirmDialog, useActionToast } from "@/components/ui";
 import { formatBRL, formatTime } from "@/lib/format";
 
 import { discardDraftAction } from "../actions";
@@ -86,42 +74,23 @@ export function AutosaveText({ status }: { status: AutosaveStatus }) {
 }
 
 export function DiscardDraftButton({ analysisId }: { analysisId: string }) {
-  const [isPending, startTransition] = useTransition();
+  const { isPending, run } = useActionToast();
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
+    <ConfirmDialog
+      title="Descartar rascunho?"
+      description="Os dados deste rascunho serão removidos. Versões fixadas não são afetadas."
+      cancelLabel="Voltar"
+      confirmLabel="Descartar"
+      loading={isPending}
+      loadingLabel="Descartando…"
+      trigger={
         <Button type="button" variant="ghost">
           <Trash2 aria-hidden="true" />
           Descartar rascunho
         </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Descartar rascunho?</DialogTitle>
-          <DialogDescription>
-            Os dados deste rascunho serão removidos. Versões fixadas não são afetadas.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="secondary">Voltar</Button>
-          </DialogClose>
-          <Button
-            variant="destructive"
-            loading={isPending}
-            loadingLabel="Descartando…"
-            onClick={() =>
-              startTransition(async () => {
-                const result = await discardDraftAction(analysisId);
-                if (result.status === "error") toast.error(result.message);
-              })
-            }
-          >
-            Descartar
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      }
+      onConfirm={() => run(() => discardDraftAction(analysisId))}
+    />
   );
 }

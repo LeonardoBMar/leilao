@@ -4,22 +4,8 @@ import { ArrowLeft, ArrowRight, ImagePlus, Star, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { type ChangeEvent, useRef, useState, useTransition } from "react";
 
-import {
-  Badge,
-  Button,
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  EmptyState,
-  toast,
-} from "@/components/ui";
+import { Badge, Button, ConfirmDialog, EmptyState, toast, useActionToast } from "@/components/ui";
 import { checkImageFile, MAX_IMAGES_PER_LOT } from "@/domain/lot-images";
-import type { ActionState } from "@/lib/action-state";
 import { LOT_IMAGES_BUCKET } from "@/lib/storage-buckets";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 
@@ -130,15 +116,7 @@ export function LotGallery({ lotId, images }: LotGalleryProps) {
 }
 
 function GalleryItem({ image, isFirst, isLast }: { image: LotImageItem; isFirst: boolean; isLast: boolean }) {
-  const [isPending, startTransition] = useTransition();
-
-  function run(action: () => Promise<ActionState>) {
-    startTransition(async () => {
-      const result = await action();
-      if (result.status === "error") toast.error(result.message);
-      else if (result.status === "success" && result.message) toast.success(result.message);
-    });
-  }
+  const { isPending, run } = useActionToast();
 
   return (
     <li className="grid gap-2" aria-busy={isPending || undefined}>
@@ -201,31 +179,18 @@ function GalleryItem({ image, isFirst, isLast }: { image: LotImageItem; isFirst:
               <Star aria-hidden="true" />
             </Button>
           ) : null}
-          <Dialog>
-            <DialogTrigger asChild>
+          <ConfirmDialog
+            title="Remover foto?"
+            description={`“${image.originalFilename}” será removida do lote e do armazenamento.`}
+            confirmLabel="Remover"
+            closeOnConfirm
+            trigger={
               <Button size="icon" variant="ghost" aria-label={`Remover ${image.originalFilename}`} disabled={isPending}>
                 <Trash2 aria-hidden="true" />
               </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Remover foto?</DialogTitle>
-                <DialogDescription>
-                  “{image.originalFilename}” será removida do lote e do armazenamento.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button variant="secondary">Cancelar</Button>
-                </DialogClose>
-                <DialogClose asChild>
-                  <Button variant="destructive" onClick={() => run(() => deleteImageAction(image.id))}>
-                    Remover
-                  </Button>
-                </DialogClose>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+            }
+            onConfirm={() => run(() => deleteImageAction(image.id))}
+          />
         </div>
       </div>
     </li>

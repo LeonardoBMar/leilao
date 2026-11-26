@@ -1,27 +1,13 @@
 "use client";
 
 import { Check, CheckCheck } from "lucide-react";
-import { useTransition } from "react";
 
-import { Button, toast } from "@/components/ui";
-import type { ActionState } from "@/lib/action-state";
+import { Button, useActionToast } from "@/components/ui";
 
 import { markAlertReadAction, markAllAlertsReadAction } from "../actions";
 
-function useRunAction() {
-  const [isPending, startTransition] = useTransition();
-  function run(action: () => Promise<ActionState>) {
-    startTransition(async () => {
-      const result = await action();
-      if (result.status === "error") toast.error(result.message);
-      else if (result.status === "success" && result.message) toast.success(result.message);
-    });
-  }
-  return [isPending, run] as const;
-}
-
 export function MarkAlertReadButton({ alertId }: { alertId: string }) {
-  const [isPending, run] = useRunAction();
+  const { isPending, run } = useActionToast();
   return (
     <Button
       variant="secondary"
@@ -38,7 +24,7 @@ export function MarkAlertReadButton({ alertId }: { alertId: string }) {
 
 /** `watchId` nulo: todos os monitores. */
 export function MarkAllAlertsReadButton({ watchId }: { watchId: string | null }) {
-  const [isPending, run] = useRunAction();
+  const { isPending, run } = useActionToast();
   return (
     <Button
       variant="secondary"

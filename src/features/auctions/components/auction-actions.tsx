@@ -1,40 +1,22 @@
 "use client";
 
 import { Archive, ArchiveRestore, Trash2 } from "lucide-react";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 
-import {
-  Button,
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  toast,
-} from "@/components/ui";
-import type { ActionState } from "@/lib/action-state";
+import { Button, ConfirmDialog, useActionToast } from "@/components/ui";
 
 import { deleteAuctionAction, markAuctionFinishedAction, setAuctionArchivedAction } from "../actions";
 
 /** Sugestão quando a data do leilão manual já passou e o status continua agendado ou em andamento. */
 export function MarkFinishedButton({ auctionId }: { auctionId: string }) {
-  const [isPending, startTransition] = useTransition();
+  const { isPending, run } = useActionToast();
   return (
     <Button
       variant="secondary"
       size="sm"
       loading={isPending}
       loadingLabel="Salvando…"
-      onClick={() =>
-        startTransition(async () => {
-          const result = await markAuctionFinishedAction(auctionId);
-          if (result.status === "error") toast.error(result.message);
-          else if (result.status === "success" && result.message) toast.success(result.message);
-        })
-      }
+      onClick={() => run(() => markAuctionFinishedAction(auctionId))}
     >
       Marcar como encerrado
     </Button>
@@ -50,16 +32,8 @@ type AuctionActionsProps = {
 };
 
 export function AuctionActions({ auctionId, auctionName, isArchived, canDelete }: AuctionActionsProps) {
-  const [isPending, startTransition] = useTransition();
+  const { isPending, run } = useActionToast();
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-
-  function run(action: () => Promise<ActionState>) {
-    startTransition(async () => {
-      const result = await action();
-      if (result.status === "error") toast.error(result.message);
-      else if (result.status === "success" && result.message) toast.success(result.message);
-    });
-  }
 
   return (
     <>
@@ -73,36 +47,22 @@ export function AuctionActions({ auctionId, auctionName, isArchived, canDelete }
       </Button>
 
       {canDelete ? (
-        <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-          <DialogTrigger asChild>
+        <ConfirmDialog
+          open={isDeleteOpen}
+          onOpenChange={setIsDeleteOpen}
+          title="Excluir leilão?"
+          description={`“${auctionName}” será excluído definitivamente. Esta ação não pode ser desfeita. Para apenas tirá-lo das listas, use Arquivar.`}
+          confirmLabel="Excluir definitivamente"
+          loading={isPending}
+          loadingLabel="Excluindo…"
+          trigger={
             <Button variant="ghost">
               <Trash2 aria-hidden="true" />
               Excluir
             </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Excluir leilão?</DialogTitle>
-              <DialogDescription>
-                “{auctionName}” será excluído definitivamente. Esta ação não pode ser desfeita. Para apenas tirá-lo das
-                listas, use Arquivar.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="secondary">Cancelar</Button>
-              </DialogClose>
-              <Button
-                variant="destructive"
-                loading={isPending}
-                loadingLabel="Excluindo…"
-                onClick={() => run(() => deleteAuctionAction(auctionId))}
-              >
-                Excluir definitivamente
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          }
+          onConfirm={() => run(() => deleteAuctionAction(auctionId))}
+        />
       ) : null}
     </>
   );

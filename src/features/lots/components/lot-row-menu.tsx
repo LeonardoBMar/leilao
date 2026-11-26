@@ -2,7 +2,7 @@
 
 import { Archive, ArchiveRestore, Ellipsis, Eye, EyeOff, FilePen, Pencil } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useActionState, useState, useTransition } from "react";
+import { useActionState, useState } from "react";
 
 import {
   Button,
@@ -18,6 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   toast,
+  useActionToast,
 } from "@/components/ui";
 import type { Cents } from "@/domain/money";
 import { type ActionState, fieldError, fieldValue, idleState } from "@/lib/action-state";
@@ -37,16 +38,8 @@ type LotRowMenuProps = {
 /** Ações rápidas de uma linha de lote, sem abrir a ficha: rascunho, lance, acompanhar e arquivar. */
 export function LotRowMenu({ lotId, lotLabel, currentBid, openDraftId, isFollowed, isArchived }: LotRowMenuProps) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const { isPending, run } = useActionToast();
   const [isBidOpen, setIsBidOpen] = useState(false);
-
-  function run(action: () => Promise<ActionState>) {
-    startTransition(async () => {
-      const result = await action();
-      if (result.status === "error") toast.error(result.message);
-      else if (result.status === "success" && result.message) toast.success(result.message);
-    });
-  }
 
   return (
     <>
