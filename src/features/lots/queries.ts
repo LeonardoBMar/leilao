@@ -10,6 +10,7 @@ import { getEstimateContext } from "@/features/listings/queries";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db";
+import { getRecentEstimateIndex } from "@/server/market/sold-sales";
 
 import { toFixedLimit } from "./limit";
 import { LOT_GROUPS_PAGE_SIZE, LOT_POSITION_COMPARISONS, type LotFilters, LOTS_PAGE_SIZE } from "./schemas";
@@ -388,20 +389,20 @@ export async function getLot(id: string): Promise<LotDetail | null> {
   const marketValue = listing?.marketValueCents == null ? null : cents(listing.marketValueCents);
   let price: PriceEstimate | null = null;
   if (listing?.status === "open" && (listing.endsAt === null || listing.endsAt > new Date())) {
-    const context = await getEstimateContext();
+    const index = await getRecentEstimateIndex();
     price = estimatePrice(
       {
         brand: item.brand,
         model: item.model,
         modelYear: item.modelYear,
-        mileageKm: listing.mileageKm,
+        mileageKm: row.mileageKm ?? listing.mileageKm,
         category: listing.category,
         damageLevel: listing.damageLevel,
         fipeCode: listing.fipeCode ?? listing.marketValueFipeCode,
         origin: listing.vehicleOrigin,
         marketValue,
       },
-      context.index,
+      index,
     );
   }
   const maxBid = item.limit?.isViable ? item.limit.maxBid : null;

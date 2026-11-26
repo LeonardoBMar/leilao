@@ -113,13 +113,15 @@ export function estimateFor(row: EstimateRow, context: EstimateContext | null): 
     marketValue: toCents(row.marketValueCents),
   };
   const price = estimatePrice(target, context.index);
+  // Os cartões não exibem `saleIds`; omitir a lista evita serializar centenas de UUIDs por card no payload RSC.
+  const compactPrice = price.kind === "comparables" ? { ...price, saleIds: [] } : price;
   const limit = estimateLimit(
     target,
     context.analyses,
     defaultsInputFromListing(row, context.region),
     context.costOverrides,
   );
-  return { price, limit, fit: limitFit(price, limitMaxBid(limit)) };
+  return { price: compactPrice, limit, fit: limitFit(compactPrice, limitMaxBid(limit)) };
 }
 
 export function toListItem(

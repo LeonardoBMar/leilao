@@ -37,9 +37,10 @@ export async function AnalysisView({
   if (!analysis) notFound();
 
   const compareId = analysisCompareSearchSchema.parse(resolvedSearch).comparar;
+  const needsLiveMarket = analysis.status !== "fixed" || analysis.marketSnapshot === null;
   const [versions, market, lotImages, compared, preferences] = await Promise.all([
     listLotAnalyses(analysis.lot.id),
-    getLotMarketReference(analysis.lot.id),
+    needsLiveMarket ? getLotMarketReference(analysis.lot.id) : Promise.resolve(null),
     listLotImages(analysis.lot.id),
     compareId && compareId !== analysis.id
       ? getAnalysisForComparison(analysis.lot.id, compareId)
@@ -191,7 +192,7 @@ function fixedMarket(
     market: {
       level: snapshot.level,
       scope: snapshot.scope,
-      href: current?.href ?? "/mercado",
+      href: current?.href ?? `/mercado?lote=${encodeURIComponent(analysis.lot.id)}`,
       sales: snapshot.sales,
       band: snapshot.band,
     },

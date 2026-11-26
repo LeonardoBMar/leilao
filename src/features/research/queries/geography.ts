@@ -37,7 +37,8 @@ import {
 /** Mapa: um resumo por estado, em % do valor de mercado ou, com modelo, em lance final (centavos). */
 export async function getStateMap(filters: ResearchFilters): Promise<StateMapView> {
   await requireUser();
-  return loadStateMap(cacheKeyFilters(filters, { keepMetric: true }));
+  // `salesWhere` ignora `state`, e sem modelo a medida é sempre `ratio`: normalizar evita misses ao clicar nos estados.
+  return loadStateMap({ ...cacheKeyFilters(filters, { keepMetric: filters.vehicle !== null }), state: null });
 }
 
 async function loadStateMap(filters: ResearchFilters): Promise<StateMapView> {
@@ -64,7 +65,11 @@ async function loadStateMap(filters: ResearchFilters): Promise<StateMapView> {
 export const getWhereView = cache(async (filters: ResearchFilters): Promise<WhereView> => {
   await requireUser();
   const { region } = await getUserPreferences();
-  return loadWhereView(cacheKeyFilters(filters, { keepMetric: true }), region);
+  // `loadWhereView` só usa centro e rótulo (não `radiusKm`) e sem modelo a medida é sempre `ratio`.
+  return loadWhereView(cacheKeyFilters(filters, { keepMetric: filters.vehicle !== null }), {
+    ...region,
+    radiusKm: 0,
+  });
 });
 
 async function loadWhereView(filters: ResearchFilters, region: RegionConfig): Promise<WhereView> {

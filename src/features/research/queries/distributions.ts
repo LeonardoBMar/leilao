@@ -78,7 +78,8 @@ async function groupedDistribution<K extends string>(
 /** "Quanto se paga por condição": todas as condições, com o resto dos filtros (D-45). */
 export const getConditionDistribution = cache(async (filters: ResearchFilters): Promise<ConditionDistribution> => {
   await requireUser();
-  return loadConditionDistribution(cacheKeyFilters(filters));
+  // `salesWhere` ignora `condition`: normalizar na chave evita 5 entradas idênticas no cache.
+  return loadConditionDistribution({ ...cacheKeyFilters(filters), condition: "sem-monta" });
 });
 
 async function loadConditionDistribution(filters: ResearchFilters): Promise<ConditionDistribution> {
