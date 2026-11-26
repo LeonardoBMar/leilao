@@ -1,6 +1,5 @@
 import {
   ArrowDown,
-  ArrowUpRight,
   Calculator,
   CalendarClock,
   ChevronRight,
@@ -10,12 +9,10 @@ import {
   Eye,
   Target,
 } from "lucide-react";
-import Link from "next/link";
 
 import { ButtonLink, cardVariants, Skeleton } from "@/components/ui";
 import { getRegionOverview } from "@/features/listings/queries";
 import { getFollowedLotsOverview } from "@/features/lots/queries";
-import { catalogAuctionPath } from "@/lib/catalog-search";
 import { formatCompactDateTime, formatRatio } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -109,7 +106,10 @@ export async function DashboardKpis() {
         <li>
           <a
             href="#followed-lots"
-            className={cn(kpiLinkClass, followed.aboveLimit > 0 && "bg-error-subtle hover:bg-error-subtle/80")}
+            className={cn(
+              kpiLinkClass,
+              followed.aboveLimit > 0 && "bg-error-subtle hover:bg-error-subtle hover:ring-1 hover:ring-error-border hover:ring-inset",
+            )}
           >
             <div className="flex items-center justify-between gap-2">
               <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
@@ -153,7 +153,13 @@ export async function DashboardKpis() {
 
         <li>
           {pendingTotal > 0 ? (
-            <a href="#pending-items" className={cn(kpiLinkClass, "bg-warning-subtle hover:bg-warning-subtle/80")}>
+            <a
+              href="#pending-items"
+              className={cn(
+                kpiLinkClass,
+                "bg-warning-subtle hover:bg-warning-subtle hover:ring-1 hover:ring-warning-border hover:ring-inset",
+              )}
+            >
               <div className="flex items-center justify-between gap-2">
                 <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
                   <ClipboardList aria-hidden="true" className="size-3.5 shrink-0 text-warning" />
@@ -169,72 +175,58 @@ export async function DashboardKpis() {
               <p className="text-caption text-muted tabular-nums">{pendingNote}</p>
             </a>
           ) : (
-            <Link href="/minhas-analises" className={kpiLinkClass}>
+            <div className={kpiCellClass}>
               <div className="flex items-center justify-between gap-2">
                 <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
                   <ClipboardList aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
                   Pendências
-                  <span className="sr-only"> — abrir Minhas análises.</span>
                 </span>
-                <ArrowUpRight
-                  aria-hidden="true"
-                  className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-x-0 motion-reduce:group-hover:translate-y-0"
-                />
               </div>
               <p className="text-heading-2 font-semibold text-muted tabular-nums">0</p>
               <p className="text-caption text-muted tabular-nums">{pendingNote}</p>
-            </Link>
+            </div>
           )}
         </li>
 
         <li>
-          {nextAuction ? (
-            <Link href={catalogAuctionPath(nextAuction)} className={kpiLinkClass}>
-              <div className="flex items-center justify-between gap-2">
-                <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
-                  <CalendarClock aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
-                  Próximo no catálogo
-                  <span className="sr-only"> — abrir página do leilão.</span>
-                </span>
-                <ArrowUpRight
-                  aria-hidden="true"
-                  className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-x-0 motion-reduce:group-hover:translate-y-0"
-                />
-              </div>
-              <p
-                title={nextAuction.date ? formatCompactDateTime(nextAuction.date) : undefined}
-                className="truncate text-body-lg font-semibold whitespace-nowrap text-foreground tabular-nums sm:text-heading-2"
-              >
-                {nextAuction.date ? (
-                  <time dateTime={nextAuction.date.toISOString()}>{formatCompactDateTime(nextAuction.date)}</time>
-                ) : (
-                  "Sem data"
-                )}
-              </p>
-              <p
-                title={`${plural(nextAuction.matching, "lote", "lotes")} · ${nextAuction.sourceName}`}
-                className="line-clamp-1 text-caption text-muted tabular-nums"
-              >
-                {plural(nextAuction.matching, "lote", "lotes")} · {nextAuction.sourceName}
-              </p>
-            </Link>
-          ) : (
-            <a href="#region-auctions" className={kpiLinkClass}>
-              <div className="flex items-center justify-between gap-2">
-                <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
-                  <CalendarClock aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
-                  Próximo no catálogo
-                  <span className="sr-only"> — ir para a seção abaixo.</span>
-                </span>
-                <ArrowDown
-                  aria-hidden="true"
-                  className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-y-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-y-0"
-                />
-              </div>
-              <p className="text-heading-2 font-semibold text-muted tabular-nums">—</p>
-              <p className="text-caption text-muted">Nenhum nos próximos 7 dias</p>
-            </a>
-          )}
+          <a href="#region-auctions" className={kpiLinkClass}>
+            <div className="flex items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
+                <CalendarClock aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
+                Próximo no catálogo
+                <span className="sr-only"> — ir para a seção abaixo.</span>
+              </span>
+              <ArrowDown
+                aria-hidden="true"
+                className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-y-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-y-0"
+              />
+            </div>
+            {nextAuction ? (
+              <>
+                <p
+                  title={nextAuction.date ? formatCompactDateTime(nextAuction.date) : undefined}
+                  className="truncate text-body-lg font-semibold whitespace-nowrap text-foreground tabular-nums sm:text-heading-2"
+                >
+                  {nextAuction.date ? (
+                    <time dateTime={nextAuction.date.toISOString()}>{formatCompactDateTime(nextAuction.date)}</time>
+                  ) : (
+                    "Sem data"
+                  )}
+                </p>
+                <p
+                  title={`${plural(nextAuction.matching, "lote", "lotes")} · ${nextAuction.sourceName}`}
+                  className="line-clamp-1 text-caption text-muted tabular-nums"
+                >
+                  {plural(nextAuction.matching, "lote", "lotes")} · {nextAuction.sourceName}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-heading-2 font-semibold text-muted tabular-nums">—</p>
+                <p className="text-caption text-muted">Nenhum nos próximos 7 dias</p>
+              </>
+            )}
+          </a>
         </li>
       </ul>
     </div>
