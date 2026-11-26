@@ -303,13 +303,13 @@ export function CompactListingInspect({ item, fullTitle, media, title, content, 
   const titleButtonRef = useRef<HTMLButtonElement>(null);
 
   return (
-    <article className="grid w-full grid-cols-[5.25rem_minmax(0,1fr)] gap-x-3.5 gap-y-2.5 sm:grid-cols-[6.5rem_minmax(0,1fr)]">
+    <article className="group/card grid w-full grid-cols-[5.25rem_minmax(0,1fr)] gap-x-3.5 gap-y-2.5 sm:grid-cols-[6.5rem_minmax(0,1fr)]">
       <button
         type="button"
         tabIndex={-1}
         aria-hidden="true"
         onClick={() => setOpen(true)}
-        className="group relative aspect-4/3 cursor-pointer overflow-clip rounded-md bg-surface-subtle sm:row-span-2"
+        className="group relative aspect-4/3 cursor-pointer overflow-clip rounded-md bg-surface-subtle transition-[box-shadow,opacity] duration-150 ease-[var(--ease-out)] group-hover/card:ring-1 group-hover/card:ring-border-strong motion-reduce:transition-none sm:row-span-2"
       >
         {media}
       </button>
@@ -322,7 +322,7 @@ export function CompactListingInspect({ item, fullTitle, media, title, content, 
               aria-haspopup="dialog"
               title={`Inspecionar ${fullTitle}`}
               onClick={() => setOpen(true)}
-              className="group -my-1.5 inline-flex min-h-10 max-w-full cursor-pointer items-center gap-1 rounded-sm py-1.5 text-left outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:min-h-11"
+              className="group -my-1.5 inline-flex min-h-10 max-w-full cursor-pointer items-center gap-1 rounded-sm py-1.5 text-left outline-none group-hover/card:underline hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:min-h-11"
             >
               {title}
               <span className="sr-only"> — inspecionar detalhes</span>
