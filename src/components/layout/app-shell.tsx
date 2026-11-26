@@ -2,6 +2,8 @@
 
 import {
   ChevronLeft,
+  CircleHelp,
+  Eye,
   type LucideIcon,
   PanelLeftClose,
   PanelLeftOpen,
@@ -14,7 +16,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type ReactNode, Suspense, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
-import { Button, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui";
+import {
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 import { getAdminRoleServerSnapshot, getAdminRoleSnapshot, subscribeAdminRole } from "./admin-role-store";
@@ -179,6 +192,68 @@ function HideOnDashboard({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   if (pathname === "/dashboard") return null;
   return <>{children}</>;
+}
+
+/** Atalho de lotes acompanhados quando a sidebar está recolhida (oculto no `/dashboard`). */
+function CollapsedFollowedMenu() {
+  const pathname = usePathname();
+  const items = useSyncExternalStore(
+    subscribeCommandItems,
+    getCommandItemsSnapshot,
+    getCommandItemsServerSnapshot,
+  );
+  if (pathname === "/dashboard" || items.length === 0) return null;
+
+  return (
+    <div className="mt-3 border-t border-border/70 pt-3">
+      <DropdownMenu>
+        <Tooltip delayDuration={180}>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label={`Acompanhando (${items.length} ${items.length === 1 ? "lote" : "lotes"})`}
+                className="group relative flex h-9 w-full items-center justify-center rounded-md text-foreground-secondary transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-primary-subtle/70 hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 pointer-coarse:h-11"
+              >
+                <Eye
+                  aria-hidden="true"
+                  strokeWidth={1.75}
+                  className="size-4 shrink-0 text-muted-subtle transition-colors duration-120 group-hover:text-foreground motion-reduce:transition-none"
+                />
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute top-1.5 right-1.5 size-1.75 rounded-full bg-foreground ring-2 ring-background"
+                />
+              </button>
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="right" sideOffset={10}>
+            Acompanhando ({items.length})
+          </TooltipContent>
+        </Tooltip>
+        <DropdownMenuContent side="right" align="start" sideOffset={10} className="w-64">
+          <DropdownMenuLabel className="text-overline font-medium text-muted">
+            Acompanhando ({items.length})
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {items.slice(0, 5).map((item) => (
+            <DropdownMenuItem key={item.href} asChild>
+              <Link href={item.href} className="grid gap-0.5">
+                <span className="truncate font-medium text-foreground">{item.label}</span>
+                {item.meta ? <span className="truncate text-caption text-muted">{item.meta}</span> : null}
+              </Link>
+            </DropdownMenuItem>
+          ))}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link href={"/minhas-analises?acompanhados=1&resultado=sem" as Route} className="font-medium text-accent">
+              Ver todos os acompanhados
+            </Link>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
 }
 
 /** Reseta o scroll do painel encaixado ao trocar de rota no desktop (o App Router só reseta `window`). */
@@ -445,6 +520,11 @@ export function AppShell({
           <div ref={sidebarContentRef} className="flex min-h-full flex-col gap-5">
             <nav aria-label="Principal" className="w-full">
               <NavLinks badges={badges} collapsed={collapsed} />
+              {collapsed ? (
+                <Suspense fallback={null}>
+                  <CollapsedFollowedMenu />
+                </Suspense>
+              ) : null}
             </nav>
 
             {/* Extras removidos do fluxo no modo colapsado para evitar scroll fantasma na rail */}
