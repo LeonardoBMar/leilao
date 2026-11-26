@@ -115,9 +115,9 @@ export function UserMenuDropdown({ email, devBypass, variant = "header" }: UserM
       )}
 
       <DropdownMenuContent
-        side={isSidebar ? "top" : "bottom"}
-        align={isSidebar ? "start" : "end"}
-        sideOffset={8}
+        side={isSidebar ? (collapsed ? "right" : "top") : "bottom"}
+        align={isSidebar ? (collapsed ? "end" : "start") : "end"}
+        sideOffset={collapsed && isSidebar ? 10 : 8}
         className="w-60"
       >
         <DropdownMenuLabel className="grid gap-1.5 font-normal">

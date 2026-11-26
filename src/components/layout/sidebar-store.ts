@@ -6,8 +6,15 @@ const sidebarListeners = new Set<() => void>();
 
 export function subscribeSidebar(listener: () => void) {
   sidebarListeners.add(listener);
+  function onStorage(event: StorageEvent) {
+    if (event.key === SIDEBAR_STORAGE_KEY || event.key === null) {
+      listener();
+    }
+  }
+  window.addEventListener("storage", onStorage);
   return () => {
     sidebarListeners.delete(listener);
+    window.removeEventListener("storage", onStorage);
   };
 }
 
