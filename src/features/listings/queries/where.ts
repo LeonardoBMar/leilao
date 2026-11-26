@@ -203,23 +203,11 @@ function hideWhere(keys: readonly HideKey[]): Prisma.ListingWhereInput {
 
 /**
  * Cada palavra da busca precisa aparecer em `search_text` (maiúsculas sem acento, D-91, índice GIN `pg_trgm`).
- * Mantém fallback nos campos brutos apenas enquanto `search_text` estiver vazio (antes do backfill).
  */
 export function searchWhere(search: string | null): Prisma.ListingWhereInput {
   return {
     AND: searchTokens(search).map((token) => ({
-      OR: [
-        { searchText: { contains: token } },
-        {
-          searchText: "",
-          OR: [
-            { title: { contains: token, mode: "insensitive" } },
-            { brand: { contains: token, mode: "insensitive" } },
-            { model: { contains: token, mode: "insensitive" } },
-            { fipeName: { contains: token, mode: "insensitive" } },
-          ],
-        },
-      ],
+      searchText: { contains: token },
     })),
   };
 }
