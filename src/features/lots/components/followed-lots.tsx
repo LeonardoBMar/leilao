@@ -58,17 +58,17 @@ export async function FollowedLots() {
           return (
             <li
               key={lot.id}
-              className="relative -mx-2 grid grid-cols-1 items-center gap-x-5 gap-y-3 rounded-md border-t border-border px-2 py-4 transition-colors duration-150 ease-[var(--ease-out)] hover:bg-background motion-reduce:transition-none @2xl:grid-cols-[3.5rem_minmax(0,1fr)_9.5rem_12rem]"
+              className="relative -mx-2 grid grid-cols-1 items-center gap-x-5 gap-y-3 rounded-md border-t border-border px-2 py-4 transition-colors duration-150 ease-[var(--ease-out)] hover:bg-background motion-reduce:transition-none @xl:grid-cols-[3.5rem_minmax(0,1fr)_8.75rem_13rem]"
             >
               <span
                 title={lot.lotNumber}
-                className="hidden truncate font-mono text-label font-normal text-foreground-secondary @2xl:inline"
+                className="hidden truncate font-mono text-label font-normal text-foreground-secondary @xl:inline"
               >
                 {lot.lotNumber}
               </span>
               <div className="min-w-0">
                 <div className="flex min-w-0 items-center gap-2">
-                  <span className="shrink-0 font-mono text-caption font-normal text-muted @2xl:hidden">
+                  <span className="shrink-0 font-mono text-caption font-normal text-muted @xl:hidden">
                     #{lot.lotNumber}
                   </span>
                   <Link
@@ -109,7 +109,7 @@ export async function FollowedLots() {
                   </span>
                 </p>
               </div>
-              <div className="grid gap-0.5 @2xl:text-end">
+              <div className="grid gap-0.5 @xl:text-end">
                 <p className="text-caption text-muted tabular-nums">
                   Lance
                   {lot.currentBid !== null && lot.currentBidObservedAt !== null ? (
@@ -185,18 +185,18 @@ function ProbableLine({ lot }: { lot: FollowedLotItem }) {
 
 export function FollowedLotsSkeleton() {
   return (
-    <div className="border-b border-border" aria-hidden="true">
+    <div className="@container border-b border-border" aria-hidden="true">
       {[0, 1, 2].map((index) => (
         <div
           key={index}
-          className="grid grid-cols-1 items-center gap-x-5 gap-y-2 border-t border-border py-4 sm:grid-cols-[3.5rem_minmax(0,1fr)_9.5rem_12rem]"
+          className="grid grid-cols-1 items-center gap-x-5 gap-y-2 border-t border-border py-4 @xl:grid-cols-[3.5rem_minmax(0,1fr)_8.75rem_13rem]"
         >
-          <Skeleton className="hidden h-4 w-10 sm:block" />
+          <Skeleton className="hidden h-4 w-10 @xl:block" />
           <div className="grid gap-1.5">
             <Skeleton className="h-5 w-48 max-w-full" />
             <Skeleton className="h-3.5 w-36 max-w-full" />
           </div>
-          <div className="grid gap-1 sm:justify-items-end">
+          <div className="grid gap-1 @xl:justify-items-end">
             <Skeleton className="h-3.5 w-16" />
             <Skeleton className="h-5 w-24" />
           </div>

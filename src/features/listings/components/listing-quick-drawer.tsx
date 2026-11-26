@@ -2,7 +2,7 @@
 
 import { Car, ClipboardCheck, Clock, ExternalLink, Eye, MapPin } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import {
   Badge,
@@ -43,13 +43,20 @@ type ListingQuickDrawerProps = {
   trigger?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onCloseAutoFocus?: (event: Event) => void;
 };
 
 /**
  * Gaveta de pré-visualização rápida de um anúncio do catálogo: reúne foto, condição, leitura financeira
  * e a escolha direta entre salvar na fila ou abrir o rascunho em um clique.
  */
-export function ListingQuickDrawer({ item, trigger, open: controlledOpen, onOpenChange }: ListingQuickDrawerProps) {
+export function ListingQuickDrawer({
+  item,
+  trigger,
+  open: controlledOpen,
+  onOpenChange,
+  onCloseAutoFocus,
+}: ListingQuickDrawerProps) {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const open = controlledOpen ?? uncontrolledOpen;
   const setOpen = onOpenChange ?? setUncontrolledOpen;
@@ -75,7 +82,7 @@ export function ListingQuickDrawer({ item, trigger, open: controlledOpen, onOpen
           )}
         </DialogTrigger>
       ) : null}
-      <DrawerContent side="right" className="max-w-lg">
+      <DrawerContent side="right" className="max-w-lg" onCloseAutoFocus={onCloseAutoFocus}>
         <div className="border-b border-border px-5 py-4 md:px-6">
           <DialogHeader>
             <p className="font-mono text-overline text-muted uppercase">
@@ -289,6 +296,7 @@ type CompactListingInspectProps = {
  */
 export function CompactListingInspect({ item, fullTitle, media, title, content, actions }: CompactListingInspectProps) {
   const [open, setOpen] = useState(false);
+  const titleButtonRef = useRef<HTMLButtonElement>(null);
 
   return (
     <article className="grid w-full grid-cols-[5.25rem_minmax(0,1fr)] gap-x-3.5 gap-y-2.5 sm:grid-cols-[6.5rem_minmax(0,1fr)]">
@@ -305,19 +313,31 @@ export function CompactListingInspect({ item, fullTitle, media, title, content, 
         <div className="grid min-w-0 gap-1">
           <h3 className="min-w-0 text-body font-semibold text-foreground">
             <button
+              ref={titleButtonRef}
               type="button"
+              aria-haspopup="dialog"
               title={`Inspecionar ${fullTitle}`}
               onClick={() => setOpen(true)}
               className="group -my-1.5 inline-flex min-h-10 max-w-full cursor-pointer items-center gap-1 rounded-sm py-1.5 text-left outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:min-h-11"
             >
               {title}
+              <span className="sr-only"> — inspecionar detalhes</span>
             </button>
           </h3>
           {content}
         </div>
       </div>
       <div className="col-span-full flex flex-wrap items-center gap-2 sm:col-start-2">{actions}</div>
-      <ListingQuickDrawer item={item} trigger={null} open={open} onOpenChange={setOpen} />
+      <ListingQuickDrawer
+        item={item}
+        trigger={null}
+        open={open}
+        onOpenChange={setOpen}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          titleButtonRef.current?.focus();
+        }}
+      />
     </article>
   );
 }

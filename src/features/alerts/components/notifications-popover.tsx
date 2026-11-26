@@ -2,7 +2,7 @@
 
 import { AlertTriangle, Bell, BellRing, Check, CheckCheck, ChevronRight, LoaderCircle } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { Badge, Button, Popover, PopoverContent, PopoverTrigger, useActionToast } from "@/components/ui";
 import { formatCompactDateTime } from "@/lib/format";
@@ -34,6 +34,8 @@ export function NotificationsPopover({
   const [open, setOpen] = useState(false);
   const [confirmMarkAll, setConfirmMarkAll] = useState(false);
   const [pendingAlertId, setPendingAlertId] = useState<string | null>(null);
+  const cancelConfirmRef = useRef<HTMLButtonElement>(null);
+  const markAllTriggerRef = useRef<HTMLButtonElement>(null);
   const { isPending: isMarkingAllRead, run: runMarkAllRead } = useActionToast();
   const { isPending: isMarkingSingleRead, run: runMarkSingleRead } = useActionToast();
   const totalCount = unreadTotal + (collectorWarning ? 1 : 0);
@@ -205,6 +207,7 @@ export function NotificationsPopover({
                         </Link>
                         <button
                           type="button"
+                          disabled={(isMarkingSingleRead && pendingAlertId !== alert.id) || isMarkingAllRead}
                           aria-busy={isMarkingSingleRead && pendingAlertId === alert.id ? true : undefined}
                           aria-label={`Marcar alerta “${alert.title}” como lido`}
                           title="Marcar como lido"
@@ -219,7 +222,7 @@ export function NotificationsPopover({
                               }
                             });
                           }}
-                          className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted transition-colors outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:size-11"
+                          className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted transition-colors outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent disabled:pointer-events-none disabled:opacity-50 pointer-coarse:size-11"
                         >
                           {isMarkingSingleRead && pendingAlertId === alert.id ? (
                             <LoaderCircle
@@ -247,11 +250,15 @@ export function NotificationsPopover({
                   {confirmMarkAll ? (
                     <div className="flex items-center gap-1.5">
                       <Button
+                        ref={cancelConfirmRef}
                         type="button"
                         variant="ghost"
                         size="sm"
                         disabled={isMarkingAllRead}
-                        onClick={() => setConfirmMarkAll(false)}
+                        onClick={() => {
+                          setConfirmMarkAll(false);
+                          window.requestAnimationFrame(() => markAllTriggerRef.current?.focus());
+                        }}
                       >
                         Cancelar
                       </Button>
@@ -271,6 +278,7 @@ export function NotificationsPopover({
                     </div>
                   ) : (
                     <Button
+                      ref={markAllTriggerRef}
                       type="button"
                       variant="ghost"
                       size="sm"
@@ -279,6 +287,7 @@ export function NotificationsPopover({
                       onClick={() => {
                         if (unreadTotal > 1) {
                           setConfirmMarkAll(true);
+                          window.requestAnimationFrame(() => cancelConfirmRef.current?.focus());
                           return;
                         }
                         runMarkAllRead(() => markAllAlertsReadAction(null));
