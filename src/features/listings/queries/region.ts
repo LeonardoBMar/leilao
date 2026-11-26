@@ -115,16 +115,15 @@ export const getRegionOverview = cache(async (): Promise<RegionOverview> => {
   const now = new Date();
   const [watches, dismissals, context, { region }] = await Promise.all([
     db.watch.findMany({ where: { ownerId: user.id, active: true }, select: storedCriteriaSelect }),
-    // Dispensados (D-56) saem só das sugestões; buscar todos do usuário em paralelo evita 1 RTT e `IN` gigante (D-85).
+    // Dispensados (D-56) saem só das sugestões; filtrar `openWhere(now)` no banco evita ler histórico encerrado.
     db.listingDismissal.findMany({
-      where: { ownerId: user.id },
+      where: { ownerId: user.id, listing: openWhere(now) },
       orderBy: { createdAt: "desc" },
       select: {
         listingId: true,
         listing: {
           select: {
             title: true,
-            status: true,
             endsAt: true,
             source: { select: { name: true } },
           },
@@ -135,11 +134,12 @@ export const getRegionOverview = cache(async (): Promise<RegionOverview> => {
     getUserPreferences(),
   ]);
   const dismissed = new Set(dismissals.map(({ listingId }) => listingId));
-  const dismissedOpen = dismissals.flatMap(({ listingId, listing }) =>
-    listing.status === "open" && (listing.endsAt === null || listing.endsAt > now)
-      ? [{ id: listingId, title: listing.title, sourceName: listing.source.name, endsAt: listing.endsAt }]
-      : [],
-  );
+  const dismissedOpen = dismissals.map(({ listingId, listing }) => ({
+    id: listingId,
+    title: listing.title,
+    sourceName: listing.source.name,
+    endsAt: listing.endsAt,
+  }));
   const userDefaultCriteria = { ...DEFAULT_CRITERIA, radiusKm: region.radiusKm };
   const criteriaList = [userDefaultCriteria, ...watches.map(criteriaFromStored)];
   const wheres = await Promise.all(
