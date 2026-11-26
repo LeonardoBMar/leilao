@@ -335,6 +335,25 @@ describe("estimateLimit", () => {
     ).toEqual({ kind: "insufficient", analyses: 1, needed: 3 });
   });
 
+  it("sucata não herda análises de carros íntegros e condição conhecida não mistura danos", () => {
+    const intact = analysis({ damageLevel: null });
+    expect(estimateLimit(target({ damageLevel: "salvage" }), [intact, intact, intact], null)).toEqual({
+      kind: "insufficient",
+      analyses: 0,
+      needed: 3,
+    });
+    expect(estimateLimit(target({ damageLevel: "large" }), [intact, intact, intact], null)).toEqual({
+      kind: "insufficient",
+      analyses: 0,
+      needed: 3,
+    });
+    const salvage = analysis({ damageLevel: "salvage" });
+    expect(estimateLimit(target({ damageLevel: "salvage" }), [salvage, salvage, salvage], null)).toMatchObject({
+      kind: "estimated",
+      n: 3,
+    });
+  });
+
   it("premissas sem lance viável: estimado, mas sem limite", () => {
     const expensive = inputs({ repairCost: cents(6_000_000) });
     expect(

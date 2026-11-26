@@ -33,6 +33,7 @@ async function loadEstimateContext(now: Date): Promise<EstimateContext> {
         brand: true,
         model: true,
         modelYear: true,
+        listing: { select: { damageLevel: true } },
         analyses: { where: { status: "fixed" }, orderBy: { version: "desc" }, take: 1, select: analysisColumns },
       },
     }),
@@ -41,8 +42,12 @@ async function loadEstimateContext(now: Date): Promise<EstimateContext> {
 
   return {
     index,
-    analyses: lots.flatMap(({ analyses, ...lot }) =>
-      analyses.map((analysis) => ({ ...lot, inputs: toInputs(analysis) })),
+    analyses: lots.flatMap(({ analyses, listing, ...lot }) =>
+      analyses.map((analysis) => ({
+        ...lot,
+        ...(listing ? { damageLevel: listing.damageLevel } : {}),
+        inputs: toInputs(analysis),
+      })),
     ),
     now,
     region: preferences.region,

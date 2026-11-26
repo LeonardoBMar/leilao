@@ -221,7 +221,7 @@ export function AnalysisEditor({
 
   const emptyFixedCostCount = FIXED_COST_LABELS.filter(([name]) => inputs[name] === null).length;
   const { inputs: saved, references } = analysis;
-  const value = (field: string, stored?: string) => fieldValue(state, field) ?? prefill?.[field] ?? stored;
+  const value = (field: string, stored?: string) => prefill?.[field] ?? fieldValue(state, field) ?? stored;
   const summaryModel = liveSummary(inputs);
   const missingFields = summaryModel.outcome.kind === "incomplete" ? summaryModel.outcome.missing : [];
 
@@ -232,7 +232,10 @@ export function AnalysisEditor({
         ref={formRef}
         action={formAction}
         onInput={() => recompute()}
-        onSubmit={() => cancelAutosave()}
+        onSubmit={() => {
+          cancelAutosave();
+          setPrefill(null);
+        }}
         noValidate
         className="grid content-start gap-8"
       >

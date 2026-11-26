@@ -156,10 +156,10 @@ export function AnalysisCostsSection({
           label="Fiz esta análise já conhecendo o resultado do lote"
           description="Análises retrospectivas ficam fora do indicador de decisões anteriores ao resultado."
           defaultChecked={
-            state.status === "error"
-              ? fieldValue(state, "knownResultAtCreation") !== undefined
-              : prefill
-                ? prefill.knownResultAtCreation !== undefined
+            prefill
+              ? prefill.knownResultAtCreation !== undefined
+              : state.status === "error"
+                ? fieldValue(state, "knownResultAtCreation") !== undefined
                 : references.knownResultAtCreation
           }
         />

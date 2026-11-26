@@ -304,7 +304,11 @@ export function similarityOf(target: Vehicle, sale: Vehicle): { score: number; r
 }
 
 /** Análise fixada do usuário: o veículo do lote e as entradas que ele usou. */
-export type AnalysisSample = Pick<Vehicle, "brand" | "model" | "modelYear"> & { inputs: AnalysisInputs };
+export type AnalysisSample = Pick<Vehicle, "brand" | "model" | "modelYear"> & {
+  /** Condição do anúncio ligado ao lote; ausente em lotes manuais. */
+  damageLevel?: DamageLevel | null;
+  inputs: AnalysisInputs;
+};
 
 export type LimitEstimate =
   /** `maxBid` nulo: com essas premissas, nenhum lance preserva a margem. */
@@ -334,15 +338,16 @@ export function estimateLimit(
   overrides?: UserDefaultOverrides | null,
 ): LimitEstimate {
   const key = vehicleKey(target.brand, target.model);
-  const similar = analyses.filter(
-    (analysis) =>
-      key !== null &&
-      missingFields(analysis.inputs).length === 0 &&
-      vehicleKey(analysis.brand, analysis.model) === key &&
-      target.modelYear !== null &&
-      analysis.modelYear !== null &&
-      Math.abs(target.modelYear - analysis.modelYear) <= YEAR_TOLERANCE,
-  );
+  const similar = analyses.filter((analysis) => {
+    if (key === null || missingFields(analysis.inputs).length > 0) return false;
+    if (vehicleKey(analysis.brand, analysis.model) !== key) return false;
+    if (target.modelYear === null || analysis.modelYear === null) return false;
+    if (Math.abs(target.modelYear - analysis.modelYear) > YEAR_TOLERANCE) return false;
+    // Sucata nunca herda premissas de carro íntegro; quando a análise tem condição conhecida, exige a mesma condição.
+    if (target.damageLevel === "salvage") return analysis.damageLevel === "salvage";
+    if (analysis.damageLevel !== undefined && analysis.damageLevel !== target.damageLevel) return false;
+    return true;
+  });
   if (similar.length < MIN_COMPARABLE_ANALYSES) {
     const fallback = defaults === null ? null : defaultMaxBid(defaults, overrides);
     if (fallback === null || fallback.kind === "incomplete") {
