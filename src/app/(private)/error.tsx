@@ -30,7 +30,7 @@ export default function PrivateError({ error, retry }: { error: Error & { digest
       </Alert>
       <div className="flex flex-wrap gap-2">
         <Button
-          variant="secondary"
+          variant="primary"
           loading={isPending}
           loadingLabel="Tentando…"
           onClick={() => startTransition(() => retry())}
