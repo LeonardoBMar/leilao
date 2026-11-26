@@ -55,11 +55,18 @@ export async function RegionAuctions() {
             key={key}
             className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-x-4 border-t border-border pt-4 pb-2 @lg:grid-cols-[6rem_minmax(0,1fr)] @lg:gap-x-6"
           >
-            <p className="grid content-start">
-              <span className="text-heading-1 tabular-nums">{parts.day}</span>
-              <span className="text-label text-foreground-secondary">{parts.month}</span>
-              <span className="text-caption text-muted">{parts.weekday}</span>
-            </p>
+            {key === "sem-data" ? (
+              <p className="grid content-start">
+                <span className="text-heading-1 tabular-nums">{parts.day}</span>
+                <span className="text-caption text-muted">Sem data</span>
+              </p>
+            ) : (
+              <time dateTime={key} className="grid content-start">
+                <span className="text-heading-1 tabular-nums">{parts.day}</span>
+                <span className="text-label text-foreground-secondary">{parts.month}</span>
+                <span className="text-caption text-muted">{parts.weekday}</span>
+              </time>
+            )}
             <ul role="list" className="grid content-start border-l border-border">
               {items.map((auction) => (
                 <li
@@ -84,7 +91,9 @@ export async function RegionAuctions() {
                       href={catalogAuctionPath(auction)}
                       className="group inline-flex max-w-full items-center gap-1 rounded-sm font-medium text-foreground outline-none after:absolute after:inset-0 after:rounded-r-md hover:underline focus-visible:after:ring-2 focus-visible:after:ring-accent focus-visible:after:ring-inset"
                     >
-                      <span className="line-clamp-2">{auction.name ?? "Leilão sem nome"}</span>
+                      <span title={auction.name ?? "Leilão sem nome"} className="line-clamp-2">
+                        {auction.name ?? "Leilão sem nome"}
+                      </span>
                       <ChevronRight
                         aria-hidden="true"
                         className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:text-foreground"

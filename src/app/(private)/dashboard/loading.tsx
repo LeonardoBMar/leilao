@@ -1,16 +1,19 @@
 import { Skeleton } from "@/components/ui";
 import { DashboardKpisSkeleton, DecisionIndicatorSkeleton } from "@/features/dashboard/components/dashboard-summary";
-import { PendingItemsSkeleton } from "@/features/dashboard/components/pending-items";
 import { RegionAuctionsSkeleton } from "@/features/dashboard/components/region-auctions";
 import { ToAnalyzeSkeleton } from "@/features/dashboard/components/to-analyze";
+import { CollectorStatusLineSkeleton } from "@/features/listings/components/collector-status";
 import { FollowedLotsSkeleton } from "@/features/lots/components/followed-lots";
 
 export default function DashboardLoading() {
   return (
     <div className="grid gap-8" aria-hidden="true">
       <div className="grid gap-5">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <Skeleton className="h-9 w-40" />
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="grid gap-1.5">
+            <Skeleton className="h-9 w-28" />
+            <CollectorStatusLineSkeleton compact />
+          </div>
           <div className="flex gap-2">
             <Skeleton className="h-10 w-32 sm:h-9" />
             <Skeleton className="h-10 w-32 sm:h-9" />
@@ -34,7 +37,6 @@ export default function DashboardLoading() {
           </div>
         </div>
         <div className="grid gap-8">
-          <PendingItemsSkeleton />
           <DecisionIndicatorSkeleton />
         </div>
       </div>

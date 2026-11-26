@@ -6,19 +6,20 @@ import { PageHeader } from "@/components/layout/page-header";
 import { SectionErrorBoundary } from "@/components/layout/section-error-boundary";
 import { Alert, AlertDescription, AlertTitle, ButtonLink, Section, SectionTitle } from "@/components/ui";
 import { RecentAlerts } from "@/features/alerts/components/recent-alerts";
+import { DashboardGuidePopover } from "@/features/dashboard/components/dashboard-guide-popover";
 import {
   DashboardKpis,
   DashboardKpisSkeleton,
   DecisionIndicator,
   DecisionIndicatorSkeleton,
 } from "@/features/dashboard/components/dashboard-summary";
-import { PendingItems, PendingItemsSkeleton } from "@/features/dashboard/components/pending-items";
+import { PendingItems } from "@/features/dashboard/components/pending-items";
 import { RegionAuctions, RegionAuctionsSkeleton } from "@/features/dashboard/components/region-auctions";
 import { ToAnalyze, ToAnalyzeSkeleton } from "@/features/dashboard/components/to-analyze";
 import { CollectorStatusLine, CollectorStatusLineSkeleton } from "@/features/listings/components/collector-status";
 import { FollowedLots, FollowedLotsSkeleton } from "@/features/lots/components/followed-lots";
 
-export const metadata: Metadata = { title: "Visão geral · Leilão Tracker" };
+export const metadata: Metadata = { title: "Início · Leilão Tracker" };
 
 const ALL_FOLLOWED_HREF = "/minhas-analises?acompanhados=1&resultado=sem" as Route;
 
@@ -49,11 +50,14 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
     <div className="grid gap-8">
       <div className="grid gap-5">
         <PageHeader
-          title="Visão geral"
+          title="Início"
           inlineMeta={
-            <Suspense fallback={<CollectorStatusLineSkeleton compact />}>
-              <CollectorStatusLine compact />
-            </Suspense>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <Suspense fallback={<CollectorStatusLineSkeleton compact />}>
+                <CollectorStatusLine compact />
+              </Suspense>
+              <DashboardGuidePopover />
+            </div>
           }
           actions={
             <>
@@ -92,7 +96,7 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
 
       <div className="grid items-start gap-10 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] xl:gap-x-14">
         <div className="grid content-start gap-10">
-          <Section id="to-analyze" className="scroll-mt-20 gap-3">
+          <Section id="to-analyze" tabIndex={-1} className="scroll-mt-20 gap-3 outline-none">
             <div className="grid gap-1">
               <SectionTitle className="flex items-center gap-2">
                 <Calculator aria-hidden="true" className="size-4 shrink-0 text-muted" />
@@ -113,7 +117,7 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
             </SectionErrorBoundary>
           </Section>
 
-          <Section id="followed-lots" className="scroll-mt-20 gap-2">
+          <Section id="followed-lots" tabIndex={-1} className="scroll-mt-20 gap-2 outline-none">
             <SectionTitle className="flex items-center gap-2">
               <Eye aria-hidden="true" className="size-4 shrink-0 text-muted" />
               Lotes acompanhados
@@ -129,7 +133,7 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
             </SectionErrorBoundary>
           </Section>
 
-          <Section id="region-auctions" className="scroll-mt-20 gap-3">
+          <Section id="region-auctions" tabIndex={-1} className="scroll-mt-20 gap-3 outline-none">
             <div className="grid gap-1">
               <SectionTitle className="flex items-center gap-2">
                 <CalendarDays aria-hidden="true" className="size-4 shrink-0 text-muted" />
@@ -157,7 +161,7 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
             fallbackHref="/minhas-analises"
             fallbackLabel="Abrir Minhas análises"
           >
-            <Suspense fallback={<PendingItemsSkeleton />}>
+            <Suspense fallback={null}>
               <PendingItems />
             </Suspense>
           </SectionErrorBoundary>

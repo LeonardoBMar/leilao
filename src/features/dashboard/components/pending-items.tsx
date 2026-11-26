@@ -25,8 +25,9 @@ export async function PendingItems() {
   return (
     <section
       id="pending-items"
+      tabIndex={-1}
       aria-labelledby="pending-items-heading"
-      className={cn(cardVariants({ variant: "summary" }), "grid scroll-mt-20 gap-4 p-5 md:p-6")}
+      className={cn(cardVariants({ variant: "summary" }), "grid scroll-mt-20 gap-4 p-5 outline-none md:p-6")}
     >
       <div className="flex items-center justify-between gap-3">
         <h2 id="pending-items-heading" className="flex items-center gap-2 text-heading-3 text-foreground">
@@ -65,11 +66,16 @@ export async function PendingItems() {
                   linkFocusClass,
                 )}
               >
-                <span className="line-clamp-2 font-semibold text-foreground group-hover:underline">
+                <span
+                  title={item.lotLabel}
+                  className="line-clamp-2 font-semibold text-foreground group-hover:underline"
+                >
                   {item.lotLabel}
                 </span>
                 <span className="flex min-w-0 items-center gap-1.5 text-caption text-muted">
-                  <span className="line-clamp-1 min-w-0">{item.auctionName}</span>
+                  <span title={item.auctionName} className="line-clamp-1 min-w-0">
+                    {item.auctionName}
+                  </span>
                   <span aria-hidden="true" className="shrink-0 text-border-strong">
                     ·
                   </span>
@@ -118,13 +124,18 @@ export async function PendingItems() {
               >
                 <span className="grid min-w-0 gap-0.5">
                   <span className="flex flex-wrap items-center gap-2">
-                    <span className="line-clamp-2 font-semibold text-foreground group-hover:underline">
+                    <span
+                      title={`${draft.lotLabel} · v${draft.version}`}
+                      className="line-clamp-2 font-semibold text-foreground group-hover:underline"
+                    >
                       {draft.lotLabel} · v{draft.version}
                     </span>
                     {!draft.canFix ? <Badge variant="outline">Incompleto</Badge> : null}
                   </span>
                   <span className="flex min-w-0 items-center gap-1.5 text-caption text-muted">
-                    <span className="line-clamp-1 min-w-0">{draft.auctionName}</span>
+                    <span title={draft.auctionName} className="line-clamp-1 min-w-0">
+                      {draft.auctionName}
+                    </span>
                     <span aria-hidden="true" className="shrink-0 text-border-strong">
                       ·
                     </span>

@@ -35,7 +35,7 @@ export async function FollowedLots() {
         title="Nenhum lote acompanhado"
         description="Adicione um lote de Leilões à análise (ele já entra acompanhado) para ver lance e limite aqui."
         action={
-          <ButtonLink href="/leiloes/veiculos" variant="secondary">
+          <ButtonLink href="/leiloes/veiculos" variant="secondary" size="sm">
             Explorar veículos
           </ButtonLink>
         }
@@ -66,7 +66,9 @@ export async function FollowedLots() {
                     href={`/lotes/${lot.id}`}
                     className="group inline-flex min-w-0 items-center gap-1 rounded-sm font-semibold text-foreground outline-none after:absolute after:inset-0 after:rounded-md hover:underline focus-visible:after:ring-2 focus-visible:after:ring-accent focus-visible:after:ring-inset"
                   >
-                    <span className="line-clamp-2">{lotTitle}</span>
+                    <span title={lotTitle} className="line-clamp-2">
+                      {lotTitle}
+                    </span>
                     <ChevronRight
                       aria-hidden="true"
                       className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:text-foreground"
@@ -74,7 +76,9 @@ export async function FollowedLots() {
                   </Link>
                 </div>
                 <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-caption text-muted">
-                  <span className="line-clamp-1 min-w-0">{lot.auction.name}</span>
+                  <span title={lot.auction.name} className="line-clamp-1 min-w-0">
+                    {lot.auction.name}
+                  </span>
                   <span aria-hidden="true" className="text-border-strong">
                     ·
                   </span>

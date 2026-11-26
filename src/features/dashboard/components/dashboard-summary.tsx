@@ -146,16 +146,20 @@ export async function DashboardKpis() {
               <p className="text-caption text-muted tabular-nums">{pendingNote}</p>
             </a>
           ) : (
-            <div className={kpiCellClass}>
+            <Link href="/minhas-analises" className={kpiLinkClass}>
               <div className="flex items-center justify-between gap-2">
                 <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
                   <ClipboardList aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
                   Pendências
                 </span>
+                <ArrowUpRight
+                  aria-hidden="true"
+                  className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-foreground"
+                />
               </div>
               <p className="text-heading-2 font-semibold text-muted tabular-nums">0</p>
               <p className="text-caption text-muted tabular-nums">{pendingNote}</p>
-            </div>
+            </Link>
           )}
         </li>
 
@@ -172,14 +176,17 @@ export async function DashboardKpis() {
                   className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-foreground"
                 />
               </div>
-              <p className="text-body-lg font-semibold whitespace-nowrap text-foreground tabular-nums @md:text-heading-2">
+              <p className="truncate text-heading-2 font-semibold whitespace-nowrap text-foreground tabular-nums">
                 {nextAuction.date ? (
                   <time dateTime={nextAuction.date.toISOString()}>{formatCompactDateTime(nextAuction.date)}</time>
                 ) : (
                   "Sem data"
                 )}
               </p>
-              <p className="line-clamp-1 text-caption text-muted tabular-nums">
+              <p
+                title={`${plural(nextAuction.matching, "lote", "lotes")} · ${nextAuction.sourceName}`}
+                className="line-clamp-1 text-caption text-muted tabular-nums"
+              >
                 {plural(nextAuction.matching, "lote", "lotes")} · {nextAuction.sourceName}
               </p>
             </Link>
@@ -195,7 +202,7 @@ export async function DashboardKpis() {
                   className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-y-0.5 group-hover:text-foreground"
                 />
               </div>
-              <p className="text-body-lg font-semibold text-muted tabular-nums @md:text-heading-2">—</p>
+              <p className="text-heading-2 font-semibold text-muted tabular-nums">—</p>
               <p className="text-caption text-muted">Nenhum nos próximos 7 dias</p>
             </a>
           )}
@@ -255,12 +262,12 @@ export async function DecisionIndicator() {
             sua calibração.
           </p>
           <ButtonLink href="/mercado/calibracao" variant="secondary" size="sm" className="w-fit">
-            Abrir calibração
+            Ver calibração
             <ChevronRight aria-hidden="true" />
           </ButtonLink>
         </div>
       ) : (
-        <div className="grid gap-2.5">
+        <div className="grid gap-3">
           <p className="grid gap-1 text-body text-foreground-secondary">
             <span className="text-heading-1 text-foreground tabular-nums">
               {indicator.withinLimit} <span className="font-medium text-muted">de {indicator.comparable}</span>
@@ -275,13 +282,10 @@ export async function DecisionIndicator() {
               {formatRatio(ratio)} dentro do limite
             </span>
           </div>
-          <Link
-            href="/mercado/calibracao"
-            className="inline-flex min-h-10 w-fit items-center gap-1 rounded-sm text-caption font-medium text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent sm:min-h-8"
-          >
+          <ButtonLink href="/mercado/calibracao" variant="secondary" size="sm" className="w-fit">
             Ver calibração
-            <ChevronRight aria-hidden="true" className="size-3.5" />
-          </Link>
+            <ChevronRight aria-hidden="true" />
+          </ButtonLink>
         </div>
       )}
     </section>
