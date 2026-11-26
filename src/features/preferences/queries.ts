@@ -7,6 +7,7 @@ import { normalizePlaceName, stateCode } from "@/domain/listings/place";
 import { resolveRegion } from "@/domain/listings/region";
 import { bps, cents } from "@/domain/money";
 import { requireUser } from "@/server/auth";
+import { type CatalogMunicipality, loadAllMunicipalities } from "@/server/catalog-values";
 import { db } from "@/server/db";
 
 import type { MunicipalityOption, RawUserPreferences, UserPreferences } from "./types";
@@ -135,25 +136,18 @@ export async function searchMunicipalities(query: string): Promise<MunicipalityO
   const nameKey = normalizePlaceName(rawName ?? trimmed);
   if (nameKey.length < 2) return [];
 
-  const rows = await db.municipality.findMany({
-    where: {
-      nameKey: { contains: nameKey },
-      ...(parsedState ? { state: parsedState } : {}),
-    },
-    orderBy: [{ name: "asc" }, { state: "asc" }],
-    take: 20,
-    select: { ibgeCode: true, name: true, state: true },
-  });
+  const all = await loadAllMunicipalities();
+  const starts: CatalogMunicipality[] = [];
+  const contains: CatalogMunicipality[] = [];
 
-  // Prioriza quem começa com o termo buscado.
-  const sorted = [...rows].sort((a, b) => {
-    const aStarts = normalizePlaceName(a.name).startsWith(nameKey) ? 0 : 1;
-    const bStarts = normalizePlaceName(b.name).startsWith(nameKey) ? 0 : 1;
-    if (aStarts !== bStarts) return aStarts - bStarts;
-    return a.name.localeCompare(b.name, "pt-BR");
-  });
+  // Prioriza quem começa com o termo buscado antes de aplicar o limite de 20 itens.
+  for (const row of all) {
+    if (parsedState && row.state !== parsedState) continue;
+    if (row.nameKey.startsWith(nameKey)) starts.push(row);
+    else if (row.nameKey.includes(nameKey)) contains.push(row);
+  }
 
-  return sorted.map((row) => ({
+  return [...starts, ...contains].slice(0, 20).map((row) => ({
     ibgeCode: row.ibgeCode,
     name: row.name,
     state: row.state,

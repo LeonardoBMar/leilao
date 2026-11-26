@@ -11,6 +11,26 @@ import { db } from "./db";
  * Valores de referência do catálogo global, com cache entre requisições (D-78). Não leem a sessão: quem chama exige.
  */
 
+export type CatalogMunicipality = {
+  ibgeCode: number;
+  name: string;
+  state: string;
+  nameKey: string;
+  latitude: number;
+  longitude: number;
+};
+
+/** Tabela estática do IBGE (~5.570 municípios), com cache máximo entre requisições (D-78). */
+export async function loadAllMunicipalities(): Promise<CatalogMunicipality[]> {
+  "use cache";
+  cacheLife("max");
+  cacheTag("catalog-municipalities");
+  return db.municipality.findMany({
+    orderBy: [{ name: "asc" }, { state: "asc" }],
+    select: { ibgeCode: true, name: true, state: true, nameKey: true, latitude: true, longitude: true },
+  });
+}
+
 /**
  * Municípios a até `radiusKm` do centro da região, pela mesma `distanceKm` dos cartões. O filtro de raio vira
  * `municipality_id IN (...)` e fica exato no banco. A tabela é a carga do IBGE e não muda com o uso.
@@ -22,9 +42,7 @@ export async function municipalitiesWithin(
   "use cache";
   cacheLife("max");
   cacheTag("catalog-municipalities");
-  const municipalities = await db.municipality.findMany({
-    select: { ibgeCode: true, latitude: true, longitude: true },
-  });
+  const municipalities = await loadAllMunicipalities();
   return municipalities.flatMap((municipality) =>
     distanceKm(center, municipality) <= radiusKm ? [municipality.ibgeCode] : [],
   );
