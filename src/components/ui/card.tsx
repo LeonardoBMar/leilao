@@ -7,7 +7,7 @@ const cardVariants = cva("rounded-lg border border-border bg-surface text-foregr
     variant: {
       default: "",
       metric: "",
-      summary: "border-border bg-surface-subtle",
+      summary: "border-transparent bg-background",
       interactive:
         "transition-[border-color,background-color,box-shadow] duration-150 ease-[var(--ease-out)] hover:border-border-strong hover:bg-background hover:shadow-xs has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-transparent",
     },
