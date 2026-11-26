@@ -245,11 +245,10 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
   const evidence = price ? priceEvidenceLabel(price) : null;
   const limitOrigin =
     limit?.kind === "defaults"
-      ? "limite por premissas padrão"
+      ? "padrão"
       : limit?.kind === "estimated"
-        ? `limite por ${limit.n} ${limit.n === 1 ? "análise" : "análises"}`
+        ? `${limit.n} ${limit.n === 1 ? "análise" : "análises"}`
         : null;
-  const transparency = [evidence, limitOrigin].filter(Boolean).join(" · ");
 
   const fullTitle = item.modelYear ? `${item.title} ${item.modelYear}` : item.title;
 
@@ -311,7 +310,7 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
             </div>
             {price && price.kind !== "insufficient" ? (
               <div className="grid gap-0.5">
-                <dt className="text-caption text-muted">Provável</dt>
+                <dt className="text-caption text-muted">Provável{evidence ? ` (${evidence})` : ""}</dt>
                 <dd className="text-label font-medium whitespace-nowrap text-foreground-secondary">
                   <Money value={price.median} />
                 </dd>
@@ -319,15 +318,13 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
             ) : null}
             {limit && limit.kind !== "insufficient" ? (
               <div className="grid gap-0.5">
-                <dt className="text-caption text-muted">Limite</dt>
+                <dt className="text-caption text-muted">Limite{limitOrigin ? ` (${limitOrigin})` : ""}</dt>
                 <dd className="text-label font-medium whitespace-nowrap text-foreground-secondary">
                   {limit.maxBid !== null ? <Money value={limit.maxBid} /> : "Sem lance viável"}
                 </dd>
               </div>
             ) : null}
           </dl>
-
-          {transparency ? <p className="mt-1 text-caption text-muted tabular-nums">{transparency}</p> : null}
 
           <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-muted tabular-nums">
             <span className="inline-flex items-center gap-1.5">

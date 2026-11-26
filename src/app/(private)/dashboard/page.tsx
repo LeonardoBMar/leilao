@@ -12,7 +12,7 @@ import {
   DecisionIndicator,
   DecisionIndicatorSkeleton,
 } from "@/features/dashboard/components/dashboard-summary";
-import { PendingItems } from "@/features/dashboard/components/pending-items";
+import { PendingItems, PendingItemsSkeleton } from "@/features/dashboard/components/pending-items";
 import { RegionAuctions, RegionAuctionsSkeleton } from "@/features/dashboard/components/region-auctions";
 import { ToAnalyze, ToAnalyzeSkeleton } from "@/features/dashboard/components/to-analyze";
 import { CollectorStatusLine, CollectorStatusLineSkeleton } from "@/features/listings/components/collector-status";
@@ -159,23 +159,25 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
         </div>
 
         <aside className="grid content-start gap-8" aria-label="Pendências e indicadores">
-          <Suspense fallback={<DecisionIndicatorSkeleton />}>
-            <SectionErrorBoundary
-              title="Pendências indisponíveis"
-              fallbackHref="/minhas-analises"
-              fallbackLabel="Abrir Minhas análises"
-            >
+          <SectionErrorBoundary
+            title="Pendências indisponíveis"
+            fallbackHref="/minhas-analises"
+            fallbackLabel="Abrir Minhas análises"
+          >
+            <Suspense fallback={<PendingItemsSkeleton />}>
               <PendingItems />
-            </SectionErrorBoundary>
+            </Suspense>
+          </SectionErrorBoundary>
 
-            <SectionErrorBoundary
-              title="Indicador indisponível"
-              fallbackHref="/mercado/calibracao"
-              fallbackLabel="Ver calibração"
-            >
+          <SectionErrorBoundary
+            title="Indicador indisponível"
+            fallbackHref="/mercado/calibracao"
+            fallbackLabel="Ver calibração"
+          >
+            <Suspense fallback={<DecisionIndicatorSkeleton />}>
               <DecisionIndicator />
-            </SectionErrorBoundary>
-          </Suspense>
+            </Suspense>
+          </SectionErrorBoundary>
         </aside>
       </div>
     </div>
