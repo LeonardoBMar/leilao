@@ -18,6 +18,8 @@ import {
   type QuickJumpItem,
   subscribeCommandItems,
 } from "./command-palette-store";
+import { GlobalGuideDialog } from "./global-guide-dialog";
+import { setGuideDialogOpen } from "./guide-dialog-store";
 import { MobileNav } from "./mobile-nav";
 import { NAV_ITEMS, type NavBadges, NavLinks } from "./nav-links";
 import { getSidebarServerSnapshot, getSidebarSnapshot, setSidebarCollapsed, subscribeSidebar } from "./sidebar-store";
@@ -236,9 +238,14 @@ export function AppShell({
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
+      if (isEditableTarget(event.target)) return;
+      if (!event.altKey && !event.ctrlKey && !event.metaKey && event.key === "?") {
+        event.preventDefault();
+        setGuideDialogOpen(true);
+        return;
+      }
       if (event.altKey || event.shiftKey) return;
       if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "b") return;
-      if (isEditableTarget(event.target)) return;
       if (!window.matchMedia("(min-width: 64rem)").matches) return;
       event.preventDefault();
       setSidebarCollapsed(!getSidebarSnapshot());
@@ -470,6 +477,7 @@ export function AppShell({
       </Suspense>
       {commandItems}
       <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
+      <GlobalGuideDialog />
     </div>
   );
 }

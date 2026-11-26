@@ -2,17 +2,12 @@
 
 import { ChevronsUpDown, CircleHelp, LoaderCircle, LogOut, SlidersHorizontal, UserRound } from "lucide-react";
 import Link from "next/link";
-import { useState, useSyncExternalStore, useTransition } from "react";
+import { useSyncExternalStore, useTransition } from "react";
 
+import { setGuideDialogOpen } from "@/components/layout/guide-dialog-store";
 import { getSidebarServerSnapshot, getSidebarSnapshot, subscribeSidebar } from "@/components/layout/sidebar-store";
-import { useIsMac } from "@/components/layout/use-is-mac";
 import {
   Badge,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -40,8 +35,6 @@ function subscribeNoop() {
 /** Avatar e menu da conta (compacto no header mobile ou dock ancorado no rodapé da sidebar desktop). */
 export function UserMenuDropdown({ email, devBypass, variant = "header" }: UserMenuDropdownProps) {
   const [isPending, startTransition] = useTransition();
-  const [guideOpen, setGuideOpen] = useState(false);
-  const isMac = useIsMac();
   const isSidebar = variant === "sidebar";
   const collapsed = useSyncExternalStore(
     isSidebar ? subscribeSidebar : subscribeNoop,
@@ -149,7 +142,7 @@ export function UserMenuDropdown({ email, devBypass, variant = "header" }: UserM
             </Link>
           </DropdownMenuItem>
 
-          <DropdownMenuItem onSelect={() => setGuideOpen(true)}>
+          <DropdownMenuItem onSelect={() => setGuideDialogOpen(true)}>
             <CircleHelp aria-hidden="true" className="text-muted" />
             Guia e atalhos
           </DropdownMenuItem>
@@ -175,59 +168,6 @@ export function UserMenuDropdown({ email, devBypass, variant = "header" }: UserM
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      <Dialog open={guideOpen} onOpenChange={setGuideOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Guia rápido e atalhos</DialogTitle>
-            <DialogDescription>
-              Conceitos financeiros e atalhos de teclado disponíveis em todas as telas do Leilão Tracker.
-            </DialogDescription>
-          </DialogHeader>
-
-          <dl className="grid gap-3 text-body">
-            <div className="grid gap-0.5">
-              <dt className="text-label font-semibold text-foreground">Preço provável</dt>
-              <dd className="text-caption text-foreground-secondary">
-                Mediana dos arremates comparáveis do mesmo modelo no catálogo, sempre acompanhada do tamanho da base
-                (n).
-              </dd>
-            </div>
-            <div className="grid gap-0.5">
-              <dt className="text-label font-semibold text-foreground">Limite estimado e premissas padrão</dt>
-              <dd className="text-caption text-foreground-secondary">
-                Lance máximo calculado pelas suas análises anteriores ou pelas premissas padrão de margem, guincho e
-                custos em Preferências.
-              </dd>
-            </div>
-            <div className="grid gap-0.5">
-              <dt className="text-label font-semibold text-foreground">Resultados comparáveis e calibração</dt>
-              <dd className="text-caption text-foreground-secondary">
-                Lotes com análise fixada antes do leilão e resultado registrado, usados para acompanhar a precisão dos
-                seus limites.
-              </dd>
-            </div>
-          </dl>
-
-          <div className="grid gap-2 border-t border-border pt-4 text-caption">
-            <p className="font-mono text-overline font-medium text-muted uppercase">Atalhos de teclado</p>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-foreground-secondary">
-              <span>
-                <kbd className="rounded-sm border border-border-strong bg-background px-1.5 py-0.5 font-mono text-caption text-foreground">
-                  {isMac ? "⌘K" : "Ctrl+K"}
-                </kbd>{" "}
-                busca e salto rápido
-              </span>
-              <span>
-                <kbd className="rounded-sm border border-border-strong bg-background px-1.5 py-0.5 font-mono text-caption text-foreground">
-                  {isMac ? "⌘B" : "Ctrl+B"}
-                </kbd>{" "}
-                recolher barra lateral
-              </span>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

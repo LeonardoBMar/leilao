@@ -5,6 +5,7 @@ import {
   Calculator,
   Car,
   ChartColumn,
+  CircleHelp,
   Clock,
   Compass,
   Database,
@@ -30,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { getAdminRoleServerSnapshot, getAdminRoleSnapshot, subscribeAdminRole } from "./admin-role-store";
 import { matchesCommandQuery, normalizeCommandText } from "./command-palette-search";
 import { getCommandItemsServerSnapshot, getCommandItemsSnapshot, subscribeCommandItems } from "./command-palette-store";
+import { setGuideDialogOpen } from "./guide-dialog-store";
 import { useIsMac } from "./use-is-mac";
 
 const RECENTS_STORAGE_KEY = "leilao.command-recents";
@@ -108,7 +110,9 @@ function recordRecent(entry: StoredRecent) {
 }
 
 type CommandDestination = {
-  href: Route;
+  href?: Route;
+  onSelect?: () => void;
+  id: string;
   label: string;
   meta?: string;
   group: "Recentes" | "Navegação" | "Mercado" | "Ações" | "Sistema" | "Acompanhando" | "Buscar";
@@ -117,9 +121,24 @@ type CommandDestination = {
 };
 
 const DESTINATIONS: readonly CommandDestination[] = [
-  { href: "/dashboard", label: "Início", group: "Navegação", keywords: "dashboard home resumo", icon: House },
-  { href: "/leiloes", label: "Leilões do catálogo", group: "Navegação", keywords: "catalogo eventos", icon: Gavel },
   {
+    id: "/dashboard",
+    href: "/dashboard",
+    label: "Início",
+    group: "Navegação",
+    keywords: "dashboard home resumo",
+    icon: House,
+  },
+  {
+    id: "/leiloes",
+    href: "/leiloes",
+    label: "Leilões do catálogo",
+    group: "Navegação",
+    keywords: "catalogo eventos",
+    icon: Gavel,
+  },
+  {
+    id: "/leiloes/veiculos",
     href: "/leiloes/veiculos",
     label: "Todos os veículos",
     group: "Navegação",
@@ -127,22 +146,39 @@ const DESTINATIONS: readonly CommandDestination[] = [
     icon: Car,
   },
   {
+    id: "/minhas-analises",
     href: "/minhas-analises",
     label: "Minhas análises",
     group: "Navegação",
     keywords: "lotes salvos limites",
     icon: Calculator,
   },
-  { href: "/monitores", label: "Monitores", group: "Navegação", keywords: "buscas salvas radar", icon: Radar },
-  { href: "/alertas", label: "Alertas", group: "Navegação", keywords: "notificacoes novos", icon: BellRing },
   {
+    id: "/monitores",
+    href: "/monitores",
+    label: "Monitores",
+    group: "Navegação",
+    keywords: "buscas salvas radar",
+    icon: Radar,
+  },
+  {
+    id: "/alertas",
+    href: "/alertas",
+    label: "Alertas",
+    group: "Navegação",
+    keywords: "notificacoes novos",
+    icon: BellRing,
+  },
+  {
+    id: "/mercado",
     href: "/mercado",
     label: "Mercado — Avaliar modelo",
-    group: "Mercado",
-    keywords: "fipe faixa arremate preco provavel",
+    group: "Navegação",
+    keywords: "fipe faixa arremate preco provavel mercado",
     icon: ChartColumn,
   },
   {
+    id: "/mercado/panorama",
     href: "/mercado/panorama",
     label: "Mercado — Panorama",
     group: "Mercado",
@@ -150,6 +186,7 @@ const DESTINATIONS: readonly CommandDestination[] = [
     icon: Compass,
   },
   {
+    id: "/mercado/calibracao",
     href: "/mercado/calibracao",
     label: "Mercado — Calibração",
     group: "Mercado",
@@ -157,6 +194,7 @@ const DESTINATIONS: readonly CommandDestination[] = [
     icon: Scale,
   },
   {
+    id: "action:followed",
     href: "/minhas-analises?acompanhados=1&resultado=sem" as Route,
     label: "Lotes acompanhados ativos",
     group: "Ações",
@@ -164,6 +202,7 @@ const DESTINATIONS: readonly CommandDestination[] = [
     icon: Eye,
   },
   {
+    id: "action:drafts",
     href: "/minhas-analises?analise=rascunho" as Route,
     label: "Rascunhos de análise em aberto",
     group: "Ações",
@@ -171,6 +210,7 @@ const DESTINATIONS: readonly CommandDestination[] = [
     icon: FilePen,
   },
   {
+    id: "/minhas-analises/leiloes/novo",
     href: "/minhas-analises/leiloes/novo",
     label: "Cadastrar leilão manual",
     group: "Ações",
@@ -178,6 +218,15 @@ const DESTINATIONS: readonly CommandDestination[] = [
     icon: Plus,
   },
   {
+    id: "action:guide",
+    onSelect: () => setGuideDialogOpen(true),
+    label: "Guia rápido e atalhos",
+    group: "Ações",
+    keywords: "ajuda guia atalhos glossario como ler preco provavel limite calibracao",
+    icon: CircleHelp,
+  },
+  {
+    id: "/sistema",
     href: "/sistema",
     label: "Sistema — Saúde da coleta",
     group: "Sistema",
@@ -185,6 +234,7 @@ const DESTINATIONS: readonly CommandDestination[] = [
     icon: Radar,
   },
   {
+    id: "/sistema/fipe",
     href: "/sistema/fipe",
     label: "Sistema — Correções FIPE",
     group: "Sistema",
@@ -192,6 +242,7 @@ const DESTINATIONS: readonly CommandDestination[] = [
     icon: Database,
   },
   {
+    id: "/sistema/preferencias",
     href: "/sistema/preferencias",
     label: "Sistema — Preferências",
     group: "Sistema",
@@ -241,6 +292,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     ? recents
         .filter((item) => isAdmin || !item.href.startsWith("/sistema") || item.href === "/sistema/preferencias")
         .map((item) => ({
+          id: `recent:${item.href}`,
           href: item.href as Route,
           label: item.label,
           meta: item.meta,
@@ -249,17 +301,18 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           icon: Clock,
         }))
     : [];
-  const recentHrefs = new Set(recentDestinations.map((item) => item.href));
+  const recentHrefs = new Set(recentDestinations.map((item) => item.href).filter(Boolean));
 
   // Sem consulta digitada, exibe apenas destinos principais e ações (sub-rotas de Mercado/Sistema entram ao digitar).
   const defaultDestinations = visibleDestinations.filter(
-    (item) => (item.group === "Navegação" || item.group === "Ações") && !recentHrefs.has(item.href),
+    (item) => (item.group === "Navegação" || item.group === "Ações") && (!item.href || !recentHrefs.has(item.href)),
   );
   const filteredDestinations = normalized
     ? visibleDestinations.filter((item) => matchesCommandQuery([item.label, item.keywords, item.group], normalized))
     : defaultDestinations;
 
   const followedDestinations: readonly CommandDestination[] = quickItems.map((item) => ({
+    id: `followed:${item.href}`,
     href: item.href,
     label: item.label,
     meta: item.meta,
@@ -271,12 +324,13 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     ? followedDestinations.filter((item) =>
         matchesCommandQuery([item.label, item.meta, item.keywords, item.group], normalized),
       )
-    : followedDestinations.filter((item) => !recentHrefs.has(item.href)).slice(0, 4);
+    : followedDestinations.filter((item) => !item.href || !recentHrefs.has(item.href)).slice(0, 4);
 
   const searchActions: readonly CommandDestination[] =
     normalized.length >= 2
       ? [
           {
+            id: `search:catalog:${trimmedQuery}`,
             href: `/leiloes/veiculos?busca=${encodeURIComponent(trimmedQuery)}` as Route,
             label: `Buscar “${trimmedQuery}” nos veículos do catálogo`,
             group: "Buscar",
@@ -284,6 +338,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             icon: Car,
           },
           {
+            id: `search:analyses:${trimmedQuery}`,
             href: `/minhas-analises?busca=${encodeURIComponent(trimmedQuery)}` as Route,
             label: `Buscar “${trimmedQuery}” em Minhas análises`,
             group: "Buscar",
@@ -339,12 +394,18 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     onOpenChange(next);
   }
 
-  function navigateTo(destination: CommandDestination) {
-    if (destination.group !== "Buscar") {
-      recordRecent({ href: destination.href, label: destination.label, meta: destination.meta });
-    }
+  function activateDestination(destination: CommandDestination) {
     handleOpenChange(false);
-    router.push(destination.href);
+    if (destination.onSelect) {
+      destination.onSelect();
+      return;
+    }
+    if (destination.href) {
+      if (destination.group !== "Buscar") {
+        recordRecent({ href: destination.href, label: destination.label, meta: destination.meta });
+      }
+      router.push(destination.href);
+    }
   }
 
   return (
@@ -383,7 +444,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               } else if (event.key === "Enter" && activeIndex >= 0) {
                 event.preventDefault();
                 const item = items[activeIndex];
-                if (item) navigateTo(item);
+                if (item) activateDestination(item);
               }
             }}
             placeholder="Ir para uma tela ou buscar veículo/lote…"
@@ -437,13 +498,13 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                       const isSelected = index === activeIndex;
                       return (
                         <div
-                          key={`${group}:${item.href}`}
+                          key={item.id}
                           id={`${listboxId}-option-${index}`}
                           role="option"
                           aria-selected={isSelected}
                           onMouseEnter={() => setSelectedIndex(index)}
                           onMouseDown={(event) => event.preventDefault()}
-                          onClick={() => navigateTo(item)}
+                          onClick={() => activateDestination(item)}
                           className={cn(
                             "flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-2 text-start text-body select-none",
                             isSelected ? "bg-primary-subtle font-medium text-foreground" : "text-foreground-secondary",
