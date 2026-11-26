@@ -44,7 +44,7 @@ export function LimitProgress({
       ? "Lance atual no limite"
       : `Lance atual: ${formatBRL(cents(Math.abs(gap)))} ${gap > 0 ? "abaixo" : "acima"} do limite`;
   return (
-    <Track percent={maxBid > 0 ? (bid / maxBid) * 100 : 100} isAbove={gap < 0}>
+    <Track percent={maxBid > 0 ? (bid / maxBid) * 100 : 100} tone={gap < 0 ? "above" : gap === 0 ? "at_limit" : "below"}>
       <span
         className={cn(
           "text-caption font-medium tabular-nums",
@@ -63,9 +63,14 @@ export function LimitProgress({
   );
 }
 
-type TrackProps = { percent?: number; dashed?: boolean; isAbove?: boolean; children: React.ReactNode };
+type TrackProps = {
+  percent?: number;
+  dashed?: boolean;
+  tone?: "below" | "at_limit" | "above";
+  children: React.ReactNode;
+};
 
-function Track({ percent = 0, dashed = false, isAbove = false, children }: TrackProps) {
+function Track({ percent = 0, dashed = false, tone = "below", children }: TrackProps) {
   return (
     <div className="grid gap-1.5">
       {dashed ? (
@@ -73,7 +78,10 @@ function Track({ percent = 0, dashed = false, isAbove = false, children }: Track
       ) : (
         <div aria-hidden="true" className="h-1.5 rounded-full bg-primary-subtle">
           <div
-            className={cn("h-1.5 rounded-full", isAbove ? "bg-error" : "bg-foreground")}
+            className={cn(
+              "h-1.5 rounded-full",
+              tone === "above" ? "bg-error" : tone === "at_limit" ? "bg-warning" : "bg-foreground",
+            )}
             style={{ width: `${Math.min(percent, 100)}%` }}
           />
         </div>
