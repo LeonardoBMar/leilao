@@ -95,10 +95,23 @@ export function ToAnalyzeSkeleton() {
   return (
     <div className="@container" aria-hidden="true">
       <div className="grid grid-cols-1 gap-5 @3xl:grid-cols-2 @3xl:gap-x-8">
-        <Skeleton className="h-36" />
-        <Skeleton className="h-36" />
-        <Skeleton className="h-36" />
-        <Skeleton className="h-36" />
+        {[0, 1, 2, 3].map((index) => (
+          <div
+            key={index}
+            className="grid grid-cols-[5.25rem_minmax(0,1fr)] gap-3.5 sm:grid-cols-[6.5rem_minmax(0,1fr)]"
+          >
+            <Skeleton className="aspect-4/3 w-full rounded-md" />
+            <div className="grid gap-2">
+              <Skeleton className="h-5 w-4/5" />
+              <div className="flex gap-3">
+                <Skeleton className="h-8 w-16" />
+                <Skeleton className="h-8 w-16" />
+                <Skeleton className="h-8 w-16" />
+              </div>
+              <Skeleton className="h-3.5 w-2/3" />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

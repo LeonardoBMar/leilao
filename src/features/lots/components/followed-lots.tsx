@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Badge, ButtonLink, EmptyState, Money, Skeleton } from "@/components/ui";
 import type { LimitFit } from "@/domain/listings/estimates";
 import { formatClosingCountdown, formatCompactDateTime, formatDate } from "@/lib/format";
-import { LIMIT_FIT_LABELS, LIMIT_FIT_VARIANTS, priceEvidenceLabel } from "@/lib/listing-labels";
+import { LIMIT_FIT_VARIANTS, priceEvidenceLabel } from "@/lib/listing-labels";
 import { cn } from "@/lib/utils";
 
 import { getFollowedLotsOverview } from "../queries";
@@ -13,6 +13,12 @@ import { LimitProgress } from "./limit-progress";
 
 const SHOWN = 5;
 const ALL_FOLLOWED_HREF = "/minhas-analises?acompanhados=1&resultado=sem";
+
+const PROBABLE_FIT_LABELS = {
+  comfortable: "Provável abaixo",
+  tight: "Provável no limite",
+  above: "Provável acima",
+} as const satisfies Record<LimitFit, string>;
 
 const LIMIT_FIT_ICONS = {
   comfortable: CircleCheck,
@@ -54,7 +60,10 @@ export async function FollowedLots() {
               key={lot.id}
               className="relative -mx-2 grid grid-cols-1 items-center gap-x-5 gap-y-3 rounded-md border-t border-border px-2 py-4 transition-colors duration-150 ease-[var(--ease-out)] hover:bg-background motion-reduce:transition-none @2xl:grid-cols-[3.5rem_minmax(0,1fr)_9.5rem_12rem]"
             >
-              <span className="hidden font-mono text-label font-normal text-foreground-secondary @2xl:inline">
+              <span
+                title={lot.lotNumber}
+                className="hidden truncate font-mono text-label font-normal text-foreground-secondary @2xl:inline"
+              >
                 {lot.lotNumber}
               </span>
               <div className="min-w-0">
@@ -167,7 +176,7 @@ function ProbableLine({ lot }: { lot: FollowedLotItem }) {
       {fit !== null && FitIcon ? (
         <Badge variant={LIMIT_FIT_VARIANTS[fit]}>
           <FitIcon aria-hidden="true" className="size-3 shrink-0" />
-          {LIMIT_FIT_LABELS[fit]}
+          {PROBABLE_FIT_LABELS[fit]}
         </Badge>
       ) : null}
     </p>
@@ -176,10 +185,27 @@ function ProbableLine({ lot }: { lot: FollowedLotItem }) {
 
 export function FollowedLotsSkeleton() {
   return (
-    <div className="grid gap-3" aria-hidden="true">
-      <Skeleton className="h-16" />
-      <Skeleton className="h-16" />
-      <Skeleton className="h-16" />
+    <div className="border-b border-border" aria-hidden="true">
+      {[0, 1, 2].map((index) => (
+        <div
+          key={index}
+          className="grid grid-cols-1 items-center gap-x-5 gap-y-2 border-t border-border py-4 sm:grid-cols-[3.5rem_minmax(0,1fr)_9.5rem_12rem]"
+        >
+          <Skeleton className="hidden h-4 w-10 sm:block" />
+          <div className="grid gap-1.5">
+            <Skeleton className="h-5 w-48 max-w-full" />
+            <Skeleton className="h-3.5 w-36 max-w-full" />
+          </div>
+          <div className="grid gap-1 sm:justify-items-end">
+            <Skeleton className="h-3.5 w-16" />
+            <Skeleton className="h-5 w-24" />
+          </div>
+          <div className="grid gap-1.5">
+            <Skeleton className="h-1.5 w-full rounded-full" />
+            <Skeleton className="h-3.5 w-32" />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

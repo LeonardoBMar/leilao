@@ -149,9 +149,22 @@ function groupByDay(auctions: RegionAuction[]) {
 
 export function RegionAuctionsSkeleton() {
   return (
-    <div className="grid gap-3" aria-hidden="true">
-      <Skeleton className="h-20" />
-      <Skeleton className="h-20" />
+    <div className="grid" aria-hidden="true">
+      {[0, 1].map((index) => (
+        <div
+          key={index}
+          className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-x-4 border-t border-border pt-4 pb-2 sm:grid-cols-[6rem_minmax(0,1fr)]"
+        >
+          <div className="grid content-start gap-1">
+            <Skeleton className="h-7 w-10" />
+            <Skeleton className="h-3.5 w-12" />
+          </div>
+          <div className="grid gap-3 border-l border-border py-2 pl-5">
+            <Skeleton className="h-5 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

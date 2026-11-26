@@ -56,7 +56,7 @@ export async function DashboardKpis() {
         </span>
       )
     ) : pending.awaitingResultTotal > 0 && pending.draftsTotal > 0 ? (
-      `${plural(pending.awaitingResultTotal, "resultado", "resultados")} a registrar · ${plural(pending.draftsTotal, "rascunho", "rascunhos")} em aberto`
+      `${plural(pending.awaitingResultTotal, "resultado", "resultados")} · ${plural(pending.draftsTotal, "rascunho", "rascunhos")}`
     ) : pending.awaitingResultTotal > 0 ? (
       `${plural(pending.awaitingResultTotal, "resultado", "resultados")} a registrar`
     ) : (
@@ -109,7 +109,7 @@ export async function DashboardKpis() {
         <li>
           <a
             href="#followed-lots"
-            className={cn(kpiLinkClass, followed.aboveLimit > 0 && "bg-error-subtle/40 hover:bg-error-subtle/60")}
+            className={cn(kpiLinkClass, followed.aboveLimit > 0 && "bg-error-subtle hover:bg-error-subtle/80")}
           >
             <div className="flex items-center justify-between gap-2">
               <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
@@ -147,7 +147,7 @@ export async function DashboardKpis() {
 
         <li>
           {pendingTotal > 0 ? (
-            <a href="#pending-items" className={cn(kpiLinkClass, "bg-warning-subtle/40 hover:bg-warning-subtle/60")}>
+            <a href="#pending-items" className={cn(kpiLinkClass, "bg-warning-subtle hover:bg-warning-subtle/80")}>
               <div className="flex items-center justify-between gap-2">
                 <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
                   <ClipboardList aria-hidden="true" className="size-3.5 shrink-0 text-warning" />
@@ -316,5 +316,12 @@ export async function DecisionIndicator() {
 }
 
 export function DecisionIndicatorSkeleton() {
-  return <Skeleton className="h-36" aria-hidden="true" />;
+  return (
+    <div className={cn(cardVariants(), "grid gap-3 p-5 md:p-6")} aria-hidden="true">
+      <Skeleton className="h-5 w-48" />
+      <Skeleton className="h-8 w-28" />
+      <Skeleton className="h-1.5 w-full rounded-full" />
+      <Skeleton className="h-8 w-32" />
+    </div>
+  );
 }

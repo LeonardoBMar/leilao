@@ -337,9 +337,6 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
       actions={
         <>
           <TrackerAction item={item} openDirectly variant="secondary" />
-          {!item.trackedLotId ? (
-            <AddToTrackerButton listingId={item.id} mode="stay" label="Salvar na fila" variant="ghost" size="sm" />
-          ) : null}
           {footer}
         </>
       }
