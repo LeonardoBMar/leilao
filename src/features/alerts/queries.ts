@@ -78,12 +78,14 @@ export const countUnreadAlerts = cache(async (): Promise<number> => {
 export type RecentUnreadAlert = {
   id: string;
   title: string;
+  createdAt: Date;
+  watchName: string | null;
   trackedLotId: string | null;
 };
 
 /**
- * Os não lidos mais recentes, para o dashboard (D-85): seleção mínima (sem fotos, watch nem base de estimativas)
- * compartilhando a contagem de `countUnreadAlerts` na mesma requisição.
+ * Os não lidos mais recentes, para o dashboard e popover de notificações (D-85): seleção mínima (sem fotos nem base
+ * de estimativas) compartilhando a contagem de `countUnreadAlerts` na mesma requisição.
  */
 export async function listRecentUnreadAlerts(limit: number): Promise<{ items: RecentUnreadAlert[]; total: number }> {
   const user = await requireUser();
@@ -94,6 +96,8 @@ export async function listRecentUnreadAlerts(limit: number): Promise<{ items: Re
       take: limit,
       select: {
         id: true,
+        createdAt: true,
+        watch: { select: { name: true } },
         listing: {
           select: {
             title: true,
@@ -108,6 +112,8 @@ export async function listRecentUnreadAlerts(limit: number): Promise<{ items: Re
     items: rows.map((row) => ({
       id: row.id,
       title: row.listing.title,
+      createdAt: row.createdAt,
+      watchName: row.watch.name,
       trackedLotId: row.listing.lots[0]?.id ?? null,
     })),
     total,

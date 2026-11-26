@@ -1,13 +1,14 @@
 "use client";
 
-import { AlertTriangle, Bell, BellRing, CheckCheck, ChevronRight } from "lucide-react";
+import { AlertTriangle, Bell, BellRing, Check, CheckCheck, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
 import { Badge, Button, Popover, PopoverContent, PopoverTrigger, useActionToast } from "@/components/ui";
+import { formatCompactDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-import { markAllAlertsReadAction } from "../actions";
+import { markAlertReadAction, markAllAlertsReadAction } from "../actions";
 import type { RecentUnreadAlert } from "../queries";
 
 export type CollectorNotification = {
@@ -172,21 +173,44 @@ export function NotificationsPopover({
                   {alerts.map((alert) => {
                     const href = alert.trackedLotId ? (`/lotes/${alert.trackedLotId}` as const) : ("/alertas" as const);
                     return (
-                      <li key={alert.id}>
+                      <li key={alert.id} className="flex items-center gap-1">
                         <Link
                           href={href}
                           onClick={() => setOpen(false)}
-                          className="group flex min-h-10 items-center gap-2.5 rounded-md px-2 py-2 text-body transition-colors outline-none hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:min-h-11"
+                          className="group flex min-h-10 min-w-0 flex-1 items-center gap-2.5 rounded-md px-2 py-2 text-body transition-colors outline-none hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:min-h-11"
                         >
                           <BellRing aria-hidden="true" className="size-3.5 shrink-0 text-accent" />
-                          <span className="line-clamp-1 min-w-0 flex-1 text-label text-foreground" title={alert.title}>
-                            {alert.title}
+                          <span className="grid min-w-0 flex-1 gap-0.5">
+                            <span className="line-clamp-1 text-label text-foreground" title={alert.title}>
+                              {alert.title}
+                            </span>
+                            <span className="flex min-w-0 items-center gap-1.5 text-caption text-muted tabular-nums">
+                              {alert.watchName ? <span className="truncate">{alert.watchName}</span> : null}
+                              {alert.watchName ? (
+                                <span aria-hidden="true" className="shrink-0 text-border-strong">
+                                  ·
+                                </span>
+                              ) : null}
+                              <time dateTime={alert.createdAt.toISOString()} className="shrink-0">
+                                {formatCompactDateTime(alert.createdAt)}
+                              </time>
+                            </span>
                           </span>
                           <ChevronRight
                             aria-hidden="true"
                             className="size-3.5 shrink-0 text-muted-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
                           />
                         </Link>
+                        <button
+                          type="button"
+                          disabled={isMarkingRead}
+                          aria-label={`Marcar alerta “${alert.title}” como lido`}
+                          title="Marcar como lido"
+                          onClick={() => runMarkRead(() => markAlertReadAction(alert.id))}
+                          className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted transition-colors outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent disabled:opacity-50 pointer-coarse:size-11"
+                        >
+                          <Check aria-hidden="true" className="size-3.5" />
+                        </button>
                       </li>
                     );
                   })}
