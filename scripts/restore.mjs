@@ -89,13 +89,19 @@ function validate({ tables, catalog, watches }) {
   return problems;
 }
 
-/** Colunas reais não geradas da tabela no destino: impede injeção de identificador e ignora colunas removidas. */
+/** Colunas reais não geradas da tabela no destino e seus tipos: impede injeção, ignora removidas e serializa json/jsonb. */
 async function insertableColumns(client, table) {
   const { rows } = await client.query(
-    "select column_name from information_schema.columns where table_schema = 'public' and table_name = $1 and is_generated = 'NEVER'",
+    "select column_name, data_type from information_schema.columns where table_schema = 'public' and table_name = $1 and is_generated = 'NEVER'",
     [table],
   );
-  return new Set(rows.map((row) => row.column_name));
+  return new Map(rows.map((row) => [row.column_name, row.data_type]));
+}
+
+function serializeRestoreValue(value, dataType) {
+  if (value === null || value === undefined) return value;
+  if (dataType === "json" || dataType === "jsonb") return JSON.stringify(value);
+  return value;
 }
 
 async function insertRows(client, table, rows) {
@@ -117,7 +123,7 @@ async function insertRows(client, table, rows) {
       const placeholders = [];
       for (const column of columns) {
         placeholders.push(`$${paramIndex}`);
-        values.push(row[column]);
+        values.push(serializeRestoreValue(row[column], allowed.get(column)));
         paramIndex += 1;
       }
       tuples.push(`(${placeholders.join(", ")})`);
