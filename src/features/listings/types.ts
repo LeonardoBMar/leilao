@@ -83,12 +83,22 @@ export type CatalogAuctionPage = {
 /** Leilão do catálogo na home: `matching` = lotes no filtro que encerram em 7 dias; `fitting` = quantos cabem. */
 export type RegionAuction = CatalogAuctionItem & { fitting: number };
 
+/** Sugestão aberta dispensada pelo usuário em "Para analisar agora" (D-56). */
+export type DismissedSuggestion = {
+  id: string;
+  title: string;
+  sourceName: string;
+  endsAt: Date | null;
+};
+
 /** O catálogo visto da home (D-44). */
 export type RegionOverview = {
   /** Os primeiros de "Para analisar agora", na ordem da regra. */
   toAnalyze: ListingListItem[];
   toAnalyzeTotal: number;
   toAnalyzeComfortable: number;
+  /** Sugestões ainda abertas dispensadas pelo usuário, para rever ou restaurar. */
+  dismissed: DismissedSuggestion[];
   /** Próximos leilões na região, do mais próximo. */
   auctions: RegionAuction[];
   auctionsTotal: number;

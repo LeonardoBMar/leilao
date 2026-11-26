@@ -24,3 +24,13 @@ export async function listLotImages(lotId: string): Promise<LotImageItem[]> {
   const urls = await signedImageUrls(rows.map((row) => row.storagePath));
   return rows.map(({ storagePath: _path, ...row }, index) => ({ ...row, url: urls[index] ?? null }));
 }
+
+/** URLs das fotos do anúncio coletado ligado ao lote (D-29), sem cópia no Storage. */
+export async function listLotListingPhotos(lotId: string): Promise<string[]> {
+  const user = await requireUser();
+  const lot = await db.lot.findFirst({
+    where: { id: lotId, ownerId: user.id },
+    select: { listing: { select: { photoUrls: true } } },
+  });
+  return lot?.listing?.photoUrls ?? [];
+}

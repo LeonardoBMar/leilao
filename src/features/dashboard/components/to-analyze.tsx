@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { ButtonLink, EmptyState, Skeleton } from "@/components/ui";
 import { DismissListingButton } from "@/features/listings/components/dismiss-listing-button";
+import { DismissedListingsDialog } from "@/features/listings/components/dismissed-listings-dialog";
 import { ListingCard } from "@/features/listings/components/listing-card";
 import { getRegionOverview } from "@/features/listings/queries";
 import { getUserPreferences } from "@/features/preferences/queries";
@@ -34,9 +35,12 @@ export async function ToAnalyze() {
           </>
         }
         action={
-          <ButtonLink href={CATALOG_LISTINGS_PATH} variant="secondary" size="sm">
-            Ver todos os veículos
-          </ButtonLink>
+          <div className="flex flex-wrap items-center gap-2">
+            <ButtonLink href={CATALOG_LISTINGS_PATH} variant="secondary" size="sm">
+              Ver todos os veículos
+            </ButtonLink>
+            <DismissedListingsDialog items={overview.dismissed} />
+          </div>
         }
       />
     );
@@ -61,16 +65,21 @@ export async function ToAnalyze() {
           Mostrando os primeiros resultados do filtro — há mais anúncios abertos na região.
         </p>
       ) : null}
-      {remaining > 0 ? (
-        <ButtonLink
-          href={withQuery(CATALOG_LISTINGS_PATH, { analisados: "esconder" })}
-          variant="secondary"
-          size="sm"
-          className="w-fit"
-        >
-          Ver mais {remaining} no catálogo
-          <ChevronRight aria-hidden="true" />
-        </ButtonLink>
+      {remaining > 0 || overview.dismissed.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-3">
+          {remaining > 0 ? (
+            <ButtonLink
+              href={withQuery(CATALOG_LISTINGS_PATH, { analisados: "esconder" })}
+              variant="secondary"
+              size="sm"
+              className="w-fit"
+            >
+              Ver mais {remaining} no catálogo
+              <ChevronRight aria-hidden="true" />
+            </ButtonLink>
+          ) : null}
+          <DismissedListingsDialog items={overview.dismissed} />
+        </div>
       ) : null}
     </div>
   );
