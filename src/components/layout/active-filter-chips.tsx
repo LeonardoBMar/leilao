@@ -96,7 +96,7 @@ export function ActiveFilterChips({
                   <button
                     type="button"
                     onClick={() => onApplyShortcut(shortcut.id)}
-                    className="inline-flex min-h-10 items-center gap-1 rounded-full border border-dashed border-control-border px-3 text-caption font-medium text-foreground-secondary transition-colors duration-120 outline-none hover:border-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent"
+                    className="inline-flex min-h-10 items-center gap-1 rounded-full border border-dashed border-control-border px-3 text-caption font-medium text-foreground-secondary transition-colors duration-120 outline-none hover:border-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:min-h-11"
                   >
                     <Plus aria-hidden="true" className="size-3.5" />
                     {shortcut.label}
