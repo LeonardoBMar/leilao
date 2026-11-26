@@ -17,12 +17,13 @@ import {
   Scale,
   Search,
   SlidersHorizontal,
+  X,
 } from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useState, useSyncExternalStore } from "react";
 
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 import { getAdminRoleServerSnapshot, getAdminRoleSnapshot, subscribeAdminRole } from "./admin-role-store";
@@ -197,8 +198,27 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const activeIndex = items.length > 0 ? Math.min(selectedIndex, items.length - 1) : -1;
   const activeOptionId = activeIndex >= 0 ? `${listboxId}-option-${activeIndex}` : undefined;
 
+  const groupedItems: { group: CommandDestination["group"]; entries: { item: CommandDestination; index: number }[] }[] =
+    [];
+  for (let index = 0; index < items.length; index += 1) {
+    const item = items[index];
+    if (!item) continue;
+    const existing = groupedItems.find((entry) => entry.group === item.group);
+    if (existing) {
+      existing.entries.push({ item, index });
+    } else {
+      groupedItems.push({ group: item.group, entries: [{ item, index }] });
+    }
+  }
+
+  useEffect(() => {
+    if (!open || !activeOptionId) return;
+    document.getElementById(activeOptionId)?.scrollIntoView({ block: "nearest" });
+  }, [open, activeOptionId]);
+
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
+      if (event.altKey || event.shiftKey) return;
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
         if (open) {
@@ -270,45 +290,82 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           <kbd className="hidden rounded-sm border border-border-strong bg-background px-1.5 py-0.5 font-mono text-caption text-muted sm:inline-block">
             ESC
           </kbd>
+          <DialogClose
+            aria-label="Fechar busca"
+            className="-mr-1.5 flex size-10 shrink-0 items-center justify-center rounded-md text-muted transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] sm:hidden"
+          >
+            <X aria-hidden="true" className="size-4.5" />
+          </DialogClose>
         </div>
 
         <div className="max-h-80 overflow-y-auto overscroll-contain p-1.5">
           {items.length === 0 ? (
             <p className="px-3 py-8 text-center text-body text-muted">Nenhum destino encontrado para “{query}”.</p>
           ) : (
-            <ul id={listboxId} role="listbox" aria-label="Destinos" className="grid gap-0.5">
-              {items.map((item, index) => {
-                const Icon = item.icon;
-                const isSelected = index === activeIndex;
+            <div id={listboxId} role="listbox" aria-label="Destinos" className="grid gap-2.5">
+              {groupedItems.map(({ group, entries }, groupIndex) => {
+                const headingId = `${listboxId}-group-${groupIndex}`;
                 return (
-                  <li
-                    key={item.href}
-                    id={`${listboxId}-option-${index}`}
-                    role="option"
-                    aria-selected={isSelected}
-                    onMouseEnter={() => setSelectedIndex(index)}
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => navigateTo(item.href)}
-                    className={cn(
-                      "flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-2 text-start text-body select-none",
-                      isSelected ? "bg-primary-subtle font-medium text-foreground" : "text-foreground-secondary",
-                    )}
-                  >
-                    <Icon
-                      aria-hidden="true"
-                      strokeWidth={1.75}
-                      className={cn("size-4 shrink-0", isSelected ? "text-foreground" : "text-muted-subtle")}
-                    />
-                    <span className="min-w-0 flex-1 truncate">
-                      <span>{item.label}</span>
-                      {item.meta ? <span className="ml-2 text-caption font-normal text-muted">{item.meta}</span> : null}
-                    </span>
-                    <span className="shrink-0 text-caption text-muted">{item.group}</span>
-                  </li>
+                  <div key={group} role="group" aria-labelledby={headingId} className="grid gap-0.5">
+                    <p
+                      id={headingId}
+                      className="px-2.5 pt-1 pb-0.5 font-mono text-overline font-medium text-muted uppercase"
+                    >
+                      {group}
+                    </p>
+                    {entries.map(({ item, index }) => {
+                      const Icon = item.icon;
+                      const isSelected = index === activeIndex;
+                      return (
+                        <div
+                          key={item.href}
+                          id={`${listboxId}-option-${index}`}
+                          role="option"
+                          aria-selected={isSelected}
+                          onMouseEnter={() => setSelectedIndex(index)}
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => navigateTo(item.href)}
+                          className={cn(
+                            "flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-2 text-start text-body select-none",
+                            isSelected ? "bg-primary-subtle font-medium text-foreground" : "text-foreground-secondary",
+                          )}
+                        >
+                          <Icon
+                            aria-hidden="true"
+                            strokeWidth={1.75}
+                            className={cn("size-4 shrink-0", isSelected ? "text-foreground" : "text-muted-subtle")}
+                          />
+                          <span className="min-w-0 flex-1 truncate">
+                            <span>{item.label}</span>
+                            {item.meta ? (
+                              <span className="ml-2 text-caption font-normal text-muted">{item.meta}</span>
+                            ) : null}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 );
               })}
-            </ul>
+            </div>
           )}
+        </div>
+
+        <div className="hidden items-center justify-between gap-3 border-t border-border bg-background px-3.5 py-2 text-caption text-muted sm:flex">
+          <span className="flex items-center gap-3">
+            <span>
+              <kbd className="font-mono text-foreground-secondary">↑↓</kbd> navegar
+            </span>
+            <span>
+              <kbd className="font-mono text-foreground-secondary">↵</kbd> abrir
+            </span>
+            <span>
+              <kbd className="font-mono text-foreground-secondary">Esc</kbd> fechar
+            </span>
+          </span>
+          <span>
+            <kbd className="font-mono text-foreground-secondary">Ctrl+B</kbd> barra lateral
+          </span>
         </div>
       </DialogContent>
     </Dialog>
