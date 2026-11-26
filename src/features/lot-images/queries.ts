@@ -32,5 +32,5 @@ export async function listLotListingPhotos(lotId: string): Promise<string[]> {
     where: { id: lotId, ownerId: user.id },
     select: { listing: { select: { photoUrls: true } } },
   });
-  return lot?.listing?.photoUrls ?? [];
+  return Array.from(new Set(lot?.listing?.photoUrls ?? []));
 }

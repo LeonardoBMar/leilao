@@ -37,6 +37,7 @@ export async function LotPhotosPanel({ lotId }: { lotId: string }) {
                     loading="lazy"
                     className="aspect-4/3 w-full object-cover"
                   />
+                  <span className="sr-only"> (abre em nova aba)</span>
                 </a>
               </li>
             ))}
