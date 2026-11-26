@@ -108,7 +108,8 @@ export async function DashboardKpis() {
             href="#followed-lots"
             className={cn(
               kpiLinkClass,
-              followed.aboveLimit > 0 && "bg-error-subtle hover:bg-error-subtle hover:ring-1 hover:ring-error-border hover:ring-inset",
+              followed.aboveLimit > 0 &&
+                "bg-error-subtle hover:bg-error-subtle hover:ring-1 hover:ring-error-border hover:ring-inset",
             )}
           >
             <div className="flex items-center justify-between gap-2">

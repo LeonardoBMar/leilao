@@ -197,11 +197,7 @@ function HideOnDashboard({ children }: { children: ReactNode }) {
 /** Atalho de lotes acompanhados quando a sidebar está recolhida (oculto no `/dashboard`). */
 function CollapsedFollowedMenu() {
   const pathname = usePathname();
-  const items = useSyncExternalStore(
-    subscribeCommandItems,
-    getCommandItemsSnapshot,
-    getCommandItemsServerSnapshot,
-  );
+  const items = useSyncExternalStore(subscribeCommandItems, getCommandItemsSnapshot, getCommandItemsServerSnapshot);
   if (pathname === "/dashboard" || items.length === 0) return null;
 
   return (

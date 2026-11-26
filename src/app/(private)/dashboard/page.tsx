@@ -93,102 +93,102 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
 
       <div className="@container">
         <div className="grid items-start gap-10 @5xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] @5xl:gap-x-14">
-        <div className="grid content-start gap-10">
-          <Section
-            id="to-analyze"
-            aria-labelledby="to-analyze-heading"
-            tabIndex={-1}
-            className="scroll-mt-6 gap-3 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4"
-          >
-            <div className="grid gap-1">
-              <SectionTitle id="to-analyze-heading" className="flex items-center gap-2">
-                <Calculator aria-hidden="true" className="size-4 shrink-0 text-muted" />
-                Para analisar agora
+          <div className="grid content-start gap-10">
+            <Section
+              id="to-analyze"
+              aria-labelledby="to-analyze-heading"
+              tabIndex={-1}
+              className="scroll-mt-6 gap-3 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4"
+            >
+              <div className="grid gap-1">
+                <SectionTitle id="to-analyze-heading" className="flex items-center gap-2">
+                  <Calculator aria-hidden="true" className="size-4 shrink-0 text-muted" />
+                  Para analisar agora
+                </SectionTitle>
+                <p className="text-caption text-muted">
+                  Lotes abertos na sua região-base ou nos seus monitores cujo preço provável cabe no limite estimado.
+                </p>
+              </div>
+              <SectionErrorBoundary
+                title="Sugestões indisponíveis"
+                fallbackHref="/leiloes/veiculos"
+                fallbackLabel="Abrir catálogo"
+              >
+                <Suspense fallback={<ToAnalyzeSkeleton />}>
+                  <ToAnalyze />
+                </Suspense>
+              </SectionErrorBoundary>
+            </Section>
+
+            <Section
+              id="followed-lots"
+              aria-labelledby="followed-lots-heading"
+              tabIndex={-1}
+              className="scroll-mt-6 gap-2 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4"
+            >
+              <SectionTitle id="followed-lots-heading" className="flex items-center gap-2">
+                <Eye aria-hidden="true" className="size-4 shrink-0 text-muted" />
+                Lotes acompanhados
               </SectionTitle>
-              <p className="text-caption text-muted">
-                Lotes abertos na sua região-base ou nos seus monitores cujo preço provável cabe no limite estimado.
-              </p>
-            </div>
-            <SectionErrorBoundary
-              title="Sugestões indisponíveis"
-              fallbackHref="/leiloes/veiculos"
-              fallbackLabel="Abrir catálogo"
+              <SectionErrorBoundary
+                title="Lotes acompanhados indisponíveis"
+                fallbackHref={ALL_FOLLOWED_HREF}
+                fallbackLabel="Ver acompanhados"
+              >
+                <Suspense fallback={<FollowedLotsSkeleton />}>
+                  <FollowedLots />
+                </Suspense>
+              </SectionErrorBoundary>
+            </Section>
+
+            <Section
+              id="region-auctions"
+              aria-labelledby="region-auctions-heading"
+              tabIndex={-1}
+              className="scroll-mt-6 gap-3 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4"
             >
-              <Suspense fallback={<ToAnalyzeSkeleton />}>
-                <ToAnalyze />
+              <div className="grid gap-1">
+                <SectionTitle id="region-auctions-heading" className="flex items-center gap-2">
+                  <CalendarDays aria-hidden="true" className="size-4 shrink-0 text-muted" />
+                  Próximos leilões na região
+                </SectionTitle>
+                <p className="text-caption text-muted">
+                  Leilões do catálogo nos próximos 7 dias dentro do seu filtro ou monitores.
+                </p>
+              </div>
+              <SectionErrorBoundary
+                title="Próximos leilões indisponíveis"
+                fallbackHref="/leiloes"
+                fallbackLabel="Abrir Leilões"
+              >
+                <Suspense fallback={<RegionAuctionsSkeleton />}>
+                  <RegionAuctions />
+                </Suspense>
+              </SectionErrorBoundary>
+            </Section>
+          </div>
+
+          <aside className="grid content-start gap-8" aria-label="Pendências e indicadores">
+            <SectionErrorBoundary
+              title="Pendências indisponíveis"
+              fallbackHref="/minhas-analises"
+              fallbackLabel="Abrir Minhas análises"
+            >
+              <Suspense fallback={<PendingItemsSkeleton />}>
+                <PendingItems />
               </Suspense>
             </SectionErrorBoundary>
-          </Section>
 
-          <Section
-            id="followed-lots"
-            aria-labelledby="followed-lots-heading"
-            tabIndex={-1}
-            className="scroll-mt-6 gap-2 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4"
-          >
-            <SectionTitle id="followed-lots-heading" className="flex items-center gap-2">
-              <Eye aria-hidden="true" className="size-4 shrink-0 text-muted" />
-              Lotes acompanhados
-            </SectionTitle>
             <SectionErrorBoundary
-              title="Lotes acompanhados indisponíveis"
-              fallbackHref={ALL_FOLLOWED_HREF}
-              fallbackLabel="Ver acompanhados"
+              title="Indicador indisponível"
+              fallbackHref="/mercado/calibracao"
+              fallbackLabel="Ver calibração"
             >
-              <Suspense fallback={<FollowedLotsSkeleton />}>
-                <FollowedLots />
+              <Suspense fallback={<DecisionIndicatorSkeleton />}>
+                <DecisionIndicator />
               </Suspense>
             </SectionErrorBoundary>
-          </Section>
-
-          <Section
-            id="region-auctions"
-            aria-labelledby="region-auctions-heading"
-            tabIndex={-1}
-            className="scroll-mt-6 gap-3 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4"
-          >
-            <div className="grid gap-1">
-              <SectionTitle id="region-auctions-heading" className="flex items-center gap-2">
-                <CalendarDays aria-hidden="true" className="size-4 shrink-0 text-muted" />
-                Próximos leilões na região
-              </SectionTitle>
-              <p className="text-caption text-muted">
-                Leilões do catálogo nos próximos 7 dias dentro do seu filtro ou monitores.
-              </p>
-            </div>
-            <SectionErrorBoundary
-              title="Próximos leilões indisponíveis"
-              fallbackHref="/leiloes"
-              fallbackLabel="Abrir Leilões"
-            >
-              <Suspense fallback={<RegionAuctionsSkeleton />}>
-                <RegionAuctions />
-              </Suspense>
-            </SectionErrorBoundary>
-          </Section>
-        </div>
-
-        <aside className="grid content-start gap-8" aria-label="Pendências e indicadores">
-          <SectionErrorBoundary
-            title="Pendências indisponíveis"
-            fallbackHref="/minhas-analises"
-            fallbackLabel="Abrir Minhas análises"
-          >
-            <Suspense fallback={<PendingItemsSkeleton />}>
-              <PendingItems />
-            </Suspense>
-          </SectionErrorBoundary>
-
-          <SectionErrorBoundary
-            title="Indicador indisponível"
-            fallbackHref="/mercado/calibracao"
-            fallbackLabel="Ver calibração"
-          >
-            <Suspense fallback={<DecisionIndicatorSkeleton />}>
-              <DecisionIndicator />
-            </Suspense>
-          </SectionErrorBoundary>
-        </aside>
+          </aside>
         </div>
       </div>
     </div>
