@@ -45,7 +45,7 @@ function DialogContent({ className, children, hideClose = false, ...props }: Dia
         {!hideClose ? (
           <DialogPrimitive.Close
             aria-label="Fechar"
-            className="absolute top-3.5 right-3.5 flex size-9 items-center justify-center rounded-md text-muted transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97]"
+            className="absolute top-3.5 right-3.5 flex size-10 items-center justify-center rounded-md text-muted transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] sm:size-9"
           >
             <X aria-hidden="true" className="size-4.5" />
           </DialogPrimitive.Close>
@@ -56,8 +56,8 @@ function DialogContent({ className, children, hideClose = false, ...props }: Dia
 }
 
 type DrawerContentProps = DialogPrimitive.DialogContentProps & {
-  /** `right`: painel lateral (desktop). `bottom`: gaveta inferior (celular), até 85% da altura. `responsive`: inferior no celular e lateral a partir de `md`. */
-  side?: "right" | "bottom" | "responsive";
+  /** `left`/`right`: painel lateral. `bottom`: gaveta inferior (celular), até 85% da altura. `responsive`: inferior no celular e lateral a partir de `md`. */
+  side?: "left" | "right" | "bottom" | "responsive";
 };
 
 /**
@@ -71,6 +71,8 @@ function DrawerContent({ className, children, side = "right", ...props }: Drawer
       <DialogPrimitive.Content
         className={cn(
           "fixed z-50 flex flex-col overscroll-contain bg-surface-elevated shadow-lg transition-transform duration-280 ease-[var(--ease-drawer)] outline-none motion-reduce:transition-none",
+          side === "left" &&
+            "inset-y-0 left-0 w-74 max-w-[85dvw] -translate-x-full border-r border-border data-[state=open]:translate-x-0 starting:-translate-x-full",
           side === "right" &&
             "inset-y-0 right-0 w-full max-w-110 translate-x-full border-l border-border data-[state=open]:translate-x-0 starting:translate-x-full",
           side === "bottom" &&

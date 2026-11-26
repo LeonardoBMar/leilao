@@ -4,7 +4,7 @@ import { Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { type ReactNode, Suspense, useEffect, useRef, useState } from "react";
 
-import { Button, Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui";
+import { Button, Dialog, DialogDescription, DialogTitle, DialogTrigger, DrawerContent } from "@/components/ui";
 
 import { Brand } from "./brand";
 import { type NavBadges, NavLinks } from "./nav-links";
@@ -15,6 +15,12 @@ type MobileNavProps = {
   followed?: ReactNode;
   nextAuction?: ReactNode;
 };
+
+function HideOnDashboard({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  if (pathname === "/dashboard") return null;
+  return <>{children}</>;
+}
 
 /**
  * Fecha a gaveta quando o pathname muda (ex.: link nos extras do menu ou navegação programática).
@@ -48,7 +54,7 @@ export function MobileNav({ badges, followed, nextAuction }: MobileNavProps) {
           <Menu aria-hidden="true" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="top-0 left-0 flex h-svh max-h-svh w-74 max-w-[85dvw] translate-x-0 translate-y-0 scale-100 flex-col gap-5 overflow-y-auto rounded-none border-y-0 border-l-0 bg-surface px-2.5 pt-5 pb-4 data-[state=open]:scale-100 starting:scale-100">
+      <DrawerContent side="left" className="gap-5 overflow-y-auto bg-background px-2.5 pt-5 pb-4">
         <div className="pr-10 pl-1.5">
           <DialogTitle asChild>
             <div>
@@ -61,9 +67,13 @@ export function MobileNav({ badges, followed, nextAuction }: MobileNavProps) {
           {/* Fecha ao navegar: com <Activity> a rota anterior fica montada e a gaveta ficaria aberta. */}
           <NavLinks onNavigate={() => setIsOpen(false)} badges={badges} />
         </nav>
-        {followed}
+        {followed ? (
+          <Suspense fallback={followed}>
+            <HideOnDashboard>{followed}</HideOnDashboard>
+          </Suspense>
+        ) : null}
         {nextAuction ? <div className="mt-auto grid grid-cols-1 gap-2.5">{nextAuction}</div> : null}
-      </DialogContent>
+      </DrawerContent>
     </Dialog>
   );
 }

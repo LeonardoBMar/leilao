@@ -56,7 +56,7 @@ export function NotificationsPopover({
           size="icon"
           aria-label={triggerLabel}
           className={cn(
-            "relative size-10 text-muted hover:text-foreground sm:size-8 pointer-coarse:size-10",
+            "relative size-10 text-muted hover:text-foreground sm:size-9 pointer-coarse:size-11",
             isDestructive && "text-error hover:text-error",
           )}
         >

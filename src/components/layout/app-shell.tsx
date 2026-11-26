@@ -451,7 +451,7 @@ export function AppShell({
                 onClick={() => setCommandOpen(true)}
                 aria-label={isMac ? "Ir para tela ou buscar (⌘K)" : "Ir para tela ou buscar (Ctrl+K)"}
                 aria-keyshortcuts="Control+K Meta+K"
-                className="size-10 text-muted hover:text-foreground sm:size-8 lg:hidden pointer-coarse:size-10"
+                className="size-10 text-muted hover:text-foreground sm:size-9 lg:hidden pointer-coarse:size-11"
               >
                 <Search aria-hidden="true" strokeWidth={1.75} className="size-4" />
               </Button>

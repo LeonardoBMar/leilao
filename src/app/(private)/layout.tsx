@@ -16,7 +16,7 @@ import { FollowedLotsNav } from "@/features/lots/components/followed-lots-nav";
  */
 export default function PrivateLayout({ children }: LayoutProps<"/">) {
   const account = (
-    <Suspense fallback={<Skeleton className="size-10 rounded-full sm:size-8 pointer-coarse:size-10" />}>
+    <Suspense fallback={<Skeleton className="size-10 rounded-full sm:size-9 pointer-coarse:size-11" />}>
       <UserMenu variant="header" />
     </Suspense>
   );
@@ -26,7 +26,7 @@ export default function PrivateLayout({ children }: LayoutProps<"/">) {
     </Suspense>
   );
   const notifications = (
-    <Suspense fallback={<Skeleton className="size-10 rounded-md sm:size-8 pointer-coarse:size-10" />}>
+    <Suspense fallback={<Skeleton className="size-10 rounded-md sm:size-9 pointer-coarse:size-11" />}>
       <NotificationsMenu />
     </Suspense>
   );
