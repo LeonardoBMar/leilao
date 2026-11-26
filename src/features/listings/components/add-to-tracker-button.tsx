@@ -16,6 +16,8 @@ type AddToTrackerButtonProps = {
   variant?: ButtonProps["variant"];
   size?: ButtonProps["size"];
   className?: string;
+  disabled?: boolean;
+  onPendingChange?: (pending: boolean) => void;
   onAdded?: () => void;
 };
 
@@ -27,6 +29,8 @@ export function AddToTrackerButton({
   variant,
   size = "sm",
   className = "w-fit",
+  disabled = false,
+  onPendingChange,
   onAdded,
 }: AddToTrackerButtonProps) {
   const router = useRouter();
@@ -40,24 +44,31 @@ export function AddToTrackerButton({
       size={size}
       variant={resolvedVariant}
       className={className}
+      disabled={disabled}
       loading={isPending}
       loadingLabel={isOpenMode ? "Abrindo…" : "Adicionando…"}
-      onClick={() =>
+      onClick={() => {
+        if (disabled || isPending) return;
+        onPendingChange?.(true);
         startTransition(async () => {
-          const result = await addListingToTrackerAction(listingId);
-          if (result.status !== "success") {
-            if (result.status === "error") toast.error(result.message);
-            return;
+          try {
+            const result = await addListingToTrackerAction(listingId);
+            if (result.status !== "success") {
+              if (result.status === "error") toast.error(result.message);
+              return;
+            }
+            onAdded?.();
+            const { href } = result.data;
+            if (isOpenMode) {
+              router.push(href);
+              return;
+            }
+            toast.success(result.message, { action: { label: "Abrir análise", onClick: () => router.push(href) } });
+          } finally {
+            onPendingChange?.(false);
           }
-          onAdded?.();
-          const { href } = result.data;
-          if (isOpenMode) {
-            router.push(href);
-            return;
-          }
-          toast.success(result.message, { action: { label: "Abrir análise", onClick: () => router.push(href) } });
-        })
-      }
+        });
+      }}
     >
       {isOpenMode ? (
         <>

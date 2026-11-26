@@ -58,6 +58,7 @@ export function ListingQuickDrawer({
   onCloseAutoFocus,
 }: ListingQuickDrawerProps) {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const [isFooterBusy, setIsFooterBusy] = useState(false);
   const open = controlledOpen ?? uncontrolledOpen;
   const setOpen = onOpenChange ?? setUncontrolledOpen;
   const isOpen = item.status === "open";
@@ -267,6 +268,8 @@ export function ListingQuickDrawer({
                 variant="secondary"
                 size="md"
                 className="w-full md:w-auto"
+                disabled={isFooterBusy}
+                onPendingChange={setIsFooterBusy}
                 onAdded={() => setOpen(false)}
               />
               <AddToTrackerButton
@@ -276,6 +279,8 @@ export function ListingQuickDrawer({
                 variant="primary"
                 size="md"
                 className="w-full md:w-auto"
+                disabled={isFooterBusy}
+                onPendingChange={setIsFooterBusy}
               />
             </>
           ) : null}
