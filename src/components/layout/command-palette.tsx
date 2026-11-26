@@ -487,7 +487,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                   inputRef.current?.focus();
                 }}
                 aria-label="Limpar busca"
-                className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted transition-colors outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:size-10"
+                className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted transition-colors outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:size-11"
               >
                 <X aria-hidden="true" className="size-3.5" />
               </button>
@@ -506,11 +506,13 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             </DialogClose>
           </div>
 
-          {trimmedQuery.length > 0 && items.length > 0 ? (
-            <span role="status" aria-live="polite" className="sr-only">
-              {items.length === 1 ? "1 resultado encontrado" : `${items.length} resultados encontrados`}
-            </span>
-          ) : null}
+          <span role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+            {trimmedQuery.length > 0 && items.length > 0
+              ? items.length === 1
+                ? "1 resultado encontrado"
+                : `${items.length} resultados encontrados`
+              : ""}
+          </span>
 
           <div className="max-h-[min(20rem,50dvh)] overflow-y-auto overscroll-contain p-1.5">
             {items.length === 0 ? (

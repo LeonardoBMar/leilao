@@ -175,7 +175,7 @@ export function NotificationsPopover({
                   {alerts.map((alert) => {
                     const href = alert.trackedLotId ? (`/lotes/${alert.trackedLotId}` as const) : ("/alertas" as const);
                     return (
-                      <li key={alert.id} className="flex items-center gap-1">
+                      <li key={alert.id} className="flex items-center gap-2">
                         <Link
                           href={href}
                           onClick={() => setOpen(false)}
