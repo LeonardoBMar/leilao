@@ -138,7 +138,7 @@ export function ListingCard({ item, header, footer, eager = false, compact = fal
                 <span>Sem lance viável</span>
               ) : (
                 <span>
-                  Lim. <Money value={item.estimate.limit.maxBid} className="font-medium text-foreground-secondary" />
+                  Limite <Money value={item.estimate.limit.maxBid} className="font-medium text-foreground-secondary" />
                 </span>
               )}
               {fit === null ? null : <Badge variant={LIMIT_FIT_VARIANTS[fit]}>{LIMIT_FIT_LABELS[fit]}</Badge>}
@@ -166,7 +166,7 @@ export function ListingCard({ item, header, footer, eager = false, compact = fal
           href={item.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="ml-auto inline-flex items-center gap-1 text-label text-accent hover:underline"
+          className="ml-auto inline-flex items-center gap-1 rounded-sm text-label text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent"
         >
           {item.sourceName}
           <ExternalLink aria-hidden="true" className="size-3.5" />
@@ -254,32 +254,15 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
 
   return (
     <article className="grid w-full grid-cols-[6.5rem_minmax(0,1fr)] gap-x-3.5 gap-y-2.5">
-      <ListingQuickDrawer
-        item={item}
-        trigger={
-          <button
-            type="button"
-            aria-label={`Inspecionar ${fullTitle}`}
-            className="group relative row-span-2 aspect-4/3 overflow-clip rounded-md bg-surface-subtle outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent"
-          >
-            {item.photoUrl ? (
-              <Image
-                src={item.photoUrl}
-                alt=""
-                fill
-                unoptimized
-                loading="lazy"
-                sizes="8rem"
-                className="object-cover transition-transform duration-200 ease-[var(--ease-out)] group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-              />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center text-muted-subtle transition-colors group-hover:text-foreground">
-                <Car aria-hidden="true" className="size-6" />
-              </div>
-            )}
-          </button>
-        }
-      />
+      <div className="relative aspect-4/3 overflow-clip rounded-md bg-surface-subtle sm:row-span-2">
+        {item.photoUrl ? (
+          <Image src={item.photoUrl} alt="" fill unoptimized loading="lazy" sizes="8rem" className="object-cover" />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-muted-subtle">
+            <Car aria-hidden="true" className="size-6" />
+          </div>
+        )}
+      </div>
       <div className="grid min-w-0 gap-2">
         <div className="grid min-w-0 gap-1">
           <h3 className="min-w-0 text-body font-semibold text-foreground">
@@ -288,8 +271,8 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
               trigger={
                 <button
                   type="button"
-                  title={fullTitle}
-                  className="line-clamp-2 max-w-full rounded-sm text-left outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent"
+                  title={`Inspecionar ${fullTitle}`}
+                  className="group line-clamp-2 max-w-full rounded-sm text-left outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent"
                 >
                   {item.title}
                   {item.modelYear ? (
@@ -314,17 +297,17 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
           ) : null}
         </div>
 
-        <dl className="grid grid-cols-3 gap-x-3 gap-y-1 tabular-nums">
+        <dl className="flex flex-wrap gap-x-4 gap-y-1.5 tabular-nums">
           <div className="grid gap-0.5">
             <dt className="text-caption text-muted">Lance</dt>
-            <dd className="text-label font-semibold text-foreground">
+            <dd className="text-label font-semibold whitespace-nowrap text-foreground">
               <Money value={bid} />
             </dd>
           </div>
           {price && price.kind !== "insufficient" ? (
             <div className="grid gap-0.5">
               <dt className="text-caption text-muted">Provável</dt>
-              <dd className="text-label font-medium text-foreground-secondary">
+              <dd className="text-label font-medium whitespace-nowrap text-foreground-secondary">
                 <Money value={price.median} />
               </dd>
             </div>
@@ -332,7 +315,7 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
           {limit && limit.kind !== "insufficient" ? (
             <div className="grid gap-0.5">
               <dt className="text-caption text-muted">Limite</dt>
-              <dd className="text-label font-medium text-foreground-secondary">
+              <dd className="text-label font-medium whitespace-nowrap text-foreground-secondary">
                 {limit.maxBid !== null ? <Money value={limit.maxBid} /> : "Sem lance viável"}
               </dd>
             </div>
@@ -350,13 +333,13 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
             <span className="inline-flex items-center gap-1.5">
               <MapPin aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
               {item.city}/{item.state}
+              {item.distanceKm === null ? null : ` · ${Math.round(item.distanceKm)} km`}
             </span>
           ) : null}
         </p>
       </div>
-      <div className="col-start-2 flex flex-wrap items-center gap-2">
+      <div className="col-span-full flex flex-wrap items-center gap-2 sm:col-start-2">
         <TrackerAction item={item} openDirectly variant="secondary" />
-        <ListingQuickDrawer item={item} />
         {footer}
       </div>
     </article>
