@@ -40,20 +40,24 @@ export async function loadPlaceLookup(): Promise<PlaceLookup> {
 }
 
 /**
- * Regiões ativas configuradas pelos usuários (`user_preferences`, D-89) + fallback `DEFAULT_REGION`.
- * Deduplicadas por centro e raio, para manter a agenda de revisitas de 6 h alinhada à região real de cada usuário.
+ * Regiões ativas configuradas pelos usuários (`user_preferences`, D-89) + fallback `DEFAULT_REGION` quando há
+ * usuários sem preferências salvas. Deduplicadas por centro e raio para manter a agenda de revisitas de 6 h alinhada.
  */
 export async function loadActiveRegions(): Promise<RegionConfig[]> {
-  const rows = await db.userPreference.findMany({
-    select: {
-      radiusKm: true,
-      municipality: { select: { ibgeCode: true, name: true, state: true, latitude: true, longitude: true } },
-    },
-  });
-  if (rows.length === 0) return [DEFAULT_REGION];
+  const [rows, profileCount] = await Promise.all([
+    db.userPreference.findMany({
+      select: {
+        radiusKm: true,
+        municipality: { select: { ibgeCode: true, name: true, state: true, latitude: true, longitude: true } },
+      },
+    }),
+    db.userProfile.count(),
+  ]);
+  const regions: RegionConfig[] = rows.map((row) => resolveRegion(row));
+  if (rows.length === 0 || profileCount > rows.length) regions.push(DEFAULT_REGION);
+
   const unique = new Map<string, RegionConfig>();
-  for (const row of rows) {
-    const region = resolveRegion(row);
+  for (const region of regions) {
     const key = `${region.center.latitude.toFixed(4)}|${region.center.longitude.toFixed(4)}|${region.radiusKm}`;
     if (!unique.has(key)) unique.set(key, region);
   }
