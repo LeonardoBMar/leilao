@@ -45,7 +45,7 @@ function DialogContent({ className, children, hideClose = false, ...props }: Dia
         {!hideClose ? (
           <DialogPrimitive.Close
             aria-label="Fechar"
-            className="absolute top-3.5 right-3.5 flex size-10 items-center justify-center rounded-md text-muted transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] sm:size-9"
+            className="absolute top-3.5 right-3.5 flex size-10 items-center justify-center rounded-md text-muted transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] sm:size-9 pointer-coarse:size-11"
           >
             <X aria-hidden="true" className="size-4.5" />
           </DialogPrimitive.Close>
@@ -86,7 +86,7 @@ function DrawerContent({ className, children, side = "right", ...props }: Drawer
         {children}
         <DialogPrimitive.Close
           aria-label="Fechar"
-          className="absolute top-3.5 right-3.5 flex size-10 items-center justify-center rounded-md text-muted transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] sm:size-9"
+          className="absolute top-3.5 right-3.5 flex size-10 items-center justify-center rounded-md text-muted transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] sm:size-9 pointer-coarse:size-11"
         >
           <X aria-hidden="true" className="size-4.5" />
         </DialogPrimitive.Close>

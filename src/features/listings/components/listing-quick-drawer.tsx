@@ -92,7 +92,11 @@ export function ListingQuickDrawer({
               {item.title}
               {item.modelYear ? <span className="font-medium text-muted tabular-nums"> {item.modelYear}</span> : null}
             </DialogTitle>
-            {details.length > 0 ? <DialogDescription>{details.join(" · ")}</DialogDescription> : null}
+            {details.length > 0 ? (
+              <DialogDescription>{details.join(" · ")}</DialogDescription>
+            ) : (
+              <DialogDescription className="sr-only">Detalhes e estimativa do anúncio.</DialogDescription>
+            )}
           </DialogHeader>
         </div>
 

@@ -372,7 +372,7 @@ export function AppShell({
                 aria-keyshortcuts="Control+B Meta+B"
                 className={cn(
                   "inline-flex shrink-0 items-center justify-center rounded-md text-muted-subtle transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-primary-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.95] motion-reduce:transition-none motion-reduce:active:scale-100",
-                  collapsed ? "h-9 w-full pointer-coarse:h-11" : "size-8 pointer-coarse:size-10",
+                  collapsed ? "h-9 w-full pointer-coarse:h-11" : "size-8 pointer-coarse:size-11",
                 )}
               >
                 {collapsed ? (

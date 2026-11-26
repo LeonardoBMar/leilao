@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronsUpDown, CircleHelp, LoaderCircle, LogOut, SlidersHorizontal, UserRound } from "lucide-react";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import Link from "next/link";
 import { useSyncExternalStore, useTransition } from "react";
 
@@ -14,6 +15,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  toast,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -155,7 +157,12 @@ export function UserMenuDropdown({ email, devBypass, variant = "header" }: UserM
               event.preventDefault();
               if (isPending) return;
               startTransition(async () => {
-                await logoutAction();
+                try {
+                  await logoutAction();
+                } catch (error) {
+                  if (isRedirectError(error)) throw error;
+                  toast.error("Não foi possível sair. Tente novamente.");
+                }
               });
             }}
           >

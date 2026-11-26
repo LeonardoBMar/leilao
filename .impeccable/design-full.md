@@ -302,12 +302,12 @@ Regras:
 | `body` | `14px / 1.45` | `400` | Texto padrão, controles, células e navegação (500). |
 | `label` | `13px / 1.35` | `500` | Labels de campo e tabs. |
 | `caption` | `12px / 1.35` | `400` | Metadado, helper, timestamp e cabeçalho de tabela (500). |
-| `overline` | `12px / 1.35` | `500` | Linha de contexto em `font-mono`, caixa alta, `0.02em`, cor `muted`. |
+| `overline` | `12px / 1.35` | `500` | Linha de contexto em `font-mono`, caixa alta, `0.01em`, cor `muted`. |
 
 Regras:
 
 - Não usar texto menor que 12 px.
-- Abaixo de `md` (768 px), `display` usa `36px / 42px` e `heading-1` usa `26px / 32px`. Os demais tokens permanecem.
+- Abaixo de `md` (768 px), `display` usa `34px / 1.08` e `heading-1` usa `24px / 1.2`. Os demais tokens permanecem.
 - A escala é implementada em `@theme inline`: use `text-heading-1`, `text-heading-2`, `text-heading-3`, `text-body-lg`, `text-body`, `text-label`, `text-caption` e `text-overline`. Cada classe aplica tamanho e linha; títulos, label e overline também aplicam seu peso semântico. Botões aplicam `font-semibold`.
 - `cn()` reconhece esses nomes como tamanhos tipográficos, permitindo combinar `text-heading-2` e `text-foreground` sem apagar nenhuma classe.
 - Corpo de texto não usa peso 500 para compensar contraste insuficiente.
