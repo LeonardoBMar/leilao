@@ -76,7 +76,7 @@ export async function DashboardKpis() {
               <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
                 <Calculator aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
                 Para analisar
-                <span className="sr-only"> — ir para a seção abaixo</span>
+                <span className="sr-only"> — ir para a seção abaixo.</span>
               </span>
               <ArrowDown
                 aria-hidden="true"
@@ -113,13 +113,19 @@ export async function DashboardKpis() {
           >
             <div className="flex items-center justify-between gap-2">
               <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
-                <Eye aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
+                <Eye
+                  aria-hidden="true"
+                  className={cn("size-3.5 shrink-0", followed.aboveLimit > 0 ? "text-error" : "text-muted-subtle")}
+                />
                 Acompanhados
-                <span className="sr-only"> — ir para a seção abaixo</span>
+                <span className="sr-only"> — ir para a seção abaixo.</span>
               </span>
               <ArrowDown
                 aria-hidden="true"
-                className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-y-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-y-0"
+                className={cn(
+                  "size-3.5 shrink-0 transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-y-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-y-0",
+                  followed.aboveLimit > 0 ? "text-muted" : "text-muted-subtle",
+                )}
               />
             </div>
             <p
@@ -152,11 +158,11 @@ export async function DashboardKpis() {
                 <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
                   <ClipboardList aria-hidden="true" className="size-3.5 shrink-0 text-warning" />
                   Pendências
-                  <span className="sr-only"> — ir para a seção abaixo</span>
+                  <span className="sr-only"> — ir para a seção abaixo.</span>
                 </span>
                 <ArrowDown
                   aria-hidden="true"
-                  className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-y-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-y-0"
+                  className="size-3.5 shrink-0 text-muted transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-y-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-y-0"
                 />
               </div>
               <p className="text-heading-2 font-semibold text-foreground tabular-nums">{pendingTotal}</p>
@@ -168,7 +174,7 @@ export async function DashboardKpis() {
                 <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
                   <ClipboardList aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
                   Pendências
-                  <span className="sr-only"> — abrir Minhas análises</span>
+                  <span className="sr-only"> — abrir Minhas análises.</span>
                 </span>
                 <ArrowUpRight
                   aria-hidden="true"
@@ -188,7 +194,7 @@ export async function DashboardKpis() {
                 <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
                   <CalendarClock aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
                   Próximo no catálogo
-                  <span className="sr-only"> — abrir página do leilão</span>
+                  <span className="sr-only"> — abrir página do leilão.</span>
                 </span>
                 <ArrowUpRight
                   aria-hidden="true"
@@ -218,7 +224,7 @@ export async function DashboardKpis() {
                 <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
                   <CalendarClock aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
                   Próximo no catálogo
-                  <span className="sr-only"> — ir para a seção abaixo</span>
+                  <span className="sr-only"> — ir para a seção abaixo.</span>
                 </span>
                 <ArrowDown
                   aria-hidden="true"
@@ -273,7 +279,7 @@ export async function DecisionIndicator() {
   const indicator = await getLimitIndicator();
   const ratio = indicator.comparable > 0 ? indicator.withinLimit / indicator.comparable : 0;
   return (
-    <section className={cn(cardVariants(), "grid gap-3 p-5 md:p-6")}>
+    <section aria-labelledby="decision-indicator" className={cn(cardVariants(), "grid gap-3 p-5 md:p-6")}>
       <h2 id="decision-indicator" className="flex items-center gap-2 text-heading-3 text-foreground">
         <Target aria-hidden="true" className="size-4 shrink-0 text-muted" />
         Suas decisões antes do resultado

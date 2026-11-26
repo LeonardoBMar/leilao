@@ -95,11 +95,12 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
         <div className="grid content-start gap-10">
           <Section
             id="to-analyze"
+            aria-labelledby="to-analyze-heading"
             tabIndex={-1}
             className="scroll-mt-20 gap-3 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4"
           >
             <div className="grid gap-1">
-              <SectionTitle className="flex items-center gap-2">
+              <SectionTitle id="to-analyze-heading" className="flex items-center gap-2">
                 <Calculator aria-hidden="true" className="size-4 shrink-0 text-muted" />
                 Para analisar agora
               </SectionTitle>
@@ -120,10 +121,11 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
 
           <Section
             id="followed-lots"
+            aria-labelledby="followed-lots-heading"
             tabIndex={-1}
             className="scroll-mt-20 gap-2 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4"
           >
-            <SectionTitle className="flex items-center gap-2">
+            <SectionTitle id="followed-lots-heading" className="flex items-center gap-2">
               <Eye aria-hidden="true" className="size-4 shrink-0 text-muted" />
               Lotes acompanhados
             </SectionTitle>
@@ -140,11 +142,12 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
 
           <Section
             id="region-auctions"
+            aria-labelledby="region-auctions-heading"
             tabIndex={-1}
             className="scroll-mt-20 gap-3 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4"
           >
             <div className="grid gap-1">
-              <SectionTitle className="flex items-center gap-2">
+              <SectionTitle id="region-auctions-heading" className="flex items-center gap-2">
                 <CalendarDays aria-hidden="true" className="size-4 shrink-0 text-muted" />
                 Próximos leilões na região
               </SectionTitle>

@@ -39,7 +39,7 @@ export function DashboardGuidePopover() {
           </p>
         </div>
 
-        <div className="grid gap-3 px-4 py-3.5">
+        <div className="grid max-h-[min(28rem,70dvh)] gap-3 overflow-y-auto overscroll-contain px-4 py-3.5">
           <GlossaryContent onNavigate={() => setOpen(false)} />
         </div>
       </PopoverContent>
