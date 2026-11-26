@@ -582,6 +582,25 @@ export function AppShell({
                 <Search aria-hidden="true" strokeWidth={1.75} className="size-4" />
                 <span className="hidden text-label font-normal sm:inline">Buscar</span>
               </Button>
+              <Tooltip delayDuration={200}>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setGuideDialogOpen(true)}
+                    aria-label="Guia rápido e atalhos (?)"
+                    aria-haspopup="dialog"
+                    aria-keyshortcuts="?"
+                    className="hidden size-9 text-muted hover:text-foreground sm:inline-flex pointer-coarse:size-11"
+                  >
+                    <CircleHelp aria-hidden="true" strokeWidth={1.75} className="size-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" sideOffset={6}>
+                  Guia rápido e atalhos (?)
+                </TooltipContent>
+              </Tooltip>
               {notifications}
               {sidebarAccount ? <div className="lg:hidden">{account}</div> : account}
             </div>
