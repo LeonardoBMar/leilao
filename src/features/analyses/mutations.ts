@@ -127,15 +127,33 @@ export async function createDraft(lotId: string, sourceId?: string): Promise<Res
   }
 }
 
-export type SaveDraftError = "not_found" | "not_draft";
+export type SaveDraftError = "not_found" | "not_draft" | "stale_draft";
 
-export async function saveDraft(id: string, form: AnalysisForm): Promise<Result<null, SaveDraftError>> {
+export async function saveDraft(
+  id: string,
+  form: AnalysisForm,
+  expectedUpdatedAt?: Date,
+): Promise<Result<{ updatedAt: Date }, SaveDraftError>> {
   const user = await requireUser();
+  const updatedAt = new Date();
   const { count } = await db.analysis.updateMany({
-    where: { id, ownerId: user.id, status: "draft" },
-    data: toAnalysisData(form),
+    where: {
+      id,
+      ownerId: user.id,
+      status: "draft",
+      ...(expectedUpdatedAt ? { updatedAt: expectedUpdatedAt } : {}),
+    },
+    data: { ...toAnalysisData(form), updatedAt },
   });
-  return count > 0 ? ok(null) : err(await whyNotDraft(id, user.id));
+  if (count > 0) return ok({ updatedAt });
+  if (expectedUpdatedAt) {
+    const stillDraft = await db.analysis.findFirst({
+      where: { id, ownerId: user.id, status: "draft" },
+      select: { id: true },
+    });
+    if (stillDraft) return err("stale_draft");
+  }
+  return err(await whyNotDraft(id, user.id));
 }
 
 export type FixAnalysisError = SaveDraftError | "incomplete" | "market_value_not_positive";
@@ -268,7 +286,8 @@ export async function fixAllReadyDrafts(analysisIds?: readonly string[]): Promis
   );
 
   const fixed = results.reduce((total, { count }) => total + count, 0);
-  return { fixed, skipped };
+  const skippedConcurrent = ready.length - fixed;
+  return { fixed, skipped: skipped + skippedConcurrent };
 }
 
 /** Descarta o rascunho. Versões fixadas nunca são removidas. */
@@ -280,8 +299,8 @@ export async function discardDraft(id: string): Promise<Result<{ lotId: string }
   });
   if (!draft) return err(await whyNotDraft(id, user.id));
 
-  await db.analysis.deleteMany({ where: { id, ownerId: user.id, status: "draft" } });
-  return ok(draft);
+  const { count } = await db.analysis.deleteMany({ where: { id, ownerId: user.id, status: "draft" } });
+  return count > 0 ? ok(draft) : err(await whyNotDraft(id, user.id));
 }
 
 async function whyNotDraft(id: string, ownerId: string): Promise<SaveDraftError> {

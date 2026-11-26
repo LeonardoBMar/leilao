@@ -29,6 +29,7 @@ const CREATE_ERRORS = {
 const FIX_ERRORS = {
   not_found: NOT_FOUND,
   not_draft: "Esta análise já foi fixada e não pode ser alterada. Crie uma nova versão para revisar.",
+  stale_draft: "Este rascunho foi atualizado por outra ação mais recente.",
   incomplete: "Para fixar, preencha os campos pendentes.",
   market_value_not_positive: "Para fixar, o valor de mercado precisa ser maior que zero.",
 } satisfies Record<FixAnalysisError, string>;
@@ -49,7 +50,11 @@ export async function createAnalysisAction(lotId: string, sourceId?: string): Pr
 }
 
 /** "Salvar rascunho" ou "Fixar análise", conforme o botão acionado (`intent`). */
-export async function saveAnalysisAction(id: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+export async function saveAnalysisAction(
+  id: string,
+  _prev: ActionState<{ updatedAt?: string }>,
+  formData: FormData,
+): Promise<ActionState<{ updatedAt?: string }>> {
   const parsedId = analysisIdSchema.safeParse(id);
   if (!parsedId.success) return failure(NOT_FOUND);
   const parsed = analysisFormSchema.safeParse(Object.fromEntries(formData));
@@ -61,7 +66,7 @@ export async function saveAnalysisAction(id: string, _prev: ActionState, formDat
 
   if (form.intent === "draft") {
     refresh();
-    return { status: "success", message: "Rascunho salvo." };
+    return { status: "success", message: "Rascunho salvo.", data: { updatedAt: saved.value.updatedAt.toISOString() } };
   }
 
   // O rascunho já foi salvo acima; pendências voltam como erro de cada campo (CA-07).
@@ -76,6 +81,7 @@ export async function saveAnalysisAction(id: string, _prev: ActionState, formDat
   const fixed = await fixAnalysis(parsedId.data, form);
   if (!fixed.ok) {
     if (fixed.error === "market_value_not_positive") {
+      refresh();
       return {
         status: "error",
         message: FIX_ERRORS.market_value_not_positive,
@@ -87,23 +93,32 @@ export async function saveAnalysisAction(id: string, _prev: ActionState, formDat
   }
 
   refresh();
-  return { status: "success", message: "Análise fixada. As premissas e o limite foram preservados." };
+  return { status: "success", message: "Análise fixada. As premissas e o limite foram preservados.", data: {} };
 }
 
 /**
  * Salvamento automático do rascunho enquanto o usuário digita. Silencioso: não revalida a tela (o formulário é a
  * fonte do que está escrito) e, com campo inválido, não grava nada; o "Salvar rascunho" mostra os erros.
+ * Usa guarda otimista (`expectedUpdatedAt`) para impedir que um autosave atrasado sobrescreva uma edição mais nova.
  */
-export async function autosaveDraftAction(id: string, formData: FormData): Promise<ActionState> {
+export async function autosaveDraftAction(
+  id: string,
+  formData: FormData,
+  expectedUpdatedAtIso?: string,
+): Promise<ActionState<{ updatedAt: string }>> {
   const parsedId = analysisIdSchema.safeParse(id);
   if (!parsedId.success) return failure(NOT_FOUND);
   const parsed = analysisFormSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return validationError(parsed.error, formData);
 
-  const saved = await saveDraft(parsedId.data, parsed.data);
+  const expectedUpdatedAt =
+    expectedUpdatedAtIso && !Number.isNaN(Date.parse(expectedUpdatedAtIso))
+      ? new Date(expectedUpdatedAtIso)
+      : undefined;
+  const saved = await saveDraft(parsedId.data, parsed.data, expectedUpdatedAt);
   if (!saved.ok) return failure(FIX_ERRORS[saved.error], formData);
 
-  return { status: "success" };
+  return { status: "success", data: { updatedAt: saved.value.updatedAt.toISOString() } };
 }
 
 export async function discardDraftAction(id: string): Promise<ActionState> {

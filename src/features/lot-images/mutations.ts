@@ -15,6 +15,18 @@ import { createUploadUrl, inspectUpload, removeObjects } from "@/server/storage"
 
 import type { ConfirmUploadInput, RequestUploadInput } from "./schemas";
 
+type DbTx = Parameters<Parameters<typeof db.$transaction>[0]>[0];
+
+/** Serializa mutações concorrentes na galeria do mesmo lote adquirindo lock na linha pai (`lots`). */
+async function lockLotForOwner(tx: DbTx, lotId: string, ownerId: string): Promise<boolean> {
+  const rows = await tx.$queryRaw<{ id: string }[]>`
+    SELECT id::text AS id FROM lots
+    WHERE id = ${lotId}::uuid AND owner_id = ${ownerId}::uuid
+    FOR UPDATE
+  `;
+  return rows.length > 0;
+}
+
 export type RequestUploadError = "lot_not_found" | "limit_reached" | "storage_unavailable" | ImageCheckError;
 
 /**
@@ -53,8 +65,11 @@ async function insertLotImage(
   mimeType: string,
   sizeBytes: number,
   forceNotCover = false,
-): Promise<"ok" | "limit_reached"> {
+): Promise<"ok" | "limit_reached" | "lot_not_found"> {
   return db.$transaction(async (tx) => {
+    const locked = await lockLotForOwner(tx, lotId, ownerId);
+    if (!locked) return "lot_not_found";
+
     const images = await tx.lotImage.findMany({
       where: { lotId, ownerId },
       select: { sortOrder: true, isCover: true },
@@ -111,13 +126,16 @@ export async function confirmImageUpload(
 
   try {
     const outcome = await insertLotImage(lotId, user.id, input, mimeType, uploaded.size);
-    if (outcome === "limit_reached") {
+    if (outcome !== "ok") {
       await removeObjects([input.path]);
-      return err("limit_reached");
+      return err(outcome);
     }
     return ok(null);
   } catch (error) {
-    if (!isUniqueViolation(error)) throw error;
+    if (!isUniqueViolation(error)) {
+      await removeObjects([input.path]);
+      throw error;
+    }
     const existing = await db.lotImage.findFirst({
       where: { storagePath: input.path, ownerId: user.id },
       select: { id: true },
@@ -128,13 +146,14 @@ export async function confirmImageUpload(
     // Colisão concorrente pela capa única (`lot_images_one_cover_per_lot`): registra como foto comum.
     try {
       const retry = await insertLotImage(lotId, user.id, input, mimeType, uploaded.size, true);
-      if (retry === "limit_reached") {
+      if (retry !== "ok") {
         await removeObjects([input.path]);
-        return err("limit_reached");
+        return err(retry);
       }
       return ok(null);
     } catch (retryError) {
       if (isUniqueViolation(retryError)) return ok(null);
+      await removeObjects([input.path]);
       throw retryError;
     }
   }
@@ -142,59 +161,81 @@ export async function confirmImageUpload(
 
 export type ImageError = "not_found";
 
-/** Define a capa (no máximo uma por lote, garantido por índice único parcial). */
+/** Define a capa (no máximo uma por lote, garantido por índice único parcial e lock por lote). */
 export async function setCoverImage(imageId: string): Promise<Result<null, ImageError>> {
   const user = await requireUser();
-  const image = await db.lotImage.findFirst({ where: { id: imageId, ownerId: user.id }, select: { lotId: true } });
-  if (!image) return err("not_found");
+  const updated = await db.$transaction(async (tx) => {
+    const initial = await tx.lotImage.findFirst({ where: { id: imageId, ownerId: user.id }, select: { lotId: true } });
+    if (!initial) return false;
+    if (!(await lockLotForOwner(tx, initial.lotId, user.id))) return false;
 
-  await db.$transaction([
-    db.lotImage.updateMany({
-      where: { lotId: image.lotId, ownerId: user.id, isCover: true },
+    const current = await tx.lotImage.findFirst({ where: { id: imageId, ownerId: user.id }, select: { id: true } });
+    if (!current) return false;
+
+    await tx.lotImage.updateMany({
+      where: { lotId: initial.lotId, ownerId: user.id, isCover: true },
       data: { isCover: false },
-    }),
-    db.lotImage.updateMany({ where: { id: imageId, ownerId: user.id }, data: { isCover: true } }),
-  ]);
-  return ok(null);
+    });
+    const { count } = await tx.lotImage.updateMany({
+      where: { id: imageId, ownerId: user.id },
+      data: { isCover: true },
+    });
+    return count > 0;
+  });
+  return updated ? ok(null) : err("not_found");
 }
 
-/** Troca a posição da foto com a vizinha (ordem da galeria). */
+/** Troca a posição da foto com a vizinha (ordem da galeria), serializada sob lock do lote. */
 export async function moveImage(imageId: string, direction: "up" | "down"): Promise<Result<null, ImageError>> {
   const user = await requireUser();
-  const image = await db.lotImage.findFirst({ where: { id: imageId, ownerId: user.id }, select: { lotId: true } });
-  if (!image) return err("not_found");
+  const found = await db.$transaction(async (tx) => {
+    const initial = await tx.lotImage.findFirst({ where: { id: imageId, ownerId: user.id }, select: { lotId: true } });
+    if (!initial) return false;
+    if (!(await lockLotForOwner(tx, initial.lotId, user.id))) return false;
 
-  const images = await db.lotImage.findMany({
-    where: { lotId: image.lotId, ownerId: user.id },
-    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-    select: { id: true },
+    const images = await tx.lotImage.findMany({
+      where: { lotId: initial.lotId, ownerId: user.id },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+      select: { id: true },
+    });
+    const index = images.findIndex((item) => item.id === imageId);
+    if (index < 0) return false;
+    const target = direction === "up" ? index - 1 : index + 1;
+    const neighbor = images[target];
+    if (!neighbor) return true;
+
+    // Renumera toda a galeria (0..n-1) com a troca aplicada: ordem estável mesmo com valores repetidos.
+    const reordered = images.map((item) => item.id);
+    reordered[index] = neighbor.id;
+    reordered[target] = imageId;
+    for (let sortOrder = 0; sortOrder < reordered.length; sortOrder++) {
+      const id = reordered[sortOrder];
+      if (id) await tx.lotImage.updateMany({ where: { id, ownerId: user.id }, data: { sortOrder } });
+    }
+    return true;
   });
-  const index = images.findIndex((item) => item.id === imageId);
-  const target = direction === "up" ? index - 1 : index + 1;
-  const neighbor = images[target];
-  if (index < 0 || !neighbor) return ok(null);
-
-  // Renumera toda a galeria (0..n-1) com a troca aplicada: ordem estável mesmo com valores repetidos.
-  const reordered = images.map((item) => item.id);
-  reordered[index] = neighbor.id;
-  reordered[target] = imageId;
-  await db.$transaction(
-    reordered.map((id, sortOrder) => db.lotImage.updateMany({ where: { id, ownerId: user.id }, data: { sortOrder } })),
-  );
-  return ok(null);
+  return found ? ok(null) : err("not_found");
 }
 
-/** Remove a foto do banco e depois o arquivo. Se era a capa, a próxima da galeria assume. */
+/** Remove a foto do banco e depois o arquivo. Se era a capa, a próxima da galeria assume sob lock do lote. */
 export async function deleteImage(imageId: string): Promise<Result<null, ImageError>> {
   const user = await requireUser();
   const deleted = await db.$transaction(async (tx) => {
+    const initial = await tx.lotImage.findFirst({
+      where: { id: imageId, ownerId: user.id },
+      select: { lotId: true },
+    });
+    if (!initial) return null;
+    if (!(await lockLotForOwner(tx, initial.lotId, user.id))) return null;
+
     const image = await tx.lotImage.findFirst({
       where: { id: imageId, ownerId: user.id },
       select: { lotId: true, storagePath: true, isCover: true },
     });
     if (!image) return null;
 
-    await tx.lotImage.deleteMany({ where: { id: imageId, ownerId: user.id } });
+    const { count } = await tx.lotImage.deleteMany({ where: { id: imageId, ownerId: user.id } });
+    if (count === 0) return null;
     if (image.isCover) {
       const next = await tx.lotImage.findFirst({
         where: { lotId: image.lotId, ownerId: user.id },

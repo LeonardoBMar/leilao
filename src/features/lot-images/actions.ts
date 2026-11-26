@@ -45,7 +45,10 @@ export async function requestImageUploadAction(lotId: string, file: unknown): Pr
   const parsedLot = lotIdSchema.safeParse(lotId);
   const parsed = requestUploadSchema.safeParse(file);
   if (!parsedLot.success) return failure(REQUEST_ERRORS.lot_not_found);
-  if (!parsed.success) return failure(REQUEST_ERRORS.unsupported_type);
+  if (!parsed.success) {
+    const sizeIssue = parsed.error.issues.some((issue) => issue.path[0] === "size");
+    return failure(sizeIssue ? REQUEST_ERRORS.too_large : REQUEST_ERRORS.unsupported_type);
+  }
 
   const result = await requestImageUpload(parsedLot.data, parsed.data);
   if (!result.ok) return failure(REQUEST_ERRORS[result.error]);

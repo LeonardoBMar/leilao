@@ -8,7 +8,7 @@ import type { CommissionMode } from "@/domain/finance/calculator";
 import { estimateFromFipe, type UserDefaultOverrides } from "@/domain/finance/defaults";
 import { type Cents, parseBRL } from "@/domain/money";
 import type { LotMarketReference } from "@/features/research/types";
-import { type ActionState, fieldValue, idleState } from "@/lib/action-state";
+import { type ActionState, fieldValue } from "@/lib/action-state";
 import { formatBps, formatMoneyInput } from "@/lib/format";
 
 import { autosaveDraftAction, saveAnalysisAction } from "../actions";
@@ -27,6 +27,8 @@ const AUTOSAVE_DELAY_MS = 1500;
 
 const centsToInput = (value: Cents | null) => (value === null ? undefined : formatMoneyInput(value));
 
+const initialSaveState: ActionState<{ updatedAt?: string }> = { status: "idle" };
+
 /** Rascunho da análise (SPEC `/analise/[id]`, RF-04): formulário + resumo ao vivo. */
 export function AnalysisEditor({
   analysis,
@@ -38,11 +40,18 @@ export function AnalysisEditor({
   costOverrides?: UserDefaultOverrides;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
-  const [state, formAction, pending] = useActionState(async (prev: ActionState, formData: FormData) => {
-    const next = await saveAnalysisAction(analysis.id, prev, formData);
-    if (next.status === "success" && next.message) toast.success(next.message);
-    return next;
-  }, idleState);
+  const lastSavedAtRef = useRef(analysis.updatedAt.toISOString());
+  const [state, formAction, pending] = useActionState(
+    async (prev: ActionState<{ updatedAt?: string }>, formData: FormData) => {
+      const next = await saveAnalysisAction(analysis.id, prev, formData);
+      if (next.status === "success") {
+        if (next.data?.updatedAt) lastSavedAtRef.current = next.data.updatedAt;
+        if (next.message) toast.success(next.message);
+      }
+      return next;
+    },
+    initialSaveState,
+  );
   const [inputs, setInputs] = useState(analysis.inputs);
   const [mode, setMode] = useState<CommissionMode | "">(analysis.inputs.commissionMode ?? "");
   const [intent, setIntent] = useState<"draft" | "fix">("draft");
@@ -84,7 +93,7 @@ export function AnalysisEditor({
         const snapshot = pendingData.current;
         pendingFlag.current = false;
         pendingData.current = null;
-        void autosaveDraftAction(analysisId, snapshot);
+        void autosaveDraftAction(analysisId, snapshot, lastSavedAtRef.current);
       } else {
         pendingFlag.current = false;
         pendingData.current = null;
@@ -129,11 +138,12 @@ export function AnalysisEditor({
       pendingFormDataRef.current = null;
       const seq = ++autosaveSeqRef.current;
       setAutosave({ kind: "saving" });
-      void autosaveDraftAction(analysis.id, formData).then(
+      void autosaveDraftAction(analysis.id, formData, lastSavedAtRef.current).then(
         (result) => {
           if (seq !== autosaveSeqRef.current) return;
           hasPendingAutosaveRef.current = false;
           if (result.status === "success") {
+            if (result.data?.updatedAt) lastSavedAtRef.current = result.data.updatedAt;
             setAutosave({ kind: "saved", at: new Date() });
           } else if (result.status === "error" && result.fieldErrors) {
             setAutosave({ kind: "invalid" });

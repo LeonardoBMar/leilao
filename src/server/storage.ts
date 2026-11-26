@@ -44,12 +44,17 @@ export async function inspectUpload(path: string): Promise<UploadedImage | null>
   const { data: signed } = await storage.createSignedUrl(path, 60);
   let detectedType: ImageMimeType | null = null;
   if (signed) {
-    const response = await fetch(signed.signedUrl, {
-      headers: { Range: `bytes=0-${HEADER_BYTES - 1}` },
-      cache: "no-store",
-      signal: AbortSignal.timeout(INSPECT_TIMEOUT_MS),
-    });
-    if (response.ok) detectedType = detectImageType(await readHeaderBytes(response));
+    try {
+      const response = await fetch(signed.signedUrl, {
+        headers: { Range: `bytes=0-${HEADER_BYTES - 1}` },
+        cache: "no-store",
+        signal: AbortSignal.timeout(INSPECT_TIMEOUT_MS),
+      });
+      if (response.ok) detectedType = detectImageType(await readHeaderBytes(response));
+    } catch (fetchError) {
+      console.error("Storage: falha ao inspecionar assinatura binária", fetchError);
+      return null;
+    }
   }
 
   return { size: info.size ?? 0, declaredType: info.contentType ?? null, detectedType };
