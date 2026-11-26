@@ -54,7 +54,7 @@ export async function CollectorStatusLine({ compact = false }: { compact?: boole
           {isAdmin ? (
             <Link
               href="/sistema"
-              className="inline-flex items-center rounded-sm tabular-nums outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:min-h-11"
+              className="inline-flex items-center rounded-sm tabular-nums underline decoration-border-strong underline-offset-2 outline-none hover:text-foreground hover:decoration-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:min-h-11"
             >
               {compact
                 ? `Coleta ${formatCompactDateTime(lastFinishedAt)}`

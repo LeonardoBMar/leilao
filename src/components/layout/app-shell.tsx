@@ -253,7 +253,8 @@ export function AppShell({
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (isEditableTarget(event.target)) return;
-      if (!event.altKey && !event.ctrlKey && !event.metaKey && event.key === "?") {
+      const isAltGr = event.getModifierState("AltGraph");
+      if (!event.metaKey && ((!event.altKey && !event.ctrlKey) || isAltGr) && event.key === "?") {
         if (document.querySelector('[role="dialog"]')) return;
         event.preventDefault();
         setGuideDialogOpen(true);

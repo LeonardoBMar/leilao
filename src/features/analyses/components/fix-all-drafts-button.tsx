@@ -131,7 +131,7 @@ export function FixAllDraftsButton({ drafts, totalCount, fixableTotal }: FixAllD
                   <span className="text-caption font-medium text-foreground tabular-nums">
                     {draft.isViable && draft.maxBid !== null ? (
                       <>
-                        Lim. <Money value={draft.maxBid} />
+                        Limite <Money value={draft.maxBid} />
                       </>
                     ) : (
                       <span className="text-muted">Sem lance viável</span>
@@ -164,7 +164,7 @@ export function FixAllDraftsButton({ drafts, totalCount, fixableTotal }: FixAllD
           ) : null}
           {drafts.length > 5 ? (
             <Link
-              href="/minhas-analises"
+              href="/minhas-analises?analise=rascunho"
               onClick={() => setOpen(false)}
               className="inline-flex min-h-10 w-fit items-center rounded-sm font-medium text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent sm:min-h-8 pointer-coarse:min-h-11"
             >
