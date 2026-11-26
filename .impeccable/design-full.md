@@ -188,7 +188,7 @@ Os nomes semânticos são a API visual do projeto. O código deve consumir `back
 
 | Token | Valor | Uso | Não usar para |
 | --- | --- | --- | --- |
-| `background` | `#FAFAFB` | Chrome cirúrgico: fundo do header fixo (`48px`) e da sidebar colapsável. | Fundo de campos. |
+| `background` | `#FAFAFB` | Chrome cirúrgico: fundo da sidebar colapsável (`264px ↔ 56px`). | Fundo de campos. |
 | `surface` | `#FFFFFF` | Canvas principal de conteúdo, cards, tabelas e formulários. | Criar camadas sem necessidade. |
 | `surface-subtle` | `#F3F4F6` | Superfície rebaixada: painéis de resumo/cálculo, campos readonly e grupos secundários. | Estados selecionados ou alertas. |
 | `surface-elevated` | `#FFFFFF` | Dialogs, menus, popovers e `CommandPalette` com sombra em camadas. | Cards comuns que não flutuam. |
@@ -357,10 +357,10 @@ Não misturar raios diferentes em elementos equivalentes. Inputs e botões lado 
 
 ```text
 shadow-none: none
-shadow-xs: 0 1px 1px rgba(21, 23, 28, 0.03)
-shadow-sm: 0 1px 2px rgba(21, 23, 28, 0.06), 0 0 0 1px rgba(21, 23, 28, 0.035)
-shadow-md: 0 8px 24px rgba(21, 23, 28, 0.10), 0 0 0 1px rgba(21, 23, 28, 0.04)
-shadow-lg: 0 20px 48px rgba(21, 23, 28, 0.16), 0 0 0 1px rgba(21, 23, 28, 0.04)
+shadow-xs: 0 1px 2px rgb(17 19 24 / 5%)
+shadow-sm: 0 1px 2px rgb(17 19 24 / 6%), 0 0 0 1px rgb(17 19 24 / 4%)
+shadow-md: 0 8px 24px rgb(17 19 24 / 8%), 0 2px 6px rgb(17 19 24 / 4%), 0 0 0 1px rgb(17 19 24 / 5%)
+shadow-lg: 0 20px 48px rgb(17 19 24 / 14%), 0 4px 12px rgb(17 19 24 / 6%), 0 0 0 1px rgb(17 19 24 / 6%)
 ```
 
 - A hierarquia vem da troca de superfície (papel, branco, papel rebaixado) e de linhas finas, não de sombra. Cards comuns usam só a borda `border`.
