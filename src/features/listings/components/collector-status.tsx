@@ -18,13 +18,18 @@ export async function CollectorStatusLine({ compact = false }: { compact?: boole
     getCollectorStatus(),
     isCurrentUserAdmin(),
   ]);
-  const neutralBadge = compact
-    ? null
-    : health === "running"
-      ? ({ label: "Coleta em andamento", variant: "default" } as const)
-      : health === "never"
-        ? ({ label: "Nenhuma coleta ainda", variant: "outline" } as const)
-        : null;
+  const statusBadge =
+    health === "failed"
+      ? ({ label: "Falha na coleta", variant: "destructive" } as const)
+      : health === "late"
+        ? ({ label: "Coleta atrasada", variant: "warning" } as const)
+        : compact
+          ? null
+          : health === "running"
+            ? ({ label: "Coleta em andamento", variant: "default" } as const)
+            : health === "never"
+              ? ({ label: "Nenhuma coleta ainda", variant: "outline" } as const)
+              : null;
 
   return (
     <div
@@ -64,7 +69,7 @@ export async function CollectorStatusLine({ compact = false }: { compact?: boole
           )}
         </>
       ) : null}
-      {neutralBadge ? <Badge variant={neutralBadge.variant}>{neutralBadge.label}</Badge> : null}
+      {statusBadge ? <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge> : null}
     </div>
   );
 }

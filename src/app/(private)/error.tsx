@@ -12,9 +12,12 @@ export default function PrivateError({ error, retry }: { error: Error & { digest
   return (
     <div className="grid max-w-2xl gap-4">
       <Alert variant="error">
-        <AlertTitle>Algo deu errado</AlertTitle>
+        <AlertTitle>Não foi possível abrir esta tela</AlertTitle>
         <AlertDescription className="grid gap-1.5">
-          <p>Não foi possível carregar esta página.</p>
+          <p>
+            Ocorreu uma falha temporária ao carregar os dados. Tente novamente abaixo ou volte ao Início; seus dados
+            salvos não foram alterados.
+          </p>
           {error.digest ? (
             <p className="text-caption text-muted">
               Código de suporte: <span className="font-mono tabular-nums select-all">{error.digest}</span>. Se
