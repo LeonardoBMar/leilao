@@ -1,4 +1,4 @@
-import { Radar } from "lucide-react";
+import { Activity } from "lucide-react";
 import Link from "next/link";
 
 import { Badge, Skeleton } from "@/components/ui";
@@ -38,7 +38,7 @@ export async function CollectorStatusLine({ compact = false }: { compact?: boole
         compact ? "gap-x-2 text-muted" : "gap-x-3 text-foreground-secondary",
       )}
     >
-      <Radar
+      <Activity
         aria-hidden="true"
         className={cn("shrink-0", compact ? "size-3.5 text-muted-subtle" : "size-4 text-muted")}
       />

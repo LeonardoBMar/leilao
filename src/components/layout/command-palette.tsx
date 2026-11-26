@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Activity,
   BellRing,
   Calculator,
   Car,
@@ -231,7 +232,7 @@ const DESTINATIONS: readonly CommandDestination[] = [
     label: "Sistema — Saúde da coleta",
     group: "Sistema",
     keywords: "coletor fontes erros pausar status",
-    icon: Radar,
+    icon: Activity,
   },
   {
     id: "/sistema/fipe",

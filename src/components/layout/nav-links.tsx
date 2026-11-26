@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Activity,
   BellRing,
   Calculator,
   ChartColumn,
@@ -57,7 +58,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
 ];
 
 export const SYSTEM_NAV_ITEMS: readonly NavItem[] = [
-  { href: "/sistema", label: "Coleta", icon: Radar },
+  { href: "/sistema", label: "Coleta", icon: Activity },
   { href: "/sistema/fipe", label: "Correções FIPE", icon: Database },
   { href: "/sistema/preferencias", label: "Preferências", icon: SlidersHorizontal },
 ];
