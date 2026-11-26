@@ -392,7 +392,7 @@ O design é mobile first. Breakpoint indica mudança de composição, não uma c
 
 - Em `lg` ou maior, a sidebar colapsável (`264px` expandida ↔ `56px` recolhida, atalho `Ctrl+B`/`⌘B`) fica sobre `background` (`#FAFAFB`), separada por borda hairline `border`, com topo próprio de `48px` (marca e botão recolher/expandir), gatilho da paleta rápida `CommandPalette` (`⌘K`/`Ctrl+K`) integrado e dock da conta no rodapé. Na rota `/dashboard`, o grupo `Acompanhando` da sidebar é ocultado para evitar duplicação com a seção principal.
 - A coluna principal à direita traz o header fixo de `48px` sobre `surface` (`#FFFFFF`) com breadcrumb clicável à esquerda e central de notificações (falhas de coleta + novos alertas) à direita, seguido pelo canvas em `surface` (`#FFFFFF`).
-- Abaixo de `lg`, o mesmo header fixo de `48px` traz o menu em gaveta (`MobileNav`), a marca, o contexto de rota (`md+`), o gatilho da paleta rápida, as notificações e o menu da conta.
+- Abaixo de `lg`, o mesmo header fixo de `48px` traz o menu em gaveta (`MobileNav`), o contexto de rota, o gatilho da paleta rápida, as notificações e o menu da conta.
 - A área de conteúdo usa largura máxima de `1440px` (`max-w-360`), centralizada na coluna principal.
 - Padding horizontal: `16px` no mobile (`px-4`), `24px` em `md` (`px-6`) e `32px` em `lg` (`px-8`).
 - Padding vertical da página: `24px` no mobile (`py-6`) e `28px` no desktop `lg` (`py-7`).
