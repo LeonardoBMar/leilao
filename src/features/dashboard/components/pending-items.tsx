@@ -149,7 +149,7 @@ export async function PendingItems() {
                 </span>
                 <ChevronRight
                   aria-hidden="true"
-                  className="size-4 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:text-foreground"
+                  className="size-4 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
                 />
               </Link>
             </li>

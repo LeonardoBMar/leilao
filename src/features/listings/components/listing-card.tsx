@@ -1,5 +1,6 @@
 import {
   Car,
+  ChevronRight,
   CircleAlert,
   CircleCheck,
   ClipboardCheck,
@@ -272,12 +273,18 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
                 <button
                   type="button"
                   title={`Inspecionar ${fullTitle}`}
-                  className="group line-clamp-2 max-w-full rounded-sm text-left outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent"
+                  className="group -my-1.5 inline-flex min-h-10 max-w-full items-center gap-1 rounded-sm py-1.5 text-left outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:min-h-11"
                 >
-                  {item.title}
-                  {item.modelYear ? (
-                    <span className="font-medium text-muted tabular-nums"> {item.modelYear}</span>
-                  ) : null}
+                  <span className="line-clamp-2">
+                    {item.title}
+                    {item.modelYear ? (
+                      <span className="font-medium text-muted tabular-nums"> {item.modelYear}</span>
+                    ) : null}
+                  </span>
+                  <ChevronRight
+                    aria-hidden="true"
+                    className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+                  />
                 </button>
               }
             />
@@ -297,7 +304,7 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
           ) : null}
         </div>
 
-        <dl title={transparency || undefined} className="flex flex-wrap gap-x-4 gap-y-1.5 tabular-nums">
+        <dl className="flex flex-wrap gap-x-4 gap-y-1.5 tabular-nums">
           <div className="grid gap-0.5">
             <dt className="text-caption text-muted">Lance</dt>
             <dd className="text-label font-semibold whitespace-nowrap text-foreground">
@@ -321,6 +328,8 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
             </div>
           ) : null}
         </dl>
+
+        {transparency ? <p className="text-caption text-muted tabular-nums">{transparency}</p> : null}
 
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-muted tabular-nums">
           <span className="inline-flex items-center gap-1.5">

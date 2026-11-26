@@ -52,7 +52,7 @@ export async function FollowedLots() {
           return (
             <li
               key={lot.id}
-              className="relative -mx-2 grid grid-cols-1 items-center gap-x-5 gap-y-3 rounded-md border-t border-border px-2 py-4 transition-colors duration-150 ease-[var(--ease-out)] hover:bg-background @2xl:grid-cols-[3.5rem_minmax(0,1fr)_9.5rem_12rem]"
+              className="relative -mx-2 grid grid-cols-1 items-center gap-x-5 gap-y-3 rounded-md border-t border-border px-2 py-4 transition-colors duration-150 ease-[var(--ease-out)] hover:bg-background motion-reduce:transition-none @2xl:grid-cols-[3.5rem_minmax(0,1fr)_9.5rem_12rem]"
             >
               <span className="hidden font-mono text-label font-normal text-foreground-secondary @2xl:inline">
                 {lot.lotNumber}
@@ -71,7 +71,7 @@ export async function FollowedLots() {
                     </span>
                     <ChevronRight
                       aria-hidden="true"
-                      className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:text-foreground"
+                      className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
                     />
                   </Link>
                 </div>
@@ -101,15 +101,19 @@ export async function FollowedLots() {
                 </p>
               </div>
               <div className="grid gap-0.5 @2xl:text-end">
-                <p className="text-caption text-muted">Lance</p>
-                <p
-                  title={
-                    lot.currentBid !== null && lot.currentBidObservedAt !== null
-                      ? `Lance visto em ${formatCompactDateTime(lot.currentBidObservedAt)}`
-                      : undefined
-                  }
-                  className="text-body-lg font-semibold text-foreground tabular-nums"
-                >
+                <p className="text-caption text-muted tabular-nums">
+                  Lance
+                  {lot.currentBid !== null && lot.currentBidObservedAt !== null ? (
+                    <>
+                      {" "}
+                      · visto{" "}
+                      <time dateTime={lot.currentBidObservedAt.toISOString()}>
+                        {formatCompactDateTime(lot.currentBidObservedAt)}
+                      </time>
+                    </>
+                  ) : null}
+                </p>
+                <p className="text-body-lg font-semibold text-foreground tabular-nums">
                   <Money value={lot.currentBid} />
                 </p>
                 <p className="text-caption text-muted tabular-nums">

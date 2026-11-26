@@ -77,7 +77,7 @@ export async function RegionAuctions() {
               {items.map((auction) => (
                 <li
                   key={`${auction.sourceId}/${auction.externalId}`}
-                  className="relative flex min-h-11 flex-col gap-1 rounded-r-md border-border py-2.5 pr-2 pl-5 transition-colors duration-150 ease-[var(--ease-out)] not-first:border-t hover:bg-background @lg:flex-row @lg:items-center @lg:justify-between @lg:gap-4"
+                  className="relative flex min-h-11 flex-col gap-1 rounded-r-md border-border py-2.5 pr-2 pl-5 transition-colors duration-150 ease-[var(--ease-out)] not-first:border-t hover:bg-background motion-reduce:transition-none @lg:flex-row @lg:items-center @lg:justify-between @lg:gap-4"
                 >
                   <span
                     aria-hidden="true"
@@ -102,7 +102,7 @@ export async function RegionAuctions() {
                       </span>
                       <ChevronRight
                         aria-hidden="true"
-                        className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:text-foreground"
+                        className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
                       />
                     </Link>
                     <span className="text-caption text-muted">· {auction.sourceName}</span>

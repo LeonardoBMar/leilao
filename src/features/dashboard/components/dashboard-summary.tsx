@@ -28,7 +28,7 @@ const plural = (count: number, one: string, many: string) =>
 const kpiCellClass = "flex h-full flex-col justify-between gap-2 bg-surface p-4";
 const kpiLinkClass = cn(
   kpiCellClass,
-  "group transition-colors duration-150 ease-[var(--ease-out)] hover:bg-background focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent focus-visible:ring-inset active:bg-surface-subtle",
+  "group transition-colors duration-150 ease-[var(--ease-out)] hover:bg-background focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent focus-visible:ring-inset active:bg-surface-subtle motion-reduce:transition-none",
 );
 
 /**
@@ -80,7 +80,7 @@ export async function DashboardKpis() {
               </span>
               <ArrowDown
                 aria-hidden="true"
-                className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-y-0.5 group-hover:text-foreground"
+                className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-y-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-y-0"
               />
             </div>
             <p
@@ -119,7 +119,7 @@ export async function DashboardKpis() {
               </span>
               <ArrowDown
                 aria-hidden="true"
-                className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-y-0.5 group-hover:text-foreground"
+                className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-y-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-y-0"
               />
             </div>
             <p
@@ -156,7 +156,7 @@ export async function DashboardKpis() {
                 </span>
                 <ArrowDown
                   aria-hidden="true"
-                  className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-y-0.5 group-hover:text-foreground"
+                  className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-y-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-y-0"
                 />
               </div>
               <p className="text-heading-2 font-semibold text-foreground tabular-nums">{pendingTotal}</p>
@@ -172,7 +172,7 @@ export async function DashboardKpis() {
                 </span>
                 <ArrowUpRight
                   aria-hidden="true"
-                  className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-foreground"
+                  className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-x-0 motion-reduce:group-hover:translate-y-0"
                 />
               </div>
               <p className="text-heading-2 font-semibold text-muted tabular-nums">0</p>
@@ -192,7 +192,7 @@ export async function DashboardKpis() {
                 </span>
                 <ArrowUpRight
                   aria-hidden="true"
-                  className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-foreground"
+                  className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-x-0 motion-reduce:group-hover:translate-y-0"
                 />
               </div>
               <p className="truncate text-heading-2 font-semibold whitespace-nowrap text-foreground tabular-nums">
@@ -219,7 +219,7 @@ export async function DashboardKpis() {
                 </span>
                 <ArrowDown
                   aria-hidden="true"
-                  className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-y-0.5 group-hover:text-foreground"
+                  className="size-3.5 shrink-0 text-muted-subtle transition-[transform,color] duration-150 ease-[var(--ease-out)] group-hover:translate-y-0.5 group-hover:text-foreground motion-reduce:transition-none motion-reduce:group-hover:translate-y-0"
                 />
               </div>
               <p className="text-heading-2 font-semibold text-muted tabular-nums">—</p>

@@ -18,7 +18,7 @@ import { ToAnalyze, ToAnalyzeSkeleton } from "@/features/dashboard/components/to
 import { CollectorStatusLine, CollectorStatusLineSkeleton } from "@/features/listings/components/collector-status";
 import { FollowedLots, FollowedLotsSkeleton } from "@/features/lots/components/followed-lots";
 
-export const metadata: Metadata = { title: "Início · Leilão Tracker" };
+export const metadata: Metadata = { title: "Visão geral · Leilão Tracker" };
 
 const ALL_FOLLOWED_HREF = "/minhas-analises?acompanhados=1&resultado=sem" as Route;
 
@@ -49,7 +49,7 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
     <div className="grid gap-8">
       <div className="grid gap-5">
         <PageHeader
-          title="Início"
+          title="Visão geral"
           inlineMeta={
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <Suspense fallback={<CollectorStatusLineSkeleton compact />}>
@@ -158,17 +158,7 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
           </Section>
         </div>
 
-        <aside className="grid content-start gap-8" aria-label="Indicadores e pendências">
-          <SectionErrorBoundary
-            title="Indicador indisponível"
-            fallbackHref="/mercado/calibracao"
-            fallbackLabel="Ver calibração"
-          >
-            <Suspense fallback={<DecisionIndicatorSkeleton />}>
-              <DecisionIndicator />
-            </Suspense>
-          </SectionErrorBoundary>
-
+        <aside className="grid content-start gap-8" aria-label="Pendências e indicadores">
           <SectionErrorBoundary
             title="Pendências indisponíveis"
             fallbackHref="/minhas-analises"
@@ -176,6 +166,16 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
           >
             <Suspense fallback={null}>
               <PendingItems />
+            </Suspense>
+          </SectionErrorBoundary>
+
+          <SectionErrorBoundary
+            title="Indicador indisponível"
+            fallbackHref="/mercado/calibracao"
+            fallbackLabel="Ver calibração"
+          >
+            <Suspense fallback={<DecisionIndicatorSkeleton />}>
+              <DecisionIndicator />
             </Suspense>
           </SectionErrorBoundary>
         </aside>
