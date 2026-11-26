@@ -1,59 +1,97 @@
 "use client";
 
-import { SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 
+import { normalizeCommandText } from "./command-palette-search";
 import { useIsMac } from "./use-is-mac";
+
+type GlossaryEntry = {
+  term: string;
+  description: string;
+};
+
+const GLOSSARY_ENTRIES: readonly GlossaryEntry[] = [
+  {
+    term: "Preço provável",
+    description:
+      "Mediana dos arremates comparáveis do mesmo modelo no catálogo, sempre acompanhada do tamanho da base (n).",
+  },
+  {
+    term: "Limite estimado e premissas padrão",
+    description:
+      "Lance máximo calculado a partir das suas análises anteriores ou das premissas padrão de margem, guincho e custos configuradas em Preferências.",
+  },
+  {
+    term: "Monitores e região-base",
+    description:
+      "Sua região-base define o raio padrão do catálogo; monitores são buscas salvas que avisam quando surgem novos lotes compatíveis.",
+  },
+  {
+    term: "Fixar análise e versões (v1, v2)",
+    description:
+      "Análises fixadas antes do leilão ficam imutáveis para preservar sua disciplina; cada ajuste posterior gera uma nova versão.",
+  },
+  {
+    term: "Resultados comparáveis e calibração",
+    description:
+      "Lotes com análise fixada antes do leilão e resultado registrado, usados para acompanhar a precisão dos seus limites.",
+  },
+];
 
 type GlossaryContentProps = {
   onNavigate?: () => void;
+  searchable?: boolean;
 };
 
 /**
  * Glossário único de conceitos financeiros e atalhos de teclado, reutilizado no popover do dashboard e no diálogo
  * global da conta/paleta de comandos para evitar divergência de conteúdo.
  */
-export function GlossaryContent({ onNavigate }: GlossaryContentProps) {
+export function GlossaryContent({ onNavigate, searchable = false }: GlossaryContentProps) {
   const isMac = useIsMac();
+  const [filter, setFilter] = useState("");
+  const normalized = normalizeCommandText(filter.trim());
+  const visibleEntries = normalized
+    ? GLOSSARY_ENTRIES.filter((entry) =>
+        normalizeCommandText(`${entry.term} ${entry.description}`).includes(normalized),
+      )
+    : GLOSSARY_ENTRIES;
 
   return (
     <>
-      <dl className="grid gap-3 text-caption">
-        <div className="grid gap-0.5">
-          <dt className="font-semibold text-foreground">Preço provável</dt>
-          <dd className="text-foreground-secondary">
-            Mediana dos arremates comparáveis do mesmo modelo no catálogo, sempre acompanhada do tamanho da base (n).
-          </dd>
+      {searchable ? (
+        <div className="relative">
+          <Search
+            aria-hidden="true"
+            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted"
+          />
+          <input
+            type="search"
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+            placeholder="Filtrar termo ou conceito…"
+            aria-label="Filtrar termo ou conceito do glossário"
+            className="h-10 w-full rounded-md border border-control-border bg-surface pr-3 pl-9 text-base text-foreground transition-colors outline-none placeholder:text-placeholder focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 sm:text-body"
+          />
         </div>
-        <div className="grid gap-0.5">
-          <dt className="font-semibold text-foreground">Limite estimado e premissas padrão</dt>
-          <dd className="text-foreground-secondary">
-            Lance máximo calculado a partir das suas análises anteriores ou das premissas padrão de margem, guincho e
-            custos configuradas em Preferências.
-          </dd>
-        </div>
-        <div className="grid gap-0.5">
-          <dt className="font-semibold text-foreground">Monitores e região-base</dt>
-          <dd className="text-foreground-secondary">
-            Sua região-base define o raio padrão do catálogo; monitores são buscas salvas que avisam quando surgem novos
-            lotes compatíveis.
-          </dd>
-        </div>
-        <div className="grid gap-0.5">
-          <dt className="font-semibold text-foreground">Fixar análise e versões (v1, v2)</dt>
-          <dd className="text-foreground-secondary">
-            Análises fixadas antes do leilão ficam imutáveis para preservar sua disciplina; cada ajuste posterior gera
-            uma nova versão.
-          </dd>
-        </div>
-        <div className="grid gap-0.5">
-          <dt className="font-semibold text-foreground">Resultados comparáveis e calibração</dt>
-          <dd className="text-foreground-secondary">
-            Lotes com análise fixada antes do leilão e resultado registrado, usados para acompanhar a precisão dos seus
-            limites.
-          </dd>
-        </div>
-      </dl>
+      ) : null}
+
+      {visibleEntries.length === 0 ? (
+        <p role="status" className="py-4 text-center text-caption text-muted">
+          Nenhum termo encontrado para “{filter}”.
+        </p>
+      ) : (
+        <dl className="grid gap-3 text-caption">
+          {visibleEntries.map((entry) => (
+            <div key={entry.term} className="grid gap-0.5">
+              <dt className="font-semibold text-foreground">{entry.term}</dt>
+              <dd className="text-foreground-secondary">{entry.description}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
 
       <div className="grid gap-2 border-t border-border pt-3 text-caption">
         <p className="font-mono text-overline font-medium text-muted uppercase">Atalhos de teclado</p>

@@ -447,7 +447,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                 if (item) activateDestination(item);
               }
             }}
-            placeholder="Ir para uma tela ou buscar veículo/lote…"
+            placeholder="Ir para uma tela ou digitar para buscar veículo/lote…"
             aria-label="Ir para uma tela ou buscar veículo ou lote"
             className="h-11 w-full bg-transparent text-base text-foreground outline-none placeholder:text-placeholder sm:text-body"
           />
@@ -465,9 +465,12 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               <X aria-hidden="true" className="size-3.5" />
             </button>
           ) : null}
-          <kbd className="hidden rounded-sm border border-border-strong bg-background px-1.5 py-0.5 font-mono text-caption text-muted sm:inline-block">
+          <DialogClose
+            aria-label="Fechar busca"
+            className="hidden rounded-sm border border-border-strong bg-background px-1.5 py-0.5 font-mono text-caption text-muted transition-colors outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent sm:inline-flex sm:items-center"
+          >
             ESC
-          </kbd>
+          </DialogClose>
           <DialogClose
             aria-label="Fechar busca"
             className="-mr-1.5 flex size-10 shrink-0 items-center justify-center rounded-md text-muted transition-[background-color,color,transform] duration-150 ease-[var(--ease-out)] outline-none hover:bg-surface-subtle hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent active:scale-[0.97] sm:hidden"

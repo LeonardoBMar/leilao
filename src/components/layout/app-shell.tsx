@@ -77,7 +77,7 @@ function resolveRouteContext(
 
   let detail: string | null = null;
   let detailMono = false;
-  if (pathname === "/dashboard") detail = null;
+  if (pathname === "/dashboard") detail = "Visão geral";
   else if (pathname === "/leiloes") detail = "Catálogo";
   else if (pathname === "/leiloes/veiculos") detail = "Todos os veículos";
   else if (pathname.startsWith("/leiloes/")) detail = "Leilão do catálogo";
@@ -129,7 +129,7 @@ function HeaderRouteContext() {
             <Link
               href={context.sectionHref}
               title={context.section}
-              className="-my-1.5 inline-flex min-w-0 items-center gap-1.5 rounded-sm py-1.5 text-muted transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent motion-reduce:transition-none"
+              className="-my-1.5 inline-flex min-w-0 items-center gap-1.5 rounded-sm py-1.5 text-muted transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent motion-reduce:transition-none pointer-coarse:min-h-11"
             >
               <SectionIcon aria-hidden="true" strokeWidth={1.75} className="size-3.5 shrink-0 text-muted-subtle" />
               <span className="truncate">{context.section}</span>

@@ -15,7 +15,7 @@ type BrandProps = {
 export function Brand({ href, compact = false, hideLabelOnNarrow = false, className }: BrandProps) {
   const content = (
     <>
-      <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-primary text-white shadow-xs">
+      <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-primary text-surface shadow-xs">
         <Gavel aria-hidden="true" strokeWidth={1.75} className="size-3.5" />
       </span>
       <span

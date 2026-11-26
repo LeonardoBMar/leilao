@@ -16,7 +16,7 @@ export async function NextAuctionCard() {
       className="group grid grid-cols-1 gap-1 rounded-lg border border-border bg-surface-subtle/60 px-2.5 py-2.5 transition-colors duration-150 ease-[var(--ease-out)] outline-none hover:border-border-strong hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent motion-reduce:transition-none"
     >
       <span className="flex items-center justify-between gap-2">
-        <span className="font-mono text-overline font-medium text-muted uppercase">Seu próximo leilão</span>
+        <span className="font-mono text-overline font-medium text-muted uppercase">Próximo em Minhas análises</span>
         <ChevronRight
           aria-hidden="true"
           strokeWidth={1.75}

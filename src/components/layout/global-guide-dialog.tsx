@@ -25,7 +25,7 @@ export function GlobalGuideDialog() {
             Conceitos financeiros e atalhos de teclado disponíveis em todas as telas do Leilão Tracker.
           </DialogDescription>
         </DialogHeader>
-        <GlossaryContent onNavigate={() => setGuideDialogOpen(false)} />
+        <GlossaryContent searchable onNavigate={() => setGuideDialogOpen(false)} />
       </DialogContent>
     </Dialog>
   );
