@@ -31,7 +31,13 @@ async function DashboardNotice({ searchParams }: { searchParams: PageProps<"/das
       <AlertTitle>Acesso restrito</AlertTitle>
       <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
         <span>As páginas operacionais de coleta e correções FIPE são exclusivas para administradores.</span>
-        <ButtonLink href="/dashboard" replace variant="secondary" size="sm" className="min-h-10 sm:min-h-8">
+        <ButtonLink
+          href="/dashboard"
+          replace
+          variant="secondary"
+          size="sm"
+          className="min-h-10 sm:min-h-8 pointer-coarse:min-h-11"
+        >
           Dispensar
         </ButtonLink>
       </AlertDescription>

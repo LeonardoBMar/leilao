@@ -60,7 +60,7 @@ export async function ToAnalyze() {
         {overview.toAnalyze.map((item) => (
           <li
             key={item.id}
-            className="flex border-t border-border pt-5 first:border-t-0 first:pt-0 @3xl:border-t-0 @3xl:pt-0"
+            className="flex border-t border-border pt-5 first:border-t-0 first:pt-0 @3xl:border-t-0 @3xl:pt-0 @3xl:[&:nth-child(n+3)]:border-t @3xl:[&:nth-child(n+3)]:pt-5"
           >
             <ListingCard item={item} compact footer={<DismissListingButton listingId={item.id} />} />
           </li>

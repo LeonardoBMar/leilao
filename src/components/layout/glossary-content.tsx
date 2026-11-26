@@ -14,6 +14,11 @@ type GlossaryEntry = {
 
 const GLOSSARY_ENTRIES: readonly GlossaryEntry[] = [
   {
+    term: "Lance atual vs. preço provável",
+    description:
+      "A barra compara o lance observado agora com seu limite fixado; o preço provável projeta onde o arremate costuma encerrar no histórico.",
+  },
+  {
     term: "Preço provável",
     description:
       "Mediana dos arremates comparáveis do mesmo modelo no catálogo, sempre acompanhada do tamanho da base (n).",

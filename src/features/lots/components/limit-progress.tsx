@@ -32,8 +32,8 @@ export function LimitProgress({ limit, bid }: { limit: LotLimit | null; bid: Cen
   const gap = maxBid - bid;
   const text =
     comparison === "at_limit"
-      ? "No limite"
-      : `${formatBRL(cents(Math.abs(gap)))} ${gap > 0 ? "abaixo" : "acima"} do limite`;
+      ? "Lance atual no limite"
+      : `Lance atual: ${formatBRL(cents(Math.abs(gap)))} ${gap > 0 ? "abaixo" : "acima"} do limite`;
   return (
     <Track percent={maxBid > 0 ? (bid / maxBid) * 100 : 100} isAbove={gap < 0}>
       <span

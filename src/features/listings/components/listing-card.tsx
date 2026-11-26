@@ -258,15 +258,7 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
       fullTitle={fullTitle}
       media={
         item.photoUrl ? (
-          <Image
-            src={item.photoUrl}
-            alt=""
-            fill
-            unoptimized
-            loading="lazy"
-            sizes="8rem"
-            className="object-cover transition-transform duration-200 ease-[var(--ease-out)] group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-          />
+          <Image src={item.photoUrl} alt="" fill unoptimized loading="lazy" sizes="8rem" className="object-cover" />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-muted-subtle transition-colors group-hover:text-foreground motion-reduce:transition-none">
             <Car aria-hidden="true" className="size-6" />

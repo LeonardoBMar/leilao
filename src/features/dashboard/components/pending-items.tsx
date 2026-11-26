@@ -51,7 +51,7 @@ export async function PendingItems() {
               <Link
                 href="/minhas-analises?acompanhados=1&resultado=sem"
                 className={cn(
-                  "inline-flex min-h-10 w-fit items-center text-caption font-medium text-accent hover:underline sm:min-h-8",
+                  "inline-flex min-h-10 w-fit items-center text-caption font-medium text-accent hover:underline sm:min-h-8 pointer-coarse:min-h-11",
                   linkFocusClass,
                 )}
               >
@@ -110,7 +110,7 @@ export async function PendingItems() {
               <Link
                 href="/minhas-analises?analise=rascunho"
                 className={cn(
-                  "inline-flex min-h-10 w-fit items-center text-caption font-medium text-accent hover:underline sm:min-h-8",
+                  "inline-flex min-h-10 w-fit items-center text-caption font-medium text-accent hover:underline sm:min-h-8 pointer-coarse:min-h-11",
                   linkFocusClass,
                 )}
               >

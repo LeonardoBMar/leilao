@@ -140,7 +140,7 @@ export function FixAllDraftsButton({ drafts, totalCount, fixableTotal }: FixAllD
                   <Link
                     href={`/analise/${draft.analysisId}`}
                     onClick={() => setOpen(false)}
-                    className="inline-flex min-h-10 items-center rounded-sm text-caption font-medium text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent sm:min-h-8"
+                    className="inline-flex min-h-10 items-center rounded-sm text-caption font-medium text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent sm:min-h-8 pointer-coarse:min-h-11"
                   >
                     Revisar
                   </Link>
@@ -166,7 +166,7 @@ export function FixAllDraftsButton({ drafts, totalCount, fixableTotal }: FixAllD
             <Link
               href="/minhas-analises"
               onClick={() => setOpen(false)}
-              className="inline-flex min-h-10 w-fit items-center rounded-sm font-medium text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent sm:min-h-8"
+              className="inline-flex min-h-10 w-fit items-center rounded-sm font-medium text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent sm:min-h-8 pointer-coarse:min-h-11"
             >
               Revisar todos em Minhas análises
             </Link>

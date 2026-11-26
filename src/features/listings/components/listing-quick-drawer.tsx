@@ -316,7 +316,13 @@ export function CompactListingInspect({ item, fullTitle, media, title, content, 
           {content}
         </div>
       </div>
-      <div className="col-span-full flex flex-wrap items-center gap-2 sm:col-start-2">{actions}</div>
+      <div className="col-span-full flex flex-wrap items-center gap-2 sm:col-start-2">
+        {actions}
+        <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(true)} className="w-fit">
+          <Eye aria-hidden="true" />
+          Inspecionar
+        </Button>
+      </div>
       <ListingQuickDrawer item={item} trigger={null} open={open} onOpenChange={setOpen} />
     </article>
   );
