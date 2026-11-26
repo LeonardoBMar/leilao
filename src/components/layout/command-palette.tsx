@@ -37,14 +37,41 @@ const MAX_RECENTS = 3;
 
 type StoredRecent = { href: string; label: string; meta?: string };
 
-function readRecents(): readonly StoredRecent[] {
-  if (typeof window === "undefined") return [];
+const EMPTY_RECENTS: readonly StoredRecent[] = [];
+const recentListeners = new Set<() => void>();
+let cachedRecentsRaw: string | null = null;
+let cachedRecentsParsed: readonly StoredRecent[] = EMPTY_RECENTS;
+
+function subscribeRecents(listener: () => void) {
+  recentListeners.add(listener);
+  function onStorage(event: StorageEvent) {
+    if (event.key === RECENTS_STORAGE_KEY || event.key === null) {
+      listener();
+    }
+  }
+  window.addEventListener("storage", onStorage);
+  return () => {
+    recentListeners.delete(listener);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
+function getRecentsSnapshot(): readonly StoredRecent[] {
+  if (typeof window === "undefined") return EMPTY_RECENTS;
   try {
     const raw = window.localStorage.getItem(RECENTS_STORAGE_KEY);
-    if (!raw) return [];
+    if (raw === cachedRecentsRaw) return cachedRecentsParsed;
+    cachedRecentsRaw = raw;
+    if (!raw) {
+      cachedRecentsParsed = EMPTY_RECENTS;
+      return cachedRecentsParsed;
+    }
     const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed
+    if (!Array.isArray(parsed)) {
+      cachedRecentsParsed = EMPTY_RECENTS;
+      return cachedRecentsParsed;
+    }
+    cachedRecentsParsed = parsed
       .filter(
         (entry): entry is StoredRecent =>
           typeof entry === "object" &&
@@ -54,18 +81,29 @@ function readRecents(): readonly StoredRecent[] {
           typeof (entry as StoredRecent).label === "string",
       )
       .slice(0, MAX_RECENTS);
+    return cachedRecentsParsed;
   } catch {
-    return [];
+    return EMPTY_RECENTS;
   }
+}
+
+function getRecentsServerSnapshot(): readonly StoredRecent[] {
+  return EMPTY_RECENTS;
 }
 
 function recordRecent(entry: StoredRecent) {
   try {
-    const current = readRecents().filter((item) => item.href !== entry.href);
+    const current = getRecentsSnapshot().filter((item) => item.href !== entry.href);
     const next = [entry, ...current].slice(0, MAX_RECENTS);
-    window.localStorage.setItem(RECENTS_STORAGE_KEY, JSON.stringify(next));
+    const serialized = JSON.stringify(next);
+    window.localStorage.setItem(RECENTS_STORAGE_KEY, serialized);
+    cachedRecentsRaw = serialized;
+    cachedRecentsParsed = next;
   } catch {
     // Modo privado ou quota excedida: segue sem persistir.
+  }
+  for (const listener of recentListeners) {
+    listener();
   }
 }
 
@@ -178,19 +216,13 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const isMac = useIsMac();
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [recents, setRecents] = useState<readonly StoredRecent[]>([]);
+  const recents = useSyncExternalStore(subscribeRecents, getRecentsSnapshot, getRecentsServerSnapshot);
   const isAdmin = useSyncExternalStore(subscribeAdminRole, getAdminRoleSnapshot, getAdminRoleServerSnapshot);
   const quickItems = useSyncExternalStore(
     subscribeCommandItems,
     getCommandItemsSnapshot,
     getCommandItemsServerSnapshot,
   );
-
-  useEffect(() => {
-    if (open) {
-      setRecents(readRecents());
-    }
-  }, [open]);
 
   const visibleDestinations = isAdmin
     ? DESTINATIONS
