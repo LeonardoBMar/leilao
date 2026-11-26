@@ -87,7 +87,7 @@ export function NotificationsPopover({
               aria-hidden="true"
               className="absolute top-0.5 right-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-error px-1 text-caption leading-none font-bold text-surface tabular-nums ring-2 ring-surface"
             >
-              {unreadTotal > 0 ? (unreadTotal > 99 ? "99+" : unreadTotal) : "!"}
+              {unreadTotal > 0 ? (totalCount > 99 ? "99+" : totalCount) : "!"}
             </span>
           ) : hasNotifications ? (
             <span
