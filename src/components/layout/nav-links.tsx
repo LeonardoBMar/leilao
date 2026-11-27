@@ -204,7 +204,7 @@ function NavList({
                 </TooltipTrigger>
                 <TooltipContent side="right" sideOffset={10} className="inline-flex items-center gap-2">
                   <span>{label}</span>
-                  {hasRestoredQuery ? <span className="text-muted">· Filtros salvos</span> : null}
+                  {hasRestoredQuery ? <span className="text-white/75">· Filtros salvos</span> : null}
                   {badges?.[href] ? <span className="empty:hidden">{badges[href]}</span> : null}
                 </TooltipContent>
               </Tooltip>
