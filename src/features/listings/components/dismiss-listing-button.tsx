@@ -13,13 +13,17 @@ export function DismissListingButton({ listingId }: { listingId: string }) {
 
   function set(dismissed: boolean) {
     startTransition(async () => {
-      const result = await setListingDismissedAction(listingId, dismissed);
-      if (result.status === "error") toast.error(result.message);
-      else if (result.status === "success" && result.message) {
-        toast.success(
-          result.message,
-          dismissed ? { duration: 8000, action: { label: "Desfazer", onClick: () => set(false) } } : undefined,
-        );
+      try {
+        const result = await setListingDismissedAction(listingId, dismissed);
+        if (result.status === "error") toast.error(result.message);
+        else if (result.status === "success" && result.message) {
+          toast.success(
+            result.message,
+            dismissed ? { duration: 8000, action: { label: "Desfazer", onClick: () => set(false) } } : undefined,
+          );
+        }
+      } catch {
+        toast.error("Não foi possível atualizar a sugestão. Tente novamente.");
       }
     });
   }
