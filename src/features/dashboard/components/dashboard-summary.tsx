@@ -194,7 +194,7 @@ export async function DashboardKpis() {
             <div className="flex items-center justify-between gap-2">
               <span className="inline-flex items-center gap-1.5 text-label text-foreground-secondary">
                 <CalendarClock aria-hidden="true" className="size-3.5 shrink-0 text-muted-subtle" />
-                Próximo no catálogo
+                Próximo leilão
                 <span className="sr-only"> — ir para a seção abaixo.</span>
               </span>
               <ArrowDown
@@ -238,13 +238,13 @@ const KPI_SKELETON_ITEMS = [
   { label: "Para analisar", icon: Calculator, valueWidth: "w-12", noteWidth: "w-32" },
   { label: "Acompanhados", icon: Eye, valueWidth: "w-10", noteWidth: "w-36" },
   { label: "Pendências", icon: ClipboardList, valueWidth: "w-10", noteWidth: "w-28" },
-  { label: "Próximo no catálogo", icon: CalendarClock, valueWidth: "w-28", noteWidth: "w-36" },
+  { label: "Próximo leilão", icon: CalendarClock, valueWidth: "w-28", noteWidth: "w-36" },
 ] as const;
 
 export function DashboardKpisSkeleton() {
   return (
     <div className="@container" aria-hidden="true">
-      <ul className="grid grid-cols-2 gap-px overflow-clip rounded-lg border border-border bg-border @3xl:grid-cols-4">
+      <ul className="grid grid-cols-1 gap-px overflow-clip rounded-lg border border-border bg-border min-[420px]:grid-cols-2 @3xl:grid-cols-4">
         {KPI_SKELETON_ITEMS.map(({ label, icon: Icon, valueWidth, noteWidth }) => (
           <li key={label} className={kpiCellClass}>
             <div className="flex items-center justify-between gap-2">
