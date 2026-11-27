@@ -122,10 +122,15 @@ export function GlossaryContent({ onNavigate, searchable = false }: GlossaryCont
               </span>
             ))}
           </div>
+        </div>
+      ) : null}
+
+      {hasAnyMatch ? (
+        <div className="border-t border-border pt-3 text-caption">
           <Link
             href="/sistema/preferencias"
             onClick={onNavigate}
-            className="mt-1 inline-flex min-h-10 w-fit items-center gap-1.5 rounded-sm font-medium text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:min-h-11"
+            className="inline-flex min-h-10 w-fit items-center gap-1.5 rounded-sm font-medium text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:min-h-11"
           >
             <SlidersHorizontal aria-hidden="true" className="size-3.5" />
             Ajustar premissas padrão e região-base
