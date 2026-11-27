@@ -1,12 +1,13 @@
 "use client";
 
-import { Menu } from "lucide-react";
+import { CircleHelp, Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { type ReactNode, Suspense, useEffect, useRef, useState } from "react";
 
 import { Button, Dialog, DialogDescription, DialogTitle, DialogTrigger, DrawerContent } from "@/components/ui";
 
 import { Brand } from "./brand";
+import { setGuideDialogOpen } from "./guide-dialog-store";
 import { type NavBadges, NavLinks } from "./nav-links";
 
 type MobileNavProps = {
@@ -67,6 +68,19 @@ export function MobileNav({ badges, followed, nextAuction }: MobileNavProps) {
           {/* Fecha ao navegar: com <Activity> a rota anterior fica montada e a gaveta ficaria aberta. */}
           <NavLinks onNavigate={() => setIsOpen(false)} badges={badges} />
         </nav>
+        <div className="border-t border-border/70 pt-3">
+          <button
+            type="button"
+            onClick={() => {
+              setIsOpen(false);
+              setGuideDialogOpen(true);
+            }}
+            className="flex h-10 w-full items-center gap-2.5 rounded-md px-2.5 text-label font-medium text-foreground-secondary transition-colors outline-none hover:bg-primary-subtle/70 hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:h-11"
+          >
+            <CircleHelp aria-hidden="true" strokeWidth={1.75} className="size-4 shrink-0 text-muted-subtle" />
+            <span>Guia rápido e atalhos</span>
+          </button>
+        </div>
         {followed ? (
           <Suspense fallback={followed}>
             <HideOnDashboard>{followed}</HideOnDashboard>
