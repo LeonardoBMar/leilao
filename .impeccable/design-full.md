@@ -495,7 +495,7 @@ Variantes:
 
 - **Default:** `surface`, borda `border` sem sombra, `radius-lg`, padding de 20 px abaixo de `md` e 24 px a partir de `md`. Título usa `heading-3` (15/22).
 - **Metric:** valor principal, label, contexto e tendência/estado opcional; sem ícone decorativo obrigatório.
-- **Summary:** destaca cálculo ou decisão; painel rebaixado em `background` (papel), sem borda.
+- **Summary:** destaca cálculo ou decisão; painel rebaixado em `surface-subtle` (`#F3F4F6`) com borda `border` (nunca `background` `#FAFAFB` sem borda sobre `surface` `#FFFFFF`).
 - **Interactive:** o card inteiro pode ser clicável somente se tiver um único destino e foco visível.
 
 Cards não devem conter cards idênticos aninhados. Para subdivisões internas, use `surface-subtle`, divisores ou grupos sem borda.
