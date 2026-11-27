@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { Download, Plus } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
@@ -16,10 +16,16 @@ export default function MyAnalysesPage({ searchParams }: PageProps<"/minhas-anal
         title="Minhas análises"
         description="Os lotes que você levou para análise, os leilões que cadastrou e sua carteira de arrematados."
         actions={
-          <ButtonLink href="/minhas-analises/leiloes/novo">
-            <Plus aria-hidden="true" />
-            Novo leilão
-          </ButtonLink>
+          <>
+            <ButtonLink href="/minhas-analises/importar" variant="secondary">
+              <Download aria-hidden="true" />
+              Importar lote
+            </ButtonLink>
+            <ButtonLink href="/minhas-analises/leiloes/novo">
+              <Plus aria-hidden="true" />
+              Novo leilão
+            </ButtonLink>
+          </>
         }
       />
       <Suspense fallback={<MyAnalysesViewSkeleton />}>
