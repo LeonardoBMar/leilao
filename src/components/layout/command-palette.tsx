@@ -331,12 +331,16 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     : [];
   const recentHrefs = new Set(recentDestinations.map((item) => item.href).filter(Boolean));
 
-  // Sem consulta digitada, exibe destinos principais, Preferências e ações (sub-rotas entram ao digitar).
-  const defaultDestinations = visibleDestinations.filter(
-    (item) =>
-      (item.group === "Navegação" || item.group === "Ações" || item.href === "/sistema/preferencias") &&
-      (!item.href || !recentHrefs.has(item.href)),
-  );
+  // Sem consulta digitada, exibe destinos principais, Preferências (em Navegação) e ações (sub-rotas entram ao digitar).
+  const defaultDestinations = visibleDestinations
+    .filter(
+      (item) =>
+        (item.group === "Navegação" || item.group === "Ações" || item.href === "/sistema/preferencias") &&
+        (!item.href || !recentHrefs.has(item.href)),
+    )
+    .map((item) =>
+      item.href === "/sistema/preferencias" ? { ...item, label: "Preferências", group: "Navegação" as const } : item,
+    );
   const filteredDestinations = normalized
     ? visibleDestinations.filter((item) => matchesCommandQuery([item.label, item.keywords, item.group], normalized))
     : defaultDestinations;
