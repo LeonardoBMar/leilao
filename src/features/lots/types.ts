@@ -1,3 +1,4 @@
+import type { ImportPreviewResult } from "@/domain/import/universal";
 import type { DamageLevel } from "@/domain/listings/condition";
 import type { LimitFit, PriceEstimate } from "@/domain/listings/estimates";
 import type { MarketValueOrigin } from "@/domain/listings/fipe-match";
@@ -6,6 +7,8 @@ import type { LotBidStep } from "@/domain/lots/bid-history";
 import type { DiligenceChecklist } from "@/domain/lots/diligence";
 import type { NoticeAuditResult } from "@/domain/lots/notice-audit";
 import type { Cents } from "@/domain/money";
+
+export type { ImportPreviewResult };
 
 /** Auditoria determinística de edital persistida em `lots.notice_audit` (D-97). */
 export type StoredNoticeAudit = {
