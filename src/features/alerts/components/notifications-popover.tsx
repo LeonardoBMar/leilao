@@ -74,6 +74,7 @@ export function NotificationsPopover({
   );
   const cancelConfirmRef = useRef<HTMLButtonElement>(null);
   const markAllTriggerRef = useRef<HTMLButtonElement>(null);
+  const emptyStateRef = useRef<HTMLDivElement>(null);
   const { isPending: isMarkingAllRead, run: runMarkAllRead } = useActionToast();
   const { isPending: isMarkingSingleRead, run: runMarkSingleRead } = useActionToast();
   const warningKey = collectorWarning
@@ -150,7 +151,7 @@ export function NotificationsPopover({
         </div>
 
         {!hasNotifications ? (
-          <div className="grid gap-1 px-4 py-6 text-center">
+          <div ref={emptyStateRef} tabIndex={-1} className="grid gap-1 px-4 py-6 text-center outline-none">
             <p className="text-body font-medium text-foreground">Tudo em dia</p>
             <p className="text-caption text-muted">Falhas de coleta e novos alertas aparecerão aqui.</p>
           </div>
@@ -214,7 +215,12 @@ export function NotificationsPopover({
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => dismissWarningInSession(warningKey)}
+                      onClick={() => {
+                        dismissWarningInSession(warningKey);
+                        if (unreadTotal === 0) {
+                          window.requestAnimationFrame(() => emptyStateRef.current?.focus());
+                        }
+                      }}
                       className="w-fit justify-self-end"
                     >
                       Dispensar aviso
@@ -334,7 +340,9 @@ export function NotificationsPopover({
                               return await markAllAlertsReadAction(null);
                             } finally {
                               setConfirmMarkAll(false);
-                              window.requestAnimationFrame(() => markAllTriggerRef.current?.focus());
+                              window.requestAnimationFrame(() => {
+                                (markAllTriggerRef.current ?? emptyStateRef.current)?.focus();
+                              });
                             }
                           });
                         }}
