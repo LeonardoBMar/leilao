@@ -307,10 +307,7 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
             </div>
             {price && price.kind !== "insufficient" ? (
               <div className="grid gap-0.5">
-                <dt
-                  title="Mediana dos arremates comparáveis no catálogo"
-                  className="text-caption text-muted"
-                >
+                <dt title="Mediana dos arremates comparáveis no catálogo" className="text-caption text-muted">
                   Provável{evidence ? ` (${evidence})` : ""}
                 </dt>
                 <dd className="text-label font-medium whitespace-nowrap text-foreground-secondary">

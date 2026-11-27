@@ -44,7 +44,10 @@ export function LimitProgress({
       ? "Lance atual no limite"
       : `Lance atual: ${formatBRL(cents(Math.abs(gap)))} ${gap > 0 ? "abaixo" : "acima"} do limite`;
   return (
-    <Track percent={maxBid > 0 ? (bid / maxBid) * 100 : 100} tone={gap < 0 ? "above" : gap === 0 ? "at_limit" : "below"}>
+    <Track
+      percent={maxBid > 0 ? (bid / maxBid) * 100 : 100}
+      tone={gap < 0 ? "above" : gap === 0 ? "at_limit" : "below"}
+    >
       <span
         className={cn(
           "text-caption font-medium tabular-nums",
