@@ -2,7 +2,7 @@
 
 import { AlertTriangle, Bell, BellRing, Check, CheckCheck, ChevronRight, LoaderCircle } from "lucide-react";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 
 import { Badge, Button, Popover, PopoverContent, PopoverTrigger, useActionToast } from "@/components/ui";
 import { formatCompactDateTime } from "@/lib/format";
@@ -10,6 +10,38 @@ import { cn } from "@/lib/utils";
 
 import { markAlertReadAction, markAllAlertsReadAction } from "../actions";
 import type { RecentUnreadAlert } from "../queries";
+
+const DISMISSED_WARNING_STORAGE_KEY = "leilao:dismissed-collector-warning";
+const dismissedListeners = new Set<() => void>();
+
+function subscribeDismissedWarning(listener: () => void) {
+  dismissedListeners.add(listener);
+  return () => {
+    dismissedListeners.delete(listener);
+  };
+}
+
+function getDismissedWarningSnapshot(): string | null {
+  try {
+    return window.sessionStorage.getItem(DISMISSED_WARNING_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function getDismissedWarningServerSnapshot(): string | null {
+  return null;
+}
+
+function dismissWarningInSession(key: string | null) {
+  if (!key) return;
+  try {
+    window.sessionStorage.setItem(DISMISSED_WARNING_STORAGE_KEY, key);
+  } catch {
+    // Ignora bloqueio de storage no modo privado.
+  }
+  for (const listener of dismissedListeners) listener();
+}
 
 export type CollectorNotification = {
   variant: "destructive" | "warning";
@@ -35,7 +67,11 @@ export function NotificationsPopover({
   const [open, setOpen] = useState(false);
   const [confirmMarkAll, setConfirmMarkAll] = useState(false);
   const [pendingAlertId, setPendingAlertId] = useState<string | null>(null);
-  const [dismissedWarningKey, setDismissedWarningKey] = useState<string | null>(null);
+  const dismissedWarningKey = useSyncExternalStore(
+    subscribeDismissedWarning,
+    getDismissedWarningSnapshot,
+    getDismissedWarningServerSnapshot,
+  );
   const cancelConfirmRef = useRef<HTMLButtonElement>(null);
   const markAllTriggerRef = useRef<HTMLButtonElement>(null);
   const { isPending: isMarkingAllRead, run: runMarkAllRead } = useActionToast();
@@ -178,7 +214,7 @@ export function NotificationsPopover({
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => setDismissedWarningKey(warningKey)}
+                      onClick={() => dismissWarningInSession(warningKey)}
                       className="w-fit justify-self-end"
                     >
                       Dispensar aviso
