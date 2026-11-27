@@ -186,13 +186,17 @@ export function FixAllDraftsButton({ drafts, totalCount, fixableTotal }: FixAllD
             loadingLabel="Fixando…"
             onClick={() =>
               startTransition(async () => {
-                const result = await fixAllDraftsAction(selectedToFix);
-                if (result.status === "error") {
-                  toast.error(result.message);
-                  return;
+                try {
+                  const result = await fixAllDraftsAction(selectedToFix);
+                  if (result.status === "error") {
+                    toast.error(result.message);
+                    return;
+                  }
+                  setOpen(false);
+                  if (result.status === "success" && result.message) toast.success(result.message);
+                } catch {
+                  toast.error("Não foi possível fixar as análises. Tente novamente.");
                 }
-                setOpen(false);
-                if (result.status === "success" && result.message) toast.success(result.message);
               })
             }
           >
