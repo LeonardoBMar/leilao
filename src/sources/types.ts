@@ -35,8 +35,7 @@ export type Discovery = { listings: DiscoveredListing[]; complete: boolean; erro
  * se isso é desfecho (anúncio encerrado) ou falha (`goneStatus`).
  */
 export type ListingFetch =
-  | { ok: true; value: ListingInput }
-  | { ok: false; gone: boolean; redirected?: boolean; error: string };
+  { ok: true; value: ListingInput } | { ok: false; gone: boolean; redirected?: boolean; error: string };
 
 /**
  * Contrato de um adaptador de fonte (D-27, D-37). Uma fonte nova é um adaptador novo, registrado em `./index.ts`;
