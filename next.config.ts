@@ -55,6 +55,12 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
   // Memoização automática; não escrever useMemo/useCallback/memo por desempenho.
   reactCompiler: true,
+  // Limite de corpo das Server Actions para upload de edital PDF/TXT (até 4 MB + overhead multipart, D-97).
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "4.5mb",
+    },
+  },
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },
