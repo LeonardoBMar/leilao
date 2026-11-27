@@ -1,8 +1,11 @@
 import "server-only";
 
 import { FORMULA_VERSION, prepareFixedAnalysis } from "@/domain/finance/calculator";
+import type { ExtractedNoticeFees } from "@/domain/lots/notice-audit";
 import { getUserPreferences } from "@/features/preferences/queries";
 import { getLotMarketReference, getLotMarketReferences } from "@/features/research/queries";
+import type { Prisma } from "@/generated/prisma/client";
+import { formatBps, formatBRL } from "@/lib/format";
 import { err, ok, type Result } from "@/lib/result";
 import { requireUser } from "@/server/auth";
 import { db, isUniqueViolation } from "@/server/db";
@@ -311,4 +314,73 @@ export async function discardDraft(id: string): Promise<Result<{ lotId: string }
 async function whyNotDraft(id: string, ownerId: string): Promise<SaveDraftError> {
   const exists = await db.analysis.findFirst({ where: { id, ownerId }, select: { id: true } });
   return exists ? "not_draft" : "not_found";
+}
+
+/**
+ * Aplica taxas extraídas pela auditoria determinística de edital (D-97) no rascunho aberto do lote,
+ * criando um novo rascunho se ainda não existir. Nunca altera análises fixadas.
+ */
+export async function applyNoticeFeesToDraft(
+  lotId: string,
+  fees: ExtractedNoticeFees,
+): Promise<Result<{ analysisId: string }, "lot_not_found">> {
+  const user = await requireUser();
+  const lot = await db.lot.findFirst({
+    where: { id: lotId, ownerId: user.id },
+    select: {
+      id: true,
+      analyses: {
+        where: { status: "draft" },
+        take: 1,
+        select: { id: true, notes: true },
+      },
+    },
+  });
+  if (!lot) return err("lot_not_found");
+
+  let draftId = lot.analyses[0]?.id ?? null;
+  let existingNotes = lot.analyses[0]?.notes ?? null;
+
+  if (draftId === null) {
+    const created = await createDraft(lotId);
+    if (!created.ok) return err("lot_not_found");
+    draftId = created.value.id;
+    const fresh = await db.analysis.findFirst({
+      where: { id: draftId, ownerId: user.id },
+      select: { notes: true },
+    });
+    existingNotes = fresh?.notes ?? null;
+  }
+
+  const appliedParts: string[] = [];
+  const data: Prisma.AnalysisUpdateManyMutationInput = {};
+  if (fees.commissionRateBps !== null) {
+    data.commissionMode = "percentage";
+    data.commissionRateBps = fees.commissionRateBps;
+    data.commissionFixedCents = null;
+    appliedParts.push(`comissão ${formatBps(fees.commissionRateBps)}`);
+  }
+  if (fees.adminFeesCents !== null) {
+    data.otherFeesCents = fees.adminFeesCents;
+    appliedParts.push(`outras taxas ${formatBRL(fees.adminFeesCents)}`);
+  }
+  if (fees.debtsCapCents !== null) {
+    data.debtsCostCents = fees.debtsCapCents;
+    appliedParts.push(`teto de débitos ${formatBRL(fees.debtsCapCents)}`);
+  }
+
+  if (appliedParts.length > 0) {
+    const noteLine = `Taxas aplicadas da auditoria de edital: ${appliedParts.join(", ")}.`;
+    const alreadyPresent = existingNotes?.includes(noteLine) ?? false;
+    if (!alreadyPresent) {
+      const combined = existingNotes ? `${existingNotes}\n${noteLine}` : noteLine;
+      data.notes = combined.length > 10_000 ? combined.slice(0, 10_000) : combined;
+    }
+    await db.analysis.updateMany({
+      where: { id: draftId, ownerId: user.id, status: "draft" },
+      data,
+    });
+  }
+
+  return ok({ analysisId: draftId });
 }
