@@ -175,6 +175,10 @@ model Lot {
   archivedAt           DateTime? @map("archived_at") @db.Timestamptz(3)
   /// Anúncio coletado ligado ao lote (etapa 3): o coletor mantém o lance atual. Um lote por usuário e anúncio.
   listingId            String?   @map("listing_id") @db.Uuid
+  /// Checklist de diligência pré-lance (7 verificações padronizadas, D-97).
+  diligenceChecklist   Json?     @map("diligence_checklist") @db.JsonB
+  /// Última auditoria determinística de edital salva no lote (validada por Zod na leitura, D-97).
+  noticeAudit          Json?     @map("notice_audit") @db.JsonB
 
   auction     Auction         @relation(fields: [auctionId, ownerId], references: [id, ownerId], onDelete: Restrict)
   listing     Listing?        @relation(fields: [listingId], references: [id], onDelete: Restrict)
