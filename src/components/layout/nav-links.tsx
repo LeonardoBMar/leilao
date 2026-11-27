@@ -7,6 +7,7 @@ import {
   ChartColumn,
   ChevronRight,
   Database,
+  Filter,
   Gavel,
   House,
   type LucideIcon,
@@ -170,14 +171,17 @@ function NavList({
                     {hasRestoredQuery ? (
                       <>
                         <span className="sr-only"> (com filtros salvos)</span>
-                        <span
-                          aria-hidden="true"
-                          title="Retoma os últimos filtros usados"
-                          className={cn(
-                            "z-10 size-1.5 shrink-0 rounded-full bg-accent",
-                            collapsed ? "pointer-events-none absolute bottom-1.5 left-1.5" : "relative",
-                          )}
-                        />
+                        {!collapsed ? (
+                          <Filter
+                            aria-hidden="true"
+                            className="relative z-10 ml-auto size-3 shrink-0 text-muted-subtle"
+                          />
+                        ) : (
+                          <span
+                            aria-hidden="true"
+                            className="pointer-events-none absolute bottom-1.5 left-1.5 size-1.5 rounded-full bg-muted ring-2 ring-background"
+                          />
+                        )}
                       </>
                     ) : null}
                     {badges?.[href] ? (
@@ -200,6 +204,7 @@ function NavList({
                 </TooltipTrigger>
                 <TooltipContent side="right" sideOffset={10} className="inline-flex items-center gap-2">
                   <span>{label}</span>
+                  {hasRestoredQuery ? <span className="text-muted">· Filtros salvos</span> : null}
                   {badges?.[href] ? <span className="empty:hidden">{badges[href]}</span> : null}
                 </TooltipContent>
               </Tooltip>
