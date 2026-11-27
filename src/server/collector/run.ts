@@ -412,7 +412,7 @@ async function collectListings(input: {
     try {
       const outcome = await visitListing(source, fetcher, visit.externalId, { now: now(), place, regions }, listReadAt);
       if (outcome.ok) {
-        counters[outcome.value]++;
+        if (outcome.value !== "skipped") counters[outcome.value]++;
         consecutiveFailures = 0;
         consecutiveParseFailures = 0;
         consecutiveUnexpectedFailures = 0;
@@ -450,12 +450,16 @@ export async function visitListing(
   externalId: string,
   context: Parameters<typeof saveListing>[2],
   listReadAt: Date | null,
-): Promise<Result<"created" | "updated">> {
+): Promise<Result<"created" | "updated" | "skipped">> {
   const stored = source.usesStoredRaw ? await findStoredRaw(source.id, externalId) : null;
   const fetched = await source.fetchListing(fetcher, externalId, context.now, stored);
   // Página fora do ar de anúncio encerrado ou fora da lista da fonte: desfecho, não falha (goneStatus).
-  if (!fetched.ok && fetched.gone && (await markGone(source.id, externalId, context.now, listReadAt))) {
-    return ok("updated");
+  // Quando a URL redireciona para outro anúncio (301), o id pedido foi substituído: fecha se já existir ou ignora se for novo no sitemap.
+  if (!fetched.ok && fetched.gone) {
+    if (await markGone(source.id, externalId, context.now, listReadAt, fetched.redirected === true)) {
+      return ok("updated");
+    }
+    if (fetched.redirected) return ok("skipped");
   }
   if (!fetched.ok) return err(fetched.error);
   // O anúncio precisa ser o pedido e cumprir o contrato comum; senão vira falha, nunca dado errado no catálogo.

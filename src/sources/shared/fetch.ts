@@ -45,6 +45,11 @@ export async function fetchListingPage(
   const parsed = parse(response.text, now);
   if (!parsed.ok) return { ok: false, gone: false, error: parsed.error };
   if (parsed.value.url !== url)
-    return { ok: false, gone: true, error: `redireciona para outro anúncio (${parsed.value.externalId})` };
+    return {
+      ok: false,
+      gone: true,
+      redirected: true,
+      error: `redireciona para outro anúncio (${parsed.value.externalId})`,
+    };
   return parsed;
 }

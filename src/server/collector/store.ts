@@ -357,13 +357,16 @@ export async function markGone(
   externalId: string,
   now: Date,
   sitemapReadAt: Date | null,
+  force = false,
 ): Promise<boolean> {
   return db.$transaction(async (tx) => {
     const listing = await tx.listing.findUnique({
       where: { sourceId_externalId: { sourceId, externalId } },
       select: { id: true, status: true, endsAt: true, lastSeenAt: true, currentBidCents: true, bidCount: true },
     });
-    const status = listing && goneStatus(listing, now, sitemapReadAt);
+    const status =
+      listing &&
+      (force ? (listing.status === "open" ? "unknown" : listing.status) : goneStatus(listing, now, sitemapReadAt));
     if (!listing || !status) return false;
     await tx.listing.update({
       where: { id: listing.id },
