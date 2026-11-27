@@ -13,6 +13,8 @@ import { BidLimitPanel } from "./bid-limit-panel";
 import { EditLotDrawer } from "./edit-lot-drawer";
 import { FollowSwitch } from "./follow-switch";
 import { LotActions } from "./lot-actions";
+import { LotDiligencePanel } from "./lot-diligence-panel";
+import { LotNoticeAuditPanel } from "./lot-notice-audit-panel";
 
 /** Ficha do lote (SPEC `/lotes/[id]`, DESIGN.md §15.3). Lance e limite primeiro; depois análise, mercado, resultado e veículo. */
 type LotDetailViewProps = {
@@ -89,6 +91,8 @@ export async function LotDetailView({
       <div className="grid gap-9 xl:grid-cols-[minmax(0,1.75fr)_minmax(0,1fr)] xl:gap-14">
         <div className="grid content-start gap-9">
           {analysis}
+          <LotNoticeAuditPanel lotId={lot.id} audit={lot.noticeAudit} />
+          <LotDiligencePanel key={lot.id} lotId={lot.id} initial={lot.diligence} privatePlate={lot.privatePlate} />
           {market}
           {result}
           {postAuction}

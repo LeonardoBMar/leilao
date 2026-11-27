@@ -1,11 +1,14 @@
 import "server-only";
 
 import { cache } from "react";
+import { z } from "zod";
 
 import { compareToFixedLimit, roomToFixedLimit } from "@/domain/finance/calculator";
 import { estimatePrice, limitFit, type PriceEstimate } from "@/domain/listings/estimates";
 import { lotBidSteps } from "@/domain/lots/bid-history";
-import { cents } from "@/domain/money";
+import { parseDiligenceChecklist } from "@/domain/lots/diligence";
+import type { NoticeFinding } from "@/domain/lots/notice-audit";
+import { bps, cents } from "@/domain/money";
 import { getEstimateContext } from "@/features/listings/queries";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireUser } from "@/server/auth";
@@ -14,7 +17,70 @@ import { getRecentEstimateIndex } from "@/server/market/sold-sales";
 
 import { toFixedLimit } from "./limit";
 import { LOT_GROUPS_PAGE_SIZE, LOT_POSITION_COMPARISONS, type LotFilters, LOTS_PAGE_SIZE } from "./schemas";
-import type { FollowedLotBase, FollowedLotsOverview, LotDetail, LotGroupPage, LotListItem, LotPage } from "./types";
+import type {
+  FollowedLotBase,
+  FollowedLotsOverview,
+  LotDetail,
+  LotGroupPage,
+  LotListItem,
+  LotPage,
+  StoredNoticeAudit,
+} from "./types";
+
+const storedNoticeFindingSchema = z.object({
+  id: z.string(),
+  category: z.enum(["debts", "fees", "deadlines", "condition"]),
+  severity: z.enum(["critical", "warning", "info"]),
+  title: z.string(),
+  summary: z.string(),
+  excerpt: z.string(),
+});
+
+const storedNoticeAuditSchema = z.object({
+  auditedAt: z.string().refine((value) => !Number.isNaN(Date.parse(value))),
+  sourceLabel: z.string(),
+  result: z.object({
+    findings: z.array(storedNoticeFindingSchema),
+    extractedFees: z.object({
+      commissionRateBps: z.number().int().min(0).max(10_000).nullable(),
+      adminFeesCents: z.number().int().min(0).max(100_000_000).nullable(),
+      debtsCapCents: z.number().int().min(0).max(100_000_000).nullable(),
+      dailyStorageCents: z.number().int().min(0).max(100_000_000).nullable(),
+      paymentDeadlineHours: z.number().int().min(0).max(8_760).nullable(),
+      documentDeadlineDays: z.number().int().min(0).max(3_650).nullable(),
+    }),
+    textLength: z.number().int().min(0).optional(),
+  }),
+});
+
+function parseStoredNoticeAudit(raw: unknown): StoredNoticeAudit | null {
+  const parsed = storedNoticeAuditSchema.safeParse(raw);
+  if (!parsed.success) return null;
+  const { auditedAt, sourceLabel, result } = parsed.data;
+  const findings: NoticeFinding[] = result.findings;
+  const fees = result.extractedFees;
+  return {
+    auditedAt,
+    sourceLabel,
+    result: {
+      findings,
+      extractedFees: {
+        commissionRateBps: fees.commissionRateBps === null ? null : bps(fees.commissionRateBps),
+        adminFeesCents: fees.adminFeesCents === null ? null : cents(fees.adminFeesCents),
+        debtsCapCents: fees.debtsCapCents === null ? null : cents(fees.debtsCapCents),
+        dailyStorageCents: fees.dailyStorageCents === null ? null : cents(fees.dailyStorageCents),
+        paymentDeadlineHours: fees.paymentDeadlineHours,
+        documentDeadlineDays: fees.documentDeadlineDays,
+      },
+      counts: {
+        critical: findings.filter((item) => item.severity === "critical").length,
+        warning: findings.filter((item) => item.severity === "warning").length,
+        info: findings.filter((item) => item.severity === "info").length,
+      },
+      textLength: result.textLength ?? 0,
+    },
+  };
+}
 
 const listSelect = {
   id: true,
@@ -357,6 +423,9 @@ export async function getLot(id: string): Promise<LotDetail | null> {
       lotUrl: true,
       notes: true,
       updatedAt: true,
+      diligenceChecklist: true,
+      noticeAudit: true,
+      postAuction: { select: { privatePlate: true } },
       listing: {
         select: {
           lastCheckedAt: true,
@@ -417,6 +486,9 @@ export async function getLot(id: string): Promise<LotDetail | null> {
     fixedAnalysisCount: row._count.analyses,
     resultCount: row._count.results,
     updatedAt: row.updatedAt,
+    diligence: parseDiligenceChecklist(row.diligenceChecklist),
+    noticeAudit: parseStoredNoticeAudit(row.noticeAudit),
+    privatePlate: row.postAuction?.privatePlate ?? null,
     tracking: listing && {
       sourceName: listing.source.name,
       lastCheckedAt: listing.lastCheckedAt,

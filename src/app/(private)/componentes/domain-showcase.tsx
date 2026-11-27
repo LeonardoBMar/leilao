@@ -1,4 +1,5 @@
 import { Card, CardContent, Money, Stat } from "@/components/ui";
+import { emptyDiligenceChecklist } from "@/domain/lots/diligence";
 import { cents } from "@/domain/money";
 import { CatalogAuctionCard } from "@/features/listings/components/catalog-auctions-view";
 import { ListingCard } from "@/features/listings/components/listing-card";
@@ -90,6 +91,9 @@ const lot: LotDetail = {
   currentBid: cents(3_150_000),
   currentBidObservedAt: FIXED_AT,
   archivedAt: null,
+  diligence: emptyDiligenceChecklist(),
+  noticeAudit: null,
+  privatePlate: null,
   auction: {
     id: "00000000-0000-7000-8000-000000000003",
     name: "Leilão de exemplo",

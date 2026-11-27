@@ -3,7 +3,16 @@ import type { LimitFit, PriceEstimate } from "@/domain/listings/estimates";
 import type { MarketValueOrigin } from "@/domain/listings/fipe-match";
 import type { VehicleOrigin } from "@/domain/listings/origin";
 import type { LotBidStep } from "@/domain/lots/bid-history";
+import type { DiligenceChecklist } from "@/domain/lots/diligence";
+import type { NoticeAuditResult } from "@/domain/lots/notice-audit";
 import type { Cents } from "@/domain/money";
+
+/** Auditoria determinística de edital persistida em `lots.notice_audit` (D-97). */
+export type StoredNoticeAudit = {
+  auditedAt: string;
+  sourceLabel: string;
+  result: NoticeAuditResult;
+};
 
 /** Limite da análise fixada mais recente do lote. */
 export type LotLimit = { isViable: boolean; maxBid: Cents | null; version: number; fixedAt: Date };
@@ -83,6 +92,12 @@ export type LotDetail = LotListItem & {
   fixedAnalysisCount: number;
   resultCount: number;
   updatedAt: Date;
+  /** Checklist de diligência pré-lance (D-97). */
+  diligence: DiligenceChecklist;
+  /** Última auditoria determinística de edital salva neste lote (D-97). */
+  noticeAudit: StoredNoticeAudit | null;
+  /** Placa privada registrada no pós-arremate, para atalhos públicos de verificação (D-97). */
+  privatePlate: string | null;
   /** Anúncio coletado ligado ao lote: o coletor mantém o lance atual (etapa 3). */
   tracking: {
     sourceName: string;

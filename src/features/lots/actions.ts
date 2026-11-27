@@ -1,11 +1,14 @@
 "use server";
 
-import { refresh } from "next/cache";
+import { refresh, revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { createDraft } from "@/features/analyses/mutations";
+import { DILIGENCE_KEYS, type DiligenceKey } from "@/domain/lots/diligence";
+import { auditNoticeText } from "@/domain/lots/notice-audit";
+import { applyNoticeFeesToDraft, createDraft } from "@/features/analyses/mutations";
 import { type ActionState, failure, validationError } from "@/lib/action-state";
+import { extractPdfText, MAX_PDF_BYTES } from "@/lib/pdf-text";
 import { entityId } from "@/lib/schemas";
 
 import {
@@ -14,12 +17,15 @@ import {
   type DeleteLotError,
   type LotStateError,
   type SaveLotError,
+  saveLotNoticeAudit,
   setLotArchived,
   setLotFollowed,
+  toggleLotDiligenceItem,
   updateCurrentBid,
   updateLot,
   updateLotsState,
 } from "./mutations";
+import { getLot } from "./queries";
 import { currentBidInputSchema, lotIdSchema, lotInputSchema } from "./schemas";
 
 const NOT_FOUND = "Lote não encontrado.";
@@ -149,6 +155,132 @@ export async function deleteLotAction(id: string): Promise<ActionState> {
   if (!result.ok) return failure(DELETE_ERRORS[result.error]);
 
   redirect(`/minhas-analises/leiloes/${result.value.auctionId}`);
+}
+
+const diligenceKeySchema = z.enum(DILIGENCE_KEYS);
+
+/** Marca ou desmarca um item do checklist de diligência pré-lance do lote (D-97). */
+export async function toggleDiligenceItemAction(
+  lotId: string,
+  key: DiligenceKey,
+  checked: boolean,
+): Promise<ActionState> {
+  const parsedId = lotIdSchema.safeParse(lotId);
+  const parsedKey = diligenceKeySchema.safeParse(key);
+  const parsedChecked = z.boolean().safeParse(checked);
+  if (!parsedId.success) return failure(NOT_FOUND);
+  if (!parsedKey.success || !parsedChecked.success) return failure("Item de diligência inválido.");
+
+  const result = await toggleLotDiligenceItem(parsedId.data, parsedKey.data, parsedChecked.data);
+  if (!result.ok) return failure(STATE_ERRORS[result.error]);
+
+  revalidatePath(`/lotes/${parsedId.data}`);
+  revalidatePath("/analise/[id]", "page");
+  refresh();
+  return { status: "success" };
+}
+
+const MAX_NOTICE_FILE_BYTES = MAX_PDF_BYTES;
+const MAX_NOTICE_TEXT_CHARS = 250_000;
+
+/** Executa auditoria determinística de edital (texto colado ou PDF/TXT) e salva o resumo no lote (D-97). */
+export async function auditLotNoticeAction(
+  lotId: string,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const parsedId = lotIdSchema.safeParse(lotId);
+  if (!parsedId.success) return failure(NOT_FOUND);
+
+  const fileEntry = formData.get("noticeFile");
+  const rawTextEntry = formData.get("noticeText");
+  let sourceLabel = "Texto colado";
+  let text = typeof rawTextEntry === "string" ? rawTextEntry.trim() : "";
+
+  if (fileEntry instanceof File && fileEntry.size > 0) {
+    if (fileEntry.size > MAX_NOTICE_FILE_BYTES) {
+      return failure("O arquivo excede o limite de 4 MB. Cole o trecho relevante do edital abaixo.", formData);
+    }
+    const lowerName = fileEntry.name.toLowerCase();
+    const isPdf = fileEntry.type === "application/pdf" || lowerName.endsWith(".pdf");
+    const isTxt = fileEntry.type === "text/plain" || lowerName.endsWith(".txt");
+    if (!isPdf && !isTxt) {
+      return failure("Envie um arquivo PDF ou TXT, ou cole o texto do edital abaixo.", formData);
+    }
+    sourceLabel = fileEntry.name.slice(0, 120);
+    if (isPdf) {
+      const buffer = Buffer.from(await fileEntry.arrayBuffer());
+      text = extractPdfText(buffer);
+      if (text.length < 20) {
+        return failure(
+          "Não foi possível extrair texto deste PDF (pode ser escaneado como imagem). Copie e cole o texto do edital abaixo.",
+          formData,
+        );
+      }
+    } else {
+      text = (await fileEntry.text()).trim();
+    }
+  }
+
+  if (text.length < 20) {
+    return failure("Cole ao menos um trecho do edital (mínimo de 20 caracteres) ou envie um PDF.", formData);
+  }
+  if (text.length > MAX_NOTICE_TEXT_CHARS) {
+    text = text.slice(0, MAX_NOTICE_TEXT_CHARS);
+  }
+
+  const auditResult = auditNoticeText(text);
+  const saved = await saveLotNoticeAudit(parsedId.data, {
+    auditedAt: new Date().toISOString(),
+    sourceLabel,
+    result: auditResult,
+  });
+  if (!saved.ok) return failure(STATE_ERRORS[saved.error], formData);
+
+  revalidatePath(`/lotes/${parsedId.data}`);
+  refresh();
+  const total = auditResult.findings.length;
+  return {
+    status: "success",
+    message:
+      total === 0
+        ? "Edital auditado: nenhuma cláusula crítica padrão identificada."
+        : total === 1
+          ? "Edital auditado: 1 ponto identificado."
+          : `Edital auditado: ${total} pontos identificados.`,
+  };
+}
+
+/** Limpa a auditoria de edital salva no lote (D-97). */
+export async function clearLotNoticeAuditAction(lotId: string): Promise<ActionState> {
+  const parsedId = lotIdSchema.safeParse(lotId);
+  if (!parsedId.success) return failure(NOT_FOUND);
+  const result = await saveLotNoticeAudit(parsedId.data, null);
+  if (!result.ok) return failure(STATE_ERRORS[result.error]);
+
+  revalidatePath(`/lotes/${parsedId.data}`);
+  refresh();
+  return { status: "success", message: "Auditoria de edital removida." };
+}
+
+/** Leva comissão, taxa administrativa e teto de débitos encontrados no edital para o rascunho da análise (D-97). */
+export async function applyNoticeFeesToDraftAction(lotId: string): Promise<ActionState> {
+  const parsedId = lotIdSchema.safeParse(lotId);
+  if (!parsedId.success) return failure(NOT_FOUND);
+
+  const lot = await getLot(parsedId.data);
+  if (!lot) return failure(NOT_FOUND);
+  const fees = lot.noticeAudit?.result.extractedFees;
+  if (!fees || (fees.commissionRateBps === null && fees.adminFeesCents === null && fees.debtsCapCents === null)) {
+    return failure("Nenhuma taxa aplicável encontrada na auditoria salva.");
+  }
+
+  const applied = await applyNoticeFeesToDraft(parsedId.data, fees);
+  if (!applied.ok) return failure(NOT_FOUND);
+
+  revalidatePath(`/lotes/${parsedId.data}`);
+  revalidatePath(`/analise/${applied.value.analysisId}`);
+  redirect(`/analise/${applied.value.analysisId}`);
 }
 
 /** Número repetido é erro do campo, para aparecer junto do "Número do lote" (CA-02). */

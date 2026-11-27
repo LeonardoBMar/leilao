@@ -1,12 +1,15 @@
 import "server-only";
 
+import { type DiligenceChecklist, type DiligenceKey, parseDiligenceChecklist } from "@/domain/lots/diligence";
 import type { Cents } from "@/domain/money";
+import { Prisma } from "@/generated/prisma/client";
 import { err, ok, type Result } from "@/lib/result";
 import { requireUser } from "@/server/auth";
 import { db, isForeignKeyViolation, isUniqueViolation } from "@/server/db";
 import { removeObjects } from "@/server/storage";
 
 import type { LotInput } from "./schemas";
+import type { StoredNoticeAudit } from "./types";
 
 /** Opcionais ausentes viram `null`: no update, `undefined` manteria o valor antigo. */
 function toLotData(input: LotInput) {
@@ -85,6 +88,57 @@ export async function updateCurrentBid(id: string, currentBid: Cents | null): Pr
 export async function setLotFollowed(id: string, isFollowed: boolean): Promise<Result<null, LotStateError>> {
   const user = await requireUser();
   const { count } = await db.lot.updateMany({ where: { id, ownerId: user.id }, data: { isFollowed } });
+  return count === 0 ? err("not_found") : ok(null);
+}
+
+/** Alterna um item do checklist de diligência pré-lance atomicamente no banco via `jsonb_set` (D-97). */
+export async function toggleLotDiligenceItem(
+  id: string,
+  key: DiligenceKey,
+  checked: boolean,
+): Promise<Result<DiligenceChecklist, LotStateError>> {
+  const user = await requireUser();
+  const updatedAt = new Date().toISOString();
+  const itemPath = `{items,${key}}`;
+
+  const rows = await db.$queryRaw<{ diligence_checklist: unknown }[]>`
+    update "lots"
+    set "diligence_checklist" = jsonb_set(
+      jsonb_set(
+        case
+          when jsonb_typeof("diligence_checklist") = 'object'
+           and jsonb_typeof("diligence_checklist" -> 'items') = 'object'
+          then "diligence_checklist"
+          else '{"items":{}}'::jsonb
+        end,
+        ${itemPath}::text[],
+        to_jsonb(${checked}::boolean),
+        true
+      ),
+      '{updatedAt}'::text[],
+      to_jsonb(${updatedAt}::text),
+      true
+    ),
+    "updated_at" = now()
+    where "id" = ${id}::uuid and "owner_id" = ${user.id}::uuid
+    returning "diligence_checklist"
+  `;
+
+  const updated = rows[0];
+  if (!updated) return err("not_found");
+  return ok(parseDiligenceChecklist(updated.diligence_checklist));
+}
+
+/** Persiste ou limpa a última auditoria determinística de edital do lote (D-97). */
+export async function saveLotNoticeAudit(
+  id: string,
+  audit: StoredNoticeAudit | null,
+): Promise<Result<null, LotStateError>> {
+  const user = await requireUser();
+  const { count } = await db.lot.updateMany({
+    where: { id, ownerId: user.id },
+    data: { noticeAudit: audit === null ? Prisma.JsonNull : audit },
+  });
   return count === 0 ? err("not_found") : ok(null);
 }
 
