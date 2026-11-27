@@ -306,6 +306,7 @@ describe("fetchListingPage", () => {
     expect(await fetchListingPage(page(openPage), oldUrl, parseLeiloListingPage, now)).toEqual({
       ok: false,
       gone: true,
+      redirected: true,
       error: `redireciona para outro anúncio (${listing.externalId})`,
     });
     expect(await fetchListingPage(page(openPage), listing.url, parseLeiloListingPage, now)).toMatchObject({
