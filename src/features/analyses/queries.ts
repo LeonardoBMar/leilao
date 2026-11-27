@@ -4,6 +4,7 @@ import { cache } from "react";
 
 import { type AnalysisInputs, calculateMaxBid } from "@/domain/finance/calculator";
 import type { AnalysisDiffSnapshot } from "@/domain/finance/diff";
+import { parseDiligenceChecklist, summarizeDiligence } from "@/domain/lots/diligence";
 import { bps, cents } from "@/domain/money";
 import { getLotMarketBands } from "@/features/research/queries";
 import type { Prisma } from "@/generated/prisma/client";
@@ -99,6 +100,7 @@ export async function getAnalysis(id: string): Promise<AnalysisDetail | null> {
           mileageKm: true,
           lotUrl: true,
           currentBidCents: true,
+          diligenceChecklist: true,
           auction: { select: { id: true, name: true, city: true, state: true } },
           analyses: { where: { status: "draft" }, select: { id: true } },
           _count: { select: { results: true } },
@@ -172,6 +174,7 @@ export async function getAnalysis(id: string): Promise<AnalysisDetail | null> {
       title: `${lot.brand} ${lot.model} ${lot.modelYear}`,
       currentBid: money(lot.currentBidCents),
       hasResult: lot._count.results > 0,
+      diligence: summarizeDiligence(parseDiligenceChecklist(lot.diligenceChecklist)),
       auction: { id: lot.auction.id, name: lot.auction.name },
       context: {
         vehicleVersion: lot.vehicleVersion,

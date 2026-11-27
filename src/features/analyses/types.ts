@@ -1,6 +1,7 @@
 import type { AnalysisInputs } from "@/domain/finance/calculator";
 import type { DefaultsInput } from "@/domain/finance/defaults";
 import type { ConditionFlag, DamageLevel, InspectionResult } from "@/domain/listings/condition";
+import type { DiligenceSummary } from "@/domain/lots/diligence";
 import type { Cents } from "@/domain/money";
 
 import type { ListingFipe } from "./fipe-fill";
@@ -43,6 +44,8 @@ export type AnalysisLotRef = {
   title: string;
   currentBid: Cents | null;
   hasResult: boolean;
+  /** Progresso do checklist de diligência pré-lance do lote (D-97). */
+  diligence: DiligenceSummary;
   auction: { id: string; name: string };
   context: AnalysisVehicleContext;
 };

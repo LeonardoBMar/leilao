@@ -1,6 +1,7 @@
 "use client";
 
-import { Lock, Save } from "lucide-react";
+import { ClipboardCheck, Lock, Save } from "lucide-react";
+import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 
 import { Alert, AlertDescription, Button, toast } from "@/components/ui";
@@ -320,6 +321,22 @@ export function AnalysisEditor({
         />
 
         <div className="grid gap-3 border-t border-border pt-6">
+          {analysis.lot.diligence.criticalPending.length > 0 ? (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-warning-border bg-warning-subtle/60 px-3 py-2 text-caption text-foreground">
+              <span className="flex items-center gap-2">
+                <ClipboardCheck aria-hidden="true" className="size-4 shrink-0 text-warning" />
+                <span>
+                  <strong className="font-medium tabular-nums">
+                    Diligência: {analysis.lot.diligence.completed} de {analysis.lot.diligence.total}
+                  </strong>{" "}
+                  — pendentes críticos: {analysis.lot.diligence.criticalPending.map((item) => item.label).join("; ")}.
+                </span>
+              </span>
+              <Link href={`/lotes/${analysis.lot.id}#diligencia`} className="font-medium text-accent hover:underline">
+                Revisar checklist
+              </Link>
+            </div>
+          ) : null}
           {missingFields.length > 0 ? (
             <p className="text-caption text-warning" role="status">
               Falta para fixar: {missingFields.map((field) => FIELD_LABELS[field]).join(", ")}.
