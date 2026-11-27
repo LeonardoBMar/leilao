@@ -145,7 +145,7 @@ export function ListingQuickDrawer({
             </ul>
           ) : null}
 
-          <div className="grid gap-3 rounded-lg bg-surface-subtle p-4 sm:grid-cols-2">
+          <div className="grid gap-3 rounded-lg border border-border bg-surface-subtle p-4 sm:grid-cols-2">
             <div className="grid content-start gap-1">
               <p className="text-caption text-muted">
                 {isOpen ? (item.currentBid ? "Lance atual" : "Lance inicial") : "Lance final"}

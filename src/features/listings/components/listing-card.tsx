@@ -104,7 +104,7 @@ export function ListingCard({ item, header, footer, eager = false, compact = fal
 
       <ConditionBadges item={item} />
 
-      <div className="grid gap-3 rounded-md bg-surface-subtle p-3 sm:grid-cols-2">
+      <div className="grid gap-3 rounded-md border border-border bg-surface-subtle p-3 sm:grid-cols-2">
         <div className="grid content-start gap-0.5">
           <p className="text-caption text-muted">
             {isOpen ? (item.currentBid ? "Lance atual" : "Lance inicial") : "Lance final"}
