@@ -54,22 +54,38 @@ export async function CollectorStatusLine({ compact = false }: { compact?: boole
           {isAdmin ? (
             <Link
               href="/sistema"
-              className="inline-flex items-center rounded-sm text-accent tabular-nums outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:min-h-11"
+              className="inline-flex items-center gap-2 rounded-sm text-accent tabular-nums outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent pointer-coarse:min-h-11"
             >
-              {compact
-                ? `Coleta ${formatCompactDateTime(lastFinishedAt)}`
-                : `Última coleta em ${formatDateTime(lastFinishedAt)}`}
+              <span>
+                {compact
+                  ? `Coleta ${formatCompactDateTime(lastFinishedAt)}`
+                  : `Última coleta em ${formatDateTime(lastFinishedAt)}`}
+              </span>
+              {statusBadge ? <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge> : null}
             </Link>
           ) : (
-            <span className="tabular-nums">
-              {compact
-                ? `Coleta ${formatCompactDateTime(lastFinishedAt)}`
-                : `Última coleta em ${formatDateTime(lastFinishedAt)}`}
-            </span>
+            <>
+              <span className="tabular-nums">
+                {compact
+                  ? `Coleta ${formatCompactDateTime(lastFinishedAt)}`
+                  : `Última coleta em ${formatDateTime(lastFinishedAt)}`}
+              </span>
+              {statusBadge ? <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge> : null}
+            </>
           )}
         </>
+      ) : statusBadge ? (
+        isAdmin ? (
+          <Link
+            href="/sistema"
+            className="inline-flex items-center rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-2 focus-visible:outline-transparent"
+          >
+            <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
+          </Link>
+        ) : (
+          <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
+        )
       ) : null}
-      {statusBadge ? <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge> : null}
     </div>
   );
 }
