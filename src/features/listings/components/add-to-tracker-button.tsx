@@ -66,6 +66,8 @@ export function AddToTrackerButton({
               return;
             }
             toast.success(result.message, { action: { label: "Abrir análise", onClick: () => router.push(href) } });
+          } catch {
+            toast.error("Não foi possível concluir a ação. Tente novamente.");
           } finally {
             if (!navigating) onPendingChange?.(false);
           }
