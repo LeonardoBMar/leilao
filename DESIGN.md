@@ -69,6 +69,17 @@ Não reverter sem bug objetivo novo (contraste, a11y, overflow ou perda de dados
 - **Ícones distintos:** `Radar` é exclusivo de `Monitores`; `Coleta` usa `Activity`.
 - **Ajuda global:** `?` no header em `sm+` e `"Como ler"` em `sm:hidden` no `/dashboard`, ambos abrindo o `GlobalGuideDialog` com busca.
 
+## Gate de triagem de revisões
+
+Antes de aplicar achados de review ou critique:
+
+1. **Bug objetivo (sempre corrigir):** WCAG/a11y, contraste insuficiente, perda de foco, race condition/duplo envio, overflow ou divergência entre `aria-label` e UI.
+2. **Trade-off subjetivo (validar 3 efeitos colaterais antes de editar):**
+   - O container inteiro é clicável? (nunca aplicar hover em área inerte).
+   - O indicador visual tem ícone/rótulo semântico claro? (nunca ponto colorido ambíguo).
+   - O conteúdo cabe na largura real da coluna (`320px` mobile / `200px` em cards de 2 colunas) sem quebrar alinhamento?
+3. **Verificação renderizada:** rodar `impeccable detect` contra a URL local em `1280x800` e `390x844` após mudanças de layout/contraste.
+
 Map: SPEC.md
 Map: src/components/ui
 Map: src/app/globals.css
