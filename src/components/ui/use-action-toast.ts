@@ -13,6 +13,7 @@ export function useActionToast() {
   function run(action: () => Promise<ActionState>) {
     startTransition(async () => {
       const result = await action();
+      if (!result) return;
       if (result.status === "error") toast.error(result.message);
       else if (result.status === "success" && result.message) toast.success(result.message);
     });
