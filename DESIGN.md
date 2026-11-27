@@ -58,6 +58,17 @@ Do:
 - Usar tinta (`primary`) na ação principal e o azul `accent` só em link, foco e seleção.
 - Manter números financeiros com rótulo, unidade e numerais tabulares (`tabular-nums`).
 
+## Decisões fechadas (anti-ping-pong)
+
+Não reverter sem bug objetivo novo (contraste, a11y, overflow ou perda de dados):
+
+- **Header mobile (`< lg`):** sem `Brand` no header de `48px` (a marca está no `MobileNav`) para preservar largura do título de rota em `320–375px`.
+- **Painéis `Summary`:** sempre `bg-surface-subtle` (`#F3F4F6`) + `border-border` (nunca `#FAFAFB` sem borda sobre `#FFFFFF`).
+- **`CompactCard` (`/dashboard`):** grade `2×2` para métricas financeiras (`Lance`, `Provável`, `Limite`, `Folga est.`), 2 ações no rodapé (`Analisar agora` + `Dispensar`), e hover apenas nos gatilhos clicáveis (nunca no `<article>` inteiro).
+- **`DashboardKpis`:** todos os cards ativos atuam de forma uniforme como âncoras para seções do próprio `/dashboard`.
+- **Ícones distintos:** `Radar` é exclusivo de `Monitores`; `Coleta` usa `Activity`.
+- **Ajuda global:** `?` no header em `sm+` e `"Como ler"` em `sm:hidden` no `/dashboard`, ambos abrindo o `GlobalGuideDialog` com busca.
+
 Map: SPEC.md
 Map: src/components/ui
 Map: src/app/globals.css
