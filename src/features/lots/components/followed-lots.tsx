@@ -15,9 +15,9 @@ const SHOWN = 5;
 const ALL_FOLLOWED_HREF = "/minhas-analises?acompanhados=1&resultado=sem";
 
 const PROBABLE_FIT_LABELS = {
-  comfortable: "Provável abaixo",
-  tight: "Provável no limite",
-  above: "Provável acima",
+  comfortable: "Abaixo",
+  tight: "No limite",
+  above: "Acima",
 } as const satisfies Record<LimitFit, string>;
 
 const LIMIT_FIT_ICONS = {
