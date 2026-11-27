@@ -4,10 +4,17 @@ import type { AnalysisInputs } from "@/domain/finance/calculator";
 import { bps, type Cents, cents } from "@/domain/money";
 import {
   calculateRealizedPnl,
+  type ExpenseCategory,
   isPaymentOverdue,
   plannedBreakdownFromFixedAnalysis,
   summarizePortfolio,
 } from "@/domain/post-auction/pnl";
+import {
+  type CostCalibrationLotInput,
+  type CostCalibrationSummary,
+  summarizeCostCalibration,
+} from "@/domain/research/cost-calibration";
+import { getUserPreferences } from "@/features/preferences/queries";
 import type { Prisma } from "@/generated/prisma/client";
 import { calendarDateToUtc, toZonedDateInput } from "@/lib/dates";
 import { requireUser } from "@/server/auth";
@@ -308,4 +315,134 @@ export async function getPortfolioOverview(): Promise<PortfolioOverview> {
     });
 
   return { summary, items };
+}
+
+/**
+ * Calibração 2.0 (D-97): cruza lotes vendidos no pós-arremate (`status = "sold"`) com análises fixadas
+ * pré-leilão (`analysisTiming = "prior"`) para medir viés de custos por categoria e preço de revenda.
+ */
+export async function getCostCalibration(): Promise<{
+  summary: CostCalibrationSummary;
+  lots: CostCalibrationLotInput[];
+}> {
+  const user = await requireUser();
+  const [currentResults, preferences] = await Promise.all([
+    db.result.findMany({
+      where: { ownerId: user.id },
+      orderBy: [{ lotId: "asc" }, { revision: "desc" }],
+      distinct: ["lotId"],
+      select: {
+        lotId: true,
+        personalOutcome: true,
+        analysisTiming: true,
+        finalBidCents: true,
+        eventAt: true,
+        recordedAt: true,
+        analysis: { select: analysisSelect },
+        lot: {
+          select: {
+            brand: true,
+            model: true,
+            modelYear: true,
+            postAuction: {
+              select: {
+                status: true,
+                listedAt: true,
+                soldAt: true,
+                salePriceCents: true,
+              },
+            },
+            expenses: {
+              select: { category: true, amountCents: true },
+            },
+          },
+        },
+      },
+    }),
+    getUserPreferences(),
+  ]);
+
+  const today = toAppCalendarDate(new Date());
+  const lots: CostCalibrationLotInput[] = [];
+
+  for (const result of currentResults) {
+    if (
+      result.personalOutcome !== "won" ||
+      result.analysisTiming !== "prior" ||
+      result.finalBidCents === null ||
+      result.lot.postAuction?.status !== "sold" ||
+      result.lot.postAuction.salePriceCents === null ||
+      result.lot.postAuction.salePriceCents <= 0 ||
+      result.analysis?.status !== "fixed" ||
+      result.analysis.formulaVersion === null
+    ) {
+      continue;
+    }
+
+    const finalBid = cents(result.finalBidCents);
+    const actualSalePrice = cents(result.lot.postAuction.salePriceCents);
+    const planned = plannedBreakdownFromFixedAnalysis(
+      toDomainInputs(result.analysis),
+      result.analysis.formulaVersion,
+      finalBid,
+    );
+    if (!planned) continue;
+
+    const acquiredDate = toAppCalendarDate(result.eventAt ?? result.recordedAt);
+    const expenses = result.lot.expenses.map((expense) => ({
+      category: expense.category,
+      amount: cents(expense.amountCents),
+    }));
+    const pnl = calculateRealizedPnl({
+      finalBid,
+      expenses,
+      salePrice: actualSalePrice,
+      planned,
+      acquiredAt: acquiredDate,
+      listedAt: result.lot.postAuction.listedAt,
+      soldAt: result.lot.postAuction.soldAt,
+      now: today,
+    });
+
+    if (pnl.plannedTotalWithoutReserve === null || pnl.expectedProfitAtBid === null || pnl.realizedProfit === null) {
+      continue;
+    }
+
+    const actualByCategory: Record<ExpenseCategory, Cents> = {
+      auction_commission: cents(0),
+      auction_fees: cents(0),
+      debts: cents(0),
+      transport: cents(0),
+      documentation: cents(0),
+      repair: cents(0),
+      tires: cents(0),
+      service: cents(0),
+      selling: cents(0),
+      tax: cents(0),
+      other: cents(0),
+    };
+    for (const expense of expenses) {
+      actualByCategory[expense.category] = cents(actualByCategory[expense.category] + expense.amount);
+    }
+
+    lots.push({
+      lotId: result.lotId,
+      label: `${result.lot.brand} ${result.lot.model} ${result.lot.modelYear}`,
+      soldAt: result.lot.postAuction.soldAt,
+      expectedSalePrice: planned.expectedSalePrice,
+      actualSalePrice,
+      plannedTotalWithoutReserve: pnl.plannedTotalWithoutReserve,
+      actualTotalInvested: pnl.totalInvested,
+      expectedProfitAtBid: pnl.expectedProfitAtBid,
+      realizedProfit: pnl.realizedProfit,
+      holdDays: pnl.holdDays,
+      plannedByCategory: planned.byCategory,
+      actualByCategory,
+    });
+  }
+
+  return {
+    summary: summarizeCostCalibration(lots, preferences.costOverrides),
+    lots,
+  };
 }

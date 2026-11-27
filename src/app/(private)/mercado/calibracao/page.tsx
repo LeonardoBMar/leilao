@@ -3,6 +3,12 @@ import { Suspense } from "react";
 
 import { getCalibration } from "@/features/analyses/queries";
 import {
+  CostCalibrationPanel,
+  CostCalibrationPanelSkeleton,
+} from "@/features/post-auction/components/cost-calibration-panel";
+import { getCostCalibration } from "@/features/post-auction/queries";
+import { ApplyCalibrationButton } from "@/features/preferences/components/apply-calibration-button";
+import {
   CalibrationView,
   CalibrationViewSkeleton,
   EngineQualityBlock,
@@ -17,6 +23,16 @@ export const metadata: Metadata = { title: "Calibração · Mercado · Leilão T
 async function CalibrationSection() {
   const items = await getCalibration();
   return <CalibrationView items={items} />;
+}
+
+async function CostCalibrationSection() {
+  const { summary } = await getCostCalibration();
+  return (
+    <CostCalibrationPanel
+      summary={summary}
+      applyControl={<ApplyCalibrationButton suggestions={summary.suggestions} />}
+    />
+  );
 }
 
 async function EngineQualitySection() {
@@ -34,6 +50,9 @@ export default function CalibrationPage() {
       <MarketTabs active="calibration" />
       <Suspense fallback={<CalibrationViewSkeleton />}>
         <CalibrationSection />
+      </Suspense>
+      <Suspense fallback={<CostCalibrationPanelSkeleton />}>
+        <CostCalibrationSection />
       </Suspense>
       <Suspense fallback={<EngineQualityBlockSkeleton />}>
         <EngineQualitySection />
