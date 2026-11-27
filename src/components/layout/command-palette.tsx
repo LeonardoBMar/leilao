@@ -482,12 +482,6 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                 } else if (event.key === "ArrowUp") {
                   event.preventDefault();
                   setSelectedIndex((current) => (items.length > 0 ? (current - 1 + items.length) % items.length : 0));
-                } else if (event.key === "Home" && items.length > 0) {
-                  event.preventDefault();
-                  setSelectedIndex(0);
-                } else if (event.key === "End" && items.length > 0) {
-                  event.preventDefault();
-                  setSelectedIndex(items.length - 1);
                 } else if (event.key === "Enter" && activeIndex >= 0) {
                   event.preventDefault();
                   const item = items[activeIndex];
