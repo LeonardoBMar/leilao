@@ -298,7 +298,7 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
             </div>
           ) : null}
 
-          <dl className="mt-1 flex flex-wrap gap-x-4 gap-y-1.5 tabular-nums">
+          <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-2 tabular-nums">
             <div className="grid gap-0.5">
               <dt className="text-caption text-muted">Lance</dt>
               <dd className="text-label font-semibold whitespace-nowrap text-foreground">
@@ -307,7 +307,12 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
             </div>
             {price && price.kind !== "insufficient" ? (
               <div className="grid gap-0.5">
-                <dt className="text-caption text-muted">Provável{evidence ? ` (${evidence})` : ""}</dt>
+                <dt
+                  title="Mediana dos arremates comparáveis no catálogo"
+                  className="text-caption text-muted"
+                >
+                  Provável{evidence ? ` (${evidence})` : ""}
+                </dt>
                 <dd className="text-label font-medium whitespace-nowrap text-foreground-secondary">
                   <Money value={price.median} />
                 </dd>
@@ -315,7 +320,12 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
             ) : null}
             {limit && limit.kind !== "insufficient" ? (
               <div className="grid gap-0.5">
-                <dt className="text-caption text-muted">Limite{limitOrigin ? ` (${limitOrigin})` : ""}</dt>
+                <dt
+                  title="Lance máximo estimado segundo suas premissas de custo e margem"
+                  className="text-caption text-muted"
+                >
+                  Limite{limitOrigin ? ` (${limitOrigin})` : ""}
+                </dt>
                 <dd className="text-label font-medium whitespace-nowrap text-foreground-secondary">
                   {limit.maxBid !== null ? <Money value={limit.maxBid} /> : "Sem lance viável"}
                 </dd>
@@ -323,7 +333,16 @@ function CompactCard({ item, bid, footer }: { item: ListingListItem; bid: Cents 
             ) : null}
             {headroom !== null ? (
               <div className="grid gap-0.5">
-                <dt className="text-caption text-muted">{headroom >= 0 ? "Folga est." : "Acima est."}</dt>
+                <dt
+                  title={
+                    headroom >= 0
+                      ? "Diferença estimada entre o limite e o preço provável"
+                      : "Quanto o preço provável excede o limite estimado"
+                  }
+                  className="text-caption text-muted"
+                >
+                  {headroom >= 0 ? "Folga est." : "Acima est."}
+                </dt>
                 <dd
                   className={cn(
                     "text-label font-semibold whitespace-nowrap",
