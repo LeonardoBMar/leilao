@@ -6,12 +6,19 @@ import { publicEnv } from "@/lib/public-env";
 
 const PUBLIC_PATHS = ["/login"];
 const HOME_PATH = "/dashboard";
+/** Rotas da API v1 autenticadas exclusivamente por Bearer ou públicas (D-98, §17): sem cookies nem getClaims(). */
+const STATELESS_API_PREFIXES = ["/api/v1/lots/", "/api/v1/market/", "/api/v1/openapi.json"];
 
 /**
  * Renova a sessão do Supabase e faz o redirecionamento otimista (D-12).
  * Não é barreira de segurança: a autorização real está em `requireUser()` na DAL.
  */
 export async function proxy(request: NextRequest) {
+  const { pathname, search } = request.nextUrl;
+  if (STATELESS_API_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(prefix))) {
+    return NextResponse.next();
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -35,8 +42,7 @@ export async function proxy(request: NextRequest) {
   // Nada entre createServerClient e getClaims(): é aqui que o token expirado é renovado.
   const { data } = await supabase.auth.getClaims();
   const isAuthenticated = Boolean(data?.claims) || devAuthUserId(process.env, request.headers.get("host")) !== null;
-  const { pathname, search } = request.nextUrl;
-  // Rotas de API respondem JSON (ex.: 401) sem redirecionar para `/login`, mantendo os cookies renovados (D-94).
+  // Rotas de API que usam sessão (ex.: /api/v1/municipalities, D-94) respondem JSON mantendo cookies renovados.
   if (pathname === "/api" || pathname.startsWith("/api/")) return response;
   const isPublic = PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 
